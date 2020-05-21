@@ -120,6 +120,18 @@ function installOnMyZsh(){
     setDateZone
     testPortUsage
 
+
+    # 安装 micro 编辑器
+    if [[ ! -f "${HOME}/bin/micro" ]] ;  then
+        mkdir -p ${HOME}/bin
+        cd ${HOME}/bin
+        curl https://getmic.ro | bash
+
+        cp ${HOME}/bin/micro /usr/local/bin
+    fi
+
+
+
     green "=============================="
     yellow "准备安装 ZSH"
     green "=============================="
@@ -194,13 +206,6 @@ set nu!
 EOF
     fi
 
-
-    # 安装 micro 编辑器
-    mkdir -p ${HOME}/bin
-    cd ${HOME}/bin
-    curl https://getmic.ro | bash
-
-    cp ${HOME}/bin/micro /usr/local/bin
 
 
 
