@@ -596,6 +596,7 @@ function install_trojan_server(){
         wget -O ${configTrojanPath}/${configTrojanCli}  https://github.com/trojan-gfw/trojan/releases/download/v${trojanVersion}/${configTrojanCli}
         tar xf ${configTrojanCli} -C ${configTrojanPath}
         mv ${configTrojanPath}/trojan/* ${configTrojanPath}/src
+        rm -rf ${configTrojanPath}/trojan
     fi
 
     if [ "$isTrojanGo" = "yes" ] ; then
@@ -772,7 +773,9 @@ Type=simple
 PIDFile=${configTrojanPath}/src/trojan.pid
 ExecStart=${configTrojanPath}/src/trojan${showTrojanName} -l $configTrojanLogFile -c "${configTrojanPath}/src/server.conf"
 ExecReload=/bin/kill -HUP \$MAINPID
-ExecStop=${configTrojanPath}/src/trojan${showTrojanName}
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=23
 PrivateTmp=true
 
 [Install]
@@ -832,7 +835,7 @@ EOF
       mv -f ${configTrojanPath}/trojan-win-cli-temp/* ${configTrojanPath}/trojan-win-cli/
     fi
 
-
+    rm -rf ${configTrojanPath}/trojan-win-cli-temp
     cp ${configTrojanCertPath}/fullchain.cer ${configTrojanPath}/trojan-win-cli/fullchain.cer
 
     cat > ${configTrojanPath}/trojan-win-cli/config.json <<-EOF
