@@ -1473,7 +1473,7 @@ function start_menu(){
     green " 3. 修复证书 并继续安装 trojan"
     red " 4. 卸载 trojan 与 nginx"
     echo
-    green " 5. 安装 trojan-go 和 nginx 不支持CDN"
+    green " 5. 安装 trojan-go 和 nginx 默认不支持CDN, 可以手动修改配置开启websocket 支持CDN"
     green " 6. 修复证书 并继续安装 trojan-go"
     red " 7. 卸载 trojan-go 与 nginx"
     echo
