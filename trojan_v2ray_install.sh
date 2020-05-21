@@ -593,15 +593,15 @@ function install_trojan_server(){
 
 
     if [ "$isTrojanGo" = "no" ] ; then
-      wget -O ${configTrojanPath}/${configTrojanCli}  https://github.com/trojan-gfw/trojan/releases/download/v${trojanVersion}/${configTrojanCli}
-	    tar xf ${configTrojanCli} -C ${configTrojanPath}
-	    mv ${configTrojanPath}/trojan ${configTrojanPath}/src
+        wget -O ${configTrojanPath}/${configTrojanCli}  https://github.com/trojan-gfw/trojan/releases/download/v${trojanVersion}/${configTrojanCli}
+        tar xf ${configTrojanCli} -C ${configTrojanPath}
+        mv ${configTrojanPath}/trojan/* ${configTrojanPath}/src
     fi
 
     if [ "$isTrojanGo" = "yes" ] ; then
-      # https://github.com/p4gefau1t/trojan-go/releases/download/v0.4.11/trojan-go-linux-amd64.zip
-      wget -O ${configTrojanPath}/${configTrojanCli}  https://github.com/p4gefau1t/trojan-go/releases/download/v${trojanVersion}/${configTrojanCli}
-	    unzip -d ${configTrojanPath}/src ${configTrojanCli}
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.4.11/trojan-go-linux-amd64.zip
+        wget -O ${configTrojanPath}/${configTrojanCli}  https://github.com/p4gefau1t/trojan-go/releases/download/v${trojanVersion}/${configTrojanCli}
+        unzip -d ${configTrojanPath}/src ${configTrojanCli}
     fi
 
 	  cat > ${configTrojanPath}/src/server.conf <<-EOF
