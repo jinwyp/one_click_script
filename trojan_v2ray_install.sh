@@ -792,8 +792,10 @@ Type=simple
 PIDFile=${configTrojanPath}/src/trojan.pid
 ExecStart=${configTrojanPath}/src/trojan${showTrojanName} -config "${configTrojanPath}/src/server.conf"
 ExecReload=/bin/kill -HUP \$MAINPID
-ExecStop=${configTrojanPath}/src/trojan${showTrojanName}
-PrivateTmp=true
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=23
+
 
 [Install]
 WantedBy=multi-user.target
