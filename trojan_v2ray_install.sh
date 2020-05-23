@@ -1432,10 +1432,9 @@ function remove_v2ray(){
 
 
 function bbr_boost_sh(){
+    $osSystemPackage install wget git -y
     wget -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
-
 }
-
 
 
 
@@ -1459,10 +1458,8 @@ function vps_LemonBench(){
 
 
 function start_menu(){
-    getLinuxOSVersion
-    $osSystemPackage install curl wget git -y
-    
     clear
+    getLinuxOSVersion
     green " ======================================="
     green " Trojan V2ray 一键安装自动脚本 2020-4-29 更新  "
     green " 系统：centos7+/debian9+/ubuntu16.04+"
