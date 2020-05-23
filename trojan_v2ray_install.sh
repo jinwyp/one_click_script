@@ -120,7 +120,6 @@ function installOnMyZsh(){
     setDateZone
     testPortUsage
 
-
     # 安装 micro 编辑器
     if [[ ! -f "${HOME}/bin/micro" ]] ;  then
         mkdir -p ${HOME}/bin
@@ -385,7 +384,7 @@ configTrojanLogFile="${HOME}/trojan-access.log"
 configTrojanCertPath="${HOME}/trojan/cert"
 configTrojanWebsitePath="${configTrojanPath}/website/html"
 configTrojanWindowsCliPath=$(cat /dev/urandom | head -1 | md5sum | head -c 20)
-
+configTrojanWebsiteDownloadPath="${configTrojanWebsitePath}/download/${configTrojanWindowsCliPath}"
 
 
 
@@ -406,6 +405,8 @@ configV2rayPath="${HOME}/v2ray"
 configV2rayAccessLogFile="${HOME}/v2ray-access.log"
 configV2rayErrorLogFile="${HOME}/v2ray-error.log"
 configV2rayWebsitePath="${HOME}/v2ray/website/html"
+configV2rayWebsiteDownloadPath="${configV2rayWebsitePath}/download/${configTrojanWindowsCliPath}"
+
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
 
@@ -506,12 +507,12 @@ EOF
 
     # 下载伪装站点 并设置伪装网站
     rm -rf ${configTrojanWebsitePath}/*
-    mkdir -p ${configTrojanWebsitePath}
+    mkdir -p ${configTrojanWebsiteDownloadPath}
     wget -O ${configTrojanPath}/website/trojan_website.zip https://github.com/jinwyp/Trojan/raw/master/web.zip
     unzip -d ${configTrojanWebsitePath} ${configTrojanPath}/website/trojan_website.zip
 
     wget -O ${configTrojanPath}/website/trojan_client_all.zip https://github.com/jinwyp/Trojan/raw/master/trojan_client_all.zip
-    unzip -d ${configTrojanWebsitePath} ${configTrojanPath}/website/trojan_client_all.zip
+    unzip -d ${configTrojanWebsiteDownloadPath} ${configTrojanPath}/website/trojan_client_all.zip
 
     systemctl start nginx.service
 
@@ -727,6 +728,7 @@ function install_trojan_server(){
         "${configTrojanPasswordPrefix}202099"
     ],
     "log_level": 1,
+    "log_file": "${configTrojanLogFile}",
     "ssl": {
         "cert": "$configTrojanCertPath/fullchain.cer",
         "key": "$configTrojanCertPath/private.key",
@@ -792,13 +794,12 @@ After=network.target
 
 [Service]
 Type=simple
-PIDFile=${configTrojanPath}/src/trojan.pid
+PIDFile=${configTrojanPath}/src/trojan-go.pid
 ExecStart=${configTrojanPath}/src/trojan${showTrojanName} -config "${configTrojanPath}/src/server.conf"
 ExecReload=/bin/kill -HUP \$MAINPID
 Restart=on-failure
 RestartSec=10
 RestartPreventExitStatus=23
-
 
 [Install]
 WantedBy=multi-user.target
@@ -873,8 +874,7 @@ EOF
 EOF
     cd ${configTrojanPath}/trojan-win-cli/
     zip -r trojan-win-cli.zip ${configTrojanPath}/trojan-win-cli/
-    mkdir -p ${configTrojanWebsitePath}/${configTrojanWindowsCliPath}
-    mv ${configTrojanPath}/trojan-win-cli/trojan-win-cli.zip ${configTrojanWebsitePath}/${configTrojanWindowsCliPath}
+    mv -f ${configTrojanPath}/trojan-win-cli/trojan-win-cli.zip ${configTrojanWebsiteDownloadPath}
 
 
 
@@ -916,12 +916,12 @@ EOF
 	blue  "----------------------------------------"
 	green "======================================================================"
 	green "请下载相应的trojan客户端:"
-	yellow "1 Windows 客户端下载：http://${configDomainTrojan}/download/trojan-windows.zip"
-	yellow "  Windows 客户端另一个版本下载：http://${configDomainTrojan}/download/Trojan-Qt5-windows.zip"
-	yellow "  Windows 客户端命令行版本下载：http://${configDomainTrojan}/${configTrojanWindowsCliPath}/trojan-win-cli.zip"
+	yellow "1 Windows 客户端下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-windows.zip"
+	yellow "  Windows 客户端另一个版本下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-Qt5-windows.zip"
+	yellow "  Windows 客户端命令行版本下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-win-cli.zip"
 	yellow "  Windows 客户端命令行版本需要搭配浏览器插件使用，例如switchyomega等! 具体请看 https://www.atrandys.com/2019/1963.html"
-    yellow "2 MacOS 客户端下载：http://${configDomainTrojan}/download/trojan-mac.zip"
-    yellow "  MacOS 客户端另一个版本下载：http://${configDomainTrojan}/download/Trojan-Qt5-macos.zip"
+    yellow "2 MacOS 客户端下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-mac.zip"
+    yellow "  MacOS 客户端另一个版本下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-Qt5-macos.zip"
     yellow "3 Android 客户端下载 https://github.com/trojan-gfw/igniter/releases "
     yellow "4 iOS 客户端 请安装小火箭 https://shadowsockshelp.github.io/ios/ "
     yellow "  iOS 请安装小火箭另一个地址 https://lueyingpro.github.io/shadowrocket/index.html "
@@ -980,6 +980,7 @@ function installTrojanWholeProcess(){
 
 
     configTrojanWebsitePath="${configTrojanPath}/website/html"
+    configTrojanWebsiteDownloadPath="${configTrojanWebsitePath}/download/${configTrojanWindowsCliPath}"
 
     read configDomainTrojan
     if compareRealIpWithLocalIp "${configDomainTrojan}" ; then
@@ -1119,12 +1120,12 @@ EOF
 
         # 下载伪装站点 并设置伪装网站
         rm -rf ${configV2rayWebsitePath}/*
-        mkdir -p ${configV2rayWebsitePath}
+        mkdir -p ${configV2rayWebsiteDownloadPath}
         wget -O ${configV2rayPath}/website/v2ray_website.zip https://github.com/jinwyp/Trojan/raw/master/web.zip
         unzip -d ${configV2rayWebsitePath} ${configV2rayPath}/website/v2ray_website.zip
 
         wget -O ${configV2rayPath}/website/v2ray_client_all.zip https://github.com/jinwyp/Trojan/raw/master/v2ray_client_all.zip
-        unzip -d ${configV2rayWebsitePath} ${configV2rayPath}/website/v2ray_client_all.zip
+        unzip -d ${configV2rayWebsiteDownloadPath} ${configV2rayPath}/website/v2ray_client_all.zip
 
         # 增加启动脚本
         # https://github.com/caddyserver/dist/blob/master/init/caddy.service
@@ -1363,11 +1364,11 @@ EOF
 
 	cat "${configV2rayPath}/clientConfig.json"
 	blue  "----------------------------------------"
-	green "======================================================================"
-	green "======================================================================"
-	green "请下载相应的 v2ray 客户端:"
-	yellow "1 Windows 客户端V2rayN下载：http://${configDomainV2ray}/download/v2ray-windows.zip"
-    yellow "2 MacOS 客户端下载：http://${configDomainV2ray}/download/v2ray-mac.zip"
+    green "======================================================================"
+    green "======================================================================"
+    green "请下载相应的 v2ray 客户端:"
+    yellow "1 Windows 客户端V2rayN下载：http://${configDomainV2ray}/download/${configTrojanWindowsCliPath}/v2ray-windows.zip"
+    yellow "2 MacOS 客户端下载：http://${configDomainV2ray}/download/${configTrojanWindowsCliPath}/v2ray-mac.zip"
     yellow "3 Android 客户端下载 https://github.com/2dust/v2rayNG/releases "
     yellow "4 iOS 客户端 请安装小火箭 https://shadowsockshelp.github.io/ios/ "
     yellow "  iOS 请安装小火箭另一个地址 https://lueyingpro.github.io/shadowrocket/index.html "
@@ -1502,7 +1503,7 @@ function start_menu(){
     green " 22. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
 	green " 23. testrace 回程路由  （四网路由测试）"
 	green " 24. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
-    echo
+    echo    
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuInputNumber
