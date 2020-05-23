@@ -1459,8 +1459,10 @@ function vps_LemonBench(){
 
 
 function start_menu(){
-    clear
     getLinuxOSVersion
+    $osSystemPackage install curl wget git -y
+    
+    clear
     green " ======================================="
     green " Trojan V2ray 一键安装自动脚本 2020-4-29 更新  "
     green " 系统：centos7+/debian9+/ubuntu16.04+"
