@@ -8,9 +8,13 @@
 脚本感谢 秋水逸冰、Atrandys、V2ray官方等 Youtube：波仔分享
 
 支持 trojan 与 v2ray 共存
+
 支持 trojan 和 trojan-go 安装
+
 手动配置trojan-go 可以支持CDN
+
 默认会创建10个用户账号, trojan 还能创建指定的密码, 方便用户使用.
+
 
 ====================================
 
