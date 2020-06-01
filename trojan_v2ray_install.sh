@@ -1146,15 +1146,6 @@ function installTrojanWholeProcess(){
 
     testPortUsage
 
-    green "=============================================="
-    yellow "请输入绑定到本VPS的域名 不能使用CDN"
-    if [[ $1 == "repair" ]] ; then
-        blue "务必与之前失败使用的域名一致"
-    fi
-    green "=============================================="
-
-
-
     if [ "$isTrojanGo" = "no" ] ; then
         configTrojanPath="$configTrojanOriginalPath"
     fi
@@ -1162,7 +1153,8 @@ function installTrojanWholeProcess(){
     if [ "$isTrojanGo" = "yes" ] ; then
         configTrojanPath="$configTrojanGoPath"
         showTrojanName="-go"
-
+        
+        green "=============================================="
         read -p "是否开启Websocket 支持CDN? 请输入[y/n] (默认不开启):" isTrojanGoSupportWS
         isTrojanGoSupportWS=${isTrojanGoSupportWS:-n}
 
@@ -1174,6 +1166,13 @@ function installTrojanWholeProcess(){
             isTrojanGoWebsocketConfig="false"
         fi
     fi
+
+    green "=============================================="
+    yellow "请输入绑定到本VPS的域名 不能使用CDN"
+    if [[ $1 == "repair" ]] ; then
+        blue "务必与之前失败使用的域名一致"
+    fi
+    green "=============================================="
 
 
     configTrojanWebsitePath="${configTrojanPath}/website/html"
