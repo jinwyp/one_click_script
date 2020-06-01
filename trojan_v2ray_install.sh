@@ -22,6 +22,11 @@ function getGithubLatestReleaseVersion() {
     curl --silent "https://api.github.com/repos/$1/releases/latest" | grep -Po '"tag_name": "v\K.*?(?=")'
 }
 
+function getGithubLatestReleaseVersion2() {
+    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1
+}
+
+
 function setDateZone(){
 
     green "=================================================="
@@ -573,9 +578,10 @@ function install_trojan_server(){
     fi
 
     if [ "$isTrojanGo" = "yes" ] ; then
-      # trojanVersion=$(getGithubLatestReleaseVersion "p4gefau1t/trojan-go")
-      trojanVersion="0.5.1"
-      configTrojanCli="${configTrojanGoCli}"
+        # https://github.com/p4gefau1t/trojan-go/issues/63
+        # trojanVersion="0.5.1"
+        trojanVersion=$(getGithubLatestReleaseVersion2 "p4gefau1t/trojan-go")
+        configTrojanCli="${configTrojanGoCli}"
     fi
 
     if [[ -f "${configTrojanPath}/${configTrojanCli}" ]]; then
