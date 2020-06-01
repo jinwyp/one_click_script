@@ -35,7 +35,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
-![功能说明](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.jpg?raw=true)
+![功能说明](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
 
 
 ## 使用说明 Usage 
