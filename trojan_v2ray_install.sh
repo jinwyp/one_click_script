@@ -1657,9 +1657,8 @@ function start_menu(){
     clear
     getLinuxOSVersion
     green " ======================================="
-    green " Trojan V2ray 一键安装自动脚本 2020-4-29 更新  "
+    green " Trojan V2ray 一键安装自动脚本 2020-6-10 更新  "
     green " 系统：centos7+/debian9+/ubuntu16.04+"
-    green " 网站：www.v2rayssr.com （已开启禁止国内访问）"
     green " 此脚本集成于 atrandys 和 波仔 "
     green " ======================================="
     blue " 声明："
