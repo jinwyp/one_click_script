@@ -1107,7 +1107,7 @@ EOF
 	yellow "  Windows 客户端命令行版本下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-win-cli.zip"
 	yellow "  Windows 客户端命令行版本需要搭配浏览器插件使用，例如switchyomega等! 具体请看 https://www.atrandys.com/2019/1963.html"
     yellow "2 MacOS 客户端下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-mac.zip"
-    yellow "  MacOS 客户端另一个版本下载：http://${configDomainTrojan}/download/${configTrojanWindowsCliPath}/trojan-Qt5-macos.zip"
+    yellow "  MacOS 客户端另一个版本下载：https://github.com/Trojan-Qt5/Trojan-Qt5/releases"
     yellow "3 Android 客户端下载 https://github.com/trojan-gfw/igniter/releases "
     yellow "4 iOS 客户端 请安装小火箭 https://shadowsockshelp.github.io/ios/ "
     yellow "  iOS 请安装小火箭另一个地址 https://lueyingpro.github.io/shadowrocket/index.html "
