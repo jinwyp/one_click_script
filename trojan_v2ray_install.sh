@@ -372,7 +372,10 @@ nginxErrorLogFile="${HOME}/nginx-trojan-error.log"
 
 showTrojanName=""
 isTrojanGo="no"
+isTrojanGoSupportWS="n"
+isTrojanGoWebsocketConfig="false"
 trojanVersion="1.15.1"
+configTrojanGoWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configTrojanCli="trojan-${trojanVersion}-linux-amd64.tar.xz"
 configTrojanOriginalCli="trojan-${trojanVersion}-linux-amd64.tar.xz"
 configTrojanGoCli="trojan-go-linux-amd64.zip"
@@ -558,6 +561,7 @@ function install_trojan_server(){
     trojanPassword8=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPasswordWS=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
 
     #wget https://github.com/trojan-gfw/trojan/releases/download/v1.15.1/trojan-1.15.1-linux-amd64.tar.xz
 
@@ -570,7 +574,7 @@ function install_trojan_server(){
 
     if [ "$isTrojanGo" = "yes" ] ; then
       # trojanVersion=$(getGithubLatestReleaseVersion "p4gefau1t/trojan-go")
-      trojanVersion="0.4.11"
+      trojanVersion="0.5.1"
       configTrojanCli="${configTrojanGoCli}"
     fi
 
@@ -601,12 +605,18 @@ function install_trojan_server(){
     fi
 
     if [ "$isTrojanGo" = "yes" ] ; then
-        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.4.11/trojan-go-linux-amd64.zip
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.5.1/trojan-go-linux-amd64.zip
         wget -O ${configTrojanPath}/${configTrojanCli}  https://github.com/p4gefau1t/trojan-go/releases/download/v${trojanVersion}/${configTrojanCli}
         unzip -d ${configTrojanPath}/src ${configTrojanCli}
     fi
 
-	  cat > ${configTrojanPath}/src/server.conf <<-EOF
+
+
+
+    if [ "$isTrojanGo" = "no" ] ; then
+
+        # 增加trojan 服务器端配置
+	    cat > ${configTrojanPath}/src/server.conf <<-EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
@@ -762,10 +772,9 @@ function install_trojan_server(){
 }
 EOF
 
-    # 增加启动脚本
-    if [ "$isTrojanGo" = "no" ] ; then
 
-      cat > ${osSystemmdPath}trojan.service <<-EOF
+        # 增加启动脚本
+        cat > ${osSystemmdPath}trojan.service <<-EOF
 [Unit]
 Description=trojan${showTrojanName}
 After=network.target
@@ -785,9 +794,174 @@ WantedBy=multi-user.target
 EOF
     fi
 
+
     if [ "$isTrojanGo" = "yes" ] ; then
 
-      cat > ${osSystemmdPath}trojan.service <<-EOF
+        # 增加trojan 服务器端配置
+	    cat > ${configTrojanPath}/src/server.conf <<-EOF
+{
+    "run_type": "server",
+    "local_addr": "0.0.0.0",
+    "local_port": 443,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        "$trojanPassword1",
+        "$trojanPassword2",
+        "$trojanPassword3",
+        "$trojanPassword4",
+        "$trojanPassword5",
+        "$trojanPassword6",
+        "$trojanPassword7",
+        "$trojanPassword8",
+        "$trojanPassword9",
+        "$trojanPassword10",
+        "${configTrojanPasswordPrefix}202000",
+        "${configTrojanPasswordPrefix}202010",
+        "${configTrojanPasswordPrefix}202011",
+        "${configTrojanPasswordPrefix}202012",
+        "${configTrojanPasswordPrefix}202013",
+        "${configTrojanPasswordPrefix}202014",
+        "${configTrojanPasswordPrefix}202015",
+        "${configTrojanPasswordPrefix}202016",
+        "${configTrojanPasswordPrefix}202017",
+        "${configTrojanPasswordPrefix}202018",
+        "${configTrojanPasswordPrefix}202019",
+        "${configTrojanPasswordPrefix}202020",
+        "${configTrojanPasswordPrefix}202021",
+        "${configTrojanPasswordPrefix}202022",
+        "${configTrojanPasswordPrefix}202023",
+        "${configTrojanPasswordPrefix}202024",
+        "${configTrojanPasswordPrefix}202025",
+        "${configTrojanPasswordPrefix}202026",
+        "${configTrojanPasswordPrefix}202027",
+        "${configTrojanPasswordPrefix}202028",
+        "${configTrojanPasswordPrefix}202029",
+        "${configTrojanPasswordPrefix}202030",
+        "${configTrojanPasswordPrefix}202031",
+        "${configTrojanPasswordPrefix}202032",
+        "${configTrojanPasswordPrefix}202033",
+        "${configTrojanPasswordPrefix}202034",
+        "${configTrojanPasswordPrefix}202035",
+        "${configTrojanPasswordPrefix}202036",
+        "${configTrojanPasswordPrefix}202037",
+        "${configTrojanPasswordPrefix}202038",
+        "${configTrojanPasswordPrefix}202039",
+        "${configTrojanPasswordPrefix}202040",
+        "${configTrojanPasswordPrefix}202030",
+        "${configTrojanPasswordPrefix}202031",
+        "${configTrojanPasswordPrefix}202032",
+        "${configTrojanPasswordPrefix}202033",
+        "${configTrojanPasswordPrefix}202034",
+        "${configTrojanPasswordPrefix}202035",
+        "${configTrojanPasswordPrefix}202036",
+        "${configTrojanPasswordPrefix}202037",
+        "${configTrojanPasswordPrefix}202038",
+        "${configTrojanPasswordPrefix}202039",
+        "${configTrojanPasswordPrefix}202040",
+        "${configTrojanPasswordPrefix}202041",
+        "${configTrojanPasswordPrefix}202042",
+        "${configTrojanPasswordPrefix}202043",
+        "${configTrojanPasswordPrefix}202044",
+        "${configTrojanPasswordPrefix}202045",
+        "${configTrojanPasswordPrefix}202046",
+        "${configTrojanPasswordPrefix}202047",
+        "${configTrojanPasswordPrefix}202048",
+        "${configTrojanPasswordPrefix}202049",
+        "${configTrojanPasswordPrefix}202050",
+        "${configTrojanPasswordPrefix}202051",
+        "${configTrojanPasswordPrefix}202052",
+        "${configTrojanPasswordPrefix}202053",
+        "${configTrojanPasswordPrefix}202054",
+        "${configTrojanPasswordPrefix}202055",
+        "${configTrojanPasswordPrefix}202056",
+        "${configTrojanPasswordPrefix}202057",
+        "${configTrojanPasswordPrefix}202058",
+        "${configTrojanPasswordPrefix}202059",
+        "${configTrojanPasswordPrefix}202060",
+        "${configTrojanPasswordPrefix}202061",
+        "${configTrojanPasswordPrefix}202062",
+        "${configTrojanPasswordPrefix}202063",
+        "${configTrojanPasswordPrefix}202064",
+        "${configTrojanPasswordPrefix}202065",
+        "${configTrojanPasswordPrefix}202066",
+        "${configTrojanPasswordPrefix}202067",
+        "${configTrojanPasswordPrefix}202068",
+        "${configTrojanPasswordPrefix}202069",
+        "${configTrojanPasswordPrefix}202070",
+        "${configTrojanPasswordPrefix}202071",
+        "${configTrojanPasswordPrefix}202072",
+        "${configTrojanPasswordPrefix}202073",
+        "${configTrojanPasswordPrefix}202074",
+        "${configTrojanPasswordPrefix}202075",
+        "${configTrojanPasswordPrefix}202076",
+        "${configTrojanPasswordPrefix}202077",
+        "${configTrojanPasswordPrefix}202078",
+        "${configTrojanPasswordPrefix}202079",
+        "${configTrojanPasswordPrefix}202080",
+        "${configTrojanPasswordPrefix}202081",
+        "${configTrojanPasswordPrefix}202082",
+        "${configTrojanPasswordPrefix}202083",
+        "${configTrojanPasswordPrefix}202084",
+        "${configTrojanPasswordPrefix}202085",
+        "${configTrojanPasswordPrefix}202086",
+        "${configTrojanPasswordPrefix}202087",
+        "${configTrojanPasswordPrefix}202088",
+        "${configTrojanPasswordPrefix}202089",
+        "${configTrojanPasswordPrefix}202090",
+        "${configTrojanPasswordPrefix}202091",
+        "${configTrojanPasswordPrefix}202092",
+        "${configTrojanPasswordPrefix}202093",
+        "${configTrojanPasswordPrefix}202094",
+        "${configTrojanPasswordPrefix}202095",
+        "${configTrojanPasswordPrefix}202096",
+        "${configTrojanPasswordPrefix}202097",
+        "${configTrojanPasswordPrefix}202098",
+        "${configTrojanPasswordPrefix}202099"
+    ],
+    "log_level": 1,
+    "log_file": "${configTrojanLogFile}",
+    "ssl": {
+        "cert": "$configTrojanCertPath/fullchain.cer",
+        "key": "$configTrojanCertPath/private.key",
+        "key_password": "",
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	    "prefer_server_cipher": true,
+        "alpn": [
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "session_timeout": 600,
+        "plain_http_response": "",
+        "curves": "",
+        "dhparam": ""
+    },
+    "tcp": {
+        "no_delay": true,
+        "keep_alive": true,
+        "fast_open": false,
+        "fast_open_qlen": 20
+    },
+    "websocket": {
+        "enabled": $isTrojanGoWebsocketConfig,
+        "path": "/${configTrojanGoWebSocketPath}",
+        "hostname": "$configDomainTrojan",
+        "obfuscation_password": "$trojanPasswordWS"
+    },
+    "mysql": {
+        "enabled": false,
+        "server_addr": "127.0.0.1",
+        "server_port": 3306,
+        "database": "trojan",
+        "username": "trojan",
+        "password": ""
+    }
+}
+EOF
+
+        # 增加启动脚本
+        cat > ${osSystemmdPath}trojan.service <<-EOF
 [Unit]
 Description=trojan${showTrojanName}
 After=network.target
@@ -913,6 +1087,12 @@ EOF
 	yellow "密码9: ${trojanPassword9}"
 	yellow "密码10: ${trojanPassword10}"
 	yellow "您指定前缀的密码若干: 从 ${configTrojanPasswordPrefix}202010 到 ${configTrojanPasswordPrefix}202099 都可以使用"
+
+    if [[ $isTrojanGoSupportWS == [Yy] ]]; then
+        yellow "Websocket path 路径为: ${configTrojanGoWebSocketPath}"
+        yellow "Websocket obfuscation_password 混淆密码为: ${trojanPasswordWS}"
+    fi
+
 	blue  "----------------------------------------"
 	green "======================================================================"
 	green "请下载相应的trojan客户端:"
@@ -970,12 +1150,23 @@ function installTrojanWholeProcess(){
 
 
     if [ "$isTrojanGo" = "no" ] ; then
-      configTrojanPath="$configTrojanOriginalPath"
+        configTrojanPath="$configTrojanOriginalPath"
     fi
 
     if [ "$isTrojanGo" = "yes" ] ; then
-      configTrojanPath="$configTrojanGoPath"
-      showTrojanName="-go"
+        configTrojanPath="$configTrojanGoPath"
+        showTrojanName="-go"
+
+        read -p "是否开启Websocket 支持CDN? 请输入[y/n] (默认不开启):" isTrojanGoSupportWS
+        isTrojanGoSupportWS=${isTrojanGoSupportWS:-n}
+
+        if [[ $isTrojanGoSupportWS == [Yy] ]]; then
+            isTrojanGoSupportWS="y"
+            isTrojanGoWebsocketConfig="true"
+        else
+            isTrojanGoSupportWS="n"
+            isTrojanGoWebsocketConfig="false"
+        fi
     fi
 
 
@@ -1478,7 +1669,7 @@ function start_menu(){
     green " 3. 修复证书 并继续安装 trojan"
     red " 4. 卸载 trojan 与 nginx"
     echo
-    green " 5. 安装 trojan-go 和 nginx 默认不支持CDN, 可以手动修改配置开启websocket 支持CDN"
+    green " 5. 安装 trojan-go 和 nginx 支持CDN, websocket"
     green " 6. 修复证书 并继续安装 trojan-go"
     red " 7. 卸载 trojan-go 与 nginx"
     echo
