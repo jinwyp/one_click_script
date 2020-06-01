@@ -1675,12 +1675,12 @@ function start_menu(){
     green " 3. 修复证书 并继续安装 trojan"
     red " 4. 卸载 trojan 与 nginx"
     echo
-    green " 5. 安装 trojan-go 和 nginx 支持CDN, websocket"
+    green " 5. 安装 trojan-go 和 nginx 支持websocket, 支持CDN, "
     green " 6. 修复证书 并继续安装 trojan-go"
     red " 7. 卸载 trojan-go 与 nginx"
     echo
-    green " 11. 安装 v2ray 和 Caddy, 支持 websocket tls1.3, 支持CDN"
-    red " 12. 卸载v2ray 和 Caddy"
+    green " 11. 安装 v2ray 和 Caddy 1.0.5, 支持 websocket tls1.3, 支持CDN"
+    red " 12. 卸载v2ray 和 Caddy 1.0.5"
     echo
     green " 13. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
     red " 14. 卸载 trojan + v2ray 和 nginx"
