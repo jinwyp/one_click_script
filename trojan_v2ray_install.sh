@@ -1095,8 +1095,9 @@ EOF
 	yellow "您指定前缀的密码若干: 从 ${configTrojanPasswordPrefix}202010 到 ${configTrojanPasswordPrefix}202099 都可以使用"
 
     if [[ $isTrojanGoSupportWS == [Yy] ]]; then
-        yellow "Websocket path 路径为: ${configTrojanGoWebSocketPath}"
+        yellow "Websocket path 路径为: /${configTrojanGoWebSocketPath}"
         yellow "Websocket obfuscation_password 混淆密码为: ${trojanPasswordWS}"
+        yellow "Websocket 双重TLS为: true 开启"
     fi
 
 	blue  "----------------------------------------"
