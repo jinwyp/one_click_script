@@ -23,7 +23,7 @@ function getGithubLatestReleaseVersion() {
 }
 
 function getGithubLatestReleaseVersion2() {
-    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1
+    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
 }
 
 
@@ -1153,7 +1153,7 @@ function installTrojanWholeProcess(){
     if [ "$isTrojanGo" = "yes" ] ; then
         configTrojanPath="$configTrojanGoPath"
         showTrojanName="-go"
-        
+
         green "=============================================="
         read -p "是否开启Websocket 支持CDN? 请输入[y/n] (默认不开启):" isTrojanGoSupportWS
         isTrojanGoSupportWS=${isTrojanGoSupportWS:-n}
