@@ -328,8 +328,8 @@ function testPortUsage() {
             exit
         fi
 
-        systemctl stop firewalld
-        systemctl disable firewalld
+        sudo systemctl stop firewalld
+        sudo systemctl disable firewalld
         rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
@@ -338,20 +338,20 @@ function testPortUsage() {
 
     elif [ "$osRelease" == "ubuntu" ]; then
         if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
-        red "==============="
-        red "当前系统不受支持"
-        red "==============="
-        exit
+            red "==============="
+            red "当前系统不受支持"
+            red "==============="
+            exit
         fi
         if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
-        red "==============="
-        red "当前系统不受支持"
-        red "==============="
-        exit
+            red "==============="
+            red "当前系统不受支持"
+            red "==============="
+            exit
         fi
 
-        systemctl stop ufw
-        systemctl disable ufw
+        sudo systemctl stop ufw
+        sudo systemctl disable ufw
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz-utils -y
@@ -455,11 +455,11 @@ function install_nginx(){
     sleep 1s
 
     if [[ -f "${osSystemmdPath}caddy.service" ]] ; then
-        systemctl stop caddy.service
+        sudo systemctl stop caddy.service
     fi
 
     if [[ -f "${osSystemmdPath}v2ray.service" ]] || [[ -f "/etc/systemd/system/v2ray.service" ]] || [[ -f "/lib/systemd/system/v2ray.service" ]] ; then
-        systemctl stop v2ray.service
+        sudo systemctl stop v2ray.service
     fi
 
     if test -s ${nginxConfigPath}; then
@@ -470,8 +470,8 @@ function install_nginx(){
     fi
 
     $osSystemPackage install nginx -y
-    systemctl enable nginx.service
-    systemctl stop nginx.service
+    sudo systemctl enable nginx.service
+    sudo systemctl stop nginx.service
 
     cat > "${nginxConfigPath}" <<-EOF
 user  root;
@@ -522,7 +522,7 @@ EOF
     wget -O ${configTrojanPath}/website/trojan_client_all.zip https://github.com/jinwyp/Trojan/raw/master/trojan_client_all.zip
     unzip -d ${configTrojanWebsiteDownloadPath} ${configTrojanPath}/website/trojan_client_all.zip
 
-    systemctl start nginx.service
+    sudo systemctl start nginx.service
 
     green "=========================================="
     green "       Web服务器 nginx 安装成功!!"
@@ -987,9 +987,9 @@ EOF
     fi
 
     chmod +x ${osSystemmdPath}trojan.service
-    systemctl daemon-reload
-    systemctl start trojan.service
-    systemctl enable trojan.service
+    sudo systemctl daemon-reload
+    sudo systemctl start trojan.service
+    sudo systemctl enable trojan.service
 
 
 
@@ -1142,7 +1142,7 @@ EOF
 function installTrojanWholeProcess(){
     nginx_status=`ps -aux | grep "nginx: worker" | grep -v "grep"`
     if [ -n "$nginx_status" ]; then
-        systemctl stop nginx.service
+        sudo systemctl stop nginx.service
     fi
 
     testPortUsage
@@ -1224,9 +1224,9 @@ function remove_trojan(){
     red "即将卸载trojan"
     red "同时卸载已安装的nginx"
     green "================================"
-    systemctl stop nginx.service
-    systemctl stop trojan
-    systemctl disable trojan
+    sudo systemctl stop nginx.service
+    sudo systemctl stop trojan
+    sudo systemctl disable trojan
 
 
     if [ "$osRelease" == "centos" ]; then
@@ -1269,10 +1269,10 @@ function remove_trojan(){
 function install_caddy(){
     nginx_status=`ps -aux | grep "nginx: worker" | grep -v "grep"`
     if [ -n "$nginx_status" ]; then
-        systemctl stop nginx.service
+        sudo systemctl stop nginx.service
     fi
     if [[ -f "${osSystemmdPath}trojan.service" ]] ; then
-        systemctl stop trojan.service
+        sudo systemctl stop trojan.service
     fi
 
     testPortUsage
@@ -1522,8 +1522,8 @@ uuid：${v2rayPassword1}
 EOF
     sed -i 's/CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_RAW/#CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_RAW/g' ${configV2raySystemdFile}
     sudo systemctl daemon-reload
-    systemctl restart v2ray.service
-    systemctl restart caddy.service
+    sudo systemctl restart v2ray.service
+    sudo systemctl restart caddy.service
 
     # 设置 cron 定时任务
     # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
@@ -1581,8 +1581,8 @@ function remove_caddy(){
     red "  即将卸载已安装的 caddy"
     green "================================"
 
-    systemctl stop caddy.service
-    systemctl disable caddy.service
+    sudo systemctl stop caddy.service
+    sudo systemctl disable caddy.service
 
     rm -rf /usr/local/bin/caddy
     rm -rf ${caddyConfigPath}
@@ -1607,8 +1607,8 @@ function remove_v2ray(){
     green "================================"
 
 
-    systemctl stop v2ray.service
-    systemctl disable v2ray.service
+    sudo systemctl stop v2ray.service
+    sudo systemctl disable v2ray.service
 
     rm -rf ${configV2rayBinPath}
     rm -rf ${configV2rayDefaultConfigPath}
