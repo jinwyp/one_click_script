@@ -1774,7 +1774,7 @@ function start_menu(){
     echo
     green " 14. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
     green " 15. 升级 v2ray 和 trojan 到最新版本"    
-    red " 16 卸载 trojan + v2ray 和 nginx"
+    red " 16. 卸载 trojan + v2ray 和 nginx"
     echo
     green " ======================================="
     echo
