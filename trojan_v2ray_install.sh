@@ -1285,8 +1285,9 @@ function upgrade_trojan(){
 
     sudo systemctl stop trojan
 
-    cd ${configTrojanPath}
     mkdir -p ${configTrojanPath}/upgrade
+    cd ${configTrojanPath}
+
 
     if [[ $1 == "trojan" ]] ; then
         wget -O ${configTrojanPath}/upgrade/${configTrojanCli}  https://github.com/trojan-gfw/trojan/releases/download/v${trojanVersion}/${configTrojanCli}
@@ -1693,9 +1694,10 @@ function upgrade_v2ray(){
 
     sudo systemctl stop v2ray
 
-    mkdir -p ${configV2rayPath}/
-    cd ${configV2rayPath}
     mkdir -p ${configV2rayPath}/upgrade
+    mkdir -p ${configV2rayBinPath}
+    cd ${configV2rayPath}
+
 
     wget -O ${configV2rayPath}/upgrade/${configV2rayCliFileName}  https://github.com/v2ray/v2ray-core/releases/download/v${v2rayVersion}/${configV2rayCliFileName}
     unzip -d ${configV2rayPath}/upgrade ${configV2rayPath}/upgrade/${configV2rayCliFileName} 
