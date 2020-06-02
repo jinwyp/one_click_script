@@ -23,6 +23,8 @@ function getGithubLatestReleaseVersion() {
 }
 
 function getGithubLatestReleaseVersion2() {
+    # https://github.com/p4gefau1t/trojan-go/issues/63
+    # trojanVersion="0.5.1"
     wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
 }
 
@@ -419,7 +421,10 @@ configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
 
 configV2raySystemdFile="/etc/systemd/system/v2ray.service"
-v2rayVersion="4.23.1"
+configV2rayCliFileName="v2ray-linux-64.zip"
+v2rayVersion="4.23.2"
+
+
 
 function compareRealIpWithLocalIp(){
 
@@ -578,14 +583,11 @@ function install_trojan_server(){
     fi
 
     if [ "$isTrojanGo" = "yes" ] ; then
-        # https://github.com/p4gefau1t/trojan-go/issues/63
-        # trojanVersion="0.5.1"
         trojanVersion=$(getGithubLatestReleaseVersion2 "p4gefau1t/trojan-go")
         configTrojanCli="${configTrojanGoCli}"
     fi
 
     if [[ -f "${configTrojanPath}/${configTrojanCli}" ]]; then
-
         green "=========================================="
         green "  已安装过 Trojan${showTrojanName} v${trojanVersion}, 退出安装 !"
         green "=========================================="
@@ -1259,6 +1261,56 @@ function remove_trojan(){
     green "================================"
 }
 
+function upgrade_trojan(){
+
+    if [ "$isTrojanGo" = "no" ] ; then
+        showTrojanName=""
+        configTrojanPath="$configTrojanOriginalPath"
+
+        trojanVersion=$(getGithubLatestReleaseVersion "trojan-gfw/trojan")
+        configTrojanCli="trojan-${trojanVersion}-linux-amd64.tar.xz"
+    fi
+
+    if [ "$isTrojanGo" = "yes" ] ; then
+        configTrojanPath="$configTrojanGoPath"
+        showTrojanName="-go"
+
+        trojanVersion=$(getGithubLatestReleaseVersion2 "p4gefau1t/trojan-go")
+        configTrojanCli="${configTrojanGoCli}"
+    fi   
+
+    green "=========================================="
+    green "       开始升级 Trojan${showTrojanName} Version: ${trojanVersion} !"
+    green "=========================================="
+
+    sudo systemctl stop trojan
+
+    cd ${configTrojanPath}
+    mkdir -p ${configTrojanPath}/upgrade
+
+    if [[ $1 == "trojan" ]] ; then
+        wget -O ${configTrojanPath}/upgrade/${configTrojanCli}  https://github.com/trojan-gfw/trojan/releases/download/v${trojanVersion}/${configTrojanCli}
+        tar xf ${configTrojanPath}/upgrade/${configTrojanCli} -C ${configTrojanPath}/upgrade
+        mv -f ${configTrojanPath}/upgrade/trojan/trojan ${configTrojanPath}/src
+
+        green "       升级成功!"
+    fi
+
+
+    if [[ $1 == "trojan-go" ]] ; then
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.5.1/trojan-go-linux-amd64.zip
+        wget -O ${configTrojanPath}/upgrade/${configTrojanCli}  https://github.com/p4gefau1t/trojan-go/releases/download/v${trojanVersion}/${configTrojanCli}
+        unzip -d ${configTrojanPath}/upgrade ${configTrojanPath}/upgrade/${configTrojanCli} 
+        mv -f ${configTrojanPath}/upgrade/trojan-go ${configTrojanPath}/src
+        
+        green "       升级成功!"
+    fi
+
+    rm -rf ${configTrojanPath}/upgrade
+
+    sudo systemctl start trojan
+}
+
 
 
 
@@ -1628,6 +1680,40 @@ function remove_v2ray(){
 }
 
 
+function upgrade_v2ray(){
+
+    v2rayVersion=$(getGithubLatestReleaseVersion "v2ray/v2ray-core")
+
+    # https://github.com/v2ray/v2ray-core/releases/download/v4.23.3/v2ray-linux-64.zip
+
+
+    green "=========================================="
+    green "       开始升级 V2ray Version: ${v2rayVersion} !"
+    green "=========================================="
+
+    sudo systemctl stop v2ray
+
+    mkdir -p ${configV2rayPath}/
+    cd ${configV2rayPath}
+    mkdir -p ${configV2rayPath}/upgrade
+
+    wget -O ${configV2rayPath}/upgrade/${configV2rayCliFileName}  https://github.com/v2ray/v2ray-core/releases/download/v${v2rayVersion}/${configV2rayCliFileName}
+    unzip -d ${configV2rayPath}/upgrade ${configV2rayPath}/upgrade/${configV2rayCliFileName} 
+    mv -f ${configV2rayPath}/upgrade/v2ray ${configV2rayBinPath}
+    mv -f ${configV2rayPath}/upgrade/v2ray ${configV2rayBinPath}
+        
+    rm -rf ${configV2rayPath}/upgrade
+    sudo systemctl start v2ray
+
+    green "       升级成功!"
+}
+
+
+
+
+
+
+
 function bbr_boost_sh(){
     $osSystemPackage install wget git -y
     wget -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
@@ -1672,32 +1758,36 @@ function start_menu(){
     echo
     green " 2. 安装 trojan 和 nginx 不支持CDN"
     green " 3. 修复证书 并继续安装 trojan"
-    red " 4. 卸载 trojan 与 nginx"
+    green " 4. 升级 trojan 到最新版本"
+    red " 5. 卸载 trojan 与 nginx"
     echo
-    green " 5. 安装 trojan-go 和 nginx 支持websocket, 支持CDN, "
-    green " 6. 修复证书 并继续安装 trojan-go"
-    red " 7. 卸载 trojan-go 与 nginx"
+    green " 6. 安装 trojan-go 和 nginx 支持websocket, 支持CDN, "
+    green " 7. 修复证书 并继续安装 trojan-go"
+    green " 8. 升级 trojan-go 到最新版本"
+    red " 9. 卸载 trojan-go 与 nginx"
     echo
     green " 11. 安装 v2ray 和 Caddy 1.0.5, 支持 websocket tls1.3, 支持CDN"
-    red " 12. 卸载v2ray 和 Caddy 1.0.5"
+    green " 12. 升级 v2ray 到最新版本"
+    red " 13. 卸载v2ray 和 Caddy 1.0.5"
     echo
-    green " 13. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
-    red " 14. 卸载 trojan + v2ray 和 nginx"
+    green " 14. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
+    green " 15. 升级 v2ray 和 trojan 到最新版本"    
+    red " 16 卸载 trojan + v2ray 和 nginx"
     echo
     green " ======================================="
     echo
-    green " 15. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
-    green " 16. 设置可以使用root登陆"
-    green " 17. 修改SSH 登陆端口号"
+    green " 21. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
+    green " 22. 设置可以使用root登陆"
+    green " 23. 修改SSH 登陆端口号"
     echo
     green " ======================================="
     echo
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
-    green " 21. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 22. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
-	green " 23. testrace 回程路由  （四网路由测试）"
-	green " 24. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
+    green " 32. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
+	green " 33. testrace 回程路由  （四网路由测试）"
+	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     echo    
     green " 0. 退出脚本"
     echo
@@ -1713,17 +1803,24 @@ function start_menu(){
             repair_cert
         ;;
         4 )
-            remove_trojan
+            upgrade_trojan "trojan"
         ;;
         5 )
-            isTrojanGo="yes"
-            installTrojanWholeProcess
+            remove_trojan
         ;;
         6 )
             isTrojanGo="yes"
-            repair_cert
+            installTrojanWholeProcess
         ;;
         7 )
+            isTrojanGo="yes"
+            repair_cert
+        ;;
+        8 )
+            isTrojanGo="yes"
+            upgrade_trojan "trojan-go"
+        ;;        
+        9 )
             isTrojanGo="yes"
             remove_trojan
         ;;
@@ -1732,42 +1829,49 @@ function start_menu(){
             install_v2ray
         ;;
         12 )
+            upgrade_v2ray
+        ;;         
+        13 )
             remove_caddy
         ;;
-        13 )
+        14 )
             installTrojanWholeProcess
             install_v2ray
         ;;
-        14 )
+        15 )
+            upgrade_trojan "trojan"
+            upgrade_v2ray
+        ;;          
+        16 )
             remove_trojan
             remove_v2ray
         ;;
-        15 )
+        21 )
             installOnMyZsh
         ;;
-        16 )
+        22 )
             setRootLogin
             sleep 5s
             start_menu
         ;;
-        17 )
+        23 )
             changeSSHPort
             sleep 10s
             start_menu
         ;;
-        21 )
+        31 )
             $osSystemPackage -y install wget curl
             vps_superspeed
         ;;
-        22 )
+        32 )
             $osSystemPackage -y install wget curl
             vps_zbench
         ;;
-        23 )
+        33 )
             $osSystemPackage -y install wget curl
             vps_testrace
         ;;
-        24 )
+        34 )
             $osSystemPackage -y install wget curl
             vps_LemonBench
         ;;
