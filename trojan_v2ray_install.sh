@@ -1700,7 +1700,7 @@ function upgrade_v2ray(){
     wget -O ${configV2rayPath}/upgrade/${configV2rayCliFileName}  https://github.com/v2ray/v2ray-core/releases/download/v${v2rayVersion}/${configV2rayCliFileName}
     unzip -d ${configV2rayPath}/upgrade ${configV2rayPath}/upgrade/${configV2rayCliFileName} 
     mv -f ${configV2rayPath}/upgrade/v2ray ${configV2rayBinPath}
-    mv -f ${configV2rayPath}/upgrade/v2ray ${configV2rayBinPath}
+    mv -f ${configV2rayPath}/upgrade/v2ctl ${configV2rayBinPath}
         
     rm -rf ${configV2rayPath}/upgrade
     sudo systemctl start v2ray
