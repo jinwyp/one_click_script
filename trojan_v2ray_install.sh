@@ -1223,21 +1223,10 @@ function repair_cert(){
 
 
 function remove_trojan(){
-    green "================================"
-    red "即将卸载trojan"
-    red "同时卸载已安装的nginx"
-    green "================================"
+
     sudo systemctl stop nginx.service
     sudo systemctl stop trojan
     sudo systemctl disable trojan
-
-
-    if [ "$osRelease" == "centos" ]; then
-        yum remove -y nginx
-    else
-        apt autoremove -y --purge nginx nginx-common nginx-core
-        apt-get remove --purge nginx nginx-full nginx-common
-    fi
 
     if [ "$isTrojanGo" = "no" ] ; then
       showTrojanName=""
@@ -1247,6 +1236,18 @@ function remove_trojan(){
     if [ "$isTrojanGo" = "yes" ] ; then
       configTrojanPath="$configTrojanGoPath"
       showTrojanName="-go"
+    fi
+
+    green "================================"
+    red "即将卸载trojan${showTrojanName}"
+    red "同时卸载已安装的nginx"
+    green "================================"
+
+    if [ "$osRelease" == "centos" ]; then
+        yum remove -y nginx
+    else
+        apt autoremove -y --purge nginx nginx-common nginx-core
+        apt-get remove --purge nginx nginx-full nginx-common
     fi
 
     rm -f ${osSystemmdPath}trojan.service
