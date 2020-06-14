@@ -584,6 +584,7 @@ function install_trojan_server(){
 
     if [ "$isTrojanGo" = "yes" ] ; then
         trojanVersion=$(getGithubLatestReleaseVersion2 "p4gefau1t/trojan-go")
+        trojanVersion="0.6.0"
         configTrojanCli="${configTrojanGoCli}"
     fi
 
@@ -624,7 +625,7 @@ function install_trojan_server(){
     if [ "$isTrojanGo" = "no" ] ; then
 
         # 增加trojan 服务器端配置
-	    cat > ${configTrojanPath}/src/server.conf <<-EOF
+	    cat > ${configTrojanPath}/src/server.json <<-EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
@@ -790,7 +791,7 @@ After=network.target
 [Service]
 Type=simple
 PIDFile=${configTrojanPath}/src/trojan.pid
-ExecStart=${configTrojanPath}/src/trojan${showTrojanName} -l $configTrojanLogFile -c "${configTrojanPath}/src/server.conf"
+ExecStart=${configTrojanPath}/src/trojan${showTrojanName} -l $configTrojanLogFile -c "${configTrojanPath}/src/server.json"
 ExecReload=/bin/kill -HUP \$MAINPID
 Restart=on-failure
 RestartSec=10
@@ -806,7 +807,7 @@ EOF
     if [ "$isTrojanGo" = "yes" ] ; then
 
         # 增加trojan 服务器端配置
-	    cat > ${configTrojanPath}/src/server.conf <<-EOF
+	    cat > ${configTrojanPath}/src/server.json <<-EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
@@ -977,7 +978,7 @@ After=network.target
 [Service]
 Type=simple
 PIDFile=${configTrojanPath}/src/trojan-go.pid
-ExecStart=${configTrojanPath}/src/trojan${showTrojanName} -config "${configTrojanPath}/src/server.conf"
+ExecStart=${configTrojanPath}/src/trojan${showTrojanName} -config "${configTrojanPath}/src/server.json"
 ExecReload=/bin/kill -HUP \$MAINPID
 Restart=on-failure
 RestartSec=10
@@ -1075,7 +1076,7 @@ EOF
 	red "    nginx 配置路径 ${nginxConfigPath} !"
 	red "    nginx 访问日志 ${nginxAccessLogFile} !"
 	red "    nginx 错误日志 ${nginxErrorLogFile} !"
-	red "    Trojan 服务器端配置路径 ${configTrojanPath}/src/server.conf !"
+	red "    Trojan 服务器端配置路径 ${configTrojanPath}/src/server.json !"
 	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -u trojan.service 查看 !"
 	green "    trojan 停止命令: systemctl stop trojan.service  启动命令: systemctl start trojan.service  重启命令: systemctl restart trojan.service"
 	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
