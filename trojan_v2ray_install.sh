@@ -1687,8 +1687,9 @@ function upgrade_v2ray(){
 
     v2rayVersion=$(getGithubLatestReleaseVersion "v2ray/v2ray-core")
 
-    # https://github.com/v2ray/v2ray-core/releases/download/v4.23.3/v2ray-linux-64.zip
+    # https://github.com/v2ray/v2ray-core/releases/download/v4.24.2/v2ray-linux-64.zip
 
+    sleep 3s
 
     green "=========================================="
     green "       开始升级 V2ray Version: ${v2rayVersion} !"
