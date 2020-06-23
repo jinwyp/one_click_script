@@ -584,7 +584,7 @@ function install_trojan_server(){
 
     if [ "$isTrojanGo" = "yes" ] ; then
         trojanVersion=$(getGithubLatestReleaseVersion2 "p4gefau1t/trojan-go")
-        trojanVersion="0.6.0"
+        # trojanVersion="0.6.0"
         configTrojanCli="${configTrojanGoCli}"
     fi
 
@@ -944,7 +944,8 @@ EOF
         "session_timeout": 600,
         "plain_http_response": "",
         "curves": "",
-        "dhparam": ""
+        "dhparam": "",
+        "sni": "$configDomainTrojan"
     },
     "tcp": {
         "no_delay": true,
