@@ -956,7 +956,7 @@ EOF
     "websocket": {
         "enabled": $isTrojanGoWebsocketConfig,
         "path": "/${configTrojanGoWebSocketPath}",
-        "hostname": "$configDomainTrojan",
+        "host": "$configDomainTrojan",
         "obfuscation_password": "$trojanPasswordWS"
     },
     "mysql": {
