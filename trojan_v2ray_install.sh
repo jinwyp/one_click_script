@@ -1576,7 +1576,7 @@ uuid：${v2rayPassword1}
 底层传输：tls
 }
 EOF
-    sed -i 's/CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_RAW/#CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_RAW/g' ${configV2raySystemdFile}
+    sed -i 's/CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE/#CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE/g' ${configV2raySystemdFile}
     sudo systemctl daemon-reload
     sudo systemctl restart v2ray.service
     sudo systemctl restart caddy.service
