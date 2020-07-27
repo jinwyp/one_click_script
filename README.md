@@ -9,9 +9,9 @@
 
 支持 trojan 与 v2ray 共存
 
-支持 trojan 和 trojan-go 安装
+支持 trojan 和 trojan-go 安装 升级 卸载
 
-手动配置trojan-go 可以支持CDN
+安装 trojan-go 可以选择是否支持CDN (websocket)
 
 默认会创建10个用户账号, trojan 还能创建指定的密码, 方便用户使用.
 
