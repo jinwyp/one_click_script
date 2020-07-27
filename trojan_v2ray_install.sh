@@ -422,7 +422,7 @@ configV2rayPort="$(($RANDOM + 10000))"
 
 configV2raySystemdFile="/etc/systemd/system/v2ray.service"
 configV2rayCliFileName="v2ray-linux-64.zip"
-v2rayVersion="4.23.2"
+v2rayVersion="4.26.0"
 
 
 
@@ -1465,7 +1465,7 @@ function install_v2ray(){
     green "      开始安装 V2ray !"
     green "=========================================="
 
-    v2rayVersion=$(getGithubLatestReleaseVersion "v2ray/v2ray-core")
+    v2rayVersion=$(getGithubLatestReleaseVersion2 "v2ray/v2ray-core")
     bash <(curl -L -s https://install.direct/go.sh)
 
     mkdir -p ${configV2rayPath}/
@@ -1686,7 +1686,7 @@ function remove_v2ray(){
 
 function upgrade_v2ray(){
 
-    v2rayVersion=$(getGithubLatestReleaseVersion "v2ray/v2ray-core")
+    v2rayVersion=$(getGithubLatestReleaseVersion2 "v2ray/v2ray-core")
 
     # https://github.com/v2ray/v2ray-core/releases/download/v4.24.2/v2ray-linux-64.zip
 
