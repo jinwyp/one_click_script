@@ -408,11 +408,6 @@ configTrojanWindowsCliPrefixPath=$(cat /dev/urandom | head -1 | md5sum | head -c
 configWebsiteDownloadPath="${configWebsitePath}/download/${configTrojanWindowsCliPrefixPath}"
 configDownloadTempPath="${HOME}/temp"
 
-configTrojanPath="${HOME}/trojan"
-configTrojanGoPath="${HOME}/trojan-go"
-
-configTrojanBasePath=${configTrojanPath}
-
 
 
 versionTrojan="1.16.0"
@@ -424,10 +419,22 @@ downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 versionV2ray="4.27.5"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-
 promptInfoTrojanName=""
 isTrojanGo="no"
 isTrojanGoSupportWebsocket="false"
+configTrojanGoWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+configTrojanPasswordPrefixInput="jin"
+
+configTrojanPath="${HOME}/trojan"
+configTrojanGoPath="${HOME}/trojan-go"
+configTrojanLogFile="${HOME}/trojan-access.log"
+configTrojanGoLogFile="${HOME}/trojan-go-access.log"
+
+configTrojanBasePath=${configTrojanPath}
+configTrojanBaseVersion=${versionTrojan}
+
+
+
 
 
 nginxConfigPath="/etc/nginx/nginx.conf"
@@ -436,8 +443,11 @@ nginxErrorLogFilePath="${HOME}/nginx-error.log"
 
 
 
+
+
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
+
 
 
 
@@ -462,29 +472,48 @@ function downloadAndUnzip(){
     fi
 
     mkdir -p ${configDownloadTempPath}
-    wget -O ${configDownloadTempPath}/$3 $1
-    unzip -d $2 ${configDownloadTempPath}/$3
+
+    if [[ $3 == *"tar.xz"* ]]; then
+        green "===== 下载并解压tar文件: $3 "
+        wget -O ${configDownloadTempPath}/$3 $1
+        tar xf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
+        mv ${configTrojanPath}/trojan/* $2
+        rm -rf ${configDownloadTempPath}/trojan
+    else
+        green "===== 下载并解压zip文件:  $3 "
+        wget -O ${configDownloadTempPath}/$3 $1
+        unzip -d $2 ${configDownloadTempPath}/$3
+    fi
+
 }
 
 function getGithubLatestReleaseVersion(){
     # https://github.com/p4gefau1t/trojan-go/issues/63
-    # trojanVersion="0.5.1"
     wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
 }
 
 function getTrojanAndV2rayVersion(){
-    versionTrojan=$(getGithubLatestReleaseVersion "trojan-gfw/trojan")
-    downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
+    # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+    # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
 
-    versionTrojanGo=$(getGithubLatestReleaseVersion "p4gefau1t/trojan-go")
-    downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
+    if [[ $1 == "trojan" ]] ; then
+        versionTrojan=$(getGithubLatestReleaseVersion "trojan-gfw/trojan")
+        downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
+        echo "versionTrojan: ${versionTrojan}"
+    fi
 
-    versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
-    downloadFilenameV2ray="v2ray-linux-64.zip"
+    if [[ $1 == "trojan-go" ]] ; then
+        versionTrojanGo=$(getGithubLatestReleaseVersion "p4gefau1t/trojan-go")
+        downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
+        echo "versionTrojanGo: ${versionTrojanGo}"
+    fi
 
-    echo "versionTrojan: ${versionTrojan}"
-    echo "versionTrojanGo: ${versionTrojanGo}"
-    echo "versionV2ray: ${versionV2ray}"
+    if [[ $1 == "v2ray" ]] ; then
+        versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
+        downloadFilenameV2ray="v2ray-linux-64.zip"
+        echo "versionV2ray: ${versionV2ray}"
+    fi
+
 }
 
 function stopServiceNginx(){
@@ -502,8 +531,15 @@ function stopServiceV2ray(){
 
 function isTrojanGoInstall(){
     if [ "$isTrojanGo" = "yes" ] ; then
-        configTrojanBasePath="$configTrojanGoPath"
+        getTrojanAndV2rayVersion "trojan-go"
+        configTrojanBaseVersion=${versionTrojanGo}
+        configTrojanBasePath="${configTrojanGoPath}"
         promptInfoTrojanName="-go"
+    else
+        getTrojanAndV2rayVersion "trojan"
+        configTrojanBaseVersion=${versionTrojan}
+        configTrojanBasePath="${configTrojanPath}"
+        promptInfoTrojanName=""
     fi
 }
 
@@ -535,6 +571,7 @@ function getHTTPSCertificate(){
 
     # 申请https证书
 	mkdir -p ${configSSLCertPath}
+	mkdir -p ${configWebsitePath}
 	curl https://get.acme.sh | sh
 
     green "=========================================="
@@ -561,16 +598,14 @@ function installWebServerNginx(){
     yellow "     开始安装 Web服务器 nginx !"
     green " ================================================== "
 
-    sleep 1s
-
-    stopServiceV2ray
-
     if test -s ${nginxConfigPath}; then
         green " ================================================== "
-        green "     Nginx 已存在, 退出安装!"
+        red "     Nginx 已存在, 退出安装!"
         green " ================================================== "
         exit
     fi
+
+    stopServiceV2ray
 
     ${osSystemPackage} install nginx -y
     sudo systemctl enable nginx.service
@@ -620,8 +655,10 @@ EOF
     rm -rf ${configWebsitePath}/*
     mkdir -p ${configWebsiteDownloadPath}
 
-    downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/website.zip" "${configWebsitePath}" "website.zip"
-    downloadAndUnzip "https://github.com/jinwyp/Trojan/raw/master/trojan_client_all.zip" "${configWebsiteDownloadPath}" "trojan_client_all.zip"
+    green " ================================================== "
+
+    downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/website.zip" "${configWebsitePath}" "website.zip"
+    downloadAndUnzip "https://github.com/jinwyp/Trojan/raw/master/download/trojan_client_all.zip" "${configWebsiteDownloadPath}" "trojan_client_all.zip"
 
     sudo systemctl start nginx.service
 
@@ -629,7 +666,6 @@ EOF
     green "       Web服务器 nginx 安装成功!!"
     green " ================================================== "
 }
-
 
 function removeNginx(){
 
@@ -659,12 +695,11 @@ function removeNginx(){
     green " ================================================== "
 }
 
+
 function installTrojanWholeProcess(){
 
     stopServiceNginx
     testLinuxPortUsage
-
-    isTrojanGoInstall
 
     green "=============================================="
     yellow "请输入绑定到本VPS的域名 安装时请关闭CDN后安装！"
@@ -687,7 +722,7 @@ function installTrojanWholeProcess(){
             green "=========================================="
             green "       证书获取成功!!"
             green "=========================================="
-            # install_trojan_server
+            installTrojanServer
         else
             red "==================================="
             red " https证书没有申请成功，安装失败!"
@@ -701,10 +736,578 @@ function installTrojanWholeProcess(){
     else
         exit
     fi
-
 }
 
 
+
+
+function installTrojanServer(){
+
+    trojanPassword1=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword2=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword3=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword4=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword5=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword6=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword7=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword8=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+
+    isTrojanGoInstall
+
+    if [ "$isTrojanGo" = "no" ] ; then
+        if [[ -f "${configTrojanBasePath}/trojan" ]]; then
+            green " =================================================="
+            green "  已安装过 Trojan , 退出安装 !"
+            green " =================================================="
+            exit
+        fi
+    else
+        if [[ -f "${configTrojanBasePath}/trojan-go}" ]]; then
+            green " =================================================="
+            green "  已安装过 Trojan-go , 退出安装 !"
+            green " =================================================="
+            exit
+        fi
+    fi
+
+
+    green " =================================================="
+    green "     开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
+    green " =================================================="
+
+    read -p "请输入trojan密码的前缀? (会生成10个随机密码和若干带有该前缀的密码)" configTrojanPasswordPrefixInput
+    configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-jin}
+
+    mkdir -p ${configTrojanBasePath}
+    cd ${configTrojanBasePath}
+    rm -rf ${configTrojanBasePath}/*
+
+    if [ "$isTrojanGo" = "no" ] ; then
+        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configTrojanPath}" "${downloadFilenameTrojan}"
+    else
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
+        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanGoPath}" "${downloadFilenameTrojanGo}"
+    fi
+
+
+
+
+    if [ "$isTrojanGo" = "no" ] ; then
+
+        # 增加trojan 服务器端配置
+	    cat > ${configTrojanBasePath}/server.json <<-EOF
+{
+    "run_type": "server",
+    "local_addr": "0.0.0.0",
+    "local_port": 443,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        "${trojanPassword1}",
+        "${trojanPassword2}",
+        "${trojanPassword3}",
+        "${trojanPassword4}",
+        "${trojanPassword5}",
+        "${trojanPassword6}",
+        "${trojanPassword7}",
+        "${trojanPassword8}",
+        "${trojanPassword9}",
+        "${trojanPassword10}",
+        "${configTrojanPasswordPrefixInput}202000",
+        "${configTrojanPasswordPrefixInput}202010",
+        "${configTrojanPasswordPrefixInput}202011",
+        "${configTrojanPasswordPrefixInput}202012",
+        "${configTrojanPasswordPrefixInput}202013",
+        "${configTrojanPasswordPrefixInput}202014",
+        "${configTrojanPasswordPrefixInput}202015",
+        "${configTrojanPasswordPrefixInput}202016",
+        "${configTrojanPasswordPrefixInput}202017",
+        "${configTrojanPasswordPrefixInput}202018",
+        "${configTrojanPasswordPrefixInput}202019",
+        "${configTrojanPasswordPrefixInput}202020",
+        "${configTrojanPasswordPrefixInput}202021",
+        "${configTrojanPasswordPrefixInput}202022",
+        "${configTrojanPasswordPrefixInput}202023",
+        "${configTrojanPasswordPrefixInput}202024",
+        "${configTrojanPasswordPrefixInput}202025",
+        "${configTrojanPasswordPrefixInput}202026",
+        "${configTrojanPasswordPrefixInput}202027",
+        "${configTrojanPasswordPrefixInput}202028",
+        "${configTrojanPasswordPrefixInput}202029",
+        "${configTrojanPasswordPrefixInput}202030",
+        "${configTrojanPasswordPrefixInput}202031",
+        "${configTrojanPasswordPrefixInput}202032",
+        "${configTrojanPasswordPrefixInput}202033",
+        "${configTrojanPasswordPrefixInput}202034",
+        "${configTrojanPasswordPrefixInput}202035",
+        "${configTrojanPasswordPrefixInput}202036",
+        "${configTrojanPasswordPrefixInput}202037",
+        "${configTrojanPasswordPrefixInput}202038",
+        "${configTrojanPasswordPrefixInput}202039",
+        "${configTrojanPasswordPrefixInput}202040",
+        "${configTrojanPasswordPrefixInput}202041",
+        "${configTrojanPasswordPrefixInput}202042",
+        "${configTrojanPasswordPrefixInput}202043",
+        "${configTrojanPasswordPrefixInput}202044",
+        "${configTrojanPasswordPrefixInput}202045",
+        "${configTrojanPasswordPrefixInput}202046",
+        "${configTrojanPasswordPrefixInput}202047",
+        "${configTrojanPasswordPrefixInput}202048",
+        "${configTrojanPasswordPrefixInput}202049",
+        "${configTrojanPasswordPrefixInput}202050",
+        "${configTrojanPasswordPrefixInput}202051",
+        "${configTrojanPasswordPrefixInput}202052",
+        "${configTrojanPasswordPrefixInput}202053",
+        "${configTrojanPasswordPrefixInput}202054",
+        "${configTrojanPasswordPrefixInput}202055",
+        "${configTrojanPasswordPrefixInput}202056",
+        "${configTrojanPasswordPrefixInput}202057",
+        "${configTrojanPasswordPrefixInput}202058",
+        "${configTrojanPasswordPrefixInput}202059",
+        "${configTrojanPasswordPrefixInput}202060",
+        "${configTrojanPasswordPrefixInput}202061",
+        "${configTrojanPasswordPrefixInput}202062",
+        "${configTrojanPasswordPrefixInput}202063",
+        "${configTrojanPasswordPrefixInput}202064",
+        "${configTrojanPasswordPrefixInput}202065",
+        "${configTrojanPasswordPrefixInput}202066",
+        "${configTrojanPasswordPrefixInput}202067",
+        "${configTrojanPasswordPrefixInput}202068",
+        "${configTrojanPasswordPrefixInput}202069",
+        "${configTrojanPasswordPrefixInput}202070",
+        "${configTrojanPasswordPrefixInput}202071",
+        "${configTrojanPasswordPrefixInput}202072",
+        "${configTrojanPasswordPrefixInput}202073",
+        "${configTrojanPasswordPrefixInput}202074",
+        "${configTrojanPasswordPrefixInput}202075",
+        "${configTrojanPasswordPrefixInput}202076",
+        "${configTrojanPasswordPrefixInput}202077",
+        "${configTrojanPasswordPrefixInput}202078",
+        "${configTrojanPasswordPrefixInput}202079",
+        "${configTrojanPasswordPrefixInput}202080",
+        "${configTrojanPasswordPrefixInput}202081",
+        "${configTrojanPasswordPrefixInput}202082",
+        "${configTrojanPasswordPrefixInput}202083",
+        "${configTrojanPasswordPrefixInput}202084",
+        "${configTrojanPasswordPrefixInput}202085",
+        "${configTrojanPasswordPrefixInput}202086",
+        "${configTrojanPasswordPrefixInput}202087",
+        "${configTrojanPasswordPrefixInput}202088",
+        "${configTrojanPasswordPrefixInput}202089",
+        "${configTrojanPasswordPrefixInput}202090",
+        "${configTrojanPasswordPrefixInput}202091",
+        "${configTrojanPasswordPrefixInput}202092",
+        "${configTrojanPasswordPrefixInput}202093",
+        "${configTrojanPasswordPrefixInput}202094",
+        "${configTrojanPasswordPrefixInput}202095",
+        "${configTrojanPasswordPrefixInput}202096",
+        "${configTrojanPasswordPrefixInput}202097",
+        "${configTrojanPasswordPrefixInput}202098",
+        "${configTrojanPasswordPrefixInput}202099"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "cert": "${configSSLCertPath}/fullchain.cer",
+        "key": "${configSSLCertPath}/private.key",
+        "key_password": "",
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	    "prefer_server_cipher": true,
+        "alpn": [
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "session_timeout": 600,
+        "plain_http_response": "",
+        "curves": "",
+        "dhparam": ""
+    },
+    "tcp": {
+        "no_delay": true,
+        "keep_alive": true,
+        "fast_open": false,
+        "fast_open_qlen": 20
+    },
+    "mysql": {
+        "enabled": false,
+        "server_addr": "127.0.0.1",
+        "server_port": 3306,
+        "database": "trojan",
+        "username": "trojan",
+        "password": ""
+    }
+}
+EOF
+
+
+        # 增加启动脚本
+        cat > ${osSystemMdPath}trojan.service <<-EOF
+[Unit]
+Description=trojan
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=${configTrojanPath}/trojan.pid
+ExecStart=${configTrojanPath}/trojan -l ${configTrojanLogFile} -c "${configTrojanPath}/server.json"
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=23
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+
+
+    if [ "$isTrojanGo" = "yes" ] ; then
+
+        # 增加trojan 服务器端配置
+	    cat > ${configTrojanBasePath}/server.json <<-EOF
+{
+    "run_type": "server",
+    "local_addr": "0.0.0.0",
+    "local_port": 443,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        "${trojanPassword1}",
+        "${trojanPassword2}",
+        "${trojanPassword3}",
+        "${trojanPassword4}",
+        "${trojanPassword5}",
+        "${trojanPassword6}",
+        "${trojanPassword7}",
+        "${trojanPassword8}",
+        "${trojanPassword9}",
+        "${trojanPassword10}",
+        "${configTrojanPasswordPrefixInput}202000",
+        "${configTrojanPasswordPrefixInput}202010",
+        "${configTrojanPasswordPrefixInput}202011",
+        "${configTrojanPasswordPrefixInput}202012",
+        "${configTrojanPasswordPrefixInput}202013",
+        "${configTrojanPasswordPrefixInput}202014",
+        "${configTrojanPasswordPrefixInput}202015",
+        "${configTrojanPasswordPrefixInput}202016",
+        "${configTrojanPasswordPrefixInput}202017",
+        "${configTrojanPasswordPrefixInput}202018",
+        "${configTrojanPasswordPrefixInput}202019",
+        "${configTrojanPasswordPrefixInput}202020",
+        "${configTrojanPasswordPrefixInput}202021",
+        "${configTrojanPasswordPrefixInput}202022",
+        "${configTrojanPasswordPrefixInput}202023",
+        "${configTrojanPasswordPrefixInput}202024",
+        "${configTrojanPasswordPrefixInput}202025",
+        "${configTrojanPasswordPrefixInput}202026",
+        "${configTrojanPasswordPrefixInput}202027",
+        "${configTrojanPasswordPrefixInput}202028",
+        "${configTrojanPasswordPrefixInput}202029",
+        "${configTrojanPasswordPrefixInput}202030",
+        "${configTrojanPasswordPrefixInput}202031",
+        "${configTrojanPasswordPrefixInput}202032",
+        "${configTrojanPasswordPrefixInput}202033",
+        "${configTrojanPasswordPrefixInput}202034",
+        "${configTrojanPasswordPrefixInput}202035",
+        "${configTrojanPasswordPrefixInput}202036",
+        "${configTrojanPasswordPrefixInput}202037",
+        "${configTrojanPasswordPrefixInput}202038",
+        "${configTrojanPasswordPrefixInput}202039",
+        "${configTrojanPasswordPrefixInput}202040",
+        "${configTrojanPasswordPrefixInput}202041",
+        "${configTrojanPasswordPrefixInput}202042",
+        "${configTrojanPasswordPrefixInput}202043",
+        "${configTrojanPasswordPrefixInput}202044",
+        "${configTrojanPasswordPrefixInput}202045",
+        "${configTrojanPasswordPrefixInput}202046",
+        "${configTrojanPasswordPrefixInput}202047",
+        "${configTrojanPasswordPrefixInput}202048",
+        "${configTrojanPasswordPrefixInput}202049",
+        "${configTrojanPasswordPrefixInput}202050",
+        "${configTrojanPasswordPrefixInput}202051",
+        "${configTrojanPasswordPrefixInput}202052",
+        "${configTrojanPasswordPrefixInput}202053",
+        "${configTrojanPasswordPrefixInput}202054",
+        "${configTrojanPasswordPrefixInput}202055",
+        "${configTrojanPasswordPrefixInput}202056",
+        "${configTrojanPasswordPrefixInput}202057",
+        "${configTrojanPasswordPrefixInput}202058",
+        "${configTrojanPasswordPrefixInput}202059",
+        "${configTrojanPasswordPrefixInput}202060",
+        "${configTrojanPasswordPrefixInput}202061",
+        "${configTrojanPasswordPrefixInput}202062",
+        "${configTrojanPasswordPrefixInput}202063",
+        "${configTrojanPasswordPrefixInput}202064",
+        "${configTrojanPasswordPrefixInput}202065",
+        "${configTrojanPasswordPrefixInput}202066",
+        "${configTrojanPasswordPrefixInput}202067",
+        "${configTrojanPasswordPrefixInput}202068",
+        "${configTrojanPasswordPrefixInput}202069",
+        "${configTrojanPasswordPrefixInput}202070",
+        "${configTrojanPasswordPrefixInput}202071",
+        "${configTrojanPasswordPrefixInput}202072",
+        "${configTrojanPasswordPrefixInput}202073",
+        "${configTrojanPasswordPrefixInput}202074",
+        "${configTrojanPasswordPrefixInput}202075",
+        "${configTrojanPasswordPrefixInput}202076",
+        "${configTrojanPasswordPrefixInput}202077",
+        "${configTrojanPasswordPrefixInput}202078",
+        "${configTrojanPasswordPrefixInput}202079",
+        "${configTrojanPasswordPrefixInput}202080",
+        "${configTrojanPasswordPrefixInput}202081",
+        "${configTrojanPasswordPrefixInput}202082",
+        "${configTrojanPasswordPrefixInput}202083",
+        "${configTrojanPasswordPrefixInput}202084",
+        "${configTrojanPasswordPrefixInput}202085",
+        "${configTrojanPasswordPrefixInput}202086",
+        "${configTrojanPasswordPrefixInput}202087",
+        "${configTrojanPasswordPrefixInput}202088",
+        "${configTrojanPasswordPrefixInput}202089",
+        "${configTrojanPasswordPrefixInput}202090",
+        "${configTrojanPasswordPrefixInput}202091",
+        "${configTrojanPasswordPrefixInput}202092",
+        "${configTrojanPasswordPrefixInput}202093",
+        "${configTrojanPasswordPrefixInput}202094",
+        "${configTrojanPasswordPrefixInput}202095",
+        "${configTrojanPasswordPrefixInput}202096",
+        "${configTrojanPasswordPrefixInput}202097",
+        "${configTrojanPasswordPrefixInput}202098",
+        "${configTrojanPasswordPrefixInput}202099"
+    ],
+    "log_level": 1,
+    "log_file": "${configTrojanGoLogFile}",
+    "ssl": {
+        "verify": true,
+        "verify_hostname": true,
+        "cert": "${configSSLCertPath}/fullchain.cer",
+        "key": "${configSSLCertPath}/private.key",
+        "key_password": "",
+	    "prefer_server_cipher": false,
+        "alpn": [
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "session_timeout": 600,
+        "plain_http_response": "",
+        "curves": "",
+        "dhparam": "",
+        "sni": "${configSSLDomain}",
+        "fingerprint": "firefox"
+    },
+    "tcp": {
+        "no_delay": true,
+        "keep_alive": true
+    },
+    "websocket": {
+        "enabled": ${isTrojanGoSupportWebsocket},
+        "path": "/${configTrojanGoWebSocketPath}",
+        "host": "${configSSLDomain}"
+    },
+    "mysql": {
+        "enabled": false,
+        "server_addr": "127.0.0.1",
+        "server_port": 3306,
+        "database": "trojan",
+        "username": "trojan",
+        "password": ""
+    }
+}
+EOF
+
+        # 增加启动脚本
+        cat > ${osSystemMdPath}trojan-go.service <<-EOF
+[Unit]
+Description=trojan-go
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=${configTrojanGoPath}/trojan-go.pid
+ExecStart=${configTrojanGoPath}/trojan-go -config "${configTrojanGoPath}/server.json"
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=23
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+
+    chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
+    sudo systemctl daemon-reload
+    sudo systemctl start trojan${promptInfoTrojanName}.service
+    sudo systemctl enable trojan${promptInfoTrojanName}.service
+
+
+
+    # 下载并制作 trojan windows 客户端的命令行启动文件
+    rm -rf ${configTrojanBasePath}/trojan-win-cli
+    rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
+    mkdir -p ${configTrojanBasePath}/trojan-win-cli-temp
+
+    downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/trojan-win-cli.zip" "${configTrojanBasePath}" "trojan-win-cli.zip"
+
+    if [ "$isTrojanGo" = "no" ] ; then
+        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/trojan-${versionTrojan}-win.zip" "${configTrojanBasePath}/trojan-win-cli-temp" "trojan-${versionTrojan}-win.zip"
+        mv -f ${configTrojanBasePath}/trojan-win-cli-temp/trojan/trojan.exe ${configTrojanBasePath}/trojan-win-cli/
+        mv -f ${configTrojanBasePath}/trojan-win-cli-temp/trojan/VC_redist.x64.exe ${configTrojanBasePath}/trojan-win-cli/
+    fi
+
+    if [ "$isTrojanGo" = "yes" ] ; then
+        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/trojan-go-windows-amd64.zip" "${configTrojanBasePath}/trojan-win-cli-temp" "trojan-go-windows-amd64.zip"
+        mv -f ${configTrojanBasePath}/trojan-win-cli-temp/* ${configTrojanBasePath}/trojan-win-cli/
+    fi
+
+    rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
+    cp ${configSSLCertPath}/fullchain.cer ${configTrojanBasePath}/trojan-win-cli/fullchain.cer
+
+    cat > ${configTrojanBasePath}/trojan-win-cli/config.json <<-EOF
+{
+    "run_type": "client",
+    "local_addr": "127.0.0.1",
+    "local_port": 1080,
+    "remote_addr": "${configSSLDomain}",
+    "remote_port": 443,
+    "password": [
+        "${trojanPassword1}"
+    ],
+    "log_level": 1,
+    "ssl": {
+        "verify": true,
+        "verify_hostname": true,
+        "cert": "fullchain.cer",
+        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
+	    "sni": "",
+        "alpn": [
+            "h2",
+            "http/1.1"
+        ],
+        "reuse_session": true,
+        "session_ticket": false,
+        "curves": ""
+    },
+    "tcp": {
+        "no_delay": true,
+        "keep_alive": true,
+        "fast_open": false,
+        "fast_open_qlen": 20
+    }
+}
+EOF
+
+    zip -r ${configWebsiteDownloadPath}/trojan-win-cli.zip ${configTrojanBasePath}/trojan-win-cli/
+
+
+
+
+    # 设置 cron 定时任务
+    # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
+
+    # (crontab -l 2>/dev/null | grep -v '^[a-zA-Z]'; echo "15 4 * * 0,1,2,3,4,5,6 systemctl restart trojan.service") | sort - | uniq - | crontab -
+    (crontab -l ; echo "15 4 * * 0,1,2,3,4,5,6 systemctl restart trojan${promptInfoTrojanName}.service") | sort - | uniq - | crontab -
+
+
+	green "======================================================================"
+	green "    Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !"
+	green "    伪装站点为 http://${configSSLDomain}"
+	green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+	red "    nginx 配置路径 ${nginxConfigPath} "
+	red "    nginx 访问日志 ${nginxAccessLogFilePath} "
+	red "    nginx 错误日志 ${nginxErrorLogFilePath} "
+	red "    Trojan 服务器端配置路径 ${configTrojanBasePath}/server.json "
+	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -u trojan${promptInfoTrojanName}.service 查看 !"
+	green "    Trojan 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
+	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
+	green "    Trojan 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+	green "======================================================================"
+	blue  "----------------------------------------"
+	yellow "Trojan${promptInfoTrojanName} 配置信息如下, 请自行复制保存, 密码任选其一 !"
+	yellow "服务器地址: ${configSSLDomain}  端口: 443"
+	yellow "密码1: ${trojanPassword1}"
+	yellow "密码2: ${trojanPassword2}"
+	yellow "密码3: ${trojanPassword3}"
+	yellow "密码4: ${trojanPassword4}"
+	yellow "密码5: ${trojanPassword5}"
+	yellow "密码6: ${trojanPassword6}"
+	yellow "密码7: ${trojanPassword7}"
+	yellow "密码8: ${trojanPassword8}"
+	yellow "密码9: ${trojanPassword9}"
+	yellow "密码10: ${trojanPassword10}"
+	yellow "您指定前缀的密码若干: 从 ${configTrojanPasswordPrefixInput}202010 到 ${configTrojanPasswordPrefixInput}202099 都可以使用"
+
+    if [[ ${isTrojanGoSupportWebsocket} == "true" ]]; then
+        yellow "Websocket path 路径为: /${configTrojanGoWebSocketPath}"
+        # yellow "Websocket obfuscation_password 混淆密码为: ${trojanPasswordWS}"
+        yellow "Websocket 双重TLS为: true 开启"
+    fi
+
+	blue  "----------------------------------------"
+	green "======================================================================"
+	green "请下载相应的trojan客户端:"
+	yellow "1 Windows 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-windows.zip"
+	yellow "  Windows 客户端另一个版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-Qt5-windows.zip"
+	yellow "  Windows 客户端命令行版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-win-cli.zip"
+	yellow "  Windows 客户端命令行版本需要搭配浏览器插件使用，例如switchyomega等! "
+    yellow "2 MacOS 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-mac.zip"
+    yellow "  MacOS 客户端另一个版本下载：https://github.com/Trojan-Qt5/Trojan-Qt5/releases"
+    yellow "3 Android 客户端下载 https://github.com/trojan-gfw/igniter/releases "
+    yellow "4 iOS 客户端 请安装小火箭 https://shadowsockshelp.github.io/ios/ "
+    yellow "  iOS 请安装小火箭另一个地址 https://lueyingpro.github.io/shadowrocket/index.html "
+    yellow "  iOS 安装小火箭遇到问题 教程 https://github.com/shadowrocketHelp/help/ "
+    green "======================================================================"
+	green "教程与其他资源:"
+	green "访问 https://www.v2rayssr.com/trojan-1.html ‎ 下载 浏览器插件 客户端 及教程"
+	green "访问 https://westworldss.com/portal/page/download ‎ 下载 客户端 及教程"
+	green "======================================================================"
+	green "其他 Windows 客户端:"
+	green "https://github.com/TheWanderingCoel/Trojan-Qt5/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://github.com/Fndroid/clash_for_windows_pkg/releases"
+	green "======================================================================"
+	green "其他 Mac 客户端:"
+	green "https://github.com/TheWanderingCoel/Trojan-Qt5/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://github.com/JimLee1996/TrojanX/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://github.com/yichengchen/clashX/releases "
+	green "======================================================================"
+	green "其他 Android 客户端:"
+	green "https://github.com/trojan-gfw/igniter/releases "
+	green "https://github.com/Kr328/ClashForAndroid/releases "
+	green "======================================================================"
+}
+
+
+
+function removeTrojan(){
+
+    isTrojanGoInstall
+
+    sudo systemctl stop trojan${promptInfoTrojanName}
+    sudo systemctl disable trojan${promptInfoTrojanName}
+
+    green " ================================================== "
+    red " 准备卸载已安装的trojan${promptInfoTrojanName}"
+    green " ================================================== "
+
+
+    rm -f ${osSystemmdPath}trojan${promptInfoTrojanName}.service
+    rm -rf ${configTrojanBasePath}
+
+    crontab -r
+
+    green " ================================================== "
+    green "  trojan${promptInfoTrojanName} 和 nginx 卸载完毕 !"
+    green "  crontab 定时任务 删除完毕 !"
+    green " ================================================== "
+}
 
 
 function start_menu(){
@@ -775,7 +1378,7 @@ function start_menu(){
         ;;
         5 )
             removeNginx
-            remove_trojan
+            removeTrojan
         ;;
         6 )
             isTrojanGo="yes"
@@ -802,7 +1405,7 @@ function start_menu(){
         11 )
             isTrojanGo="yes"
             removeNginx
-            remove_trojan
+            removeTrojan
         ;;
         12 )
             install_caddy
@@ -823,7 +1426,7 @@ function start_menu(){
             upgrade_v2ray
         ;;
         17 )
-            remove_trojan
+            removeTrojan
             remove_v2ray
         ;;
         21 )
@@ -843,7 +1446,9 @@ function start_menu(){
             start_menu
         ;;
         99 )
-            getTrojanAndV2rayVersion
+            getTrojanAndV2rayVersion "trojan"
+            getTrojanAndV2rayVersion "trojan-go"
+            getTrojanAndV2rayVersion "v2ray"
         ;;
         31 )
             vps_superspeed
