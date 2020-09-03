@@ -477,7 +477,7 @@ function downloadAndUnzip(){
         green "===== 下载并解压tar文件: $3 "
         wget -O ${configDownloadTempPath}/$3 $1
         tar xf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
-        mv ${configTrojanPath}/trojan/* $2
+        mv ${configDownloadTempPath}/trojan/* $2
         rm -rf ${configDownloadTempPath}/trojan
     else
         green "===== 下载并解压zip文件:  $3 "
@@ -1290,8 +1290,8 @@ function removeTrojan(){
 
     isTrojanGoInstall
 
-    sudo systemctl stop trojan${promptInfoTrojanName}
-    sudo systemctl disable trojan${promptInfoTrojanName}
+    sudo systemctl stop trojan${promptInfoTrojanName}.service
+    sudo systemctl disable trojan${promptInfoTrojanName}.service
 
     green " ================================================== "
     red " 准备卸载已安装的trojan${promptInfoTrojanName}"
@@ -1310,6 +1310,39 @@ function removeTrojan(){
 }
 
 
+
+function upgradeTrojan(){
+
+    isTrojanGoInstall
+
+    green " ================================================== "
+    green "     开始升级 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion}"
+    green " ================================================== "
+
+    sudo systemctl stop trojan${promptInfoTrojanName}.service
+
+    mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
+
+    if [ "$isTrojanGo" = "no" ] ; then
+        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configDownloadTempPath}/upgrade/trojan" "${downloadFilenameTrojan}"
+        mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
+    else
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
+        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configDownloadTempPath}/upgrade/trojan-go" "${downloadFilenameTrojanGo}"
+        mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
+    fi
+
+    green " ================================================== "
+    green "     升级成功 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
+    green " ================================================== "
+
+    sudo systemctl start trojan${promptInfoTrojanName}.service
+}
+
+
+
+
 function start_menu(){
     clear
 
@@ -1319,10 +1352,8 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 2020-9-2 更新  "
-    green " 系统支持：centos7+ / debian9+ / ubuntu16.04+"
-    red " *请不要在任何生产环境使用此脚本"
-    red " *请不要有其他程序占用80和443端口"
+    green " Trojan Trojan-go V2ray 一键安装脚本 2020-9-2 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
     echo
@@ -1346,7 +1377,7 @@ function start_menu(){
     echo
     green " 15. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
     green " 16. 升级 v2ray 和 trojan 到最新版本"
-    red " 17. 卸载 trojan + v2ray 和 nginx"
+    red " 17. 卸载 trojan, v2ray 和 nginx"
     echo
     green " =================================================="
     green " 21. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
@@ -1374,7 +1405,7 @@ function start_menu(){
             installTrojanWholeProcess "repair"
         ;;
         4 )
-            upgrade_trojan "trojan"
+            upgradeTrojan "trojan"
         ;;
         5 )
             removeNginx
@@ -1400,7 +1431,7 @@ function start_menu(){
         ;;
         10 )
             isTrojanGo="yes"
-            upgrade_trojan "trojan-go"
+            upgradeTrojan "trojan-go"
         ;;
         11 )
             isTrojanGo="yes"
@@ -1422,7 +1453,7 @@ function start_menu(){
             install_v2ray
         ;;
         16 )
-            upgrade_trojan "trojan"
+            upgradeTrojan
             upgrade_v2ray
         ;;
         17 )
