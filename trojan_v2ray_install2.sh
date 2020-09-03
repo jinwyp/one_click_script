@@ -366,7 +366,9 @@ function installSoftOhMyZsh(){
         echo 'alias lla="ll -ah"' >> ${HOME}/.zshrc
         echo 'alias mi="micro"' >> ${HOME}/.zshrc
 
-        green "oh-my-zsh 安装成功, 请exit命令退出服务器后重新登陆vps服务器即可启动 oh-my-zsh!"
+        green " =================================================="
+        yellow " oh-my-zsh 安装成功, 请用exit命令退出服务器后重新登陆即可!"
+        green " =================================================="
 
     fi
 
@@ -459,6 +461,7 @@ function downloadAndUnzip(){
         exit
     fi
 
+    mkdir -p ${configDownloadTempPath}
     wget -O ${configDownloadTempPath}/$3 $1
     unzip -d $2 ${configDownloadTempPath}/$3
 }
@@ -627,6 +630,35 @@ EOF
     green " ================================================== "
 }
 
+
+function removeNginx(){
+
+    sudo systemctl stop nginx.service
+
+    green " ================================================== "
+    red " 准备卸载已安装的nginx"
+    green " ================================================== "
+
+    if [ "$osRelease" == "centos" ]; then
+        yum remove -y nginx
+    else
+        apt autoremove -y --purge nginx nginx-common nginx-core
+        apt-get remove --purge nginx nginx-full nginx-common
+    fi
+
+    rm -rf ${configSSLCertPath}
+    rm -rf ${configWebsitePath}
+    rm -f ${nginxAccessLogFilePath}
+    rm -f ${nginxErrorLogFilePath}
+
+    rm -rf "/etc/nginx"
+    rm -rf /root/.acme.sh/
+
+    green " ================================================== "
+    green "  Nginx 卸载完毕 !"
+    green " ================================================== "
+}
+
 function installTrojanWholeProcess(){
 
     stopServiceNginx
@@ -742,6 +774,7 @@ function start_menu(){
             upgrade_trojan "trojan"
         ;;
         5 )
+            removeNginx
             remove_trojan
         ;;
         6 )
@@ -762,12 +795,13 @@ function start_menu(){
             isTrojanGoSupportWebsocket="true"
             installTrojanWholeProcess "repair"
         ;;
-        9 )
+        10 )
             isTrojanGo="yes"
             upgrade_trojan "trojan-go"
         ;;
-        10 )
+        11 )
             isTrojanGo="yes"
+            removeNginx
             remove_trojan
         ;;
         12 )
