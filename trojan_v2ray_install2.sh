@@ -551,15 +551,15 @@ function compareRealIpWithLocalIp(){
         configNetworkLocalIp=`curl ipv4.icanhazip.com`
 
         if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
-            green "=========================================="
-            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. 域名解析正常!"
-            green "=========================================="
+            green " ================================================== "
+            green "     域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. 域名解析正常!"
+            green " ================================================== "
             true
         else
-            red "================================"
-            red "域名解析地址与本VPS IP地址不一致"
-            red "本次安装失败，请确保域名解析正常"
-            red "================================"
+            green " ================================================== "
+            red "     域名解析地址与本VPS IP地址不一致!"
+            red "     本次安装失败，请确保域名解析正常!"
+            green " ================================================== "
             false
         fi
     else
@@ -655,10 +655,8 @@ EOF
     rm -rf ${configWebsitePath}/*
     mkdir -p ${configWebsiteDownloadPath}
 
-    green " ================================================== "
-
     downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/website.zip" "${configWebsitePath}" "website.zip"
-    downloadAndUnzip "https://github.com/jinwyp/Trojan/raw/master/download/trojan_client_all.zip" "${configWebsiteDownloadPath}" "trojan_client_all.zip"
+    downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/trojan_client_all.zip" "${configWebsiteDownloadPath}" "trojan_client_all.zip"
 
     sudo systemctl start nginx.service
 
@@ -701,12 +699,12 @@ function installTrojanWholeProcess(){
     stopServiceNginx
     testLinuxPortUsage
 
-    green "=============================================="
-    yellow "请输入绑定到本VPS的域名 安装时请关闭CDN后安装！"
+    green " ================================================== "
+    yellow "请输入绑定到本VPS的域名: (此步骤请关闭CDN后安装)"
     if [[ $1 == "repair" ]] ; then
         blue "务必与之前安装失败时使用的域名一致"
     fi
-    green "=============================================="
+    green " ================================================== "
 
     read configSSLDomain
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
@@ -719,9 +717,9 @@ function installTrojanWholeProcess(){
         fi
 
         if test -s ${configSSLCertPath}/fullchain.cer; then
-            green "=========================================="
-            green "       证书获取成功!!"
-            green "=========================================="
+            green " ================================================== "
+            green "     SSL证书获取成功!"
+            green " ================================================== "
             installTrojanServer
         else
             red "==================================="
@@ -1356,7 +1354,6 @@ function start_menu(){
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
-    echo
     green " 1. 安装 BBR-PLUS 加速4合一脚本"
     echo
     green " 2. 安装 trojan 和 nginx 不支持CDN"
@@ -1364,9 +1361,9 @@ function start_menu(){
     green " 4. 升级 trojan 到最新版本"
     red " 5. 卸载 trojan 与 nginx"
     echo
-    green " 6. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket "
+    green " 6. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket (兼容trojan客户端)"
     green " 7. 修复证书 并继续安装 trojan-go 不支持CDN, 不开启websocket"
-    green " 8. 安装 trojan-go 和 nginx 支持CDN, 开启websocket "
+    green " 8. 安装 trojan-go 和 nginx 支持CDN, 开启websocket (不兼容trojan客户端)"
     green " 9. 修复证书 并继续安装 trojan-go 支持CDN, 开启websocket "
     green " 10. 升级 trojan-go 到最新版本"
     red " 11. 卸载 trojan-go 与 nginx"
@@ -1378,7 +1375,6 @@ function start_menu(){
     green " 15. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
     green " 16. 升级 v2ray 和 trojan 到最新版本"
     red " 17. 卸载 trojan, v2ray 和 nginx"
-    echo
     green " =================================================="
     green " 21. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 22. 设置可以使用root登陆"
