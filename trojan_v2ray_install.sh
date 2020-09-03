@@ -447,7 +447,6 @@ function compareRealIpWithLocalIp(){
     else
         false
     fi
-
 }
 
 function install_nginx(){
@@ -555,7 +554,6 @@ function get_https_certificate(){
         --key-file   ${configTrojanCertPath}/private.key \
         --fullchain-file ${configTrojanCertPath}/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
-
 }
 
 
@@ -1173,7 +1171,7 @@ function installTrojanWholeProcess(){
     fi
 
     green "=============================================="
-    yellow "请输入绑定到本VPS的域名 不能使用CDN"
+    yellow "请输入绑定到本VPS的域名 此步骤安装时不能使用CDN！"
     if [[ $1 == "repair" ]] ; then
         blue "务必与之前失败使用的域名一致"
     fi
