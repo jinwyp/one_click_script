@@ -33,6 +33,11 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ```
 
 
+```bash
+curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install2.sh && chmod +x trojan_v2ray_install2.sh && ./trojan_v2ray_install2.sh
+
+```
+
 
 
 ![功能说明](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)

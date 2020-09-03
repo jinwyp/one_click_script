@@ -682,9 +682,7 @@ function start_menu(){
 
     green " =================================================="
     green " Trojan Trojan-go V2ray 一键安装脚本 2020-9-2 更新  "
-    green " 系统：centos7+ / debian9+ / ubuntu16.04+"
-    green " =================================================="
-    blue " 声明："
+    green " 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本"
     red " *请不要有其他程序占用80和443端口"
     red " *若是已安装trojan或第二次使用脚本，请先执行卸载trojan"
@@ -713,13 +711,10 @@ function start_menu(){
     red " 17. 卸载 trojan + v2ray 和 nginx"
     echo
     green " =================================================="
-    echo
     green " 21. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 22. 设置可以使用root登陆"
     green " 23. 修改SSH 登陆端口号"
-    echo
     green " =================================================="
-    echo
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
     green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
