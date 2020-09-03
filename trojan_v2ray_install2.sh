@@ -57,7 +57,6 @@ function getLinuxOSVersion(){
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
     fi
-    ${osSystemPackage} -y install wget curl
     echo "OS info: ${osRelease}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
@@ -678,7 +677,11 @@ function installTrojanWholeProcess(){
 
 function start_menu(){
     clear
-    getLinuxOSVersion
+
+    if [[ $1 == "first" ]] ; then
+        getLinuxOSVersion
+        ${osSystemPackage} -y install wget curl
+    fi
 
     green " =================================================="
     green " Trojan Trojan-go V2ray 一键安装脚本 2020-9-2 更新  "
@@ -833,5 +836,6 @@ function start_menu(){
 }
 
 
-start_menu
+
+start_menu "first"
 
