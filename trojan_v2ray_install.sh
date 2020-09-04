@@ -1786,6 +1786,7 @@ function start_menu(){
             upgradeV2ray
         ;;
         14 )
+            removeNginx
             removeV2ray
         ;;
         15 )
