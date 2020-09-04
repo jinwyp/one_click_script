@@ -1780,7 +1780,6 @@ function start_menu(){
         12 )
             isNginxWithSSL="yes"
             installTrojanWholeProcess
-            installV2ray
         ;;
         13 )
             upgradeV2ray
