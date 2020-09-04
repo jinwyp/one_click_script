@@ -436,17 +436,19 @@ configTrojanBaseVersion=${versionTrojan}
 
 
 
-
+isNginxWithSSL="no"
 nginxConfigPath="/etc/nginx/nginx.conf"
 nginxAccessLogFilePath="${HOME}/nginx-access.log"
 nginxErrorLogFilePath="${HOME}/nginx-error.log"
 
 
 
-
-
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
+
+configV2rayPath="${HOME}/v2ray"
+configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
+configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 
 
 
@@ -611,7 +613,8 @@ function installWebServerNginx(){
     sudo systemctl enable nginx.service
     sudo systemctl stop nginx.service
 
-    cat > "${nginxConfigPath}" <<-EOF
+    if [[ -z $1 ]] ; then
+        cat > "${nginxConfigPath}" <<-EOF
 user  root;
 worker_processes  1;
 error_log  /var/log/nginx/error.log warn;
@@ -622,9 +625,9 @@ events {
 http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
-    log_format  main  '\$remote_addr - \$remote_user [\$time_local] "\$request" '
-                      '\$status \$body_bytes_sent "\$http_referer" '
-                      '"\$http_user_agent" "\$http_x_forwarded_for"';
+    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
+                      '"\$request" \$status \$body_bytes_sent  '
+                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
     access_log  $nginxAccessLogFilePath  main;
     error_log $nginxErrorLogFilePath;
     sendfile        on;
@@ -650,6 +653,72 @@ http {
     }
 }
 EOF
+    else
+        cat > "${nginxConfigPath}" <<-EOF
+user  root;
+worker_processes  1;
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+events {
+    worker_connections  1024;
+}
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
+                      '"\$request" \$status \$body_bytes_sent  '
+                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
+    access_log  $nginxAccessLogFilePath  main;
+    error_log $nginxErrorLogFilePath;
+    sendfile        on;
+    #tcp_nopush     on;
+    keepalive_timeout  120;
+    client_max_body_size 20m;
+    #gzip  on;
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/fullchain.cer;
+        ssl_certificate_key   ${configSSLCertPath}/private.key;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-128-CCM-SHA256:EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+ECDSA+AES128:EECDH+aRSA+AES128:RSA+AES128:EECDH+ECDSA+AES256:EECDH+aRSA+AES256:RSA+AES256:EECDH+ECDSA+3DES:EECDH+aRSA+3DES:RSA+3DES:!MD5;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location /$configV2rayWebSocketPath {
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:$configV2rayPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+    }
+}
+EOF
+    fi
+
+
 
     # 下载伪装站点 并设置伪装网站
     rm -rf ${configWebsitePath}/*
@@ -700,9 +769,9 @@ function installTrojanWholeProcess(){
     testLinuxPortUsage
 
     green " ================================================== "
-    yellow "请输入绑定到本VPS的域名: (此步骤请关闭CDN后安装)"
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
     if [[ $1 == "repair" ]] ; then
-        blue "务必与之前安装失败时使用的域名一致"
+        blue " 务必与之前安装失败时使用的域名一致"
     fi
     green " ================================================== "
 
@@ -710,8 +779,14 @@ function installTrojanWholeProcess(){
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
 
         if [[ -z $1 ]] ; then
-            installWebServerNginx
-            getHTTPSCertificate
+            if [ "$isNginxWithSSL" = "no" ] ; then
+                installWebServerNginx
+                getHTTPSCertificate
+            else
+                getHTTPSCertificate "standalone"
+                installWebServerNginx "v2ray"
+            fi
+
         else
             getHTTPSCertificate "standalone"
         fi
@@ -720,7 +795,12 @@ function installTrojanWholeProcess(){
             green " ================================================== "
             green "     SSL证书获取成功!"
             green " ================================================== "
-            installTrojanServer
+
+            if [ "$isNginxWithSSL" = "no" ] ; then
+                installTrojanServer
+            else
+                installV2ray
+            fi
         else
             red "==================================="
             red " https证书没有申请成功，安装失败!"
@@ -754,28 +834,20 @@ function installTrojanServer(){
 
     isTrojanGoInstall
 
-    if [ "$isTrojanGo" = "no" ] ; then
-        if [[ -f "${configTrojanBasePath}/trojan" ]]; then
-            green " =================================================="
-            green "  已安装过 Trojan , 退出安装 !"
-            green " =================================================="
-            exit
-        fi
-    else
-        if [[ -f "${configTrojanBasePath}/trojan-go}" ]]; then
-            green " =================================================="
-            green "  已安装过 Trojan-go , 退出安装 !"
-            green " =================================================="
-            exit
-        fi
+    if [[ -f "${configTrojanBasePath}/trojan${promptInfoTrojanName}" ]]; then
+        green " =================================================="
+        green "  已安装过 Trojan${promptInfoTrojanName} , 退出安装 !"
+        green " =================================================="
+        exit
     fi
 
 
     green " =================================================="
-    green "     开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
+    green "  开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
+    yellow " 请输入绑定到本VPS的域名: (此步骤请关闭CDN后安装)"
     green " =================================================="
 
-    read -p "请输入trojan密码的前缀? (会生成10个随机密码和若干带有该前缀的密码)" configTrojanPasswordPrefixInput
+    read -p configTrojanPasswordPrefixInput
     configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-jin}
 
     mkdir -p ${configTrojanBasePath}
@@ -1283,7 +1355,6 @@ EOF
 }
 
 
-
 function removeTrojan(){
 
     isTrojanGoInstall
@@ -1295,9 +1366,10 @@ function removeTrojan(){
     red " 准备卸载已安装的trojan${promptInfoTrojanName}"
     green " ================================================== "
 
-
-    rm -f ${osSystemmdPath}trojan${promptInfoTrojanName}.service
     rm -rf ${configTrojanBasePath}
+    rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
+    rm -f ${configTrojanLogFile}
+    rm -f ${configTrojanGoLogFile}
 
     crontab -r
 
@@ -1306,7 +1378,6 @@ function removeTrojan(){
     green "  crontab 定时任务 删除完毕 !"
     green " ================================================== "
 }
-
 
 
 function upgradeTrojan(){
@@ -1331,14 +1402,282 @@ function upgradeTrojan(){
         mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
     fi
 
+    sudo systemctl start trojan${promptInfoTrojanName}.service
+
     green " ================================================== "
     green "     升级成功 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
     green " ================================================== "
 
-    sudo systemctl start trojan${promptInfoTrojanName}.service
 }
 
 
+
+
+
+
+function installV2ray(){
+
+    v2rayPassword1=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword2=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword3=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword4=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword5=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword6=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword7=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword8=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword9=$(cat /proc/sys/kernel/random/uuid)
+    v2rayPassword10=$(cat /proc/sys/kernel/random/uuid)
+
+    if [ -f "${configV2rayPath}/v2ray" ] || [ -f "/usr/local/bin/v2ray" ] || [ -f "/usr/bin/v2ray" ]; then
+        green " =================================================="
+        green "  已安装过 V2ray, 退出安装 !"
+        green " =================================================="
+        exit
+    fi
+
+    getTrojanAndV2rayVersion "v2ray"
+    green " =================================================="
+    green "    开始安装 V2ray Version: ${versionV2ray} !"
+    green " =================================================="
+
+
+    mkdir -p ${configV2rayPath}
+    cd ${configV2rayPath}
+    rm -rf ${configV2rayPath}/*
+
+    # https://github.com/v2fly/v2ray-core/releases/download/v4.27.5/v2ray-linux-64.zip
+    downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configV2rayPath}" "${downloadFilenameV2ray}"
+
+    # 增加 v2ray 服务器端配置
+    cat > ${configV2rayPath}/config.json <<-EOF
+{
+  "log" : {
+    "access": "${configV2rayAccessLogFilePath}",
+    "error": "${configV2rayErrorLogFilePath}",
+    "loglevel": "warning"
+  },
+  "inbound": {
+    "port": ${configV2rayPort},
+    "listen":"127.0.0.1",
+    "protocol": "vmess",
+    "settings": {
+      "clients": [
+        {
+          "id": "${v2rayPassword1}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password11@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword2}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password12@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword3}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password13@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword4}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password14@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword5}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password15@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword6}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password16@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword7}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password17@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword8}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password18@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword9}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password19@gmail.com"
+        },
+        {
+          "id": "${v2rayPassword10}",
+          "level": 1,
+          "alterId": 64,
+          "email": "password20@gmail.com"
+        }
+      ]
+    },
+    "streamSettings": {
+      "network": "ws",
+      "wsSettings": {
+        "path": "/${configV2rayWebSocketPath}"
+      }
+    }
+  },
+  "outbound": {
+    "protocol": "freedom",
+    "settings": {}
+  }
+}
+EOF
+
+
+    # 增加启动脚本
+    cat > ${osSystemMdPath}v2ray.service <<-EOF
+[Unit]
+Description=V2Ray
+Documentation=https://www.v2fly.org/
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+# This service runs as root. You may consider to run it as another user for security concerns.
+# By uncommenting User=nobody and commenting out User=root, the service will run as user nobody.
+# More discussion at https://github.com/v2ray/v2ray-core/issues/1011
+User=root
+#User=nobody
+#CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=${configV2rayPath}/v2ray -config ${configV2rayPath}/config.json
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+    # 增加客户端配置说明
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+===========客户端配置参数=============
+{
+地址：${configSSLDomain}
+端口：443
+uuid：${v2rayPassword1}
+额外id：64
+加密方式：aes-128-gcm
+传输协议：ws
+别名：自己起个任意名称
+路径：${configV2rayWebSocketPath}
+底层传输：tls
+}
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl restart v2ray.service
+
+    # 设置 cron 定时任务
+    # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
+
+    (crontab -l ; echo "20 4 * * 0,1,2,3,4,5,6 systemctl restart v2ray.service") | sort - | uniq - | crontab -
+
+
+    green "======================================================================"
+	green "    V2ray Version: ${versionV2ray} 安装成功 !!"
+	green "    伪装站点为 https://${configSSLDomain}!"
+	green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+	# red "    caddy 配置路径 ${caddyConfigFile} !"
+	# red "    caddy 访问日志 ${caddyAccessLogFile} !"
+	# red "    caddy 错误日志 ${caddyErrorLogFile} !"
+	red "    V2ray 服务器端配置路径 ${configV2rayPath}/config.json !"
+	red "    V2ray 访问日志 ${configV2rayAccessLogFilePath} !"
+	red "    V2ray 错误日志 ${configV2rayErrorLogFilePath} !"
+	green "    V2ray 停止命令: systemctl stop v2ray.service  启动命令: systemctl start v2ray.service  重启命令: systemctl restart v2ray.service"
+	# green "    caddy 停止命令: systemctl stop caddy.service  启动命令: systemctl start caddy.service  重启命令: systemctl restart caddy.service"
+	green "    V2ray 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+	green "======================================================================"
+	blue  "----------------------------------------"
+	yellow "V2ray 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
+	yellow "服务器地址: ${configSSLDomain}  端口: 443"
+	yellow "用户ID或密码1: ${v2rayPassword1}"
+	yellow "用户ID或密码2: ${v2rayPassword2}"
+	yellow "用户ID或密码3: ${v2rayPassword3}"
+	yellow "用户ID或密码4: ${v2rayPassword4}"
+	yellow "用户ID或密码5: ${v2rayPassword5}"
+	yellow "用户ID或密码6: ${v2rayPassword6}"
+	yellow "用户ID或密码7: ${v2rayPassword7}"
+	yellow "用户ID或密码8: ${v2rayPassword8}"
+	yellow "用户ID或密码9: ${v2rayPassword9}"
+	yellow "用户ID或密码10: ${v2rayPassword10}"
+
+	cat "${configV2rayPath}/clientConfig.json"
+	blue  "----------------------------------------"
+    green "======================================================================"
+    green "请下载相应的 v2ray 客户端:"
+    yellow "1 Windows 客户端V2rayN下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
+    yellow "2 MacOS 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-mac.zip"
+    yellow "3 Android 客户端下载 https://github.com/2dust/v2rayNG/releases "
+    yellow "4 iOS 客户端 请安装小火箭 https://shadowsockshelp.github.io/ios/ "
+    yellow "  iOS 请安装小火箭另一个地址 https://lueyingpro.github.io/shadowrocket/index.html "
+    yellow "  iOS 安装小火箭遇到问题 教程 https://github.com/shadowrocketHelp/help/ "
+    yellow "其他客户端程序请看 https://www.v2ray.com/awesome/tools.html "
+    green "======================================================================"
+
+}
+
+
+function removeV2ray(){
+
+    green " ================================================== "
+    red " 准备卸载已安装 v2ray "
+    green " ================================================== "
+
+    sudo systemctl stop v2ray.service
+    sudo systemctl disable v2ray.service
+
+    rm -rf ${configV2rayPath}
+    rm -f ${osSystemMdPath}v2ray.service
+    rm -f ${configV2rayAccessLogFilePath}
+    rm -f ${configV2rayErrorLogFilePath}
+
+    green " ================================================== "
+    green "  v2ray 卸载完毕 !"
+    green " ================================================== "
+}
+
+
+function upgradeV2ray(){
+
+    getTrojanAndV2rayVersion "v2ray"
+
+    green " =================================================="
+    green "       开始升级 V2ray Version: ${versionV2ray} !"
+    green " =================================================="
+
+    sudo systemctl stop v2ray.service
+
+    mkdir -p ${configDownloadTempPath}/upgrade/v2ray
+
+    downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configDownloadTempPath}/upgrade/v2ray" "${downloadFilenameV2ray}"
+
+    mv -f ${configDownloadTempPath}/upgrade/v2ray/v2ray ${configV2rayPath}
+    mv -f ${configDownloadTempPath}/upgrade/v2ray/v2ctl ${configV2rayPath}
+    mv -f ${configDownloadTempPath}/upgrade/v2ray/geoip.dat ${configV2rayPath}
+    mv -f ${configDownloadTempPath}/upgrade/v2ray/geosite.dat ${configV2rayPath}
+
+    sudo systemctl start v2ray.service
+
+    green " ================================================== "
+    green "     升级成功 V2ray Version: ${versionV2ray} !"
+    green " ================================================== "
+}
 
 
 function start_menu(){
@@ -1401,7 +1740,7 @@ function start_menu(){
             installTrojanWholeProcess "repair"
         ;;
         4 )
-            upgradeTrojan "trojan"
+            upgradeTrojan
         ;;
         5 )
             removeNginx
@@ -1427,7 +1766,7 @@ function start_menu(){
         ;;
         10 )
             isTrojanGo="yes"
-            upgradeTrojan "trojan-go"
+            upgradeTrojan
         ;;
         11 )
             isTrojanGo="yes"
@@ -1435,26 +1774,28 @@ function start_menu(){
             removeTrojan
         ;;
         12 )
-            install_caddy
-            install_v2ray
+            isNginxWithSSL="yes"
+            installTrojanWholeProcess
+            installV2ray
         ;;
         13 )
-            upgrade_v2ray
+            upgradeV2ray
         ;;
         14 )
-            remove_caddy
+            removeV2ray
         ;;
         15 )
             installTrojanWholeProcess
-            install_v2ray
+            installV2ray
         ;;
         16 )
             upgradeTrojan
-            upgrade_v2ray
+            upgradeV2ray
         ;;
         17 )
+            removeNginx
             removeTrojan
-            remove_v2ray
+            removeV2ray
         ;;
         21 )
             setLinuxDateZone
