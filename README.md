@@ -5,16 +5,15 @@
 ====================================
 系统：centos7+/debian9+/ubuntu16.04+
 
-脚本感谢 秋水逸冰、Atrandys、V2ray官方等 Youtube：波仔分享
+脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
 
-支持 trojan 与 v2ray 共存
+支持 trojan 或 trojan-go 与 v2ray 共存
 
 支持 trojan 和 trojan-go 安装 升级 卸载
 
 安装 trojan-go 可以选择是否支持CDN (websocket)
 
-默认会创建10个用户账号, trojan 还能创建指定的密码, 方便用户使用.
-
+默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
 
 ====================================
 
