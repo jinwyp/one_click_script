@@ -1714,6 +1714,9 @@ function start_menu(){
     green " 15. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
     green " 16. 升级 v2ray 和 trojan 到最新版本"
     red " 17. 卸载 trojan, v2ray 和 nginx"
+    green " 18. 同时安装 trojan-go + v2ray 和 nginx, 不支持CDN"
+    green " 19. 升级 v2ray 和 trojan-go 到最新版本"
+    red " 20. 卸载 trojan-go, v2ray 和 nginx"
     green " =================================================="
     green " 21. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 22. 设置可以使用root登陆"
@@ -1793,6 +1796,22 @@ function start_menu(){
             upgradeV2ray
         ;;
         17 )
+            removeNginx
+            removeTrojan
+            removeV2ray
+        ;;
+        18 )
+            isTrojanGo="yes"
+            installTrojanWholeProcess
+            installV2ray
+        ;;
+        19 )
+            isTrojanGo="yes"
+            upgradeTrojan
+            upgradeV2ray
+        ;;
+        20 )
+            isTrojanGo="yes"
             removeNginx
             removeTrojan
             removeV2ray
