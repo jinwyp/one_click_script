@@ -732,6 +732,12 @@ EOF
 
     green " ================================================== "
     green "       Web服务器 nginx 安装成功!!"
+    green "    伪装站点为 http://${configSSLDomain}"
+	green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+	green "    nginx 配置路径 ${nginxConfigPath} "
+	green "    nginx 访问日志 ${nginxAccessLogFilePath} "
+	green "    nginx 错误日志 ${nginxErrorLogFilePath} "
+	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
     green " ================================================== "
 }
 
@@ -1288,13 +1294,9 @@ EOF
 	green "    Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !"
 	green "    伪装站点为 http://${configSSLDomain}"
 	green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
-	red "    nginx 配置路径 ${nginxConfigPath} "
-	red "    nginx 访问日志 ${nginxAccessLogFilePath} "
-	red "    nginx 错误日志 ${nginxErrorLogFilePath} "
 	red "    Trojan 服务器端配置路径 ${configTrojanBasePath}/server.json "
 	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -u trojan${promptInfoTrojanName}.service 查看 !"
 	green "    Trojan 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
-	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
 	green "    Trojan 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
 	blue  "----------------------------------------"
@@ -1593,7 +1595,6 @@ EOF
     green "======================================================================"
 	green "    V2ray Version: ${versionV2ray} 安装成功 !!"
 	green "    伪装站点为 https://${configSSLDomain}!"
-	green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
 	# red "    caddy 配置路径 ${caddyConfigFile} !"
 	# red "    caddy 访问日志 ${caddyAccessLogFile} !"
 	# red "    caddy 错误日志 ${caddyErrorLogFile} !"
@@ -1628,14 +1629,13 @@ EOF
     yellow "4 iOS 客户端 请安装小火箭 https://shadowsockshelp.github.io/ios/ "
     yellow "  iOS 请安装小火箭另一个地址 https://lueyingpro.github.io/shadowrocket/index.html "
     yellow "  iOS 安装小火箭遇到问题 教程 https://github.com/shadowrocketHelp/help/ "
-    yellow "其他客户端程序请看 https://www.v2ray.com/awesome/tools.html "
+    yellow "其他客户端程序请看 https://www.v2fly.org/awesome/tools.html "
     green "======================================================================"
 
 }
 
 
 function removeV2ray(){
-
     green " ================================================== "
     red " 准备卸载已安装 v2ray "
     green " ================================================== "
@@ -1655,7 +1655,6 @@ function removeV2ray(){
 
 
 function upgradeV2ray(){
-
     getTrojanAndV2rayVersion "v2ray"
 
     green " =================================================="
@@ -1692,7 +1691,7 @@ function start_menu(){
     green " =================================================="
     green " Trojan Trojan-go V2ray 一键安装脚本 2020-9-2 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
-    red " *若是已安装trojan或第二次使用脚本，请先执行卸载trojan"
+    red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
     green " 1. 安装 BBR-PLUS 加速4合一脚本"
     echo
