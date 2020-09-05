@@ -449,7 +449,7 @@ configV2rayPort="$(($RANDOM + 10000))"
 configV2rayPath="${HOME}/v2ray"
 configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
-
+configV2rayProtocol="vmess"
 
 
 
@@ -1446,6 +1446,14 @@ function installV2ray(){
     green "    开始安装 V2ray Version: ${versionV2ray} !"
     green " =================================================="
 
+    read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[Y/n]?" isV2rayUseVLessInput
+    isV2rayUseVLessInput=${isV2rayUseVLessInput:-Y}
+
+    if [[ $isV2rayUseVLessInput == [Yy] ]]; then
+        configV2rayProtocol="vless"
+    else
+        configV2rayProtocol="vmess"
+    fi
 
     mkdir -p ${configV2rayPath}
     cd ${configV2rayPath}
@@ -1465,7 +1473,7 @@ function installV2ray(){
   "inbound": {
     "port": ${configV2rayPort},
     "listen":"127.0.0.1",
-    "protocol": "vmess",
+    "protocol": "${configV2rayProtocol}",
     "settings": {
       "clients": [
         {

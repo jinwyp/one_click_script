@@ -7,9 +7,9 @@
 
 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
 
-支持 trojan 或 trojan-go 与 v2ray 共存
+支持 trojan， trojan-go 和v2ray 的 安装 升级 完全卸载
 
-支持 trojan 和 trojan-go 安装 升级 卸载
+支持 trojan 或 trojan-go 与 v2ray 共存, 支持v2ray 新的vless协议  
 
 安装 trojan-go 可以选择是否支持CDN (websocket)
 
