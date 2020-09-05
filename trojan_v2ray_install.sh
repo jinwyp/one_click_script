@@ -1582,15 +1582,16 @@ EOF
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 ===========客户端配置参数=============
 {
-地址：${configSSLDomain}
-端口：443
-uuid：${v2rayPassword1}
-额外id：64
-加密方式：aes-128-gcm
-传输协议：ws
-别名：自己起个任意名称
-路径：/${configV2rayWebSocketPath}
-底层传输：tls
+协议:${configV2rayProtocol},
+地址:${configSSLDomain},
+端口:443,
+uuid:${v2rayPassword1},
+额外id:64, // 如果是Vless协议则不需要该项
+加密方式:aes-128-gcm,
+传输协议:ws,
+别名:自己起个任意名称,
+路径:/${configV2rayWebSocketPath},
+底层传输:tls
 }
 EOF
 
