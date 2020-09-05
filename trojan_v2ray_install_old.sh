@@ -1570,7 +1570,7 @@ uuid：${v2rayPassword1}
 加密方式：aes-128-gcm
 传输协议：ws
 别名：自己起个任意名称
-路径：${configV2rayWebSocketPath}
+路径：/${configV2rayWebSocketPath}
 底层传输：tls
 }
 EOF
