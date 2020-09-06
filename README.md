@@ -2,29 +2,31 @@
 
 # Trojan (支持 trojan-go版本) 和 V2ray 一键安装脚本 
 
-====================================
-系统：centos7+/debian9+/ubuntu16.04+
 
-脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
-
-支持 trojan， trojan-go 和v2ray 的 安装 升级 完全卸载
-
-支持 trojan 或 trojan-go 与 v2ray 共存, 支持v2ray 新的vless协议  
-
-安装 trojan-go 可以选择是否支持CDN (websocket)
-
-默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
-
+## 功能说明 Feature 
 ====================================
 
-脚本安装命令
+1. 系统要求：centos7+/debian9+/ubuntu16.04+
+2. 支持 trojan， trojan-go 和v2ray 的 安装 升级 完全卸载
+3. 支持 trojan 或 trojan-go 与 v2ray 共存
+4. 支持v2ray 新的vless协议  
+5. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
+6. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
+
+9. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
+
+====================================
+
+## 安装方法 Installation 
+
+#### via curl 安装命令 
 
 ```bash
 curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
 
 ```
 
-或
+#### via wget 安装命令 
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
@@ -33,9 +35,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
-
-
-![功能说明](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
+![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
 
 
 ## 使用说明 Usage 
