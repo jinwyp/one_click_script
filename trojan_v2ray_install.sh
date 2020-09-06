@@ -280,6 +280,11 @@ function installBBR(){
     wget -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
+function installBBR2(){
+    $osSystemPackage install wget git -y
+    wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
+}
+
 function installSoftEditor(){
     # 安装 micro 编辑器
     if [[ ! -f "${HOME}/bin/micro" ]] ;  then
@@ -1843,6 +1848,9 @@ function start_menu(){
             changeLinuxSSHPort
             sleep 10s
             start_menu
+        ;;
+        98 )
+            installBBR2
         ;;
         99 )
             getTrojanAndV2rayVersion "trojan"
