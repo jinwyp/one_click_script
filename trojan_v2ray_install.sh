@@ -413,7 +413,7 @@ configDownloadTempPath="${HOME}/temp"
 versionTrojan="1.16.0"
 downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 
-versionTrojanGo="0.8.1"
+versionTrojanGo="0.8.2"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
 versionV2ray="4.27.5"
