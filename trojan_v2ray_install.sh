@@ -853,7 +853,7 @@ function installTrojanServer(){
 
 
     green " =================================================="
-    green "  开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
+    green " 开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
     yellow " 请输入trojan密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     green " =================================================="
 
