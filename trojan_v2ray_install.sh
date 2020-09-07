@@ -530,7 +530,7 @@ function getTrojanAndV2rayVersion(){
     if [[ $1 == "trojan-web" ]] ; then
         versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
         downloadFilenameTrojanWeb="trojan"
-        echo "versionV2ray: ${versionV2ray}"
+        echo "versionTrojanWeb: ${versionTrojanWeb}"
     fi
 
 }
@@ -1779,6 +1779,10 @@ function upgradeV2ray(){
 
 
 
+
+
+
+
 function installTrojanWeb(){
     # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh
 
@@ -1839,8 +1843,12 @@ EOF
         green " =================================================="
 
         # 命令补全环境变量
+        echo '"/root/.acme.sh/acme.sh.env"' >> ~/.${osSystemShell}rc
         echo "export PATH=$PATH:${configTrojanWebPath}" >> ~/.${osSystemShell}rc
         source ~/.${osSystemShell}rc
+
+        # 缺失/usr/local/bin路径时自动添加
+        [[ -z `echo $PATH|grep /usr/local/bin` ]] && { echo 'export PATH=$PATH:/usr/local/bin' >> /etc/profile; source /etc/profile; }
 
         ${configTrojanWebPath}/trojan-web
 
@@ -1879,10 +1887,15 @@ function removeTrojanWeb(){
     rm -rf /home/mysql /home/mariadb
 
 
+    # 移除环境变量
+    sed -i '/trojan/d' ~/.${osSystemShell}rc
+    source ~/.${osSystemShell}rc
+
     green " ================================================== "
     green "  Trojan-web 卸载完毕 !"
     green " ================================================== "
 }
+
 function upgradeTrojanWeb(){
     getTrojanAndV2rayVersion "trojan-web"
     green " =================================================="
@@ -1894,7 +1907,6 @@ function upgradeTrojanWeb(){
     mkdir -p ${configDownloadTempPath}/upgrade/trojan-web
 
     wget -O ${configDownloadTempPath}/upgrade/trojan-web/trojan-web "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
-
     mv -f ${configDownloadTempPath}/upgrade/trojan-web/trojan-web ${configTrojanWebPath}
     chmod +x ${configTrojanWebPath}/trojan-web
 
