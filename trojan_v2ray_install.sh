@@ -2058,8 +2058,8 @@ function start_menu(){
     green " 22. 设置可以使用root登陆"
     green " 23. 修改SSH 登陆端口号"
     green " =================================================="
-    green " 41 VPS 测网速工具 子菜单"
-    green " 42 trojan 和 v2ray 可视化管理面板 子菜单"
+    green " 41 VPS 测网速工具"
+    green " 42 安装 trojan 和 v2ray 可视化管理面板"
     echo
     green " 0. 退出脚本"
     echo
@@ -2176,6 +2176,7 @@ function start_menu(){
         99 )
             getTrojanAndV2rayVersion "trojan"
             getTrojanAndV2rayVersion "trojan-go"
+            getTrojanAndV2rayVersion "trojan-web"
             getTrojanAndV2rayVersion "v2ray"
         ;;
         31 )
