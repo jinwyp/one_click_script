@@ -1937,11 +1937,11 @@ function startMenuOther(){
     green " 1. 安装 trojan-web (trojan 和 trojan-go 可视化管理面板) 和 nginx 伪装网站"
     green " 2. 升级 trojan-web 到最新版本"
     green " 3. 重新申请证书"
-    ren " 4. 卸载 trojan-web 和 nginx "
+    red " 4. 卸载 trojan-web 和 nginx "
     echo
     green " 5. 安装 v2ray 可视化管理面板V2ray UI"
     green " 6. 升级 v2ray UI 到最新版本"
-    ren " 7. 卸载 v2ray UI 和 nginx"
+    red " 7. 卸载 v2ray UI 和 nginx"
 
     red " 注意: 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 或运行过请用本脚本卸载"
     red " 注意: 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 运行过请用其他脚本卸载"
