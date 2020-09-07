@@ -24,6 +24,7 @@ bold(){
 osRelease=""
 osSystemPackage=""
 osSystemMdPath=""
+osSystemShell="bash"
 
 # 系统检测版本
 function getLinuxOSVersion(){
@@ -57,7 +58,10 @@ function getLinuxOSVersion(){
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
     fi
-    echo "OS info: ${osRelease}, ${osSystemPackage}, ${osSystemMdPath}"
+
+    [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
+
+    echo "OS info: ${osRelease}, ${osSystemPackage}, ${osSystemMdPath}， ${osSystemShell}"
 }
 
 
@@ -276,12 +280,10 @@ function setLinuxDateZone(){
 # 软件安装
 
 function installBBR(){
-    $osSystemPackage install wget git -y
     wget -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
 function installBBR2(){
-    $osSystemPackage install wget git -y
     wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
@@ -424,6 +426,9 @@ downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 versionV2ray="4.27.5"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
+versionTrojanWeb="2.8.7"
+downloadFilenameTrojanWeb="trojan"
+
 promptInfoTrojanName=""
 isTrojanGo="no"
 isTrojanGoSupportWebsocket="false"
@@ -432,14 +437,15 @@ configTrojanPasswordPrefixInput="jin"
 
 configTrojanPath="${HOME}/trojan"
 configTrojanGoPath="${HOME}/trojan-go"
+configTrojanWebPath="${HOME}/trojan-web"
 configTrojanLogFile="${HOME}/trojan-access.log"
 configTrojanGoLogFile="${HOME}/trojan-go-access.log"
 
 configTrojanBasePath=${configTrojanPath}
 configTrojanBaseVersion=${versionTrojan}
 
-
-
+configTrojanWebNginxPath=$(cat /dev/urandom | head -1 | md5sum | head -c 5)
+configTrojanWebPort="$(($RANDOM + 10000))"
 
 isNginxWithSSL="no"
 nginxConfigPath="/etc/nginx/nginx.conf"
@@ -518,6 +524,12 @@ function getTrojanAndV2rayVersion(){
     if [[ $1 == "v2ray" ]] ; then
         versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
         downloadFilenameV2ray="v2ray-linux-64.zip"
+        echo "versionV2ray: ${versionV2ray}"
+    fi
+
+    if [[ $1 == "trojan-web" ]] ; then
+        versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
+        downloadFilenameTrojanWeb="trojan"
         echo "versionV2ray: ${versionV2ray}"
     fi
 
@@ -658,6 +670,70 @@ http {
     }
 }
 EOF
+
+    elif [ $1 == "trojan-web" ] ; then
+
+        cat > "${nginxConfigPath}" <<-EOF
+user  root;
+worker_processes  1;
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+events {
+    worker_connections  1024;
+}
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
+                      '"\$request" \$status \$body_bytes_sent  '
+                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
+    access_log  $nginxAccessLogFilePath  main;
+    error_log $nginxErrorLogFilePath;
+    sendfile        on;
+    #tcp_nopush     on;
+    keepalive_timeout  120;
+    client_max_body_size 20m;
+    #gzip  on;
+
+    server {
+        listen       80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location /$configV2rayWebSocketPath {
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:$configV2rayPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+        }
+
+        location /$configTrojanWebNginxPath {
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:$configTrojanWebPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+        }
+
+        location ~* ^/(js|css|vendor|common|auth|trojan)/ {
+            proxy_pass  http://127.0.0.1:$configTrojanWebPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $http_host;
+        }
+
+        # http 强制跳转到 https
+        if ( $remote_addr != 127.0.0.1 ){
+            rewrite ^/(.*)$ https://$configSSLDomain/$1 redirect;
+        }
+    }
+}
+EOF
     else
         cat > "${nginxConfigPath}" <<-EOF
 user  root;
@@ -741,7 +817,12 @@ EOF
     green " ================================================== "
     green "       Web服务器 nginx 安装成功!!"
     green "    伪装站点为 http://${configSSLDomain}"
-	green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+
+	if [ $1 == "trojan-web" ] ; then
+	    green "    Trojan可视化管理面板地址 http://${configSSLDomain}/${configTrojanWebNginxPath}!"
+	fi
+
+    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
 	green "    nginx 配置路径 ${nginxConfigPath} "
 	green "    nginx 访问日志 ${nginxAccessLogFilePath} "
 	green "    nginx 错误日志 ${nginxErrorLogFilePath} "
@@ -1295,7 +1376,7 @@ EOF
     # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
 
     # (crontab -l 2>/dev/null | grep -v '^[a-zA-Z]'; echo "15 4 * * 0,1,2,3,4,5,6 systemctl restart trojan.service") | sort - | uniq - | crontab -
-    (crontab -l ; echo "15 4 * * 0,1,2,3,4,5,6 systemctl restart trojan${promptInfoTrojanName}.service") | sort - | uniq - | crontab -
+    (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 systemctl restart trojan${promptInfoTrojanName}.service") | sort - | uniq - | crontab -
 
 
 	green "======================================================================"
@@ -1697,12 +1778,250 @@ function upgradeV2ray(){
 }
 
 
+
+function installTrojanWeb(){
+    # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh
+
+
+    if [ -f "${configTrojanWebPath}/trojan-web" ] ; then
+        green " =================================================="
+        green "  已安装过 Trojan-web 可视化管理面板, 退出安装 !"
+        green " =================================================="
+        exit
+    fi
+
+    stopServiceNginx
+    testLinuxPortUsage
+
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
+    green " ================================================== "
+
+    read configSSLDomain
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+
+        getTrojanAndV2rayVersion "trojan-web"
+        green " =================================================="
+        green "    开始安装 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
+        green " =================================================="
+
+        wget -O trojan-web -N --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+        chmod +x ${configTrojanWebPath}/trojan-web
+
+        # 增加启动脚本
+        cat > ${osSystemMdPath}trojan-web.service <<-EOF
+[Unit]
+Description=trojan-web
+Documentation=https://github.com/Jrohy/trojan
+After=network.target network-online.target nss-lookup.target mysql.service mariadb.service mysqld.service docker.service
+
+[Service]
+Type=simple
+StandardError=journal
+ExecStart=${configTrojanWebPath}/trojan-web web -p ${configTrojanWebPort}
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=on-failure
+RestartSec=3s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+        sudo systemctl daemon-reload
+        sudo systemctl restart trojan-web.service
+        sudo systemctl enable trojan-web.service
+
+        green " =================================================="
+        green " Trojan-web 可视化管理面板: ${versionTrojanWeb} 安装成功!"
+        green " Trojan可视化管理面板地址 http://${configSSLDomain}/${configTrojanWebNginxPath}!"
+        green " 开始运行命令 ${configTrojanWebPath}/trojan-web 进行初始化设置."
+        green " =================================================="
+
+        # 命令补全环境变量
+        echo "export PATH=$PATH:${configTrojanWebPath}" >> ~/.${osSystemShell}rc
+        source ~/.${osSystemShell}rc
+
+        ${configTrojanWebPath}/trojan-web
+
+        installWebServerNginx "trojan-web"
+
+        # (crontab -l ; echo '25 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null') | sort - | uniq - | crontab -
+        (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart trojan-web.service") | sort - | uniq - | crontab -
+
+    else
+        exit
+    fi
+}
+function removeTrojanWeb(){
+    # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh --remove
+
+    green " ================================================== "
+    red " 准备卸载已安装 Trojan-web "
+    green " ================================================== "
+
+    sudo systemctl stop trojan-web.service
+    sudo systemctl disable trojan-web.service
+
+    # 移除trojan web 管理程序  和数据库 leveldb文件
+    rm -rf ${configTrojanWebPath}
+    rm -f ${osSystemMdPath}trojan-web.service
+    rm -rf /var/lib/trojan-manager
+
+    # 移除trojan
+    rm -rf /usr/bin/trojan
+    rm -rf /usr/local/etc/trojan
+
+    # 移除trojan的专用数据库
+    docker rm -f trojan-mysql trojan-mariadb
+    rm -rf /home/mysql /home/mariadb
+
+
+    green " ================================================== "
+    green "  Trojan-web 卸载完毕 !"
+    green " ================================================== "
+}
+function upgradeTrojanWeb(){
+    getTrojanAndV2rayVersion "trojan-web"
+    green " =================================================="
+    green "    开始升级 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
+    green " =================================================="
+
+    sudo systemctl stop trojan-web.service
+
+    mkdir -p ${configDownloadTempPath}/upgrade/trojan-web
+
+    wget -O ${configDownloadTempPath}/upgrade/trojan-web/trojan-web "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+
+    mv -f ${configDownloadTempPath}/upgrade/trojan-web/trojan-web ${configTrojanWebPath}
+    chmod +x ${configTrojanWebPath}/trojan-web
+
+    sudo systemctl start trojan-web.service
+
+    green " ================================================== "
+    green "     升级成功 Trojan-web 可视化管理面板: ${versionV2ray} !"
+    green " ================================================== "
+}
+function runTrojanWebSSL(){
+    sudo systemctl stop trojan-web.service
+    sudo systemctl stop nginx.service
+    sudo systemctl stop trojan.service
+    ${configTrojanWebPath}/trojan-web tls
+    sudo systemctl start trojan-web.service
+    sudo systemctl start nginx.service
+    sudo systemctl restart trojan.service
+}
+
+
+function installV2rayUI(){
+    wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
+}
+function removeV2rayUI(){
+    green " =================================================="
+}
+function upgradeV2rayUI(){
+    green " =================================================="
+}
+
+
+
+
+
+
+
+
+
+
+function startMenuOther(){
+    clear
+    green " =================================================="
+    green " 1. 安装 trojan-web (trojan 和 trojan-go 可视化管理面板) 和 nginx 伪装网站"
+    green " 2. 升级 trojan-web 到最新版本"
+    green " 3. 重新申请证书"
+    ren " 4. 卸载 trojan-web 和 nginx "
+    echo
+    green " 5. 安装 v2ray 可视化管理面板V2ray UI"
+    green " 6. 升级 v2ray UI 到最新版本"
+    ren " 7. 卸载 v2ray UI 和 nginx"
+
+    red " 注意: 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 或运行过请用本脚本卸载"
+    red " 注意: 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 运行过请用其他脚本卸载"
+    echo
+    green " =================================================="
+    echo
+    green " 以下是 VPS 测网速工具"
+    red " 脚本测速会大量消耗 VPS 流量，请悉知！"
+    green " 11. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
+    green " 12. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
+	green " 13. testrace 回程路由  （四网路由测试）"
+	green " 14. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    echo
+    green " 9. 返回上级菜单"
+    green " 0. 退出脚本"
+    echo
+    read -p "请输入数字:" menuNumberInput
+    case "$menuNumberInput" in
+        1 )
+            installTrojanWeb
+        ;;
+        2 )
+            upgradeTrojanWeb
+        ;;
+        3 )
+            runTrojanWebSSL
+        ;;
+        4 )
+            removeTrojanWeb
+            removeTrojan
+        ;;
+        5 )
+            installV2rayUI
+        ;;
+        6 )
+            upgradeV2rayUI
+        ;;
+        7 )
+            removeV2rayUI
+            removeTrojan
+        ;;
+        11 )
+            vps_superspeed
+        ;;
+        12 )
+            vps_zbench
+        ;;
+        13 )
+            vps_testrace
+        ;;
+        14 )
+            vps_LemonBench
+        ;;
+        9)
+            start_menu
+        ;;
+        0 )
+            exit 1
+        ;;
+        * )
+            clear
+            red "请输入正确数字 !"
+            sleep 2s
+            startMenuOther
+        ;;
+    esac
+}
+
+
+
+
+
+
+
 function start_menu(){
     clear
 
     if [[ $1 == "first" ]] ; then
         getLinuxOSVersion
-        ${osSystemPackage} -y install wget curl
+        ${osSystemPackage} -y install wget curl git
     fi
 
     green " =================================================="
@@ -1739,12 +2058,8 @@ function start_menu(){
     green " 22. 设置可以使用root登陆"
     green " 23. 修改SSH 登陆端口号"
     green " =================================================="
-    green " 以下是 VPS 测网速工具"
-    red " 脚本测速会大量消耗 VPS 流量，请悉知！"
-    green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 32. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
-	green " 33. testrace 回程路由  （四网路由测试）"
-	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    green " 41 VPS 测网速工具 子菜单"
+    green " 42 trojan 和 v2ray 可视化管理面板 子菜单"
     echo
     green " 0. 退出脚本"
     echo
@@ -1848,6 +2163,12 @@ function start_menu(){
             changeLinuxSSHPort
             sleep 10s
             start_menu
+        ;;
+        41 )
+            startMenuOther
+        ;;
+        42 )
+            startMenuOther
         ;;
         98 )
             installBBR2
