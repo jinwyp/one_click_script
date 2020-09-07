@@ -1846,7 +1846,6 @@ EOF
 
         # 命令补全环境变量
         echo "export PATH=$PATH:${configTrojanWebPath}" >> ${HOME}/.${osSystemShell}rc
-        source "${HOME}/.${osSystemShell}rc"
 
         # (crontab -l ; echo '25 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null') | sort - | uniq - | crontab -
         (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart trojan-web.service") | sort - | uniq - | crontab -
@@ -1887,7 +1886,6 @@ function removeTrojanWeb(){
 
     # 移除环境变量
     sed -i '/trojan/d' ${HOME}/.${osSystemShell}rc
-    source "${HOME}/.${osSystemShell}rc"
 
     green " ================================================== "
     green "  Trojan-web 卸载完毕 !"
