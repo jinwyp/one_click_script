@@ -1805,7 +1805,7 @@ function installTrojanWeb(){
         green "    开始安装 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
         green " =================================================="
 
-        wget -O trojan-web -N --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+        wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
         chmod +x ${configTrojanWebPath}/trojan-web
 
         # 增加启动脚本
@@ -1948,9 +1948,10 @@ function startMenuOther(){
     green " 6. 安装 v2ray 可视化管理面板V2ray UI"
     green " 7. 升级 v2ray UI 到最新版本"
     red " 8. 卸载 v2ray UI 和 nginx"
-
-    red " 注意: 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 或运行过请用本脚本卸载"
-    red " 注意: 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 运行过请用其他脚本卸载"
+    echo
+    red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
+    red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
+    red " 上述2款可视化管理面板 无法同时安装!"
     echo
     green " =================================================="
     echo
