@@ -1805,6 +1805,7 @@ function installTrojanWeb(){
         green "    开始安装 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
         green " =================================================="
 
+        mkdir -p ${configTrojanWebPath}
         wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
         chmod +x ${configTrojanWebPath}/trojan-web
 
@@ -1898,6 +1899,7 @@ function upgradeTrojanWeb(){
     chmod +x ${configTrojanWebPath}/trojan-web
 
     sudo systemctl start trojan-web.service
+    sudo systemctl restart trojan.service
 
     green " ================================================== "
     green "     升级成功 Trojan-web 可视化管理面板: ${versionV2ray} !"
