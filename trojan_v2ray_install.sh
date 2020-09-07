@@ -660,12 +660,14 @@ http {
         index index.php index.html index.htm;
 
         location /$configV2rayWebSocketPath {
-            proxy_redirect off;
             proxy_pass http://127.0.0.1:$configV2rayPort;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection "upgrade";
             proxy_set_header Host \$http_host;
+
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
     }
 }
@@ -702,7 +704,6 @@ http {
         index index.php index.html index.htm;
 
         location /$configV2rayWebSocketPath {
-            proxy_redirect off;
             proxy_pass http://127.0.0.1:$configV2rayPort;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
@@ -711,11 +712,8 @@ http {
         }
 
         location /$configTrojanWebNginxPath {
-            proxy_redirect off;
-            proxy_pass http://127.0.0.1:$configTrojanWebPort;
-            proxy_http_version 1.1;
+            proxy_pass http://127.0.0.1:$configTrojanWebPort/;
             proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
             proxy_set_header Host \$http_host;
         }
 
@@ -727,7 +725,7 @@ http {
             proxy_set_header Host \$http_host;
         }
 
-        # http 强制跳转到 https
+        # http redirect to https
         if ( \$remote_addr != 127.0.0.1 ){
             rewrite ^/(.*)$ https://$configSSLDomain/\$1 redirect;
         }
@@ -777,7 +775,6 @@ http {
         index index.php index.html index.htm;
 
         location /$configV2rayWebSocketPath {
-            proxy_redirect off;
             proxy_pass http://127.0.0.1:$configV2rayPort;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
@@ -792,8 +789,7 @@ http {
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        root $configWebsitePath;
-        index index.php index.html index.htm;
+        return 301 https://$configSSLDomain\$request_uri;
     }
 }
 EOF
