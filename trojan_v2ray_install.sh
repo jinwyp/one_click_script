@@ -848,6 +848,7 @@ function removeNginx(){
 
     rm -rf "/etc/nginx"
     rm -rf /root/.acme.sh/
+    rm -rf ${configDownloadTempPath}
 
     green " ================================================== "
     green "  Nginx 卸载完毕 !"
