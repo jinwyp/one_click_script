@@ -724,7 +724,7 @@ http {
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "Upgrade";
-            proxy_set_header Host $http_host;
+            proxy_set_header Host \$http_host;
         }
 
         # http 强制跳转到 https
@@ -1795,7 +1795,6 @@ function installTrojanWeb(){
     fi
 
     stopServiceNginx
-    testLinuxPortUsage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -1842,17 +1841,15 @@ EOF
         green " 开始运行命令 ${configTrojanWebPath}/trojan-web 进行初始化设置."
         green " =================================================="
 
-        # 命令补全环境变量
-        echo '"/root/.acme.sh/acme.sh.env"' >> ~/.${osSystemShell}rc
-        echo "export PATH=$PATH:${configTrojanWebPath}" >> ~/.${osSystemShell}rc
-        source ~/.${osSystemShell}rc
 
-        # 缺失/usr/local/bin路径时自动添加
-        [[ -z `echo $PATH|grep /usr/local/bin` ]] && { echo 'export PATH=$PATH:/usr/local/bin' >> /etc/profile; source /etc/profile; }
 
         ${configTrojanWebPath}/trojan-web
 
         installWebServerNginx "trojan-web"
+
+        # 命令补全环境变量
+        echo "export PATH=$PATH:${configTrojanWebPath}" >> ~/.${osSystemShell}rc
+        source "~/.${osSystemShell}rc"
 
         # (crontab -l ; echo '25 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null') | sort - | uniq - | crontab -
         (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart trojan-web.service") | sort - | uniq - | crontab -
@@ -1873,6 +1870,7 @@ function removeTrojanWeb(){
     sudo systemctl disable trojan-web.service
 
     # 移除trojan web 管理程序  和数据库 leveldb文件
+    # rm -f /usr/local/bin/trojan
     rm -rf ${configTrojanWebPath}
     rm -f ${osSystemMdPath}trojan-web.service
     rm -rf /var/lib/trojan-manager
@@ -1883,7 +1881,8 @@ function removeTrojanWeb(){
     rm -f ${osSystemMdPath}trojan.service
 
     # 移除trojan的专用数据库
-    docker rm -f trojan-mysql trojan-mariadb
+    docker rm -f trojan-mysql
+    docker rm -f trojan-mariadb
     rm -rf /home/mysql /home/mariadb
 
 
@@ -1912,6 +1911,8 @@ function upgradeTrojanWeb(){
 
     sudo systemctl start trojan-web.service
     sudo systemctl restart trojan.service
+
+    crontab -r
 
     green " ================================================== "
     green "     升级成功 Trojan-web 可视化管理面板: ${versionV2ray} !"
