@@ -1859,6 +1859,7 @@ function removeTrojanWeb(){
     red " 准备卸载已安装 Trojan-web "
     green " ================================================== "
 
+    sudo systemctl stop trojan.service
     sudo systemctl stop trojan-web.service
     sudo systemctl disable trojan-web.service
 
@@ -1870,6 +1871,7 @@ function removeTrojanWeb(){
     # 移除trojan
     rm -rf /usr/bin/trojan
     rm -rf /usr/local/etc/trojan
+    rm -f ${osSystemMdPath}trojan.service
 
     # 移除trojan的专用数据库
     docker rm -f trojan-mysql trojan-mariadb
