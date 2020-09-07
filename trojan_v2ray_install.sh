@@ -1889,8 +1889,8 @@ function removeTrojanWeb(){
 
 
     # 移除环境变量
-    sed -i '/trojan/d' ~/.${osSystemShell}rc
-    source ~/.${osSystemShell}rc
+    sed -i '/trojan/d' ${HOME}/.${osSystemShell}rc
+    source "${HOME}/.${osSystemShell}rc"
 
     green " ================================================== "
     green "  Trojan-web 卸载完毕 !"
