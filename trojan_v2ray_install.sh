@@ -1912,6 +1912,9 @@ function runTrojanWebSSL(){
     sudo systemctl start nginx.service
     sudo systemctl restart trojan.service
 }
+function runTrojanWebLog(){
+    ${configTrojanWebPath}/trojan-web
+}
 
 
 function installV2rayUI(){
@@ -1939,11 +1942,12 @@ function startMenuOther(){
     green " 1. 安装 trojan-web (trojan 和 trojan-go 可视化管理面板) 和 nginx 伪装网站"
     green " 2. 升级 trojan-web 到最新版本"
     green " 3. 重新申请证书"
-    red " 4. 卸载 trojan-web 和 nginx "
+    green " 4. 查看日志, 管理用户, 查看配置等功能"
+    red " 5. 卸载 trojan-web 和 nginx "
     echo
-    green " 5. 安装 v2ray 可视化管理面板V2ray UI"
-    green " 6. 升级 v2ray UI 到最新版本"
-    red " 7. 卸载 v2ray UI 和 nginx"
+    green " 6. 安装 v2ray 可视化管理面板V2ray UI"
+    green " 7. 升级 v2ray UI 到最新版本"
+    red " 8. 卸载 v2ray UI 和 nginx"
 
     red " 注意: 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 或运行过请用本脚本卸载"
     red " 注意: 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 运行过请用其他脚本卸载"
@@ -1972,6 +1976,9 @@ function startMenuOther(){
             runTrojanWebSSL
         ;;
         4 )
+            runTrojanWebLog
+        ;;
+        5 )
             removeTrojanWeb
             removeTrojan
         ;;
@@ -2055,13 +2062,14 @@ function start_menu(){
     green " 18. 同时安装 trojan-go + v2ray 和 nginx, 不支持CDN"
     green " 19. 升级 v2ray 和 trojan-go 到最新版本"
     red " 20. 卸载 trojan-go, v2ray 和 nginx"
+    echo
+    green " 29 安装 trojan 和 v2ray 可视化管理面板"
     green " =================================================="
-    green " 21. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
-    green " 22. 设置可以使用root登陆"
-    green " 23. 修改SSH 登陆端口号"
+    green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
+    green " 32. 设置可以使用root登陆"
+    green " 33. 修改SSH 登陆端口号"
     green " =================================================="
     green " 41 VPS 测网速工具"
-    green " 42 安装 trojan 和 v2ray 可视化管理面板"
     echo
     green " 0. 退出脚本"
     echo
@@ -2150,26 +2158,26 @@ function start_menu(){
             removeTrojan
             removeV2ray
         ;;
-        21 )
+        31 )
             setLinuxDateZone
             testLinuxPortUsage
             installSoftEditor
             installSoftOhMyZsh
         ;;
-        22 )
+        32 )
             setLinuxRootLogin
             sleep 5s
             start_menu
         ;;
-        23 )
+        33 )
             changeLinuxSSHPort
             sleep 10s
             start_menu
         ;;
-        41 )
+        29 )
             startMenuOther
         ;;
-        42 )
+        41 )
             startMenuOther
         ;;
         98 )
