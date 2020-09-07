@@ -728,8 +728,8 @@ http {
         }
 
         # http 强制跳转到 https
-        if ( $remote_addr != 127.0.0.1 ){
-            rewrite ^/(.*)$ https://$configSSLDomain/$1 redirect;
+        if ( \$remote_addr != 127.0.0.1 ){
+            rewrite ^/(.*)$ https://$configSSLDomain/\$1 redirect;
         }
     }
 }
