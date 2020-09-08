@@ -2085,7 +2085,7 @@ function start_menu(){
     green " 19. 升级 v2ray 和 trojan-go 到最新版本"
     red " 20. 卸载 trojan-go, v2ray 和 nginx"
     echo
-    green " 29 安装 trojan 和 v2ray 可视化管理面板"
+    green " 29. 安装 trojan 和 v2ray 可视化管理面板"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 32. 设置可以使用root登陆"
