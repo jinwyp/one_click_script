@@ -1840,7 +1840,7 @@ EOF
 
         green " =================================================="
         green " Trojan-web 可视化管理面板: ${versionTrojanWeb} 安装成功!"
-        green " Trojan可视化管理面板地址 https://${configSSLDomain}/${configTrojanWebNginxPath}!"
+        green " Trojan可视化管理面板地址 https://${configSSLDomain}/${configTrojanWebNginxPath}"
         green " 开始运行命令 ${configTrojanWebPath}/trojan-web 进行初始化设置."
         green " =================================================="
 
@@ -1954,6 +1954,7 @@ function installV2rayUI(){
 
         wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
 
+        green " V2ray-UI 可视化管理面板地址 http://${configSSLDomain}:65432"
     else
         exit
     fi
