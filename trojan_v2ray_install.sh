@@ -673,7 +673,7 @@ http {
 }
 EOF
 
-    elif [ $1 == "trojan-web" ] ; then
+    elif [[ $1 == "trojan-web" ]] ; then
 
         cat > "${nginxConfigPath}" <<-EOF
 user  root;
@@ -814,7 +814,7 @@ EOF
     green "       Web服务器 nginx 安装成功!!"
     green "    伪装站点为 http://${configSSLDomain}"
 
-	if [ $1 == "trojan-web" ] ; then
+	if [[ $1 == "trojan-web" ]] ; then
 	    green "    Trojan-web ${versionTrojanWeb} 可视化管理面板地址  http://${configSSLDomain}/${configTrojanWebNginxPath} "
 	    green "    Trojan-web 可视化管理面板 可执行文件路径 ${configTrojanWebPath}/trojan-web"
 	    green "    Trojan 服务器端可执行文件路径 /usr/bin/trojan/trojan"
