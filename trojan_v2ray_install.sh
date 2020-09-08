@@ -2197,7 +2197,7 @@ function start_menu(){
             sleep 10s
             start_menu
         ;;
-        33 )
+        34 )
             setLinuxDateZone
             sleep 5s
             start_menu
@@ -2216,18 +2216,6 @@ function start_menu(){
             getTrojanAndV2rayVersion "trojan-go"
             getTrojanAndV2rayVersion "trojan-web"
             getTrojanAndV2rayVersion "v2ray"
-        ;;
-        31 )
-            vps_superspeed
-        ;;
-        32 )
-            vps_zbench
-        ;;
-        33 )
-            vps_testrace
-        ;;
-        34 )
-            vps_LemonBench
         ;;
         0 )
             exit 1
