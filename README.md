@@ -15,7 +15,9 @@
 7. trojan 和 v2ray 可视化管理面板安装. 
 8. 卸载后不留任何痕迹, 方便重复安装
 
-9. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
+11. 脚本感谢 https://github.com/sprov065/v2-ui 
+12. 脚本感谢 https://github.com/Jrohy/trojan 
+13. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
 
 ====================================
 
