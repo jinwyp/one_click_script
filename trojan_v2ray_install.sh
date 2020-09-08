@@ -1919,7 +1919,7 @@ function upgradeTrojanWeb(){
 
 
     green " ================================================== "
-    green "     升级成功 Trojan-web 可视化管理面板: ${versionV2ray} !"
+    green "     升级成功 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
     green " ================================================== "
 }
 function runTrojanWebSSL(){
