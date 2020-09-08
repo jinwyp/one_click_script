@@ -1987,6 +1987,7 @@ function startMenuOther(){
     read -p "请输入数字:" menuNumberInput
     case "$menuNumberInput" in
         1 )
+            setLinuxDateZone
             installTrojanWeb
         ;;
         2 )
@@ -2003,6 +2004,7 @@ function startMenuOther(){
             removeTrojanWeb
         ;;
         5 )
+            setLinuxDateZone
             installV2rayUI
         ;;
         6 )
@@ -2088,6 +2090,7 @@ function start_menu(){
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 32. 设置可以使用root登陆"
     green " 33. 修改SSH 登陆端口号"
+    green " 34. 设置时区为北京时间"
     green " =================================================="
     green " 41 VPS 测网速工具"
     echo
@@ -2192,6 +2195,11 @@ function start_menu(){
         33 )
             changeLinuxSSHPort
             sleep 10s
+            start_menu
+        ;;
+        33 )
+            setLinuxDateZone
+            sleep 5s
             start_menu
         ;;
         29 )
