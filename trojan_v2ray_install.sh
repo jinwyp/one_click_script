@@ -815,7 +815,12 @@ EOF
     green "    伪装站点为 http://${configSSLDomain}"
 
 	if [ $1 == "trojan-web" ] ; then
-	    green "    Trojan可视化管理面板地址 http://${configSSLDomain}/${configTrojanWebNginxPath}!"
+	    green "    Trojan-web ${versionTrojanWeb} 可视化管理面板地址  http://${configSSLDomain}/${configTrojanWebNginxPath}!"
+	    green "    Trojan-web 可视化管理面板 可执行文件路径 ${configTrojanWebPath}/trojan-web"
+	    green "    Trojan 服务器端可执行文件路径 /usr/bin/trojan/trojan"
+	    green "    Trojan 服务器端配置路径 /usr/local/etc/trojan/config.json "
+	    green "    Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service"
+	    green "    Trojan 停止命令: systemctl stop trojan.service  启动命令: systemctl start trojan.service  重启命令: systemctl restart trojan.service"
 	fi
 
     green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
@@ -1793,8 +1798,6 @@ function installTrojanWeb(){
 
     stopServiceNginx
     testLinuxPortUsage
-    # sudo systemctl start firewalld
-    # sudo systemctl enabled firewalld
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -1837,7 +1840,7 @@ EOF
 
         green " =================================================="
         green " Trojan-web 可视化管理面板: ${versionTrojanWeb} 安装成功!"
-        green " Trojan可视化管理面板地址 http://${configSSLDomain}/${configTrojanWebNginxPath}!"
+        green " Trojan可视化管理面板地址 https://${configSSLDomain}/${configTrojanWebNginxPath}!"
         green " 开始运行命令 ${configTrojanWebPath}/trojan-web 进行初始化设置."
         green " =================================================="
 
@@ -1890,6 +1893,8 @@ function removeTrojanWeb(){
     # 移除环境变量
     sed -i '/trojan/d' ${HOME}/.${osSystemShell}rc
 
+    crontab -r
+
     green " ================================================== "
     green "  Trojan-web 卸载完毕 !"
     green " ================================================== "
@@ -1912,7 +1917,6 @@ function upgradeTrojanWeb(){
     sudo systemctl start trojan-web.service
     sudo systemctl restart trojan.service
 
-    crontab -r
 
     green " ================================================== "
     green "     升级成功 Trojan-web 可视化管理面板: ${versionV2ray} !"
