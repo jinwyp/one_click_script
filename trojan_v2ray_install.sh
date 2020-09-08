@@ -2189,7 +2189,7 @@ function start_menu(){
         ;;
         32 )
             setLinuxRootLogin
-            sleep 5s
+            sleep 4s
             start_menu
         ;;
         33 )
@@ -2199,7 +2199,7 @@ function start_menu(){
         ;;
         34 )
             setLinuxDateZone
-            sleep 5s
+            sleep 4s
             start_menu
         ;;
         29 )
