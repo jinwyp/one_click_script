@@ -1792,6 +1792,9 @@ function installTrojanWeb(){
     fi
 
     stopServiceNginx
+    testLinuxPortUsage
+    # sudo systemctl start firewalld
+    # sudo systemctl enabled firewalld
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
