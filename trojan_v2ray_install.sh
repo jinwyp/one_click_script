@@ -1937,13 +1937,34 @@ function runTrojanWebLog(){
 
 
 function installV2rayUI(){
-    wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
+
+    stopServiceNginx
+    testLinuxPortUsage
+
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
+    green " ================================================== "
+
+    read configSSLDomain
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+
+        green " =================================================="
+        green "    开始安装 V2ray-UI 可视化管理面板 !"
+        green " =================================================="
+
+        wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
+
+    else
+        exit
+    fi
 }
 function removeV2rayUI(){
     green " =================================================="
+    /usr/bin/v2-ui
 }
 function upgradeV2rayUI(){
     green " =================================================="
+    /usr/bin/v2-ui
 }
 
 
