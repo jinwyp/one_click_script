@@ -1955,6 +1955,7 @@ function installV2rayUI(){
         wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
 
         green " V2ray-UI 可视化管理面板地址 http://${configSSLDomain}:65432"
+        green " V2ray-UI 可视化管理面板 默认管理员用户 admin 密码 admin "
     else
         exit
     fi
