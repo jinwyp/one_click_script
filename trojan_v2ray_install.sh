@@ -2105,8 +2105,10 @@ function start_menu(){
     green " 16. 升级 v2ray 和 trojan 到最新版本"
     red " 17. 卸载 trojan, v2ray 和 nginx"
     green " 18. 同时安装 trojan-go + v2ray 和 nginx, 不支持CDN"
-    green " 19. 升级 v2ray 和 trojan-go 到最新版本"
-    red " 20. 卸载 trojan-go, v2ray 和 nginx"
+    green " 19. 同时安装 trojan-go + v2ray 和 nginx, trojan-go 和 v2ray 都支持CDN"
+    green " 20. 升级 v2ray 和 trojan-go 到最新版本"
+    red " 21. 卸载 trojan-go, v2ray 和 nginx"
+
     echo
     green " 29. 安装 trojan 和 v2ray 可视化管理面板"
     green " =================================================="
@@ -2195,10 +2197,16 @@ function start_menu(){
         ;;
         19 )
             isTrojanGo="yes"
+            isTrojanGoSupportWebsocket="true"
+            installTrojanWholeProcess
+            installV2ray
+        ;;
+        20 )
+            isTrojanGo="yes"
             upgradeTrojan
             upgradeV2ray
         ;;
-        20 )
+        21 )
             isTrojanGo="yes"
             removeNginx
             removeTrojan
