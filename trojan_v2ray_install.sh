@@ -815,7 +815,7 @@ EOF
     green "    伪装站点为 http://${configSSLDomain}"
 
 	if [[ $1 == "trojan-web" ]] ; then
-	    green "    Trojan-web ${versionTrojanWeb} 可视化管理面板地址  http://${configSSLDomain}/${configTrojanWebNginxPath} "
+	    yellow "    Trojan-web ${versionTrojanWeb} 可视化管理面板地址  http://${configSSLDomain}/${configTrojanWebNginxPath} "
 	    green "    Trojan-web 可视化管理面板 可执行文件路径 ${configTrojanWebPath}/trojan-web"
 	    green "    Trojan 服务器端可执行文件路径 /usr/bin/trojan/trojan"
 	    green "    Trojan 服务器端配置路径 /usr/local/etc/trojan/config.json "
