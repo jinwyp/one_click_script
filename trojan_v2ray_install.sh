@@ -255,8 +255,13 @@ function changeLinuxSSHPort(){
 
 function setLinuxDateZone(){
 
+    tempCurrentDateZone=$(date +'%z')
+
+    if [[ ${tempCurrentDateZone} == "+0800" ]]; then
+        exit
+    fi
     green " =================================================="
-    yellow "当前时区为: $(date -R)"
+    yellow "当前时区为: $tempCurrentDateZone | $(date -R) "
     yellow "是否设置时区为北京时间 +0800区, 以便cron定时重启脚本按照北京时间运行."
     green " =================================================="
     # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
