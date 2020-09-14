@@ -258,25 +258,27 @@ function setLinuxDateZone(){
     tempCurrentDateZone=$(date +'%z')
 
     if [[ ${tempCurrentDateZone} == "+0800" ]]; then
-        exit
-    fi
-    green " =================================================="
-    yellow "当前时区为: $tempCurrentDateZone | $(date -R) "
-    yellow "是否设置时区为北京时间 +0800区, 以便cron定时重启脚本按照北京时间运行."
-    green " =================================================="
-    # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
+        yellow "当前时区已经为北京时间  $tempCurrentDateZone | $(date -R) "
+    else 
+        green " =================================================="
+        yellow "当前时区为: $tempCurrentDateZone | $(date -R) "
+        yellow "是否设置时区为北京时间 +0800区, 以便cron定时重启脚本按照北京时间运行."
+        green " =================================================="
+        # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 
-    read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]?" osTimezoneInput
-    osTimezoneInput=${osTimezoneInput:-Y}
+        read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]?" osTimezoneInput
+        osTimezoneInput=${osTimezoneInput:-Y}
 
-    if [[ $osTimezoneInput == [Yy] ]]; then
-        if [[ -f /etc/localtime ]] && [[ -f /usr/share/zoneinfo/Asia/Shanghai ]];  then
-            mv /etc/localtime /etc/localtime.bak
-            cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+        if [[ $osTimezoneInput == [Yy] ]]; then
+            if [[ -f /etc/localtime ]] && [[ -f /usr/share/zoneinfo/Asia/Shanghai ]];  then
+                mv /etc/localtime /etc/localtime.bak
+                cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-            yellow "设置成功! 当前时区已设置为 $(date -R)"
-            green " =================================================="
+                yellow "设置成功! 当前时区已设置为 $(date -R)"
+                green " =================================================="
+            fi
         fi
+
     fi
 }
 
