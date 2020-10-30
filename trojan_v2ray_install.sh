@@ -597,9 +597,13 @@ function compareRealIpWithLocalIp(){
         # configNetworkLocalIp=`curl ipv4.icanhazip.com`
         configNetworkLocalIp=`curl v4.ident.me`
 
+        green " ================================================== "
+        green "     域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. "
+        green " ================================================== "
+
         if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
             green " ================================================== "
-            green "     域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. 域名解析正常!"
+            green "     域名解析正常!"
             green " ================================================== "
             true
         else
@@ -1603,7 +1607,7 @@ function installV2ray(){
         "error": "${configV2rayErrorLogFilePath}",
         "loglevel": "warning"
     },
-    "inbound": [
+    "inbounds": [
         {
             "port": 443,
             "listen":"127.0.0.1",
@@ -1772,10 +1776,16 @@ function installV2ray(){
             }
         }
     ],
-    "outbound": {
-        "protocol": "freedom",
-        "settings": {}
-    }
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ]
 }
 EOF
 
@@ -1788,7 +1798,7 @@ EOF
         "error": "${configV2rayErrorLogFilePath}",
         "loglevel": "warning"
     },
-    "inbound": [
+    "inbounds": [
         {
             "port": 443,
             "listen":"127.0.0.1",
@@ -1798,64 +1808,64 @@ EOF
                 "clients": [
                     {
                         "id": "${v2rayPassword1}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password11@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword2}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password12@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword3}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password13@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword4}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password14@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword5}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password15@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword6}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password16@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword7}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password17@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword8}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password18@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword9}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password19@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword10}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password20@gmail.com"
                     }
                 ],
                 "fallbacks": [
-                        {
-                            "dest": 80
-                        },
-                        {
-                            "path": "/${configV2rayWebSocketPath}",
-                            "dest": ${configV2rayPort},
-                            "xver": 1
-                        }
+                    {
+                        "dest": 80
+                    },
+                    {
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayPort},
+                        "xver": 1
+                    }
                 ]
             },
             "streamSettings": {
@@ -1882,52 +1892,52 @@ EOF
                 "clients": [
                     {
                         "id": "${v2rayPassword1}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password11@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword2}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password12@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword3}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password13@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword4}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password14@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword5}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password15@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword6}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password16@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword7}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password17@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword8}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password18@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword9}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password19@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword10}",
-                        "level": 1,
+                        "level": 0,
                         "email": "password20@gmail.com"
                     }
                 ],
@@ -1943,10 +1953,16 @@ EOF
             }
         }
     ],
-    "outbound": {
-        "protocol": "freedom",
-        "settings": {}
-    }
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ]
 }
 EOF
 
@@ -1956,91 +1972,89 @@ EOF
     else
         cat > ${configV2rayPath}/config.json <<-EOF
 {
-  "log" : {
-    "access": "${configV2rayAccessLogFilePath}",
-    "error": "${configV2rayErrorLogFilePath}",
-    "loglevel": "warning"
-  },
-  "inbound": {
-    "port": ${configV2rayPort},
-    "listen":"127.0.0.1",
-    "protocol": "${configV2rayProtocol}",
-    "settings": {
-      "decryption": "none",
-      "clients": [
-        {
-          "id": "${v2rayPassword1}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password11@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword2}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password12@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword3}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password13@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword4}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password14@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword5}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password15@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword6}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password16@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword7}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password17@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword8}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password18@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword9}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password19@gmail.com"
-        },
-        {
-          "id": "${v2rayPassword10}",
-          "level": 1,
-          "alterId": 64,
-          "email": "password20@gmail.com"
-        }
-      ]
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
     },
-    "streamSettings": {
-      "network": "ws",
-      "wsSettings": {
-        "path": "/${configV2rayWebSocketPath}"
-      }
-    }
-  },
-  "outbound": {
-    "protocol": "freedom",
-    "settings": {}
-  }
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "listen":"127.0.0.1",
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "decryption": "none",
+                "clients": [
+                    {
+                        "id": "${v2rayPassword1}",
+                        "level": 0,
+                        "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}",
+                        "level": 0,
+                        "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}",
+                        "level": 0,
+                        "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}",
+                        "level": 0,
+                        "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}",
+                        "level": 0,
+                        "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}",
+                        "level": 0,
+                        "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}",
+                        "level": 0,
+                        "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}",
+                        "level": 0,
+                        "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}",
+                        "level": 0,
+                        "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}",
+                        "level": 0,
+                        "email": "password20@gmail.com"
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/${configV2rayWebSocketPath}"
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ]
 }
 EOF
 
