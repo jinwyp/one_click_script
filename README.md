@@ -1,4 +1,4 @@
-# Easy install v2ray and trojan (trojan-go) script
+# Easy install v2ray and trojan (trojan-go) script (ultimate script for all condition)
 
 # Trojan (支持 trojan-go版本) 和 V2ray 一键安装脚本 
 
@@ -8,13 +8,13 @@
 1. 系统要求：centos7+/debian9+/ubuntu16.04+
 2. 支持 trojan， trojan-go 和v2ray 的 安装 升级 完全卸载
 3. 支持 trojan 或 trojan-go 与 v2ray 共存
-4. 支持 v2ray 新的vless协议  
+4. 支持 v2ray 新的vless协议 , 支持v2ray作为前端 同时转发trojan 和 websocket 
 5. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
 6. 可以仅安装 trojan 或 v2ray 而不安装nginx
 7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
 8. trojan 和 v2ray 可视化管理面板安装. 
 9. 卸载后不留任何痕迹, 方便重复安装
-
+10. 本脚本为安装trojan和v2ray的终极脚本, 包括各种模式, 其他脚本没有本脚本的全面
 
 ## 安装方法 Installation 
 
