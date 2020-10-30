@@ -594,7 +594,8 @@ function compareRealIpWithLocalIp(){
 
     if [ -n $1 ]; then
         configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-        configNetworkLocalIp=`curl ipv4.icanhazip.com`
+        # configNetworkLocalIp=`curl ipv4.icanhazip.com`
+        configNetworkLocalIp=`curl v4.ident.me`
 
         if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
             green " ================================================== "
@@ -2472,8 +2473,8 @@ function startMenuOther(){
 
     green " 11. 单独申请域名SSL证书"
     green " 12. 只安装trojan, 不安装nginx"
-    green " 13. 只安装trojan-go, 不支持CDN, 不开启websocket (兼容trojan客户端), 不安装nginx"
-    green " 14. 只安装trojan-go, 支持CDN, 开启websocket (不兼容trojan客户端), 不安装nginx"    
+    green " 13. 只安装trojan-go, 不支持CDN, 不开启websocket (兼容trojan客户端), 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"
+    green " 14. 只安装trojan-go, 支持CDN, 开启websocket (不兼容trojan客户端), 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
     green " 15. 只安装v2ray (VLess 或 VMess协议) 开启websocket, 支持CDN, 不安装nginx, 方便与现有网站或宝塔面板共存"
     green " 16. 只安装v2ray VLESS作为最前端 (VLESS-TCP-TLS-WS) 支持CDN, 不安装nginx"
     green " 17. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan) 支持VLESS的CDN, 不安装nginx"    
