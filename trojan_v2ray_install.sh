@@ -1611,7 +1611,6 @@ function installV2ray(){
     "inbounds": [
         {
             "port": 443,
-            "listen":"127.0.0.1",
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -1779,12 +1778,14 @@ function installV2ray(){
     ],
     "outbounds": [
         {
+            "tag": "direct",
             "protocol": "freedom",
-            "tag": "direct"
+            "settings": {}
         },
         {
+            "tag": "blocked",
             "protocol": "blackhole",
-            "tag": "block"
+            "settings": {}
         }
     ]
 }
@@ -1802,7 +1803,6 @@ EOF
     "inbounds": [
         {
             "port": 443,
-            "listen":"127.0.0.1",
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -1956,12 +1956,14 @@ EOF
     ],
     "outbounds": [
         {
+            "tag": "direct",
             "protocol": "freedom",
-            "tag": "direct"
+            "settings": {}
         },
         {
+            "tag": "blocked",
             "protocol": "blackhole",
-            "tag": "block"
+            "settings": {}
         }
     ]
 }
@@ -1981,7 +1983,6 @@ EOF
     "inbounds": [
         {
             "port": ${configV2rayPort},
-            "listen":"127.0.0.1",
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -2048,12 +2049,14 @@ EOF
     ],
     "outbounds": [
         {
+            "tag": "direct",
             "protocol": "freedom",
-            "tag": "direct"
+            "settings": {}
         },
         {
+            "tag": "blocked",
             "protocol": "blackhole",
-            "tag": "block"
+            "settings": {}
         }
     ]
 }
