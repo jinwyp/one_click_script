@@ -1,5 +1,20 @@
 #!/bin/bash
 
+export LC_ALL=C
+export LANG=C
+export LANGUAGE=en_US.UTF-8
+
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+  sudoCmd="sudo"
+else
+  sudoCmd=""
+fi
+
+uninstall() {
+  ${sudoCmd} $(which rm) -rf $1
+  printf "Removed: %s\n" $1
+}
+
 
 # fonts color
 red(){
@@ -864,7 +879,8 @@ function removeNginx(){
     rm -f ${nginxErrorLogFilePath}
 
     rm -rf "/etc/nginx"
-    rm -rf /root/.acme.sh/
+    ${sudoCmd} bash /root/.acme.sh/acme.sh --uninstall
+    uninstall /root/.acme.sh
     rm -rf ${configDownloadTempPath}
 
     green " ================================================== "
@@ -2456,7 +2472,11 @@ function startMenuOther(){
     green " 16. 只安装v2ray VLESS作为最前端 (VLESS-TCP-TLS-WS) 支持CDN, 不安装nginx"
     green " 17. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan) 支持VLESS的CDN, 不安装nginx"    
     green " 18. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan-go) 支持VLESS的CDN, 不安装nginx"   
-    green " 19. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan-go) 支持VLESS的CDN和trojan-go的CDN, 不安装nginx"       
+    green " 19. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan-go) 支持VLESS的CDN和trojan-go的CDN, 不安装nginx"   
+
+    red " 27. 卸载 trojan"    
+    red " 28. 卸载 trojan-go"   
+    red " 29. 卸载 v2ray"   
     echo
     red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
     red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
@@ -2540,7 +2560,17 @@ function startMenuOther(){
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
             getHTTPSV2rayUI "v2ray"
-        ;;                                         
+        ;;     
+        27 )
+            removeTrojan
+        ;;    
+        28 )
+            isTrojanGo="yes"
+            removeTrojan
+        ;;
+        29 )
+            removeV2ray
+        ;;                                                   
         31 )
             vps_superspeed
         ;;
