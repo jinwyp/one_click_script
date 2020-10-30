@@ -550,6 +550,7 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "v2ray" ]] ; then
         versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
+        versionV2ray="4.31.3"
         downloadFilenameV2ray="v2ray-linux-64.zip"
         echo "versionV2ray: ${versionV2ray}"
     fi
