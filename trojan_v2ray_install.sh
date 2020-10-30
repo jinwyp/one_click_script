@@ -2126,7 +2126,7 @@ EOF
 	green "======================================================================"
 	blue  "----------------------------------------"
 	yellow "V2ray 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
-	yellow "服务器地址: ${configSSLDomain}  端口: 443"
+	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
 	yellow "用户ID或密码1: ${v2rayPassword1}"
 	yellow "用户ID或密码2: ${v2rayPassword2}"
 	yellow "用户ID或密码3: ${v2rayPassword3}"
