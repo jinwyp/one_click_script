@@ -1963,7 +1963,10 @@ function installV2rayUI(){
         wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
 
         green " V2ray-UI 可视化管理面板地址 http://${configSSLDomain}:65432"
-        green " V2ray-UI 可视化管理面板 默认管理员用户 admin 密码 admin "
+        green " 请确保 65432 端口已经放行, 例如检查linux防火墙或VPS防火墙 65432 端口是否开启"
+        green " V2ray-UI 可视化管理面板 默认管理员用户 admin 密码 admin, 为保证安全,请登陆后尽快修改默认密码 "
+        green " =================================================="
+
     else
         exit
     fi
@@ -1976,7 +1979,29 @@ function upgradeV2rayUI(){
     green " =================================================="
     /usr/bin/v2-ui
 }
+function getHTTPSV2rayUI(){
+    stopServiceNginx
+    testLinuxPortUsage
 
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
+    green " ================================================== "
+
+    read configSSLDomain
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+
+        getHTTPSCertificate "standalone"
+
+        green " =================================================="
+        green "   域名申请成功 !"
+        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key  "
+        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+        green " =================================================="
+
+    else
+        exit
+    fi
+}
 
 
 
@@ -1999,6 +2024,8 @@ function startMenuOther(){
     green " 7. 升级 v2ray UI 到最新版本"
     red " 8. 卸载 v2ray UI"
     echo
+    green " 11. 单独申请域名SSL证书"
+    echo
     red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
     red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
     red " 上述2款可视化管理面板 无法同时安装!"
@@ -2007,10 +2034,10 @@ function startMenuOther(){
     echo
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
-    green " 11. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 12. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
-	green " 13. testrace 回程路由  （四网路由测试）"
-	green " 14. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
+    green " 32. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
+	green " 33. testrace 回程路由  （四网路由测试）"
+	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -2046,15 +2073,18 @@ function startMenuOther(){
             removeV2rayUI
         ;;
         11 )
+            getHTTPSV2rayUI
+        ;;
+        31 )
             vps_superspeed
         ;;
-        12 )
+        32 )
             vps_zbench
         ;;
-        13 )
+        33 )
             vps_testrace
         ;;
-        14 )
+        34 )
             vps_LemonBench
         ;;
         9)
