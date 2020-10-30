@@ -2464,6 +2464,12 @@ function startMenuOther(){
     green " 7. 升级 v2ray UI 到最新版本"
     red " 8. 卸载 v2ray UI"
     echo
+    red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
+    red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
+    red " 上述2款可视化管理面板 无法同时安装!"
+
+    green " =================================================="
+
     green " 11. 单独申请域名SSL证书"
     green " 12. 只安装trojan, 不安装nginx"
     green " 13. 只安装trojan-go, 不支持CDN, 不开启websocket (兼容trojan客户端), 不安装nginx"
@@ -2477,11 +2483,7 @@ function startMenuOther(){
     red " 27. 卸载 trojan"    
     red " 28. 卸载 trojan-go"   
     red " 29. 卸载 v2ray"   
-    echo
-    red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
-    red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
-    red " 上述2款可视化管理面板 无法同时安装!"
-    echo
+
     green " =================================================="
     echo
     green " 以下是 VPS 测网速工具"
@@ -2613,7 +2615,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 2020-9-10 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray 一键安装脚本 2020-11-01 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
