@@ -1678,18 +1678,18 @@ function installV2ray(){
                     }
                 ],
                 "fallbacks": [
-                        {
-                            "dest": ${configV2rayTrojanPort}
-                        },
-                        {
-                            "path": "/${configTrojanGoWebSocketPath}",
-                            "dest": ${configV2rayTrojanPort}
-                        },
-                        {
-                            "path": "/${configV2rayWebSocketPath}",
-                            "dest": ${configV2rayPort},
-                            "xver": 1
-                        }
+                    {
+                        "dest": ${configV2rayTrojanPort}
+                    },
+                    {
+                        "path": "/${configTrojanGoWebSocketPath}",
+                        "dest": ${configV2rayTrojanPort}
+                    },
+                    {
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayPort},
+                        "xver": 1
+                    }
                 ]
             },
             "streamSettings": {
@@ -1702,7 +1702,7 @@ function installV2ray(){
                     "certificates": [
                         {
                             "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key",
+                            "keyFile": "${configSSLCertPath}/private.key"
                         }
                     ]
                 }
@@ -1879,7 +1879,7 @@ EOF
                     "certificates": [
                         {
                             "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key",
+                            "keyFile": "${configSSLCertPath}/private.key"
                         }
                     ]
                 }
