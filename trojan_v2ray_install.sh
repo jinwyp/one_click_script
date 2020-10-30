@@ -467,7 +467,7 @@ configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
 configV2rayPortShowInfo=$configV2rayPort
 configV2rayIsTlsShowInfo="none"
-
+configV2rayTrojanPort="$(($RANDOM + 10000))"
 
 configV2rayPath="${HOME}/v2ray"
 configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
@@ -973,7 +973,9 @@ function installTrojanServer(){
     fi
 
 
-
+    if [ "$configV2rayVlessMode" != "trojan" ] ; then
+        configV2rayTrojanPort=443
+    fi
 
     if [ "$isTrojanGo" = "no" ] ; then
 
@@ -982,7 +984,7 @@ function installTrojanServer(){
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
-    "local_port": 443,
+    "local_port": $configV2rayTrojanPort,
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
@@ -1152,7 +1154,7 @@ EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
-    "local_port": 443,
+    "local_port": $configV2rayTrojanPort,
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
@@ -1574,7 +1576,195 @@ function installV2ray(){
     # 增加 v2ray 服务器端配置
 
     if [[ -n "$configV2rayVlessMode" ]]; then
-        cat > ${configV2rayPath}/config.json <<-EOF
+
+        if [[ "$configV2rayVlessMode" == "trojan" ]]; then
+
+            cat > ${configV2rayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    "inbound": [
+        {
+            "port": 443,
+            "listen":"127.0.0.1",
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "decryption": "none",
+                "clients": [
+                    {
+                        "id": "${v2rayPassword1}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}",
+                        "flow": "xtls-rprx-origin",
+                        "level": 0,
+                        "email": "password20@gmail.com"
+                    }
+                ],
+                "fallbacks": [
+                        {
+                            "dest": ${configV2rayTrojanPort}
+                        },
+                        {
+                            "path": "/${configTrojanGoWebSocketPath}",
+                            "dest": ${configV2rayTrojanPort}
+                        },
+                        {
+                            "path": "/${configV2rayWebSocketPath}",
+                            "dest": ${configV2rayPort},
+                            "xver": 1
+                        }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "xtls",
+                "xtlsSettings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
+                            "keyFile": "${configSSLCertPath}/private.key",
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "port": ${configV2rayPort},
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "${v2rayPassword1}",
+                        "level": 0,
+                        "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}",
+                        "level": 0,
+                        "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}",
+                        "level": 0,
+                        "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}",
+                        "level": 0,
+                        "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}",
+                        "level": 0,
+                        "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}",
+                        "level": 0,
+                        "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}",
+                        "level": 0,
+                        "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}",
+                        "level": 0,
+                        "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}",
+                        "level": 0,
+                        "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}",
+                        "level": 0,
+                        "email": "password20@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "acceptProxyProtocol": true,
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
+        }
+    ],
+    "outbound": {
+        "protocol": "freedom",
+        "settings": {}
+    }
+}
+EOF
+
+        else
+
+            cat > ${configV2rayPath}/config.json <<-EOF
 {
     "log" : {
         "access": "${configV2rayAccessLogFilePath}",
@@ -1742,6 +1932,10 @@ function installV2ray(){
     }
 }
 EOF
+
+        fi
+
+
     else
         cat > ${configV2rayPath}/config.json <<-EOF
 {
@@ -1869,6 +2063,10 @@ EOF
         configV2rayIsTlsShowInfo="tls"
     else
         configV2rayIsTlsShowInfo="none"
+    fi
+
+    if [[ -n "$configV2rayVlessMode" ]]; then
+        configV2rayIsTlsShowInfo="tls"
     fi
 
     # 增加客户端配置说明
@@ -2206,6 +2404,10 @@ function getHTTPSV2rayUI(){
 
             if [[ $1 == "v2ray" ]] ; then
                 installV2ray
+
+                if [[ $configV2rayVlessMode == "trojan" ]] ; then
+                    installTrojanServer
+                fi
             fi
         else
             red "==================================="
@@ -2252,6 +2454,9 @@ function startMenuOther(){
     green " 14. 只安装trojan-go, 支持CDN, 开启websocket (不兼容trojan客户端), 不安装nginx"    
     green " 15. 只安装v2ray (VLess 或 VMess协议) 开启websocket, 支持CDN, 不安装nginx, 方便与现有网站或宝塔面板共存"
     green " 16. 只安装v2ray VLESS作为最前端 (VLESS-TCP-TLS-WS) 支持CDN, 不安装nginx"
+    green " 17. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan) 支持VLESS的CDN, 不安装nginx"    
+    green " 18. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan-go) 支持VLESS的CDN, 不安装nginx"   
+    green " 19. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan-go) 支持VLESS的CDN和trojan-go的CDN, 不安装nginx"       
     echo
     red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
     red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
@@ -2320,7 +2525,22 @@ function startMenuOther(){
         16 )
             configV2rayVlessMode="ws"
             getHTTPSV2rayUI "v2ray"
-        ;;                       
+        ;;       
+        17 )
+            configV2rayVlessMode="trojan"
+            getHTTPSV2rayUI "v2ray"
+        ;;
+        18 )
+            configV2rayVlessMode="trojan"
+            isTrojanGo="yes"
+            getHTTPSV2rayUI "v2ray"
+        ;;    
+        19 )
+            configV2rayVlessMode="trojan"
+            isTrojanGo="yes"
+            isTrojanGoSupportWebsocket="true"
+            getHTTPSV2rayUI "v2ray"
+        ;;                                         
         31 )
             vps_superspeed
         ;;
