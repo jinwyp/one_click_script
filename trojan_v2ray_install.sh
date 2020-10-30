@@ -1614,7 +1614,6 @@ function installV2ray(){
             "listen":"127.0.0.1",
             "protocol": "${configV2rayProtocol}",
             "settings": {
-                "decryption": "none",
                 "clients": [
                     {
                         "id": "${v2rayPassword1}",
@@ -1677,6 +1676,7 @@ function installV2ray(){
                         "email": "password20@gmail.com"
                     }
                 ],
+                "decryption": "none",
                 "fallbacks": [
                     {
                         "dest": ${configV2rayTrojanPort}
@@ -1805,7 +1805,6 @@ EOF
             "listen":"127.0.0.1",
             "protocol": "${configV2rayProtocol}",
             "settings": {
-                "decryption": "none",
                 "clients": [
                     {
                         "id": "${v2rayPassword1}",
@@ -1858,6 +1857,7 @@ EOF
                         "email": "password20@gmail.com"
                     }
                 ],
+                "decryption": "none",
                 "fallbacks": [
                     {
                         "dest": 80
@@ -1984,7 +1984,6 @@ EOF
             "listen":"127.0.0.1",
             "protocol": "${configV2rayProtocol}",
             "settings": {
-                "decryption": "none",
                 "clients": [
                     {
                         "id": "${v2rayPassword1}",
@@ -2036,7 +2035,8 @@ EOF
                         "level": 0,
                         "email": "password20@gmail.com"
                     }
-                ]
+                ],
+                "decryption": "none"
             },
             "streamSettings": {
                 "network": "ws",
