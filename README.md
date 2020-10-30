@@ -3,23 +3,18 @@
 # Trojan (支持 trojan-go版本) 和 V2ray 一键安装脚本 
 
 
-## 功能说明 Feature 
-====================================
+## 功能说明 Features 
 
 1. 系统要求：centos7+/debian9+/ubuntu16.04+
 2. 支持 trojan， trojan-go 和v2ray 的 安装 升级 完全卸载
 3. 支持 trojan 或 trojan-go 与 v2ray 共存
-4. 支持v2ray 新的vless协议  
+4. 支持 v2ray 新的vless协议  
 5. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
-6. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
-7. trojan 和 v2ray 可视化管理面板安装. 
-8. 卸载后不留任何痕迹, 方便重复安装
+6. 可以仅安装 trojan 或 v2ray 而不安装nginx
+7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
+8. trojan 和 v2ray 可视化管理面板安装. 
+9. 卸载后不留任何痕迹, 方便重复安装
 
-11. 脚本感谢 https://github.com/sprov065/v2-ui 
-12. 脚本感谢 https://github.com/Jrohy/trojan 
-13. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
-
-====================================
 
 ## 安装方法 Installation 
 
@@ -68,4 +63,14 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 2. 使用脚本安装时请先关闭CDN, cloudflare.com 中DNS设置页面, 二级域名设置为DNS only 为关闭CDN. 安装v2ray或trojan-go完毕后 可以开启CDN 设置为Proxied 即可. trojan目前不支持CDN, trojan-go 默认安装设置为不支持CDN,可以在安装过程中选择支持CDN.
 
 ![注意 cloudflare CDN](https://github.com/jinwyp/one_click_script/blob/master/docs/cloudflare1.jpg?raw=true)
+
+
+## 特别感谢 Special Thanks
+
+1. 脚本感谢 https://github.com/sprov065/v2-ui 
+2. 脚本感谢 https://github.com/Jrohy/trojan 
+3. 脚本感谢 https://github.com/v2fly/v2ray-core
+4. 脚本感谢 https://github.com/trojan-gfw/trojan
+5. 脚本感谢 https://github.com/p4gefau1t/trojan-go
+6. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
 
