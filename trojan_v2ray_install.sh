@@ -454,6 +454,8 @@ configTrojanBaseVersion=${versionTrojan}
 configTrojanWebNginxPath=$(cat /dev/urandom | head -1 | md5sum | head -c 5)
 configTrojanWebPort="$(($RANDOM + 10000))"
 
+
+isInstallNginx="true"
 isNginxWithSSL="no"
 nginxConfigPath="/etc/nginx/nginx.conf"
 nginxAccessLogFilePath="${HOME}/nginx-access.log"
@@ -463,12 +465,15 @@ nginxErrorLogFilePath="${HOME}/nginx-error.log"
 
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
+configV2rayPortShowInfo=$configV2rayPort
+configV2rayIsTlsShowInfo="none"
+
 
 configV2rayPath="${HOME}/v2ray"
 configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
-
+configV2rayVlessMode=""
 
 
 function downloadAndUnzip(){
@@ -1390,8 +1395,12 @@ EOF
 
 	green "======================================================================"
 	green "    Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !"
-	green "    伪装站点为 http://${configSSLDomain}"
-	green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+
+    if [[ ${isInstallNginx} == "true" ]]; then
+        green "    伪装站点为 http://${configSSLDomain}"
+	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+    fi
+
 	red "    Trojan 服务器端配置路径 ${configTrojanBasePath}/server.json "
 	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -u trojan${promptInfoTrojanName}.service 查看 !"
 	green "    Trojan 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
@@ -1550,6 +1559,11 @@ function installV2ray(){
         configV2rayProtocol="vmess"
     fi
 
+    if [[ -n "$configV2rayVlessMode" ]]; then
+         configV2rayProtocol="vless"
+    fi
+
+
     mkdir -p ${configV2rayPath}
     cd ${configV2rayPath}
     rm -rf ${configV2rayPath}/*
@@ -1558,7 +1572,178 @@ function installV2ray(){
     downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configV2rayPath}" "${downloadFilenameV2ray}"
 
     # 增加 v2ray 服务器端配置
-    cat > ${configV2rayPath}/config.json <<-EOF
+
+    if [[ -n "$configV2rayVlessMode" ]]; then
+        cat > ${configV2rayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    "inbound": [
+        {
+            "port": 443,
+            "listen":"127.0.0.1",
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "decryption": "none",
+                "clients": [
+                    {
+                        "id": "${v2rayPassword1}",
+                        "level": 1,
+                        "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}",
+                        "level": 1,
+                        "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}",
+                        "level": 1,
+                        "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}",
+                        "level": 1,
+                        "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}",
+                        "level": 1,
+                        "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}",
+                        "level": 1,
+                        "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}",
+                        "level": 1,
+                        "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}",
+                        "level": 1,
+                        "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}",
+                        "level": 1,
+                        "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}",
+                        "level": 1,
+                        "email": "password20@gmail.com"
+                    }
+                ],
+                "fallbacks": [
+                        {
+                            "dest": 80
+                        },
+                        {
+                            "path": "/${configV2rayWebSocketPath}",
+                            "dest": ${configV2rayPort},
+                            "xver": 1
+                        }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "tls",
+                "tlsSettings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
+                            "keyFile": "${configSSLCertPath}/private.key",
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "port": ${configV2rayPort},
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "${v2rayPassword1}",
+                        "level": 1,
+                        "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}",
+                        "level": 1,
+                        "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}",
+                        "level": 1,
+                        "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}",
+                        "level": 1,
+                        "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}",
+                        "level": 1,
+                        "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}",
+                        "level": 1,
+                        "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}",
+                        "level": 1,
+                        "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}",
+                        "level": 1,
+                        "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}",
+                        "level": 1,
+                        "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}",
+                        "level": 1,
+                        "email": "password20@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "acceptProxyProtocol": true,
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
+        }
+    ],
+    "outbound": {
+        "protocol": "freedom",
+        "settings": {}
+    }
+}
+EOF
+    else
+        cat > ${configV2rayPath}/config.json <<-EOF
 {
   "log" : {
     "access": "${configV2rayAccessLogFilePath}",
@@ -1648,7 +1833,12 @@ function installV2ray(){
 }
 EOF
 
+    fi
 
+
+
+
+    
     # 增加启动脚本
     cat > ${osSystemMdPath}v2ray.service <<-EOF
 [Unit]
@@ -1674,20 +1864,27 @@ WantedBy=multi-user.target
 EOF
 
 
+    if [[ ${isInstallNginx} == "true" ]]; then
+        configV2rayPortShowInfo=443
+        configV2rayIsTlsShowInfo="tls"
+    else
+        configV2rayIsTlsShowInfo="none"
+    fi
+
     # 增加客户端配置说明
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 ===========客户端配置参数=============
 {
 协议:${configV2rayProtocol},
 地址:${configSSLDomain},
-端口:443,
+端口:${configV2rayPortShowInfo},
 uuid:${v2rayPassword1},
 额外id:64, // 如果是Vless协议则不需要该项
-加密方式:aes-128-gcm,
+加密方式:aes-128-gcm, // 如果是Vless协议则为none
 传输协议:ws,
 别名:自己起个任意名称,
 路径:/${configV2rayWebSocketPath},
-底层传输:tls
+底层传输:${configV2rayIsTlsShowInfo} 
 }
 EOF
 
@@ -1702,10 +1899,10 @@ EOF
 
     green "======================================================================"
 	green "    V2ray Version: ${versionV2ray} 安装成功 !!"
-	green "    伪装站点为 https://${configSSLDomain}!"
-	# red "    caddy 配置路径 ${caddyConfigFile} !"
-	# red "    caddy 访问日志 ${caddyAccessLogFile} !"
-	# red "    caddy 错误日志 ${caddyErrorLogFile} !"
+    if [[ ${isInstallNginx} == "true" ]]; then
+        green "    伪装站点为 https://${configSSLDomain}!"
+    fi
+	
 	red "    V2ray 服务器端配置路径 ${configV2rayPath}/config.json !"
 	red "    V2ray 访问日志 ${configV2rayAccessLogFilePath} !"
 	red "    V2ray 错误日志 ${configV2rayErrorLogFilePath} !"
@@ -1979,6 +2176,8 @@ function upgradeV2rayUI(){
     green " =================================================="
     /usr/bin/v2-ui
 }
+
+
 function getHTTPSV2rayUI(){
     stopServiceNginx
     testLinuxPortUsage
@@ -1992,11 +2191,34 @@ function getHTTPSV2rayUI(){
 
         getHTTPSCertificate "standalone"
 
-        green " =================================================="
-        green "   域名申请成功 !"
-        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key  "
-        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-        green " =================================================="
+
+        if test -s ${configSSLCertPath}/fullchain.cer; then
+            green " =================================================="
+            green "   域名SSL证书申请成功 !"
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+            green " =================================================="
+
+            isInstallNginx="false"
+            if [[ $1 == "trojan" ]] ; then
+                installTrojanServer
+            fi
+
+            if [[ $1 == "v2ray" ]] ; then
+                installV2ray
+            fi
+        else
+            red "==================================="
+            red " https证书没有申请成功，安装失败!"
+            red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
+            red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
+            red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
+            red "==================================="
+            exit
+        fi
+
+
+
 
     else
         exit
@@ -2020,11 +2242,16 @@ function startMenuOther(){
     green " 4. 查看日志, 管理用户, 查看配置等功能"
     red " 5. 卸载 trojan-web 和 nginx "
     echo
-    green " 6. 安装 v2ray 可视化管理面板V2ray UI"
+    green " 6. 安装 v2ray 可视化管理面板V2ray UI 可以同时支持trojan"
     green " 7. 升级 v2ray UI 到最新版本"
     red " 8. 卸载 v2ray UI"
     echo
     green " 11. 单独申请域名SSL证书"
+    green " 12. 只安装trojan, 不安装nginx"
+    green " 13. 只安装trojan-go, 不支持CDN, 不开启websocket (兼容trojan客户端), 不安装nginx"
+    green " 14. 只安装trojan-go, 支持CDN, 开启websocket (不兼容trojan客户端), 不安装nginx"    
+    green " 15. 只安装v2ray (VLess 或 VMess协议) 开启websocket, 支持CDN, 不安装nginx, 方便与现有网站或宝塔面板共存"
+    green " 16. 只安装v2ray VLESS作为最前端 (VLESS-TCP-TLS-WS) 支持CDN, 不安装nginx"
     echo
     red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
     red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
@@ -2075,6 +2302,25 @@ function startMenuOther(){
         11 )
             getHTTPSV2rayUI
         ;;
+        12 )
+            getHTTPSV2rayUI "trojan"
+        ;;
+        13 )
+            isTrojanGo="yes"
+            getHTTPSV2rayUI "trojan"
+        ;;
+        14 )
+            isTrojanGo="yes"
+            isTrojanGoSupportWebsocket="true"
+            getHTTPSV2rayUI "trojan"
+        ;;          
+        15 )
+            getHTTPSV2rayUI "v2ray"
+        ;;     
+        16 )
+            configV2rayVlessMode="ws"
+            getHTTPSV2rayUI "v2ray"
+        ;;                       
         31 )
             vps_superspeed
         ;;
