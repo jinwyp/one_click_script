@@ -225,11 +225,12 @@ function setLinuxRootLogin(){
     fi
 
 
+    sudo sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
+    sudo sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
+
     if [ "$osRelease" == "centos" ] ; then
 
-        sudo sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
         sudo sed -i 's/ClientAliveInterval 420/ClientAliveInterval 180/g' /etc/ssh/sshd_config
-        sudo sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
         
         sudo service sshd restart
         sudo systemctl restart sshd
@@ -238,6 +239,9 @@ function setLinuxRootLogin(){
     fi
 
     if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
+
+        sudo sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 180/g' /etc/ssh/sshd_config
+        
         sudo service ssh restart
         sudo systemctl restart ssh
 
