@@ -228,7 +228,7 @@ function setLinuxRootLogin(){
     if [ "$osRelease" == "centos" ] ; then
 
         sudo sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
-        sudo sed -i 's/ClientAliveInterval 420/ClientAliveInterval 600/g' /etc/ssh/sshd_config
+        sudo sed -i 's/ClientAliveInterval 420/ClientAliveInterval 180/g' /etc/ssh/sshd_config
         sudo sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
         
         sudo service sshd restart
@@ -2117,7 +2117,7 @@ EOF
 地址:${configSSLDomain},
 端口:${configV2rayPortShowInfo},
 uuid:${v2rayPassword1},
-额外id:64, // 如果是Vless协议则不需要该项
+额外id: 0, // AlterID 如果是Vless协议则不需要该项
 加密方式:aes-128-gcm, // 如果是Vless协议则为none
 传输协议:ws,
 别名:自己起个任意名称,
