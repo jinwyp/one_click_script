@@ -2425,11 +2425,11 @@ function upgradeV2rayUI(){
 
 
 function getHTTPSV2rayUI(){
-    stopServiceNginx
-    testLinuxPortUsage
+    #stopServiceNginx
+    #testLinuxPortUsage
 
     green " ================================================== "
-    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
     green " ================================================== "
 
     read configSSLDomain
