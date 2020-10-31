@@ -1437,7 +1437,7 @@ EOF
 	green "======================================================================"
 	blue  "----------------------------------------"
 	yellow "Trojan${promptInfoTrojanName} 配置信息如下, 请自行复制保存, 密码任选其一 !"
-	yellow "服务器地址: ${configSSLDomain}  端口: 443"
+	yellow "服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort"
 	yellow "密码1: ${trojanPassword1}"
 	yellow "密码2: ${trojanPassword2}"
 	yellow "密码3: ${trojanPassword3}"
@@ -2126,7 +2126,7 @@ uuid:${v2rayPassword1},
 加密方式:aes-128-gcm, // 如果是Vless协议则为none
 传输协议:ws,
 别名:自己起个任意名称,
-路径:/${configV2rayWebSocketPath},
+WS路径:/${configV2rayWebSocketPath},
 底层传输:${configV2rayIsTlsShowInfo} 
 }
 EOF
