@@ -226,6 +226,11 @@ function setLinuxRootLogin(){
 
 
     if [ "$osRelease" == "centos" ] ; then
+
+        sudo sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
+        sudo sed -i 's/ClientAliveInterval 420/ClientAliveInterval 600/g' /etc/ssh/sshd_config
+        sudo sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
+        
         sudo service sshd restart
         sudo systemctl restart sshd
 
