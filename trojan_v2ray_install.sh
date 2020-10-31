@@ -1579,17 +1579,21 @@ function installV2ray(){
     green "    开始安装 V2ray Version: ${versionV2ray} !"
     green " =================================================="
 
-    read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[Y/n]?" isV2rayUseVLessInput
-    isV2rayUseVLessInput=${isV2rayUseVLessInput:-Y}
 
-    if [[ $isV2rayUseVLessInput == [Yy] ]]; then
-        configV2rayProtocol="vless"
-    else
-        configV2rayProtocol="vmess"
-    fi
 
     if [[ -n "$configV2rayVlessMode" ]]; then
          configV2rayProtocol="vless"
+    else 
+
+        read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[Y/n]?" isV2rayUseVLessInput
+        isV2rayUseVLessInput=${isV2rayUseVLessInput:-Y}
+
+        if [[ $isV2rayUseVLessInput == [Yy] ]]; then
+            configV2rayProtocol="vless"
+        else
+            configV2rayProtocol="vmess"
+        fi
+
     fi
 
 
