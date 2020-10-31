@@ -230,7 +230,7 @@ function setLinuxRootLogin(){
 
     if [ "$osRelease" == "centos" ] ; then
 
-        sudo sed -i 's/ClientAliveInterval 420/ClientAliveInterval 180/g' /etc/ssh/sshd_config
+        sudo sed -i 's/ClientAliveInterval 420/ClientAliveInterval 120/g' /etc/ssh/sshd_config
         
         sudo service sshd restart
         sudo systemctl restart sshd
@@ -240,7 +240,7 @@ function setLinuxRootLogin(){
 
     if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
 
-        sudo sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 180/g' /etc/ssh/sshd_config
+        sudo sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
         
         sudo service ssh restart
         sudo systemctl restart ssh
