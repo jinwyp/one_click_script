@@ -2106,6 +2106,7 @@ EOF
     fi
 
     if [[ -n "$configV2rayVlessMode" ]]; then
+        configV2rayPortShowInfo=443
         configV2rayIsTlsShowInfo="tls"
     fi
 
