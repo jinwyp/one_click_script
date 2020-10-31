@@ -2121,16 +2121,16 @@ EOF
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 ===========客户端配置参数=============
 {
-协议:${configV2rayProtocol},
-地址:${configSSLDomain},
-端口:${configV2rayPortShowInfo},
-uuid:${v2rayPassword1},
-额外id: 0, // AlterID 如果是Vless协议则不需要该项
-加密方式:aes-128-gcm, // 如果是Vless协议则为none
-传输协议:ws,
-别名:自己起个任意名称,
-WS路径:/${configV2rayWebSocketPath},
-底层传输:${configV2rayIsTlsShowInfo} 
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:${configV2rayIsTlsShowInfo},
+    别名:自己起个任意名称
 }
 EOF
 
