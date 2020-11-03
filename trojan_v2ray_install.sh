@@ -2503,9 +2503,9 @@ function startMenuOther(){
     green " =================================================="
 
     green " 11. 单独申请域名SSL证书"
-    green " 12. 只安装trojan, 不安装nginx"
-    green " 13. 只安装trojan-go, 不支持CDN, 不开启websocket (兼容trojan客户端), 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"
-    green " 14. 只安装trojan-go, 支持CDN, 开启websocket (不兼容trojan客户端), 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
+    green " 12. 只安装trojan 运行在443端口, 不安装nginx, 请确保443端口没有被nginx占用"
+    green " 13. 只安装trojan-go 运行在443端口, 不支持CDN, 不开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"
+    green " 14. 只安装trojan-go 运行在443端口, 支持CDN, 开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
     green " 15. 只安装v2ray (VLess 或 VMess协议) 开启websocket, 支持CDN, 不安装nginx, 方便与现有网站或宝塔面板共存"
     green " 16. 只安装v2ray VLESS作为最前端 (VLESS-TCP-TLS-WS) 支持CDN, 不安装nginx"
     green " 17. 只安装v2ray VLESS作为最前端 (VLESS-TCP-XTLS-WS + trojan) 支持VLESS的CDN, 不安装nginx"    
