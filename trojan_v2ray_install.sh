@@ -1007,6 +1007,7 @@ function installTrojanServer(){
         configV2rayTrojanPort=443
     fi
 
+
     if [ "$isTrojanGo" = "no" ] ; then
 
         # 增加trojan 服务器端配置
@@ -1154,7 +1155,7 @@ function installTrojanServer(){
 }
 EOF
 
-
+        rm /etc/systemd/system/trojan.service   
         # 增加启动脚本
         cat > ${osSystemMdPath}trojan.service <<-EOF
 [Unit]
@@ -1352,9 +1353,9 @@ EOF
     fi
 
     chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
-    sudo systemctl daemon-reload
-    sudo systemctl start trojan${promptInfoTrojanName}.service
-    sudo systemctl enable trojan${promptInfoTrojanName}.service
+    ${sudoCmd} systemctl daemon-reload
+    ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
+    ${sudoCmd} systemctl enable trojan${promptInfoTrojanName}.service
 
 
 
