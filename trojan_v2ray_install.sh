@@ -668,8 +668,8 @@ function installWebServerNginx(){
     stopServiceV2ray
 
     ${osSystemPackage} install nginx -y
-    sudo systemctl enable nginx.service
-    sudo systemctl stop nginx.service
+    ${sudoCmd} systemctl enable nginx.service
+    ${sudoCmd} systemctl stop nginx.service
 
     if [[ -z $1 ]] ; then
         cat > "${nginxConfigPath}" <<-EOF
@@ -849,7 +849,7 @@ EOF
     downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/v2ray_client_all.zip" "${configWebsiteDownloadPath}" "v2ray_client_all.zip"
     wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/v2ray-android.zip"
 
-    sudo systemctl start nginx.service
+    ${sudoCmd} systemctl start nginx.service
 
     green " ================================================== "
     green "       Web服务器 nginx 安装成功!!"
@@ -2285,9 +2285,9 @@ RestartSec=3s
 WantedBy=multi-user.target
 EOF
 
-        sudo systemctl daemon-reload
-        sudo systemctl restart trojan-web.service
-        sudo systemctl enable trojan-web.service
+        ${sudoCmd} systemctl daemon-reload
+        ${sudoCmd} systemctl restart trojan-web.service
+        ${sudoCmd} systemctl enable trojan-web.service
 
         green " =================================================="
         green " Trojan-web 可视化管理面板: ${versionTrojanWeb} 安装成功!"
