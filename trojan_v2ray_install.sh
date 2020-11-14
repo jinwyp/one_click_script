@@ -2428,15 +2428,39 @@ function getHTTPSV2rayUI(){
     #stopServiceNginx
     #testLinuxPortUsage
 
+
+
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
     green " ================================================== "
 
     read configSSLDomain
-    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+
+    yellow " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
+    read -p "是否检测域名指向的IP正确? 请输入[Y/n]?" isDomainValidInput
+    isDomainValidInput=${isDomainValidInput:-Y}
+
+    read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]?" isDomainSSLRequestInput
+    isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
+
+    if [[ $isDomainValidInput == [Yy] ]]; then
+        if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+            green "   域名检测成功 !"
+        else
+            red "==================================="
+            red " 请检查域名和DNS是否生效!"
+            red "==================================="
+            exit
+        fi
+    else
+        green "   不检测域名 !"
+    fi
+
+    isInstallNginx="false"
+
+    if [[ $isDomainSSLRequestInput == [Yy] ]]; then
 
         getHTTPSCertificate "standalone"
-
 
         if test -s ${configSSLCertPath}/fullchain.cer; then
             green " =================================================="
@@ -2445,18 +2469,6 @@ function getHTTPSV2rayUI(){
             green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
             green " =================================================="
 
-            isInstallNginx="false"
-            if [[ $1 == "trojan" ]] ; then
-                installTrojanServer
-            fi
-
-            if [[ $1 == "v2ray" ]] ; then
-                installV2ray
-
-                if [[ $configV2rayVlessMode == "trojan" ]] ; then
-                    installTrojanServer
-                fi
-            fi
         else
             red "==================================="
             red " https证书没有申请成功，安装失败!"
@@ -2467,11 +2479,24 @@ function getHTTPSV2rayUI(){
             exit
         fi
 
-
-
-
     else
-        exit
+        green " =================================================="
+        green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
+        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+        green " =================================================="
+    fi
+
+    if [[ $1 == "trojan" ]] ; then
+        installTrojanServer
+    fi
+
+    if [[ $1 == "v2ray" ]] ; then
+        installV2ray
+
+        if [[ $configV2rayVlessMode == "trojan" ]] ; then
+            installTrojanServer
+        fi
     fi
 }
 
