@@ -71,8 +71,8 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 addEventListener(
     "fetch", event => {
         let url = new URL(event.request.url);
-        url.hostname = "你的域名.xxx.com;
-        url.protocol = "http";
+        url.hostname = "yourdomain.xxx.xx";
+        url.protocol = "https";
         let request = new Request(url, event.request);
         event.respondWith(
             fetch(request)
