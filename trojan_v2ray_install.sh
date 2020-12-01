@@ -872,15 +872,7 @@ EOF
 	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
     green " ================================================== "
 
-    cat >> "${configReadme}" <<-EOF
-Web服务器 nginx 安装成功！ 伪装站点为 ${configSSLDomain}   
-伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!
-nginx 配置路径 ${nginxConfigPath}， nginx 访问日志 ${nginxAccessLogFilePath}，nginx 错误日志 ${nginxErrorLogFilePath}
-nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service
-
-如果安装了Trojan-web ${versionTrojanWeb} 可视化管理面板，访问地址  http://${configSSLDomain}/${configTrojanWebNginxPath} 
-Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service
-EOF     
+  
 }
 
 function removeNginx(){
@@ -1510,7 +1502,7 @@ EOF
 	green "======================================================================"
 
 
-    cat >> "${configReadme}" <<-EOF
+    cat >> ${configReadme} <<-EOF
 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !
 Trojan${promptInfoTrojanName} 服务器端配置路径 ${configTrojanBasePath}/server.json
 Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service
@@ -2224,7 +2216,7 @@ EOF
     yellow "其他客户端程序请看 https://www.v2fly.org/awesome/tools.html "
     green "======================================================================"
 
-    cat >> "${configReadme}" <<-EOF
+    cat >> ${configReadme} <<-EOF
 V2ray Version: ${versionV2ray} 安装成功 ! 
 V2ray 服务器端配置路径 ${configV2rayPath}/config.json 
 V2ray 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
