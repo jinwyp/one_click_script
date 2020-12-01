@@ -2776,7 +2776,6 @@ function start_menu(){
     red " 21. 卸载 trojan-go, v2ray 和 nginx"
     echo
     green " 28. 查看已安装的配置用户密码信息"
-    echo
     green " 29. 安装 trojan 和 v2ray 可视化管理面板"
     green " 30. 不安装nginx,只安装trojan或v2ray,可选择是否安装SSL证书"
     green " =================================================="
@@ -2784,9 +2783,7 @@ function start_menu(){
     green " 32. 设置可以使用root登陆"
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
-    green " =================================================="
     green " 41 VPS 测网速工具"
-    echo
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
