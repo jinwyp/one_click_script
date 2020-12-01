@@ -881,6 +881,8 @@ nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start 
 
 如果安装了Trojan-web ${versionTrojanWeb} 可视化管理面板,访问地址  ${configSSLDomain}/${configTrojanWebNginxPath}
 Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service
+
+
 EOF
 }
 
@@ -1512,6 +1514,7 @@ EOF
 
 
     cat >> ${configReadme} <<-EOF
+
 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !
 Trojan${promptInfoTrojanName} 服务器端配置路径 ${configTrojanBasePath}/server.json
 Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service
@@ -2226,6 +2229,7 @@ EOF
     green "======================================================================"
 
     cat >> ${configReadme} <<-EOF
+
 V2ray Version: ${versionV2ray} 安装成功 ! 
 V2ray 服务器端配置路径 ${configV2rayPath}/config.json 
 V2ray 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
@@ -2256,6 +2260,8 @@ V2ray 服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
     底层传输:${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
+
+
 EOF
 
 }
