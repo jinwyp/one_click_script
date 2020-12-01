@@ -498,6 +498,7 @@ configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
 configV2rayVlessMode=""
+configReadme=${HOME}/trojan_v2ray_readme.txt
 
 
 function downloadAndUnzip(){
@@ -870,6 +871,16 @@ EOF
 	green "    nginx 错误日志 ${nginxErrorLogFilePath} "
 	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
     green " ================================================== "
+
+    cat >> "${configReadme}" <<-EOF
+Web服务器 nginx 安装成功！ 伪装站点为 ${configSSLDomain}   
+伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!
+nginx 配置路径 ${nginxConfigPath}， nginx 访问日志 ${nginxAccessLogFilePath}，nginx 错误日志 ${nginxErrorLogFilePath}
+nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service
+
+如果安装了Trojan-web ${versionTrojanWeb} 可视化管理面板，访问地址  http://${configSSLDomain}/${configTrojanWebNginxPath} 
+Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service
+EOF     
 }
 
 function removeNginx(){
@@ -891,6 +902,8 @@ function removeNginx(){
     rm -rf ${configWebsitePath}
     rm -f ${nginxAccessLogFilePath}
     rm -f ${nginxErrorLogFilePath}
+
+    rm -f ${configReadme}
 
     rm -rf "/etc/nginx"
     ${sudoCmd} bash /root/.acme.sh/acme.sh --uninstall
@@ -1495,6 +1508,31 @@ EOF
 	green "https://github.com/trojan-gfw/igniter/releases "
 	green "https://github.com/Kr328/ClashForAndroid/releases "
 	green "======================================================================"
+
+
+    cat >> "${configReadme}" <<-EOF
+Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !
+Trojan${promptInfoTrojanName} 服务器端配置路径 ${configTrojanBasePath}/server.json
+Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service
+
+Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
+
+密码1: ${trojanPassword1}
+密码2: ${trojanPassword2}
+密码3: ${trojanPassword3}
+密码4: ${trojanPassword4}
+密码5: ${trojanPassword5}
+密码6: ${trojanPassword6}
+密码7: ${trojanPassword7}
+密码8: ${trojanPassword8}
+密码9: ${trojanPassword9}
+密码10: ${trojanPassword10}
+您指定前缀的密码若干: 从 ${configTrojanPasswordPrefixInput}202010 到 ${configTrojanPasswordPrefixInput}202099 都可以使用
+
+如果是trojan-go开启了Websocket，那么Websocket path 路径为: /${configTrojanGoWebSocketPath}
+
+
+EOF
 }
 
 
@@ -1513,6 +1551,8 @@ function removeTrojan(){
     rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
     rm -f ${configTrojanLogFile}
     rm -f ${configTrojanGoLogFile}
+
+    rm -f ${configReadme}
 
     crontab -r
 
@@ -2120,7 +2160,7 @@ EOF
 
     # 增加客户端配置说明
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-===========客户端配置参数=============
+===========V2ray客户端配置参数=============
 {
     协议: ${configV2rayProtocol},
     地址: ${configSSLDomain},
@@ -2183,6 +2223,39 @@ EOF
     yellow "  iOS 安装小火箭遇到问题 教程 https://github.com/shadowrocketHelp/help/ "
     yellow "其他客户端程序请看 https://www.v2fly.org/awesome/tools.html "
     green "======================================================================"
+
+    cat >> "${configReadme}" <<-EOF
+V2ray Version: ${versionV2ray} 安装成功 ! 
+V2ray 服务器端配置路径 ${configV2rayPath}/config.json 
+V2ray 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
+V2ray 停止命令: systemctl stop v2ray.service  启动命令: systemctl start v2ray.service  重启命令: systemctl restart v2ray.service
+
+V2ray 服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
+用户ID或密码1: ${v2rayPassword1}"
+用户ID或密码2: ${v2rayPassword2}"
+用户ID或密码3: ${v2rayPassword3}"
+用户ID或密码4: ${v2rayPassword4}"
+用户ID或密码5: ${v2rayPassword5}"
+用户ID或密码6: ${v2rayPassword6}"
+用户ID或密码7: ${v2rayPassword7}"
+用户ID或密码8: ${v2rayPassword8}"
+用户ID或密码9: ${v2rayPassword9}"
+用户ID或密码10: ${v2rayPassword10}"
+
+===========V2ray客户端配置参数=============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:${configV2rayIsTlsShowInfo},
+    别名:自己起个任意名称
+}
+EOF
 
 }
 
@@ -2425,10 +2498,9 @@ function upgradeV2rayUI(){
 }
 
 
-function getHTTPSV2rayUI(){
+function getHTTPSNoNgix(){
     #stopServiceNginx
     #testLinuxPortUsage
-
 
 
     green " ================================================== "
@@ -2585,41 +2657,41 @@ function startMenuOther(){
             removeV2rayUI
         ;;
         11 )
-            getHTTPSV2rayUI
+            getHTTPSNoNgix
         ;;
         12 )
-            getHTTPSV2rayUI "trojan"
+            getHTTPSNoNgix "trojan"
         ;;
         13 )
             isTrojanGo="yes"
-            getHTTPSV2rayUI "trojan"
+            getHTTPSNoNgix "trojan"
         ;;
         14 )
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
-            getHTTPSV2rayUI "trojan"
+            getHTTPSNoNgix "trojan"
         ;;          
         15 )
-            getHTTPSV2rayUI "v2ray"
+            getHTTPSNoNgix "v2ray"
         ;;     
         16 )
             configV2rayVlessMode="ws"
-            getHTTPSV2rayUI "v2ray"
+            getHTTPSNoNgix "v2ray"
         ;;       
         17 )
             configV2rayVlessMode="trojan"
-            getHTTPSV2rayUI "v2ray"
+            getHTTPSNoNgix "v2ray"
         ;;
         18 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
-            getHTTPSV2rayUI "v2ray"
+            getHTTPSNoNgix "v2ray"
         ;;    
         19 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
-            getHTTPSV2rayUI "v2ray"
+            getHTTPSNoNgix "v2ray"
         ;;     
         27 )
             removeTrojan
@@ -2702,10 +2774,10 @@ function start_menu(){
     green " 19. 同时安装 trojan-go + v2ray 和 nginx, trojan-go 和 v2ray 都支持CDN"
     green " 20. 升级 v2ray 和 trojan-go 到最新版本"
     red " 21. 卸载 trojan-go, v2ray 和 nginx"
-
+    green " 28. 查看已安装的配置用户密码信息"
     echo
     green " 29. 安装 trojan 和 v2ray 可视化管理面板"
-    green " 30. 不安装nginx, 只安装 trojan 或 v2ray"
+    green " 30. 不安装nginx,只安装trojan或v2ray,可选择是否安装SSL证书"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 32. 设置可以使用root登陆"
@@ -2807,6 +2879,9 @@ function start_menu(){
             removeTrojan
             removeV2ray
         ;;
+        28 )
+            cat "${configReadme}"
+        ;;        
         31 )
             setLinuxDateZone
             testLinuxPortUsage
@@ -2837,7 +2912,7 @@ function start_menu(){
         41 )
             startMenuOther
         ;;
-        98 )
+        88 )
             installBBR2
         ;;
         99 )
