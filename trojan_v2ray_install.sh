@@ -878,9 +878,8 @@ Web服务器 nginx 安装成功！ 伪装站点为 ${configSSLDomain}
 nginx 配置路径 ${nginxConfigPath}， nginx 访问日志 ${nginxAccessLogFilePath}，nginx 错误日志 ${nginxErrorLogFilePath}
 nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service
 
-如果安装了Trojan-web ${versionTrojanWeb} 可视化管理面板，访问地址  http://${configSSLDomain}/${configTrojanWebNginxPath} 
-Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service
-EOF  
+
+EOF
 }
 
 function removeNginx(){
