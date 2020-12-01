@@ -872,7 +872,11 @@ EOF
 	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
     green " ================================================== "
 
+    cat >> ${configReadme} <<-EOF
 
+Web服务器 nginx 安装成功！ 伪装站点为 ${configSSLDomain}   
+
+EOF
 }
 
 function removeNginx(){
