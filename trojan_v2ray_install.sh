@@ -1479,7 +1479,7 @@ EOF
 	blue  "----------------------------------------"
 	green "======================================================================"
 	green "请下载相应的trojan客户端:"
-	yellow "1 Windows 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-windows.zip"
+	yellow "1 Windows 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
 	yellow "  Windows 客户端另一个版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-Qt5-windows.zip"
 	yellow "  Windows 客户端命令行版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-win-cli.zip"
 	yellow "  Windows 客户端命令行版本需要搭配浏览器插件使用，例如switchyomega等! "
