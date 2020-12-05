@@ -553,6 +553,8 @@ function getTrojanAndV2rayVersion(){
     # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
     # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
 
+    echo ""
+    
     if [[ $1 == "trojan" ]] ; then
         versionTrojan=$(getGithubLatestReleaseVersion "trojan-gfw/trojan")
         downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
@@ -960,7 +962,7 @@ function installTrojanWholeProcess(){
 
         if test -s ${configSSLCertPath}/fullchain.cer; then
             green " ================================================== "
-            green "     SSL证书获取成功!"
+            green "     SSL证书已检测到获取成功!"
             green " ================================================== "
 
             if [ "$isNginxWithSSL" = "no" ] ; then
@@ -2390,7 +2392,7 @@ fi
 	# green "    caddy 停止命令: systemctl stop caddy.service  启动命令: systemctl start caddy.service  重启命令: systemctl restart caddy.service"
 	green "    ${promptInfoXrayName} 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
-	blue  "----------------------------------------"
+	echo ""
 	yellow "${promptInfoXrayName} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
 	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
 	yellow "用户ID或密码1: ${v2rayPassword1}"
@@ -2403,9 +2405,9 @@ fi
 	yellow "用户ID或密码8: ${v2rayPassword8}"
 	yellow "用户ID或密码9: ${v2rayPassword9}"
 	yellow "用户ID或密码10: ${v2rayPassword10}"
-
+    echo ""
 	cat "${configV2rayPath}/clientConfig.json"
-	blue  "----------------------------------------"
+	echo ""
     green "======================================================================"
     green "请下载相应的 ${promptInfoXrayName} 客户端:"
     yellow "1 Windows 客户端V2rayN下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
