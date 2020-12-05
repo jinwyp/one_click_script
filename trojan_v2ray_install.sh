@@ -2288,6 +2288,7 @@ if [[ "$configV2rayVlessMode" == "vlessws" ]] || [[ "$configV2rayVlessMode" == "
     端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow:  // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
     WS路径:无,
@@ -2302,6 +2303,7 @@ if [[ "$configV2rayVlessMode" == "vlessws" ]] || [[ "$configV2rayVlessMode" == "
     端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow:  // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: ws,
     WS路径:/${configV2rayWebSocketPath},
@@ -2792,7 +2794,7 @@ function getHTTPSNoNgix(){
     if [[ $1 == "v2ray" ]] ; then
         installV2ray
 
-        if [[ $configV2rayVlessMode == "trojan" ]] && [[ configV2rayInstallXrayOnly=""]] ; then
+        if [[ $configV2rayVlessMode == "trojan" ]] && [[ configV2rayInstallXrayOnly=""]]; then
             installTrojanServer
         fi
     fi
