@@ -554,7 +554,7 @@ function getTrojanAndV2rayVersion(){
     # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
 
     echo ""
-    
+
     if [[ $1 == "trojan" ]] ; then
         versionTrojan=$(getGithubLatestReleaseVersion "trojan-gfw/trojan")
         downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
@@ -1655,7 +1655,7 @@ function installV2ray(){
     else 
 
         read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[Y/n]?" isV2rayUseVLessInput
-        isV2rayUseVLessInput=${isV2rayUseVLessInput:-Y}
+        isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
 
         if [[ $isV2rayUseVLessInput == [Yy] ]]; then
             configV2rayProtocol="vless"
