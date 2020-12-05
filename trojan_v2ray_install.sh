@@ -2794,7 +2794,7 @@ function getHTTPSNoNgix(){
     if [[ $1 == "v2ray" ]] ; then
         installV2ray
 
-        if [[ $configV2rayVlessMode == "trojan" && $configV2rayInstallXrayOnly==""]]; then
+        if [[ $configV2rayVlessMode == "trojan" && $configV2rayInstallXrayOnly=="" ]]; then
             installTrojanServer
         fi
     fi
