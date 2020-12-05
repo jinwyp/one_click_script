@@ -3157,6 +3157,7 @@ function start_menu(){
             getTrojanAndV2rayVersion "trojan-go"
             getTrojanAndV2rayVersion "trojan-web"
             getTrojanAndV2rayVersion "v2ray"
+            getTrojanAndV2rayVersion "xray"
         ;;
         0 )
             exit 1
