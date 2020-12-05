@@ -99,3 +99,9 @@ addEventListener(
 5. 脚本感谢 https://github.com/p4gefau1t/trojan-go
 6. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
 
+
+
+
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/jinwyp/one_click_script.svg)](https://starchart.cc/jinwyp/one_click_script)
+
