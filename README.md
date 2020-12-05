@@ -95,9 +95,11 @@ addEventListener(
 1. 脚本感谢 https://github.com/sprov065/v2-ui 
 2. 脚本感谢 https://github.com/Jrohy/trojan 
 3. 脚本感谢 https://github.com/v2fly/v2ray-core
-4. 脚本感谢 https://github.com/trojan-gfw/trojan
-5. 脚本感谢 https://github.com/p4gefau1t/trojan-go
-6. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
+4. 脚本感谢 https://github.com/XTLS/Xray-core
+5. 脚本感谢 https://github.com/trojan-gfw/trojan
+6. 脚本感谢 https://github.com/p4gefau1t/trojan-go
+7. 脚本感谢 https://github.com/ylx2016/Linux-NetSpeed
+8. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
 
 
 
