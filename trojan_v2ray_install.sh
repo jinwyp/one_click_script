@@ -454,8 +454,11 @@ downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 versionTrojanGo="0.8.2"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.27.5"
+versionV2ray="4.33.0"
 downloadFilenameV2ray="v2ray-linux-64.zip"
+
+versionXray="1.1.1"
+downloadFilenameXray="Xray-linux-64.zip"
 
 versionTrojanWeb="2.8.7"
 downloadFilenameTrojanWeb="trojan"
@@ -486,9 +489,12 @@ nginxAccessLogFilePath="${HOME}/nginx-access.log"
 nginxErrorLogFilePath="${HOME}/nginx-error.log"
 
 
+promptInfoXrayName="v2ray"
+isXray="no"
 
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
+configV2rayVmessTCPPort="$(($RANDOM + 10000))"
 configV2rayPortShowInfo=$configV2rayPort
 configV2rayIsTlsShowInfo="none"
 configV2rayTrojanPort="$(($RANDOM + 10000))"
@@ -498,6 +504,7 @@ configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
 configV2rayVlessMode=""
+configV2rayInstallXrayOnly=""
 configReadme=${HOME}/trojan_v2ray_readme.txt
 
 
@@ -560,8 +567,12 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "v2ray" ]] ; then
         versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
-        downloadFilenameV2ray="v2ray-linux-64.zip"
         echo "versionV2ray: ${versionV2ray}"
+    fi
+
+    if [[ $1 == "xray" ]] ; then
+        versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
+        echo "versionXray: ${versionXray}"
     fi
 
     if [[ $1 == "trojan-web" ]] ; then
@@ -1617,16 +1628,24 @@ function installV2ray(){
 
     if [ -f "${configV2rayPath}/v2ray" ] || [ -f "/usr/local/bin/v2ray" ] || [ -f "/usr/bin/v2ray" ]; then
         green " =================================================="
-        green "  已安装过 V2ray, 退出安装 !"
+        green "  已安装过 V2ray 或 Xray, 退出安装 !"
         green " =================================================="
         exit
     fi
 
-    getTrojanAndV2rayVersion "v2ray"
-    green " =================================================="
-    green "    开始安装 V2ray Version: ${versionV2ray} !"
-    green " =================================================="
 
+    if [[ $configV2rayVlessMode == "trojan" ]] ; then
+        promptInfoXrayName="xray"
+        isXray="yes"
+    else
+        read -p "是否使用Xray内核(默认为V2ray内核 )? 请输入[Y/n]?" isV2rayOrXrayInput
+        isV2rayOrXrayInput=${isV2rayOrXrayInput:-n}
+
+        if [[ $isV2rayOrXrayInput == [Yy] ]]; then
+            promptInfoXrayName="xray"
+            isXray="yes"
+        fi
+    fi
 
 
     if [[ -n "$configV2rayVlessMode" ]]; then
@@ -1645,18 +1664,327 @@ function installV2ray(){
     fi
 
 
+    if [ "$isXray" = "no" ] ; then
+        getTrojanAndV2rayVersion "v2ray"
+        green " =================================================="
+        green "    开始安装 V2ray Version: ${versionV2ray} !"
+        green " =================================================="
+    else
+        getTrojanAndV2rayVersion "xray"
+        green " =================================================="
+        green "    开始安装 Xray Version: ${versionXray} !"
+        green " =================================================="
+    fi
+
+
+
     mkdir -p ${configV2rayPath}
     cd ${configV2rayPath}
     rm -rf ${configV2rayPath}/*
 
-    # https://github.com/v2fly/v2ray-core/releases/download/v4.27.5/v2ray-linux-64.zip
-    downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configV2rayPath}" "${downloadFilenameV2ray}"
+
+    if [ "$isXray" = "no" ] ; then
+        # https://github.com/v2fly/v2ray-core/releases/download/v4.27.5/v2ray-linux-64.zip
+        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configV2rayPath}" "${downloadFilenameV2ray}"
+
+    else
+        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${configV2rayPath}" "${downloadFilenameXray}"
+    fi
+
 
     # 增加 v2ray 服务器端配置
 
-    if [[ -n "$configV2rayVlessMode" ]]; then
+    read -r -d '' userpasswordInput << EOM
+                        {
+                            "id": "${v2rayPassword1}",
+                            "level": 0,
+                            "email": "password11@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword2}",
+                            "level": 0,
+                            "email": "password12@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword3}",
+                            "level": 0,
+                            "email": "password13@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword4}",
+                            "level": 0,
+                            "email": "password14@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword5}",
+                            "level": 0,
+                            "email": "password15@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword6}",
+                            "level": 0,
+                            "email": "password16@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword7}",
+                            "level": 0,
+                            "email": "password17@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword8}",
+                            "level": 0,
+                            "email": "password18@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword9}",
+                            "level": 0,
+                            "email": "password19@gmail.com"
+                        },
+                        {
+                            "id": "${v2rayPassword10}",
+                            "level": 0,
+                            "email": "password20@gmail.com"
+                        }
+EOM
 
-        if [[ "$configV2rayVlessMode" == "trojan" ]]; then
+    if [[ -z "$configV2rayVlessMode" ]]; then
+        cat > ${configV2rayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${userpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/${configV2rayWebSocketPath}"
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+        },
+        {
+            "tag": "blocked",
+            "protocol": "blackhole",
+            "settings": {}
+        }
+    ]
+}
+EOF
+    fi
+
+
+    if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
+        cat > ${configV2rayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    "inbounds": [
+        {
+            "port": 443,
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${userpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    },
+                    {
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayPort},
+                        "xver": 1
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "tls",
+                "tlsSettings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
+                            "keyFile": "${configSSLCertPath}/private.key"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "port": ${configV2rayPort},
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    ${userpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "acceptProxyProtocol": true,
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+        },
+        {
+            "tag": "blocked",
+            "protocol": "blackhole",
+            "settings": {}
+        }
+    ]
+}
+EOF
+    fi
+
+
+    if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
+        cat > ${configV2rayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    "inbounds": [
+        {
+            "port": 443,
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${userpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    },
+                    {
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayPort},
+                        "xver": 1
+                    },
+                    {
+                        "path": "/tcp${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayVmessTCPPort},
+                        "xver": 1
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "tls",
+                "tlsSettings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
+                            "keyFile": "${configSSLCertPath}/private.key"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "port": ${configV2rayPort},
+            "listen": "127.0.0.1",
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    ${userpasswordInput}
+                ]
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
+        },
+        {
+            "port": ${configV2rayVmessTCPPort},
+            "listen": "127.0.0.1",
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    ${userpasswordInput}
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "none",
+                "tcpSettings": {
+                    "acceptProxyProtocol": true,
+                    "header": {
+                        "type": "http",
+                        "request": {
+                            "path": [
+                                "/tcp${configV2rayWebSocketPath}"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+        },
+        {
+            "tag": "blocked",
+            "protocol": "blackhole",
+            "settings": {}
+        }
+    ]
+}
+EOF
+    fi
+
+
+
+
+
+
+    if [[ "$configV2rayVlessMode" == "trojan" ]]; then
 
             cat > ${configV2rayPath}/config.json <<-EOF
 {
@@ -1673,61 +2001,61 @@ function installV2ray(){
                 "clients": [
                     {
                         "id": "${v2rayPassword1}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password11@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword2}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password12@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword3}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password13@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword4}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password14@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword5}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password15@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword6}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password16@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword7}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password17@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword8}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password18@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword9}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password19@gmail.com"
                     },
                     {
                         "id": "${v2rayPassword10}",
-                        "flow": "xtls-rprx-origin",
+                        "flow": "xtls-rprx-direct",
                         "level": 0,
                         "email": "password20@gmail.com"
                     }
@@ -1848,285 +2176,16 @@ function installV2ray(){
 }
 EOF
 
-        else
-
-            cat > ${configV2rayPath}/config.json <<-EOF
-{
-    "log" : {
-        "access": "${configV2rayAccessLogFilePath}",
-        "error": "${configV2rayErrorLogFilePath}",
-        "loglevel": "warning"
-    },
-    "inbounds": [
-        {
-            "port": 443,
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "${v2rayPassword1}",
-                        "level": 0,
-                        "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}",
-                        "level": 0,
-                        "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}",
-                        "level": 0,
-                        "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}",
-                        "level": 0,
-                        "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}",
-                        "level": 0,
-                        "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}",
-                        "level": 0,
-                        "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}",
-                        "level": 0,
-                        "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}",
-                        "level": 0,
-                        "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}",
-                        "level": 0,
-                        "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}",
-                        "level": 0,
-                        "email": "password20@gmail.com"
-                    }
-                ],
-                "decryption": "none",
-                "fallbacks": [
-                    {
-                        "dest": 80
-                    },
-                    {
-                        "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayPort},
-                        "xver": 1
-                    }
-                ]
-            },
-            "streamSettings": {
-                "network": "tcp",
-                "security": "tls",
-                "tlsSettings": {
-                    "alpn": [
-                        "http/1.1"
-                    ],
-                    "certificates": [
-                        {
-                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key"
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "port": ${configV2rayPort},
-            "listen": "127.0.0.1",
-            "protocol": "vless",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "${v2rayPassword1}",
-                        "level": 0,
-                        "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}",
-                        "level": 0,
-                        "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}",
-                        "level": 0,
-                        "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}",
-                        "level": 0,
-                        "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}",
-                        "level": 0,
-                        "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}",
-                        "level": 0,
-                        "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}",
-                        "level": 0,
-                        "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}",
-                        "level": 0,
-                        "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}",
-                        "level": 0,
-                        "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}",
-                        "level": 0,
-                        "email": "password20@gmail.com"
-                    }
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "ws",
-                "security": "none",
-                "wsSettings": {
-                    "acceptProxyProtocol": true,
-                    "path": "/${configV2rayWebSocketPath}" 
-                }
-            }
-        }
-    ],
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
-        },
-        {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
-        }
-    ]
-}
-EOF
-
-        fi
-
-
-    else
-        cat > ${configV2rayPath}/config.json <<-EOF
-{
-    "log" : {
-        "access": "${configV2rayAccessLogFilePath}",
-        "error": "${configV2rayErrorLogFilePath}",
-        "loglevel": "warning"
-    },
-    "inbounds": [
-        {
-            "port": ${configV2rayPort},
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "${v2rayPassword1}",
-                        "level": 0,
-                        "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}",
-                        "level": 0,
-                        "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}",
-                        "level": 0,
-                        "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}",
-                        "level": 0,
-                        "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}",
-                        "level": 0,
-                        "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}",
-                        "level": 0,
-                        "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}",
-                        "level": 0,
-                        "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}",
-                        "level": 0,
-                        "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}",
-                        "level": 0,
-                        "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}",
-                        "level": 0,
-                        "email": "password20@gmail.com"
-                    }
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "ws",
-                "wsSettings": {
-                    "path": "/${configV2rayWebSocketPath}"
-                }
-            }
-        }
-    ],
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
-        },
-        {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
-        }
-    ]
-}
-EOF
-
     fi
 
 
 
 
+
+    # 增加 V2ray启动脚本
+    if [ "$isXray" = "no" ] ; then
     
-    # 增加启动脚本
-    cat > ${osSystemMdPath}v2ray.service <<-EOF
+        cat > ${osSystemMdPath}v2ray.service <<-EOF
 [Unit]
 Description=V2Ray
 Documentation=https://www.v2fly.org/
@@ -2140,16 +2199,48 @@ Type=simple
 User=root
 #User=nobody
 #CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
-AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
 ExecStart=${configV2rayPath}/v2ray -config ${configV2rayPath}/config.json
 Restart=on-failure
+RestartPreventExitStatus=23
 
 [Install]
 WantedBy=multi-user.target
 EOF
+    else
+        cat > ${osSystemMdPath}xray.service <<-EOF
+[Unit]
+Description=Xray
+Documentation=https://www.v2fly.org/
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+# This service runs as root. You may consider to run it as another user for security concerns.
+# By uncommenting User=nobody and commenting out User=root, the service will run as user nobody.
+# More discussion at https://github.com/v2ray/v2ray-core/issues/1011
+User=root
+#User=nobody
+#CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=${configV2rayPath}/xray run -config ${configV2rayPath}/config.json
+Restart=on-failure
+RestartPreventExitStatus=23
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+
+    chmod +x ${osSystemMdPath}${promptInfoXrayName}.service
+    ${sudoCmd} systemctl daemon-reload
+    ${sudoCmd} systemctl restart ${promptInfoXrayName}.service
+    ${sudoCmd} systemctl enable ${promptInfoXrayName}.service
 
 
+
+
+    # 增加客户端配置说明
     if [[ ${isInstallNginx} == "true" ]]; then
         configV2rayPortShowInfo=443
         configV2rayIsTlsShowInfo="tls"
@@ -2162,7 +2253,9 @@ EOF
         configV2rayIsTlsShowInfo="tls"
     fi
 
-    # 增加客户端配置说明
+
+
+
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 ===========V2ray客户端配置参数=============
 {
@@ -2174,35 +2267,129 @@ EOF
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: ws,
     WS路径:/${configV2rayWebSocketPath},
-    底层传输:${configV2rayIsTlsShowInfo},
+    底层传输协议:${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 EOF
 
-    sudo systemctl daemon-reload
-    sudo systemctl restart v2ray.service
+
+if [[ "$configV2rayVlessMode" == "vlessws" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+当选择了16. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
+当选择了20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS), 不安装nginx" 
+当选择了21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx
+当选择了22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx
+当选择了23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx
+
+===========V2ray客户端 VLess-TCP-TLS 配置参数=============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: tcp ,
+    WS路径:无,
+    底层传输协议:tls,    // 选择了16 为tls, 选择了20-23 为xtls
+    别名:自己起个任意名称
+}
+
+===========V2ray客户端 VLess-WS-TLS 配置参数 支持CDN =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:tls,     // 选择了16 为tls, 选择了20-23 为xtls
+    别名:自己起个任意名称
+}
+EOF
+fi
+
+
+
+if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+当选择了17. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx
+===========V2ray客户端 VLess-TCP-TLS 配置参数=============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: tcp ,
+    WS路径:无,
+    底层传输:tls,
+    别名:自己起个任意名称
+}
+
+===========V2ray客户端 VMess-WS-TLS 配置参数 支持CDN =============
+{
+    协议: VMess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:tls,
+    别名:自己起个任意名称
+}
+
+===========V2ray客户端 VMess-TCP-TLS 配置参数 支持CDN =============
+{
+    协议: VMess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: tcp,
+    路径:/tcp${configV2rayWebSocketPath},
+    底层传输:tls,
+    别名:自己起个任意名称
+}
+EOF
+fi
+
+
+
 
     # 设置 cron 定时任务
     # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
 
-    (crontab -l ; echo "20 4 * * 0,1,2,3,4,5,6 systemctl restart v2ray.service") | sort - | uniq - | crontab -
+    (crontab -l ; echo "20 4 * * 0,1,2,3,4,5,6 systemctl restart ${promptInfoXrayName}.service") | sort - | uniq - | crontab -
 
 
     green "======================================================================"
-	green "    V2ray Version: ${versionV2ray} 安装成功 !!"
+
+    if [ "$isXray" = "no" ] ; then
+        green "    V2ray Version: ${versionV2ray} 安装成功 !!"
+    else
+        green "    Xray Version: ${versionXray} 安装成功 !!"
+    fi
+
     if [[ ${isInstallNginx} == "true" ]]; then
         green "    伪装站点为 https://${configSSLDomain}!"
     fi
 	
-	red "    V2ray 服务器端配置路径 ${configV2rayPath}/config.json !"
-	red "    V2ray 访问日志 ${configV2rayAccessLogFilePath} !"
-	red "    V2ray 错误日志 ${configV2rayErrorLogFilePath} !"
-	green "    V2ray 停止命令: systemctl stop v2ray.service  启动命令: systemctl start v2ray.service  重启命令: systemctl restart v2ray.service"
+	red "    ${promptInfoXrayName} 服务器端配置路径 ${configV2rayPath}/config.json !"
+	red "    ${promptInfoXrayName} 访问日志 ${configV2rayAccessLogFilePath} !"
+	red "    ${promptInfoXrayName} 错误日志 ${configV2rayErrorLogFilePath} !"
+	green "    ${promptInfoXrayName} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service"
 	# green "    caddy 停止命令: systemctl stop caddy.service  启动命令: systemctl start caddy.service  重启命令: systemctl restart caddy.service"
-	green "    V2ray 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+	green "    ${promptInfoXrayName} 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
 	blue  "----------------------------------------"
-	yellow "V2ray 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
+	yellow "${promptInfoXrayName} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
 	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
 	yellow "用户ID或密码1: ${v2rayPassword1}"
 	yellow "用户ID或密码2: ${v2rayPassword2}"
@@ -2218,7 +2405,7 @@ EOF
 	cat "${configV2rayPath}/clientConfig.json"
 	blue  "----------------------------------------"
     green "======================================================================"
-    green "请下载相应的 v2ray 客户端:"
+    green "请下载相应的 ${promptInfoXrayName} 客户端:"
     yellow "1 Windows 客户端V2rayN下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
     yellow "2 MacOS 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-mac.zip"
     yellow "3 Android 客户端下载 http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-android.zip"
@@ -2268,47 +2455,78 @@ EOF
 
 
 function removeV2ray(){
+    if [ -f "${configV2rayPath}/xray" ]; then
+        promptInfoXrayName="xray"
+        isXray="yes"
+    fi
+
     green " ================================================== "
-    red " 准备卸载已安装 v2ray "
+    red " 准备卸载已安装 ${promptInfoXrayName} "
     green " ================================================== "
 
-    sudo systemctl stop v2ray.service
-    sudo systemctl disable v2ray.service
+    sudo systemctl stop ${promptInfoXrayName}.service
+    sudo systemctl disable ${promptInfoXrayName}.service
+
 
     rm -rf ${configV2rayPath}
-    rm -f ${osSystemMdPath}v2ray.service
+    rm -f ${osSystemMdPath}${promptInfoXrayName}.service
     rm -f ${configV2rayAccessLogFilePath}
     rm -f ${configV2rayErrorLogFilePath}
 
     green " ================================================== "
-    green "  v2ray 卸载完毕 !"
+    green "  ${promptInfoXrayName} 卸载完毕 !"
     green " ================================================== "
 }
 
 
 function upgradeV2ray(){
-    getTrojanAndV2rayVersion "v2ray"
+    if [ -f "${configV2rayPath}/xray" ]; then
+        promptInfoXrayName="xray"
+        isXray="yes"
+    fi
 
-    green " =================================================="
-    green "       开始升级 V2ray Version: ${versionV2ray} !"
-    green " =================================================="
+    if [ "$isXray" = "no" ] ; then
+        getTrojanAndV2rayVersion "v2ray"
+        green " =================================================="
+        green "       开始升级 V2ray Version: ${versionV2ray} !"
+        green " =================================================="
+    else
+        getTrojanAndV2rayVersion "xray"
+        green " =================================================="
+        green "       开始升级 Xray Version: ${versionXray} !"
+        green " =================================================="
+    fi
 
-    sudo systemctl stop v2ray.service
 
-    mkdir -p ${configDownloadTempPath}/upgrade/v2ray
 
-    downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configDownloadTempPath}/upgrade/v2ray" "${downloadFilenameV2ray}"
+    ${sudoCmd} systemctl stop ${promptInfoXrayName}.service
 
-    mv -f ${configDownloadTempPath}/upgrade/v2ray/v2ray ${configV2rayPath}
-    mv -f ${configDownloadTempPath}/upgrade/v2ray/v2ctl ${configV2rayPath}
-    mv -f ${configDownloadTempPath}/upgrade/v2ray/geoip.dat ${configV2rayPath}
-    mv -f ${configDownloadTempPath}/upgrade/v2ray/geosite.dat ${configV2rayPath}
+    mkdir -p ${configDownloadTempPath}/upgrade/${promptInfoXrayName}
 
-    sudo systemctl start v2ray.service
+    if [ "$isXray" = "no" ] ; then
+        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configDownloadTempPath}/upgrade/${promptInfoXrayName}" "${downloadFilenameV2ray}"
+        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
+    else
+        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${configDownloadTempPath}/upgrade/${promptInfoXrayName}" "${downloadFilenameXray}"
+    fi
 
-    green " ================================================== "
-    green "     升级成功 V2ray Version: ${versionV2ray} !"
-    green " ================================================== "
+    mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/${promptInfoXrayName} ${configV2rayPath}
+    mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
+    mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
+
+    ${sudoCmd} systemctl start ${promptInfoXrayName}.service
+
+
+    if [ "$isXray" = "no" ] ; then
+        green " ================================================== "
+        green "     升级成功 V2ray Version: ${versionV2ray} !"
+        green " ================================================== "
+    else
+        getTrojanAndV2rayVersion "xray"
+        green " =================================================="
+        green "     升级成功 Xray Version: ${versionXray} !"
+        green " =================================================="
+    fi
 }
 
 
@@ -2574,7 +2792,7 @@ function getHTTPSNoNgix(){
     if [[ $1 == "v2ray" ]] ; then
         installV2ray
 
-        if [[ $configV2rayVlessMode == "trojan" ]] ; then
+        if [[ $configV2rayVlessMode == "trojan" ]] && [[ configV2rayInstallXrayOnly=""]] ; then
             installTrojanServer
         fi
     fi
@@ -2611,15 +2829,17 @@ function startMenuOther(){
     green " 12. 只安装trojan 运行在443端口, 不安装nginx, 请确保443端口没有被nginx占用"
     green " 13. 只安装trojan-go 运行在443端口, 不支持CDN, 不开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"
     green " 14. 只安装trojan-go 运行在443端口, 支持CDN, 开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
-    green " 15. 只安装v2ray (VLess 或 VMess协议) 开启websocket, 支持CDN, 不安装nginx, 方便与现有网站或宝塔面板共存"
-    green " 16. 只安装v2ray VLess作为最前端运行在443端口 (VLess-TCP-TLS) + (VLess-WS) 支持CDN, 不安装nginx"
-    green " 17. 只安装v2ray VLess作为最前端运行在443端口 (VLess-TCP-XTLS) + (VLess-WS) + trojan 支持VLess的CDN, 不安装nginx"    
-    green " 18. 只安装v2ray VLess作为最前端运行在443端口 (VLess-TCP-XTLS) + (VLess-WS) + trojan-go 支持VLess的CDN, 不安装nginx"   
-    green " 19. 只安装v2ray VLess作为最前端运行在443端口 (VLess-TCP-XTLS) + (VLess-WS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
+    green " 15. 只安装V2Ray或Xray (VLess或VMess协议) 开启websocket, 支持CDN, (VLess/VMess+WS) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
+    green " 16. 只安装V2Ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx"
+    green " 17. 只安装V2Ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx"
+    green " 20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS), 不安装nginx" 
+    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx"    
+    green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx"   
+    green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
 
     red " 27. 卸载 trojan"    
     red " 28. 卸载 trojan-go"   
-    red " 29. 卸载 v2ray"   
+    red " 29. 卸载 v2ray或Xray"   
 
     green " =================================================="
     echo
@@ -2682,19 +2902,28 @@ function startMenuOther(){
             getHTTPSNoNgix "v2ray"
         ;;     
         16 )
-            configV2rayVlessMode="ws"
+            configV2rayVlessMode="vlessws"
             getHTTPSNoNgix "v2ray"
-        ;;       
+        ;; 
         17 )
+            configV2rayVlessMode="vmessws"
+            getHTTPSNoNgix "v2ray"
+        ;;    
+        20 )
+            configV2rayVlessMode="trojan"
+            configV2rayInstallXrayOnly="yes"
+            getHTTPSNoNgix "v2ray"
+        ;; 
+        21 )
             configV2rayVlessMode="trojan"
             getHTTPSNoNgix "v2ray"
         ;;
-        18 )
+        22 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             getHTTPSNoNgix "v2ray"
         ;;    
-        19 )
+        23 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
@@ -2752,7 +2981,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 2020-12-01 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray 一键安装脚本 2020-12-6 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
@@ -2770,17 +2999,17 @@ function start_menu(){
     green " 10. 升级 trojan-go 到最新版本"
     red " 11. 卸载 trojan-go 与 nginx"
     echo
-    green " 12. 安装 v2ray 和 nginx, 支持 websocket tls1.3, 支持CDN"
-    green " 13. 升级 v2ray 到最新版本"
-    red " 14. 卸载v2ray 和 nginx"
+    green " 12. 安装 v2ray或xray 和 nginx, 支持 websocket tls1.3, 支持CDN"
+    green " 13. 升级 v2ray或xray 到最新版本"
+    red " 14. 卸载v2ray或xray 和 nginx"
     echo
-    green " 15. 同时安装 trojan + v2ray 和 nginx, 不支持CDN"
-    green " 16. 升级 v2ray 和 trojan 到最新版本"
-    red " 17. 卸载 trojan, v2ray 和 nginx"
-    green " 18. 同时安装 trojan-go + v2ray 和 nginx, 不支持CDN"
-    green " 19. 同时安装 trojan-go + v2ray 和 nginx, trojan-go 和 v2ray 都支持CDN"
-    green " 20. 升级 v2ray 和 trojan-go 到最新版本"
-    red " 21. 卸载 trojan-go, v2ray 和 nginx"
+    green " 15. 同时安装 trojan + v2ray或xray 和 nginx, 不支持CDN"
+    green " 16. 升级 v2ray或xray 和 trojan 到最新版本"
+    red " 17. 卸载 trojan, v2ray或xray 和 nginx"
+    green " 18. 同时安装 trojan-go + v2ray或xray 和 nginx, 不支持CDN"
+    green " 19. 同时安装 trojan-go + v2ray或xray 和 nginx, trojan-go 和 v2ray 都支持CDN"
+    green " 20. 升级 v2ray或xray 和 trojan-go 到最新版本"
+    red " 21. 卸载 trojan-go, v2ray或xray 和 nginx"
     echo
     green " 28. 查看已安装的配置用户密码信息"
     green " 29. 安装 trojan 和 v2ray 可视化管理面板"
@@ -2886,6 +3115,7 @@ function start_menu(){
         ;;
         28 )
             cat "${configReadme}"
+            cat "${configV2rayPath}/clientConfig.json"
         ;;        
         31 )
             setLinuxDateZone

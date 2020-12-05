@@ -1,6 +1,6 @@
-# Easy install v2ray and trojan (trojan-go) script (ultimate script for all condition)
+# Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
 
-# Trojan (支持 trojan-go版本) 和 V2ray 一键安装脚本 
+# Trojan (支持 trojan-go版本) 和 V2ray (支持 xray版本) 一键安装脚本 
 
 
 ## 功能说明 Features 
@@ -15,6 +15,14 @@
 8. trojan 和 v2ray 可视化管理面板安装. 
 9. 卸载后不留任何痕迹, 方便重复安装
 10. 本脚本为安装trojan和v2ray的终极脚本, 包括各种模式, 其他脚本没有本脚本的全面
+
+
+## Features English 
+1. Install V2Ray or Xray using VLESS or VMess, support all condition: VLESS+TCP+TLS / VLESS+Websocket+TLS(CDN) / VMess+TCP+TLS / VMess+Websocket+TLS(CDN)  
+2. Using Trojan or Nginx or v2ray-core / Xray-core as frontend listening port 443
+3. Install trojan or trojan-go and V2Ray or Xray on the same server to support all protocol.
+4. Support Debian9+, Ubuntu 16+ and CentOS 7+ operation systems
+
 
 ## 安装方法 Installation 
 
