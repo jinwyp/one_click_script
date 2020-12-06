@@ -262,6 +262,11 @@ function changeLinuxSSHPort(){
         sed -i "s/#\?Port [0-9]*/Port $osSSHLoginPortInput/g" /etc/ssh/sshd_config
 
         if [ "$osRelease" == "centos" ] ; then
+            yum -y install policycoreutils-python
+
+            semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
+            firewall-cmd --add-port=$osSSHLoginPortInput/tcp --permanent
+            firewall-cmd --reload
             sudo service sshd restart
             sudo systemctl restart sshd
         fi
@@ -2983,7 +2988,7 @@ function start_menu(){
 
     if [[ $1 == "first" ]] ; then
         getLinuxOSVersion
-        ${osSystemPackage} -y install wget curl git
+        ${osSystemPackage} -y install wget curl git 
     fi
 
     green " =================================================="
