@@ -321,6 +321,10 @@ function installBBR(){
 }
 
 function installBBR2(){
+    
+    if [[ -f ./tcp.sh ]];  then
+        mv ./tcp.sh ./tcp_old.sh
+    fi    
     wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
