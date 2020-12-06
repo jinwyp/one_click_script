@@ -2240,7 +2240,8 @@ WantedBy=multi-user.target
 EOF
     fi
 
-    chmod +x ${osSystemMdPath}${promptInfoXrayName}.service
+    ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
+    ${sudoCmd} chmod +x ${osSystemMdPath}${promptInfoXrayName}.service
     ${sudoCmd} systemctl daemon-reload
     ${sudoCmd} systemctl restart ${promptInfoXrayName}.service
     ${sudoCmd} systemctl enable ${promptInfoXrayName}.service
