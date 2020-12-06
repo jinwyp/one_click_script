@@ -2316,7 +2316,7 @@ if [[ "$configV2rayVlessMode" == "vlessws" ]] || [[ "$configV2rayVlessMode" == "
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: ws,
     WS路径:/${configV2rayWebSocketPath},
-    底层传输:tls,     // 选择了16 为tls, 选择了20-23 为xtls
+    底层传输:tls,     
     别名:自己起个任意名称
 }
 EOF
