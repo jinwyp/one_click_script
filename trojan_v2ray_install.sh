@@ -621,29 +621,44 @@ function isTrojanGoInstall(){
 
 function compareRealIpWithLocalIp(){
 
-    if [ -n $1 ]; then
-        configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-        # configNetworkLocalIp=`curl ipv4.icanhazip.com`
-        configNetworkLocalIp=`curl v4.ident.me`
+    yellow " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
+    read -p "是否检测域名指向的IP正确? 请输入[Y/n]?" isDomainValidInput
+    isDomainValidInput=${isDomainValidInput:-Y}
 
-        green " ================================================== "
-        green "     域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. "
-        green " ================================================== "
+    if [[ $isDomainValidInput == [Yy] ]]; then
+        if [ -n $1 ]; then
+            configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+            # configNetworkLocalIp=`curl ipv4.icanhazip.com`
+            configNetworkLocalIp=`curl v4.ident.me`
 
-        if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
             green " ================================================== "
-            green "     域名解析正常!"
+            green "     域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. "
             green " ================================================== "
-            true
+
+            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
+                green " ================================================== "
+                green "     域名解析的IP正常!"
+                green " ================================================== "
+                true
+            else
+                green " ================================================== "
+                red "     域名解析地址与本VPS IP地址不一致!"
+                red "     本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
+                green " ================================================== "
+                false
+            fi
         else
-            green " ================================================== "
-            red "     域名解析地址与本VPS IP地址不一致!"
-            red "     本次安装失败，请确保域名解析正常!"
-            green " ================================================== "
+            green " ================================================== "        
+            red "     域名输入错误!"
+            green " ================================================== "        
             false
         fi
+        
     else
-        false
+        green " ================================================== "
+        green "     不检测域名!"
+        green " ================================================== "
+        true
     fi
 }
 
@@ -2746,56 +2761,45 @@ function getHTTPSNoNgix(){
 
     read configSSLDomain
 
-    yellow " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
-    read -p "是否检测域名指向的IP正确? 请输入[Y/n]?" isDomainValidInput
-    isDomainValidInput=${isDomainValidInput:-Y}
-
     read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]?" isDomainSSLRequestInput
     isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
-    if [[ $isDomainValidInput == [Yy] ]]; then
-        if compareRealIpWithLocalIp "${configSSLDomain}" ; then
-            green "   域名检测成功 !"
-        else
-            red "==================================="
-            red " 请检查域名和DNS是否生效!"
-            red "==================================="
-            exit
-        fi
-    else
-        green "   不检测域名 !"
-    fi
-
     isInstallNginx="false"
 
-    if [[ $isDomainSSLRequestInput == [Yy] ]]; then
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+        if [[ $isDomainSSLRequestInput == [Yy] ]]; then
 
-        getHTTPSCertificate "standalone"
+            getHTTPSCertificate "standalone"
 
-        if test -s ${configSSLCertPath}/fullchain.cer; then
+            if test -s ${configSSLCertPath}/fullchain.cer; then
+                green " =================================================="
+                green "   域名SSL证书申请成功 !"
+                green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+                green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+                green " =================================================="
+
+            else
+                red "==================================="
+                red " https证书没有申请成功，安装失败!"
+                red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
+                red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
+                red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
+                red "==================================="
+                exit
+            fi
+
+        else
             green " =================================================="
-            green "   域名SSL证书申请成功 !"
+            green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
             green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
             green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
             green " =================================================="
-
-        else
-            red "==================================="
-            red " https证书没有申请成功，安装失败!"
-            red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
-            red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
-            red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
-            red "==================================="
-            exit
         fi
-
     else
-        green " =================================================="
-        green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
-        green " =================================================="
+        exit
     fi
+
+
 
     if [[ $1 == "trojan" ]] ; then
         installTrojanServer
