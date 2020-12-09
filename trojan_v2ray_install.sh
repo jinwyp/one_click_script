@@ -2866,8 +2866,8 @@ function startMenuOther(){
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
     green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 32. ZBench 综合网速测试  （包含节点测速, Ping 以及 路由测试）"
-	green " 33. testrace 回程路由  （四网路由测试）"
+    green " 32. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+	green " 33. testrace 回程路由测试 （四网路由测试）"
 	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     echo
     green " 9. 返回上级菜单"
@@ -3039,7 +3039,7 @@ function start_menu(){
     green " 32. 设置可以使用root登陆"
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
-    green " 41 VPS 测网速工具"
+    green " 41. VPS 测网速工具"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
