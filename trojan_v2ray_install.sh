@@ -2851,9 +2851,9 @@ function startMenuOther(){
     green " 14. 只安装trojan-go 运行在443端口, 支持CDN, 开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
     green " 15. 只安装V2Ray或Xray (VLess或VMess协议) 开启websocket, 支持CDN, (VLess/VMess+WS) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
     green " 16. 只安装V2Ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx"
-    green " 17. 只安装V2Ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx"
-    green " 20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS), 不安装nginx" 
-    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx"    
+    green " 17. 只安装V2Ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS) 支持CDN, 不安装nginx"
+    green " 20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS), 不安装nginx" 
+    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx"    
     green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx"   
     green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
 
@@ -3014,7 +3014,7 @@ function start_menu(){
     echo
     green " 6. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket (兼容trojan客户端)"
     green " 7. 修复证书 并继续安装 trojan-go 不支持CDN, 不开启websocket"
-    green " 8. 安装 trojan-go 和 nginx 支持CDN, 开启websocket (不兼容trojan客户端)"
+    green " 8. 安装 trojan-go 和 nginx 支持CDN, 开启websocket (兼容trojan客户端, 但不兼容websocket)"
     green " 9. 修复证书 并继续安装 trojan-go 支持CDN, 开启websocket "
     green " 10. 升级 trojan-go 到最新版本"
     red " 11. 卸载 trojan-go 与 nginx"
