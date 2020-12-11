@@ -74,7 +74,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ![注意 cloudflare CDN](https://github.com/jinwyp/one_click_script/blob/master/docs/cloudflare1.jpg?raw=true)
 
-3. Cloudflare CDN 的worker 加速脚本, 请把域名替换成自己的vps的域名. 然后通过[寻找最快速度IP工具](https://github.com/badafans/better-cloudflare-ip), 找出距离你最快的 cloudflare 的CDN IP, 在v2ray或trojan-go支持CDN的配置中填入该IP即可.
+3. 以下是Cloudflare CDN 的worker 加速脚本, 请把域名替换成自己的vps的域名. 然后在Cloudflare新建worker 添加即可.  在你自己的客户端机器上,通过[寻找最快速度IP工具](https://github.com/badafans/better-cloudflare-ip), 找出距离你最快的 cloudflare 的CDN IP, 在v2ray或trojan-go支持CDN的配置中填入该IP即可.
 ```
 addEventListener(
     "fetch", event => {
