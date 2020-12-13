@@ -441,8 +441,12 @@ function vps_superspeed(){
 	wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 }
 
+function vps_bench(){
+	wget -N --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh && chmod +x bench.sh && bash bench.sh
+}
+
 function vps_zbench(){
-	wget -N --no-check-certificate https://raw.githubusercontent.com/FunctionClub/ZBench/master/ZBench-CN.sh && chmod +x ZBench-CN.sh && ./ZBench-CN.sh
+	wget -N --no-check-certificate https://raw.githubusercontent.com/FunctionClub/ZBench/master/ZBench-CN.sh && chmod +x ZBench-CN.sh && bash ZBench-CN.sh
 }
 
 function vps_testrace(){
@@ -2875,9 +2879,10 @@ function startMenuOther(){
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
     green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 32. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+    green " 32. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
 	green " 33. testrace 回程路由测试 （四网路由测试）"
 	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    green " 32. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
     green " 41. 安装新版本 BBR-PLUS 加速6合一脚本"
     echo
@@ -2974,14 +2979,17 @@ function startMenuOther(){
             vps_superspeed
         ;;
         32 )
-            vps_zbench
-        ;;
+            vps_bench
+        ;;        
         33 )
             vps_testrace
         ;;
         34 )
             vps_LemonBench
         ;;
+        35 )
+            vps_zbench
+        ;;        
         41 )
             installBBR2
         ;;        
