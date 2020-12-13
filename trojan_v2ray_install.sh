@@ -194,6 +194,15 @@ function testLinuxPortUsage(){
 }
 
 
+# 编辑 SSH 公钥 文件用于 免密码登录
+function editLinuxLoginWithPublicKey(){
+    if [ ! -d "${HOME}/ssh" ]; then
+        mkdir -p ${HOME}/.ssh
+    fi
+
+    vi ${HOME}/.ssh/authorized_keys
+}
+
 
 
 # 设置SSH root 登录
@@ -2870,6 +2879,8 @@ function startMenuOther(){
 	green " 33. testrace 回程路由测试 （四网路由测试）"
 	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     echo
+    green " 41. 安装新版本 BBR-PLUS 加速6合一脚本"
+    echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
     echo
@@ -2971,6 +2982,9 @@ function startMenuOther(){
         34 )
             vps_LemonBench
         ;;
+        41 )
+            installBBR2
+        ;;        
         9)
             start_menu
         ;;
@@ -3166,6 +3180,9 @@ function start_menu(){
         ;;        
         41 )
             startMenuOther
+        ;;
+        77 )
+            editLinuxLoginWithPublicKey
         ;;
         88 )
             installBBR2
