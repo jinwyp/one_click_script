@@ -2882,7 +2882,7 @@ function startMenuOther(){
     green " 32. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
 	green " 33. testrace 回程路由测试 （四网路由测试）"
 	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
-    green " 32. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+    green " 35. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
     green " 41. 安装新版本 BBR-PLUS 加速6合一脚本"
     echo
