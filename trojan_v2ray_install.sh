@@ -1678,7 +1678,7 @@ function installV2ray(){
         promptInfoXrayName="xray"
         isXray="yes"
     else
-        read -p "是否使用Xray内核(默认为V2ray内核 )? 请输入[Y/n]?" isV2rayOrXrayInput
+        read -p "是否使用Xray内核(默认为V2ray内核 )? 请输入[y/N]?" isV2rayOrXrayInput
         isV2rayOrXrayInput=${isV2rayOrXrayInput:-n}
 
         if [[ $isV2rayOrXrayInput == [Yy] ]]; then
@@ -1692,7 +1692,7 @@ function installV2ray(){
          configV2rayProtocol="vless"
     else 
 
-        read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[Y/n]?" isV2rayUseVLessInput
+        read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[y/N]?" isV2rayUseVLessInput
         isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
 
         if [[ $isV2rayUseVLessInput == [Yy] ]]; then
