@@ -435,6 +435,12 @@ function installV2rayPoseidon(){
     yellow " 准备安装 V2rayPoseidon"
     green " =================================================="
 
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+    green " ================================================== "
+
+    read configSSLDomain
+
     mkdir -p ${configV2rayPoseidonPath}
     cd ${configV2rayPoseidonPath}
     
@@ -525,6 +531,14 @@ function replaceSogaConfig(){
     sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
     sed -i "s/cert_domain=/cert_domain=${configSSLDomain}/g" /etc/soga/soga.conf
 
+    read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀:" inputV2boardDomain
+    sed -i "s/www.domain.com/${inputV2boardDomain}/g" /etc/soga/soga.conf
+
+    read -p "请输入webapi key 即通信密钥:" inputV2boardWebApiKey
+    sed -i "s/webapi_mukey=/webapi_mukey=${inputV2boardWebApiKey}/g" /etc/soga/soga.conf
+
+    read -p "请输入节点ID (纯数字):" inputV2boardNodeId
+    sed -i "s/node_id=1/node_id=${inputV2boardNodeId}/g" /etc/soga/soga.conf
 }
 
 
