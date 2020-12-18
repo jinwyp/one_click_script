@@ -169,10 +169,7 @@ function testLinuxPortUsage(){
             rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
         fi
         
-        $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz -y
-        $osSystemPackage install iputils-ping -y
+
 
     elif [ "$osRelease" == "ubuntu" ]; then
         if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
@@ -190,10 +187,7 @@ function testLinuxPortUsage(){
 
         ${sudoCommand} systemctl stop ufw
         ${sudoCommand} systemctl disable ufw
-        $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
+
 
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
@@ -316,11 +310,21 @@ function installSoftEditor(){
         green " =================================================="
     fi
 
+    $osSystemPackage update -y
+    $osSystemPackage install -y curl wget git unzip zip tar nano
+    $osSystemPackage install -y iputils-ping 
+
     if [ "$osRelease" == "centos" ]; then   
-        $osSystemPackage install -y nano git
+        
+        $osSystemPackage install -y xz 
     else
-        $osSystemPackage install -y vim-gui-common vim-runtime vim nano git
+        $osSystemPackage install -y vim-gui-common vim-runtime vim 
+        $osSystemPackage install -y xz-utils
+
     fi
+
+
+
 
     # 设置vim 中文乱码
     if [[ ! -d "${HOME}/.vimrc" ]] ;  then
