@@ -352,6 +352,12 @@ function installSoftEditor(){
         green " =================================================="
     fi
 
+    if [ "$osRelease" == "centos" ]; then   
+        $osSystemPackage install -y xz 
+    else
+        $osSystemPackage install -y vim-gui-common vim-runtime vim 
+    fi
+
     # 设置vim 中文乱码
     if [[ ! -d "${HOME}/.vimrc" ]] ;  then
         cat > "${HOME}/.vimrc" <<-EOF
