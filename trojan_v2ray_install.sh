@@ -361,6 +361,7 @@ set fencs=utf8,gbk,gb2312,gb18030
 
 syntax on
 set nu!
+colorscheme elflord
 
 EOF
     fi
@@ -404,7 +405,7 @@ function installSoftOhMyZsh(){
         zshConfig=${HOME}/.zshrc
         zshTheme="maran"
         sed -i 's/ZSH_THEME=.*/ZSH_THEME="'${zshTheme}'"/' $zshConfig
-        sed -i 's/plugins=(git)/plugins=(git cp history z rsync colorize zsh-autosuggestions)/' $zshConfig
+        sed -i 's/plugins=(git)/plugins=(git cp history z rsync colorize nvm zsh-autosuggestions)/' $zshConfig
 
         zshAutosuggestionsConfig=${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
         sed -i "s/ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'/ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=1'/" $zshAutosuggestionsConfig

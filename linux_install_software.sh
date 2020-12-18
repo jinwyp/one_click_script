@@ -277,6 +277,7 @@ function setLinuxDateZone(){
         $osSystemPackage install -y ntp
         service ntp restart
     fi
+    systemctl restart ntp
 }
 
 
@@ -297,6 +298,19 @@ function installBBR2(){
 
 
 function installSoftEditor(){
+
+    $osSystemPackage update -y
+    $osSystemPackage install -y curl wget git unzip zip tar nano
+    $osSystemPackage install -y iputils-ping 
+
+    if [ "$osRelease" == "centos" ]; then   
+        
+        $osSystemPackage install -y xz 
+    else
+        $osSystemPackage install -y vim-gui-common vim-runtime vim 
+        $osSystemPackage install -y xz-utils
+    fi
+
     # 安装 micro 编辑器
     if [[ ! -f "${HOME}/bin/micro" ]] ;  then
         mkdir -p ${HOME}/bin
@@ -310,20 +324,6 @@ function installSoftEditor(){
         green " =================================================="
     fi
 
-    $osSystemPackage update -y
-    $osSystemPackage install -y curl wget git unzip zip tar nano
-    $osSystemPackage install -y iputils-ping 
-
-    if [ "$osRelease" == "centos" ]; then   
-        
-        $osSystemPackage install -y xz 
-    else
-        $osSystemPackage install -y vim-gui-common vim-runtime vim 
-        $osSystemPackage install -y xz-utils
-
-    fi
-
-
 
 
     # 设置vim 中文乱码
@@ -335,6 +335,7 @@ set fencs=utf8,gbk,gb2312,gb18030
 
 syntax on
 set nu!
+colorscheme elflord
 
 EOF
     fi
@@ -359,6 +360,10 @@ function installNodejs(){
 
     else 
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+        echo 'export NVM_DIR="$HOME/.nvm"' >> ${HOME}/.zshrc
+        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ${HOME}/.zshrc
+        source ${HOME}/.zshrc
+
         command -v nvm
         nvm --version
         nvm ls-remote
@@ -541,6 +546,9 @@ function start_menu(){
             installNodejs
         ;;
         8 )
+            testLinuxPortUsage
+            setLinuxDateZone
+            installSoftEditor
             installDocker
         ;;
         21 )
