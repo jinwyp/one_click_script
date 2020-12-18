@@ -164,7 +164,11 @@ function testLinuxPortUsage(){
 
         ${sudoCommand} systemctl stop firewalld
         ${sudoCommand} systemctl disable firewalld
-        rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+
+        if [ "$osReleaseVersion" == "7" ]; then
+            rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+        fi
+        
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz -y
@@ -335,13 +339,39 @@ EOF
 
 
 function installNodejs(){
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
-    command -v nvm
-    nvm --version
-    nvm ls-remote
-    nvm install --lts
 
-    npm install -g pm2
+    if [ "$osRelease" == "centos" ] ; then
+
+        if [ "$osReleaseVersion" == "8" ]; then
+            ${sudoCommand} dnf module list nodejs
+            ${sudoCommand} dnf module enable nodejs:14
+            ${sudoCommand} dnf install nodejs
+        fi
+
+        if [ "$osReleaseVersion" == "7" ]; then
+            curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
+            ${sudoCommand} yum install -y nodejs
+        fi
+
+    else 
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+        command -v nvm
+        nvm --version
+        nvm ls-remote
+        nvm install --lts
+
+    fi
+
+    green " Nodejs 版本:"
+    node --version 
+    green " NPM 版本:"
+    npm --version  
+
+    green " =================================================="
+    yellow " 准备安装 PM2 进程守护程序"
+    green " =================================================="
+    npm install -g pm2 
+
 }
 
 
@@ -464,10 +494,10 @@ function start_menu(){
     green " 1. 安装 老版本 BBR-PLUS 加速4合一脚本"
     green " 2. 安装 新版本 BBR-PLUS 加速6合一脚本"
     echo
-    green " 3. 编辑 SSH登录的用户公钥 用于SSH密码登录免登录"
+    green " 3. 编辑 SSH 登录的用户公钥 用于SSH密码登录免登录"
     green " 4. 修改 SSH 登陆端口号"
     green " 5. 设置时区为北京时间"
-    green " 6. 安装 Vim Nano Micro编辑器"
+    green " 6. 安装 Vim Nano Micro 编辑器"
     green " 7. 安装 Nodejs 与 PM2"
     green " 8. 安装 Docker 与 Docker Compose"
     echo
