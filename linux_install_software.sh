@@ -513,8 +513,8 @@ function editSogaConfig(){
 function replaceSogaConfig(){
 
     sed -i 's/type=sspanel-uim/type=v2board/g' /etc/soga/soga.conf
-    sed -i "s/cert_file=/cert_file=${configSSLCertPath}/fullchain.cer/g" /etc/soga/soga.conf
-    sed -i "s/key_file=/key_file=${configSSLCertPath}/private.key/g" /etc/soga/soga.conf
+    sed -i "s?cert_file=?cert_file=${configSSLCertPath}/fullchain.cer?g" /etc/soga/soga.conf
+    sed -i "s?key_file=?key_file=${configSSLCertPath}/private.key?g" /etc/soga/soga.conf
 
     sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
     sed -i "s/cert_domain=/cert_domain=${configSSLDomain}/g" /etc/soga/soga.conf
