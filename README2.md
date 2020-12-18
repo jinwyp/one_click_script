@@ -40,7 +40,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ```
 
-## 安装其他 Linux 软件  
+## 安装其他 Linux 软件 和 V2board 服务器端 V2Ray-Poseidon 或 soga 
 
 #### via curl 安装命令 
 

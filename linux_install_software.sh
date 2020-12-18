@@ -510,7 +510,7 @@ function editSogaConfig(){
     vi /etc/soga/soga.conf
 }
 
-function replaceV2rayPoseidonConfig(){
+function replaceSogaConfig(){
 
     sed -i 's/type=sspanel-uim/type=v2board/g' /etc/soga/soga.conf
     sed -i "s/cert_file=/cert_file=${configSSLCertPath}/fullchain.cer/g" /etc/soga/soga.conf
@@ -768,6 +768,7 @@ function start_menu(){
         41 )
             getHTTPS
             replaceV2rayPoseidonConfig
+            replaceSogaConfig
         ;;               
         0 )
             exit 1
