@@ -499,6 +499,12 @@ function installSoga(){
     green "    准备安装 soga !"
     green " =================================================="
 
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+    green " ================================================== "
+
+    read configSSLDomain
+
     mkdir -p ${configDockerPath}
     cd ${configDockerPath}
 
@@ -516,11 +522,9 @@ function replaceSogaConfig(){
     sed -i "s?cert_file=?cert_file=${configSSLCertPath}/fullchain.cer?g" /etc/soga/soga.conf
     sed -i "s?key_file=?key_file=${configSSLCertPath}/private.key?g" /etc/soga/soga.conf
 
-    #sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
+    sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
     sed -i "s/cert_domain=/cert_domain=${configSSLDomain}/g" /etc/soga/soga.conf
 
-    sed -i 's/www.domain.com/board.jinss2.cf/g' /etc/soga/soga.conf
-    sed -i 's/webapi_mukey=/webapi_mukey=tgfcjinwyp2022tgfc/g' /etc/soga/soga.conf
 }
 
 
@@ -764,6 +768,7 @@ function start_menu(){
         31 )
             setLinuxDateZone
             installSoga
+            replaceSogaConfig
         ;;
         32 )
             editSogaConfig
