@@ -468,6 +468,10 @@ function checkLogV2rayPoseidon(){
     docker-compose logs
 }
 
+function deleteDockerLogs(){
+     truncate -s 0 /var/lib/docker/containers/*/*-json.log
+}
+
 function editV2rayPoseidonWSconfig(){
     vi ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
 }
@@ -475,6 +479,8 @@ function editV2rayPoseidonWSconfig(){
 function editV2rayPoseidonDockerComposeConfig(){
     vi ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
 }
+
+
 
 function replaceV2rayPoseidonConfig(){
     sed -i "s?#- ./v2ray.crt:/etc/v2ray/v2ray.crt?- ${configSSLCertPath}/fullchain.cer:/etc/v2ray/v2ray.crt?g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
@@ -484,7 +490,6 @@ function replaceV2rayPoseidonConfig(){
     sed -i 's/#- KEY_FILE=/- KEY_FILE=/g' ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
 
     sed -i "s/demo.oppapanel.xyz/${configSSLDomain}/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
-
 }
 
 
@@ -501,6 +506,19 @@ function installSoga(){
 
 }
 
+function editSogaConfig(){
+    vi /etc/soga/soga.conf
+}
+
+function replaceV2rayPoseidonConfig(){
+
+    sed -i 's/type=sspanel-uim/type=v2board/g' /etc/soga/soga.conf
+    sed -i "s/cert_file=/cert_file=${configSSLCertPath}/fullchain.cer/g" /etc/soga/soga.conf
+    sed -i "s/key_file=/key_file=${configSSLCertPath}/private.key/g" /etc/soga/soga.conf
+
+    sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
+    sed -i "s/cert_domain=/cert_domain=${configSSLDomain}/g" /etc/soga/soga.conf
+}
 
 
 configNetworkRealIp=""
@@ -672,9 +690,11 @@ function start_menu(){
     green " 25. 重启 V2Ray-Poseidon 服务器端"
     green " 26. 停止 V2Ray-Poseidon 服务器端"
     green " 27. 查看 V2Ray-Poseidon 服务器端 日志"
+    green " 28. 清空 V2Ray-Poseidon Docker日志"
     red " 29. 卸载 V2Ray-Poseidon"
     echo
     green " 31. 安装 Soga 服务器端"
+    green " 32. 编辑 Soga 配置文件 /etc/soga/soga.conf"
     echo
     green " 41. 单独申请域名SSL证书"
     green " 0. 退出脚本"
@@ -732,17 +752,23 @@ function start_menu(){
         27 )
             checkLogV2rayPoseidon
         ;;
+        28 )
+            deleteDockerLogs
+        ;;           
         29 )
             checkLogV2rayPoseidon
         ;; 
         31 )
             setLinuxDateZone
             installSoga
-        ;;             
+        ;;
+        32 )
+            editSogaConfig
+        ;;                       
         41 )
             getHTTPS
             replaceV2rayPoseidonConfig
-        ;;                  
+        ;;               
         0 )
             exit 1
         ;;
