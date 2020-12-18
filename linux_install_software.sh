@@ -709,6 +709,7 @@ function start_menu(){
             installDocker
         ;;
         21 )
+            setLinuxDateZone
             installV2rayPoseidon
             getHTTPS
             replaceV2rayPoseidonConfig
@@ -735,6 +736,7 @@ function start_menu(){
             checkLogV2rayPoseidon
         ;; 
         31 )
+            setLinuxDateZone
             installSoga
         ;;             
         41 )
