@@ -693,15 +693,20 @@ function getHTTPSCertificate(){
 	if [[ $1 == "standalone" ]] ; then
 	    green "  开始重新申请证书 acme.sh standalone mode !"
 	    ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --standalone
+
+        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
+        --key-file   ${configSSLCertPath}/private.key \
+        --fullchain-file ${configSSLCertPath}/fullchain.cer
+
 	else
 	    green "  开始第一次申请证书 acme.sh nginx mode !"
         ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
-    fi
 
-    ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
+        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
         --key-file   ${configSSLCertPath}/private.key \
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
+    fi
 }
 
 

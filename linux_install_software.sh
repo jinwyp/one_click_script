@@ -381,6 +381,10 @@ function installNodejs(){
     green " =================================================="
     npm install -g pm2 
 
+    green " ================================================== "
+    green "   Nodejs 与 PM2 安装成功 !"
+    green " ================================================== "
+
 }
 
 
@@ -406,20 +410,17 @@ function installDocker(){
     rm -f `which dc`
     ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/dc
     ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-    docker-compose --version
-
-
+    
     systemctl start docker
-
     systemctl enable docker.service
-    systemctl status docker.service
-
 
 
     green " ================================================== "
     green "   Docker 与 Docker Compose 安装成功 !"
     green " ================================================== "
+    docker-compose --version
 
+    # systemctl status docker.service
 }
 
 
@@ -438,7 +439,9 @@ function installV2rayPoseidon(){
 
     cd v2ray-poseidon
 
-    vi ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
+    green " ================================================== "
+    green "   V2rayPoseidon 安装成功 请再次运行脚本编辑配置文件"
+    green " ================================================== "
  	
 }
 
@@ -457,7 +460,7 @@ function restartV2rayPoseidonWS(){
     docker-compose restart 
 }
 
-function checkLogV2rayPoseidon {
+function checkLogV2rayPoseidon(){
     cd ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls
     docker-compose logs
 }
@@ -470,15 +473,153 @@ function editV2rayPoseidonDockerComposeConfig(){
     vi ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
 }
 
+function replaceV2rayPoseidonConfig(){
+    sed -i "s?#- ./v2ray.crt:/etc/v2ray/v2ray.crt?- ${configSSLCertPath}/fullchain.cer:/etc/v2ray/v2ray.crt?g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+    sed -i "s?#- ./v2ray.key:/etc/v2ray/v2ray.key?- ${configSSLCertPath}/private.key:/etc/v2ray/v2ray.key?g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+    
+    sed -i 's/#- CERT_FILE=/- CERT_FILE=/g' ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+    sed -i 's/#- KEY_FILE=/- KEY_FILE=/g' ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+
+    sed -i "s/demo.oppapanel.xyz/${configSSLDomain}/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+
+}
 
 
 
 
 
 
+configNetworkRealIp=""
+configNetworkLocalIp=""
+configSSLDomain=""
+
+configSSLCertPath="${HOME}/website/cert"
+configWebsitePath="${HOME}/website/html"
+
+
+function getHTTPSCertificate(){
+
+    # 申请https证书
+	mkdir -p ${configSSLCertPath}
+	mkdir -p ${configWebsitePath}
+	curl https://get.acme.sh | sh
+
+    green "=========================================="
+
+	if [[ $1 == "standalone" ]] ; then
+	    green "  开始申请证书 acme.sh standalone mode !"
+	    ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --standalone
+
+        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
+        --key-file   ${configSSLCertPath}/private.key \
+        --fullchain-file ${configSSLCertPath}/fullchain.cer
+
+	else
+	    green "  开始申请证书 acme.sh nginx mode !"
+        ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
+
+        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
+        --key-file   ${configSSLCertPath}/private.key \
+        --fullchain-file ${configSSLCertPath}/fullchain.cer \
+        --reloadcmd  "systemctl force-reload  nginx.service"
+    fi
+
+}
+
+
+function compareRealIpWithLocalIp(){
+
+    yellow " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
+    read -p "是否检测域名指向的IP正确? 请输入[Y/n]?" isDomainValidInput
+    isDomainValidInput=${isDomainValidInput:-Y}
+
+    if [[ $isDomainValidInput == [Yy] ]]; then
+        if [ -n $1 ]; then
+            configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+            # configNetworkLocalIp=`curl ipv4.icanhazip.com`
+            configNetworkLocalIp=`curl v4.ident.me`
+
+            green " ================================================== "
+            green "     域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. "
+            green " ================================================== "
+
+            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
+                green " ================================================== "
+                green "     域名解析的IP正常!"
+                green " ================================================== "
+                true
+            else
+                green " ================================================== "
+                red "     域名解析地址与本VPS IP地址不一致!"
+                red "     本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
+                green " ================================================== "
+                false
+            fi
+        else
+            green " ================================================== "        
+            red "     域名输入错误!"
+            green " ================================================== "        
+            false
+        fi
+        
+    else
+        green " ================================================== "
+        green "     不检测域名解析是否正确!"
+        green " ================================================== "
+        true
+    fi
+}
 
 
 
+
+function getHTTPS(){
+
+    testLinuxPortUsage
+
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+    green " ================================================== "
+
+    read configSSLDomain
+
+    read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]?" isDomainSSLRequestInput
+    isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
+
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+        if [[ $isDomainSSLRequestInput == [Yy] ]]; then
+
+            getHTTPSCertificate "standalone"
+
+            if test -s ${configSSLCertPath}/fullchain.cer; then
+                green " =================================================="
+                green "   域名SSL证书申请成功 !"
+                green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+                green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+                green " =================================================="
+
+            else
+                red "==================================="
+                red " https证书没有申请成功，安装失败!"
+                red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
+                red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
+                red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
+                red "==================================="
+                exit
+            fi
+
+        else
+            green " =================================================="
+            green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+            green " =================================================="
+        fi
+    else
+        exit
+    fi
+
+}
 
 
 
@@ -519,7 +660,7 @@ function start_menu(){
     green " 27. 查看 V2Ray-Poseidon 服务器端 日志"
     red " 29. 卸载 V2Ray-Poseidon"
     echo
-
+    green " 41. 单独申请域名SSL证书"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -553,6 +694,8 @@ function start_menu(){
         ;;
         21 )
             installV2rayPoseidon
+            getHTTPS
+            replaceV2rayPoseidonConfig
         ;;
         22 )
             editV2rayPoseidonWSconfig
@@ -574,7 +717,11 @@ function start_menu(){
         ;;
         29 )
             checkLogV2rayPoseidon
-        ;;        
+        ;;   
+        41 )
+            getHTTPS
+            replaceV2rayPoseidonConfig
+        ;;                  
         0 )
             exit 1
         ;;
