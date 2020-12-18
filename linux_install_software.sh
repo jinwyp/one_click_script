@@ -272,12 +272,15 @@ function setLinuxDateZone(){
 
     if [ "$osRelease" == "centos" ]; then   
         $osSystemPackage -y install ntpdate
-        ntpdate ntp1.aliyun.com
+        ntpdate -q 0.rhel.pool.ntp.org
+        systemctl enable ntpd
+        systemctl restart ntpd
     else
         $osSystemPackage install -y ntp
-        service ntp restart
+        systemctl enable ntp
+        systemctl restart ntp
     fi
-    systemctl restart ntp
+    
 }
 
 
@@ -485,7 +488,18 @@ function replaceV2rayPoseidonConfig(){
 }
 
 
+function installSoga(){
 
+    green " =================================================="
+    green "    准备安装 soga !"
+    green " =================================================="
+
+    mkdir -p ${configDockerPath}
+    cd ${configDockerPath}
+
+    wget -O soga_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/soga/master/install.sh" && chmod +x soga_install.sh && ./soga_install.sh
+
+}
 
 
 
@@ -660,6 +674,8 @@ function start_menu(){
     green " 27. 查看 V2Ray-Poseidon 服务器端 日志"
     red " 29. 卸载 V2Ray-Poseidon"
     echo
+    green " 31. 安装 Soga 服务器端"
+    echo
     green " 41. 单独申请域名SSL证书"
     green " 0. 退出脚本"
     echo
@@ -717,7 +733,10 @@ function start_menu(){
         ;;
         29 )
             checkLogV2rayPoseidon
-        ;;   
+        ;; 
+        31 )
+            installSoga
+        ;;             
         41 )
             getHTTPS
             replaceV2rayPoseidonConfig
