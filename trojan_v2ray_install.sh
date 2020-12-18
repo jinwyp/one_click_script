@@ -155,8 +155,8 @@ function testLinuxPortUsage(){
             exit
         fi
 
-        sudo systemctl stop firewalld
-        sudo systemctl disable firewalld
+        ${sudoCmd} systemctl stop firewalld
+        ${sudoCmd} systemctl disable firewalld
         rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
@@ -177,8 +177,8 @@ function testLinuxPortUsage(){
             exit
         fi
 
-        sudo systemctl stop ufw
-        sudo systemctl disable ufw
+        ${sudoCmd} systemctl stop ufw
+        ${sudoCmd} systemctl disable ufw
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz-utils -y
@@ -215,10 +215,10 @@ function setLinuxRootLogin(){
     if [[ $osIsRootLoginInput == [Yy] ]]; then
 
         if [ "$osRelease" == "centos" ] || [ "$osRelease" == "debian" ] ; then
-            sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+            ${sudoCmd} sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
         fi
         if [ "$osRelease" == "ubuntu" ]; then
-            sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+            ${sudoCmd} sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
         fi
 
         green "设置允许root登陆成功!"
@@ -234,26 +234,26 @@ function setLinuxRootLogin(){
     fi
 
 
-    sudo sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
-    sudo sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
 
     if [ "$osRelease" == "centos" ] ; then
 
-        sudo sed -i 's/ClientAliveInterval 420/ClientAliveInterval 120/g' /etc/ssh/sshd_config
-        sudo sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
+        ${sudoCmd} sed -i 's/ClientAliveInterval 420/ClientAliveInterval 120/g' /etc/ssh/sshd_config
+        ${sudoCmd} sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
         
-        sudo service sshd restart
-        sudo systemctl restart sshd
+        ${sudoCmd} service sshd restart
+        ${sudoCmd} systemctl restart sshd
 
         green "设置成功, 请用shell工具软件登陆vps服务器!"
     fi
 
     if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
 
-        sudo sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
+        ${sudoCmd} sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
         
-        sudo service ssh restart
-        sudo systemctl restart ssh
+        ${sudoCmd} service ssh restart
+        ${sudoCmd} systemctl restart ssh
 
         green "设置成功, 请用shell工具软件登陆vps服务器!"
     fi
@@ -262,6 +262,7 @@ function setLinuxRootLogin(){
 
 }
 
+# 修改SSH 端口号
 function changeLinuxSSHPort(){
     green "修改的SSH登陆的端口号, 不要使用常用的端口号. 例如 20|21|23|25|53|69|80|110|443|123!"
     read -p "请输入要修改的端口号(必须是纯数字并且在1024~65535之间或22):" osSSHLoginPortInput
@@ -276,13 +277,13 @@ function changeLinuxSSHPort(){
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
             firewall-cmd --add-port=$osSSHLoginPortInput/tcp --permanent
             firewall-cmd --reload
-            sudo service sshd restart
-            sudo systemctl restart sshd
+            ${sudoCmd} service sshd restart
+            ${sudoCmd} systemctl restart sshd
         fi
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
-            sudo service ssh restart
-            sudo systemctl restart ssh
+            ${sudoCmd} service ssh restart
+            ${sudoCmd} systemctl restart ssh
         fi
 
         green "设置成功, 请记住设置的端口号 ${osSSHLoginPortInput}!"
@@ -326,7 +327,7 @@ function setLinuxDateZone(){
 # 软件安装
 
 function installBBR(){
-    wget -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
+    wget -O tcp_old.sh -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp_old.sh && ./tcp_old.sh
 }
 
 function installBBR2(){
@@ -373,16 +374,16 @@ function installSoftOhMyZsh(){
 
     if [ "$osRelease" == "centos" ]; then
 
-        sudo $osSystemPackage install zsh -y
+        ${sudoCmd} $osSystemPackage install zsh -y
         $osSystemPackage install util-linux-user -y
 
     elif [ "$osRelease" == "ubuntu" ]; then
 
-        sudo $osSystemPackage install zsh -y
+        ${sudoCmd} $osSystemPackage install zsh -y
 
     elif [ "$osRelease" == "debian" ]; then
 
-        sudo $osSystemPackage install zsh -y
+        ${sudoCmd} $osSystemPackage install zsh -y
     fi
 
     green " =================================================="
@@ -611,13 +612,13 @@ function getTrojanAndV2rayVersion(){
 function stopServiceNginx(){
     serviceNginxStatus=`ps -aux | grep "nginx: worker" | grep -v "grep"`
     if [[ -n "$serviceNginxStatus" ]]; then
-        sudo systemctl stop nginx.service
+        ${sudoCmd} systemctl stop nginx.service
     fi
 }
 
 function stopServiceV2ray(){
     if [[ -f "${osSystemMdPath}v2ray.service" ]] || [[ -f "/etc/systemd/system/v2ray.service" ]] || [[ -f "/lib/systemd/system/v2ray.service" ]] ; then
-        sudo systemctl stop v2ray.service
+        ${sudoCmd} systemctl stop v2ray.service
     fi
 }
 
@@ -939,7 +940,7 @@ EOF
 
 function removeNginx(){
 
-    sudo systemctl stop nginx.service
+    ${sudoCmd} systemctl stop nginx.service
 
     green " ================================================== "
     red " 准备卸载已安装的nginx"
@@ -1595,8 +1596,8 @@ function removeTrojan(){
 
     isTrojanGoInstall
 
-    sudo systemctl stop trojan${promptInfoTrojanName}.service
-    sudo systemctl disable trojan${promptInfoTrojanName}.service
+    ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
+    ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
 
     green " ================================================== "
     red " 准备卸载已安装的trojan${promptInfoTrojanName}"
@@ -1626,7 +1627,7 @@ function upgradeTrojan(){
     green "     开始升级 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion}"
     green " ================================================== "
 
-    sudo systemctl stop trojan${promptInfoTrojanName}.service
+    ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
 
     mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
 
@@ -1640,7 +1641,7 @@ function upgradeTrojan(){
         mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
     fi
 
-    sudo systemctl start trojan${promptInfoTrojanName}.service
+    ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
 
     green " ================================================== "
     green "     升级成功 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
@@ -2508,8 +2509,8 @@ function removeV2ray(){
     red " 准备卸载已安装 ${promptInfoXrayName} "
     green " ================================================== "
 
-    sudo systemctl stop ${promptInfoXrayName}.service
-    sudo systemctl disable ${promptInfoXrayName}.service
+    ${sudoCmd} systemctl stop ${promptInfoXrayName}.service
+    ${sudoCmd} systemctl disable ${promptInfoXrayName}.service
 
 
     rm -rf ${configV2rayPath}
@@ -2662,9 +2663,9 @@ function removeTrojanWeb(){
     red " 准备卸载已安装 Trojan-web "
     green " ================================================== "
 
-    sudo systemctl stop trojan.service
-    sudo systemctl stop trojan-web.service
-    sudo systemctl disable trojan-web.service
+    ${sudoCmd} systemctl stop trojan.service
+    ${sudoCmd} systemctl stop trojan-web.service
+    ${sudoCmd} systemctl disable trojan-web.service
 
     # 移除trojan web 管理程序  和数据库 leveldb文件
     # rm -f /usr/local/bin/trojan
@@ -2700,7 +2701,7 @@ function upgradeTrojanWeb(){
     green "    开始升级 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
     green " =================================================="
 
-    sudo systemctl stop trojan-web.service
+    ${sudoCmd} systemctl stop trojan-web.service
 
     mkdir -p ${configDownloadTempPath}/upgrade/trojan-web
 
@@ -2708,8 +2709,8 @@ function upgradeTrojanWeb(){
     mv -f ${configDownloadTempPath}/upgrade/trojan-web/trojan-web ${configTrojanWebPath}
     chmod +x ${configTrojanWebPath}/trojan-web
 
-    sudo systemctl start trojan-web.service
-    sudo systemctl restart trojan.service
+    ${sudoCmd} systemctl start trojan-web.service
+    ${sudoCmd} systemctl restart trojan.service
 
 
     green " ================================================== "
@@ -2717,13 +2718,13 @@ function upgradeTrojanWeb(){
     green " ================================================== "
 }
 function runTrojanWebSSL(){
-    sudo systemctl stop trojan-web.service
-    sudo systemctl stop nginx.service
-    sudo systemctl stop trojan.service
+    ${sudoCmd} systemctl stop trojan-web.service
+    ${sudoCmd} systemctl stop nginx.service
+    ${sudoCmd} systemctl stop trojan.service
     ${configTrojanWebPath}/trojan-web tls
-    sudo systemctl start trojan-web.service
-    sudo systemctl start nginx.service
-    sudo systemctl restart trojan.service
+    ${sudoCmd} systemctl start trojan-web.service
+    ${sudoCmd} systemctl start nginx.service
+    ${sudoCmd} systemctl restart trojan.service
 }
 function runTrojanWebLog(){
     ${configTrojanWebPath}/trojan-web
