@@ -42,6 +42,10 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
+
+
+
+
 ![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
 
 
@@ -113,6 +117,26 @@ Let's Encrypt证书申请频率的限制
 6. 脚本感谢 https://github.com/p4gefau1t/trojan-go
 7. 脚本感谢 https://github.com/ylx2016/Linux-NetSpeed
 8. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
+
+
+
+
+
+## 安装其他 Linux 软件 和 V2board 服务器端 V2Ray-Poseidon 或 soga 
+
+#### via curl 安装命令 
+
+```bash
+curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh && chmod +x ./linux_install_software.sh && ./linux_install_software.sh
+
+```
+
+#### via wget 安装命令 
+
+```bash
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh && chmod +x ./linux_install_software.sh && ./linux_install_software.sh
+
+```
 
 
 
