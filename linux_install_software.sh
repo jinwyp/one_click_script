@@ -500,8 +500,17 @@ function replaceV2rayPoseidonConfig(){
 
         sed -i "s/demo.oppapanel.xyz/${configSSLDomain}/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
 
-    fi
 
+        read -p "请输入节点ID (纯数字):" inputV2boardNodeId
+        sed -i "s/1,/${inputV2boardNodeId},/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
+
+        read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀 结尾不要带/ :" inputV2boardDomain
+        sed -i "s?http or https://YOUR V2BOARD DOMAIN?https://${inputV2boardDomain}?g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
+
+        read -p "请输入token 即通信密钥:" inputV2boardWebApiKey
+        sed -i "s/v2board token/${inputV2boardWebApiKey}/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
+
+    fi
 
 }
 
