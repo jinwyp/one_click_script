@@ -1,7 +1,8 @@
 # Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
 
-# Trojan (支持 trojan-go版本) 和 V2ray (支持 xray版本) 一键安装脚本 
+# Trojan (支持 trojan-go版本) 和 V2ray (支持 xray版本) 一键安装脚本
 
+# 支持 V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本
 
 ## 功能说明 Features 
 
