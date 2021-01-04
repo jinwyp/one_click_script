@@ -17,8 +17,9 @@
 9. 卸载后不留任何痕迹, 方便重复安装
 10. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
 11. 本脚本为安装trojan和v2ray的终极脚本, 包括各种模式, 其他脚本没有本脚本的全面
-12. 本脚本没有其他偷跑服务器流量的网页或其他屏蔽bt流量的限制
-
+12. 本脚本没有其他偷跑服务器流量的网页或其他屏蔽bt流量的限制等
+13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 不像其他多合一脚本写死固定端口容易被检测
+14. 本脚本不推荐安装多种v2ray的多种协议共存, 协议安装的越多安全性越低, 而且也不会提高速度, 没有必要使用多合一的脚本同时安装多个协议
 
 ## Features English 
 1. Install V2Ray or Xray using VLESS or VMess, support all condition: VLESS+TCP+TLS / VLESS+Websocket+TLS(CDN) / VMess+TCP+TLS / VMess+Websocket+TLS(CDN)  
