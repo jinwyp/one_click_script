@@ -3069,7 +3069,7 @@ function start_menu(){
     green " 20. 升级 v2ray或xray 和 trojan-go 到最新版本"
     red " 21. 卸载 trojan-go, v2ray或xray 和 nginx"
     echo
-    green " 28. 查看已安装的配置用户密码信息"
+    green " 28. 查看已安装的配置和用户密码等信息"
     green " 29. 安装 trojan 和 v2ray 可视化管理面板"
     green " 30. 不安装nginx,只安装trojan或v2ray,可选择是否安装SSL证书"
     green " =================================================="
