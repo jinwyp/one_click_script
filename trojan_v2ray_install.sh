@@ -3053,7 +3053,7 @@ function start_menu(){
     echo
     green " 6. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket (兼容trojan客户端)"
     green " 7. 修复证书 并继续安装 trojan-go 不支持CDN, 不开启websocket"
-    green " 8. 安装 trojan-go 和 nginx 支持CDN 开启websocket (兼容trojan客户端 但不兼容 websocket)"
+    green " 8. 安装 trojan-go 和 nginx 支持CDN 开启websocket (兼容trojan客户端但不兼容websocket)"
     green " 9. 修复证书 并继续安装 trojan-go 支持CDN, 开启websocket"
     green " 10. 升级 trojan-go 到最新版本"
     red " 11. 卸载 trojan-go 与 nginx"
