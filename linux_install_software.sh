@@ -439,6 +439,10 @@ installPython3(){
 
     export PATH=$PATH:/usr/local/python3/bin
 
+
+    wget -O ${configPythonDownloadPath}/lzma.py https://github.com/jinwyp/one_click_script/raw/master/download/lzma.py
+    cp ${configPythonDownloadPath}/lzma.py /usr/local/python3/lib/python3.8
+
     # 添加python3的软链接 
     ln -s /usr/local/python3/bin/python3.8 /usr/bin/python3
 
@@ -449,6 +453,8 @@ installPython3(){
     
     pip install backports.lzma
     pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+
+    
 }
 
 
