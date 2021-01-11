@@ -392,31 +392,62 @@ function installNodejs(){
 
 
 configPythonDownloadPath="${HOME}/download/python3"
-configPythonDownloadFile="Python-3.9.1.tgz"
+
+configPythonVERSION="3.8.7"
+configPythonDownloadFile="Python-${configPythonVERSION}.tgz"
+
+
 installPython3(){
     if [ "$osRelease" == "centos" ] ; then
 
-        yum install -y gcc make openssl-devel bzip2-devel libffi-devel 
-        yum install -y zlib-devel ncurses-devel sqlite-devel readline-devel tk-devel 
-        yum install -y wget
-        
+        if [ "$osReleaseVersion" == "8" ]; then
+            ${sudoCommand} sudo dnf groupinstall 'development tools'
+            ${sudoCommand} dnf install bzip2-devel expat-devel gdbm-devel ncurses-devel openssl-devel sqlite-devel
+            ${sudoCommand} dnf install readline-devel wget tk-devel xz-devel zlib-devel libffi-devel
+        fi
+
+
+        if [ "$osReleaseVersion" == "7" ]; then
+            yum groupinstall 'development tools'
+            yum install -y gcc make openssl-devel bzip2-devel libffi-devel 
+            yum install -y zlib-devel ncurses-devel sqlite-devel readline-devel tk-devel 
+            yum install -y wget
+        fi
+
+        https://www.python.org/ftp/python/${configPythonVERSION}/Python-${configPythonVERSION}.tgz
         mkdir -p ${configPythonDownloadPath}
-        cd ${configDockerPath}
-        wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://www.python.org/ftp/python/3.9.1/${configPythonDownloadFile}
+        cd ${configPythonDownloadPath}
+        wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://www.python.org/ftp/python/${configPythonVERSION}/${configPythonDownloadFile}
 
-        tar -zxvf ${configPythonDownloadFile}
-        cd ${configPythonDownloadFile}
+        tar -zxvf ${configPythonDownloadPath}/${configPythonDownloadFile}
+        cd Python-${configPythonVERSION}
+
+        # ./configure prefix=/usr/local/python3 --enable-optimizations
+        ./configure prefix=/usr/local/python3
+
+        make altinstall
+
+        /usr/local/python3/bin/python3.8 -m pip install --upgrade pip
+        
+        export PATH=$PATH:/usr/local/python3/bin/
 
 
-        ./configure prefix=/usr/local/python3 --enable-optimizations
+        # 添加python3的软链接 
+        ln -s /usr/local/python3/bin/python3.8 /usr/bin/python3
 
-        make && make install
+        # 添加 pip3 的软链接 
+        ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
+        
+        
 
+        # pip3 install torch==1.7.1+cpu torchvision==0.8.1+cpu torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
     else 
 
         green " =================================================="
+        green " 只支持centos"
     fi
 }
+
 
 configDockerPath="${HOME}/download"
 configV2rayPoseidonPath="${HOME}"
