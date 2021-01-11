@@ -445,6 +445,8 @@ installPython3(){
     # 添加 pip3 的软链接 
     ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
     
+    python3.8 --version
+    
     pip install torch==1.7.1+cpu torchvision==0.8.1+cpu torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 }
 
