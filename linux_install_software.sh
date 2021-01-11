@@ -445,7 +445,7 @@ installPython3(){
 
 
     wget -O ${configPythonDownloadPath}/lzma.py https://github.com/jinwyp/one_click_script/raw/master/download/lzma.py
-    cp ${configPythonDownloadPath}/lzma.py /usr/local/python3/lib/python3.8
+    #cp ${configPythonDownloadPath}/lzma.py /usr/local/python3/lib/python3.8
 
 
     # 添加python3的软链接 
