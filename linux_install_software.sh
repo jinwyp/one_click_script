@@ -398,6 +398,11 @@ configPythonDownloadFile="Python-${configPythonVERSION}.tgz"
 
 
 installPython3(){
+
+    green " =================================================="
+    yellow " 准备安装 Python ${configPythonVERSION} "
+    green " =================================================="
+
     if [ "$osRelease" == "centos" ] ; then
 
         if [ "$osReleaseVersion" == "8" ]; then
@@ -414,11 +419,10 @@ installPython3(){
             yum install -y wget
         fi
 
-
     else 
 
-        sudo apt install software-properties-common
-        sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev liblzma-dev
+        ${sudoCommand} $osSystemPackage install -y software-properties-common
+        ${sudoCommand} $osSystemPackage install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev liblzma-dev
 
     fi
 
@@ -443,17 +447,24 @@ installPython3(){
     wget -O ${configPythonDownloadPath}/lzma.py https://github.com/jinwyp/one_click_script/raw/master/download/lzma.py
     cp ${configPythonDownloadPath}/lzma.py /usr/local/python3/lib/python3.8
 
+
     # 添加python3的软链接 
     ln -s /usr/local/python3/bin/python3.8 /usr/bin/python3
 
     # 添加 pip3 的软链接 
     ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
     
-    python3.8 --version
     
+    #wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl  https://github.com/jinwyp/one_click_script/raw/master/download/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
+    #pip install ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
+
     pip install backports.lzma
     pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
+    green " ================================================== "
+    green "    Python ${configPythonVERSION} 安装成功  !"
+    green " ================================================== "
+    python3 --version
     
 }
 
