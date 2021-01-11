@@ -469,6 +469,21 @@ installPython3(){
 }
 
 
+installPython3Rembg(){
+    pip install rembg
+
+    # 添加 pip3 的软链接 
+    ln -s /usr/local/python3/bin/rembg /usr/bin/rembg
+    ln -s /usr/local/python3/bin/rembg-server /usr/bin/rembg-server
+
+    green " ================================================== "
+    green "    rembg 安装成功  !"
+    green "    后台运行网站API服务命令 nohup rembg-server > /root/rembg.log 2>&1 &"
+    green " ================================================== "
+    
+}
+
+
 configDockerPath="${HOME}/download"
 configV2rayPoseidonPath="${HOME}"
 
@@ -802,6 +817,7 @@ function start_menu(){
     green " 7. 安装 Nodejs 与 PM2"
     green " 8. 安装 Docker 与 Docker Compose"
     green " 9. 安装 Python3.8 "
+    green " 10. 安装 remgb "
     echo
     green " 21. 安装 V2Ray-Poseidon 服务器端"
     green " 22. 编辑 V2Ray-Poseidon WS-TLS 模式配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
@@ -850,6 +866,10 @@ function start_menu(){
         ;;
         9 )
             installPython3
+        ;;
+        10 )
+            installPython3
+            installPython3Rembg
         ;;
         21 )
             setLinuxDateZone
