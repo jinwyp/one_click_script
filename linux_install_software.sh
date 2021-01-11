@@ -428,7 +428,7 @@ installPython3(){
         make altinstall
 
         /usr/local/python3/bin/python3.8 -m pip install --upgrade pip
-        
+
         export PATH=$PATH:/usr/local/python3/bin/
 
 
@@ -440,7 +440,7 @@ installPython3(){
         
         
 
-        # pip3 install torch==1.7.1+cpu torchvision==0.8.1+cpu torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+        pip install torch==1.7.1+cpu torchvision==0.8.1+cpu torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
     else 
 
         green " =================================================="
@@ -781,7 +781,7 @@ function start_menu(){
     green " 6. 安装 Vim Nano Micro 编辑器"
     green " 7. 安装 Nodejs 与 PM2"
     green " 8. 安装 Docker 与 Docker Compose"
-    green " 9. 安装 Python3.9 "
+    green " 9. 安装 Python3.8 "
     echo
     green " 21. 安装 V2Ray-Poseidon 服务器端"
     green " 22. 编辑 V2Ray-Poseidon WS-TLS 模式配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
