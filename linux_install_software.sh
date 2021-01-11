@@ -414,38 +414,38 @@ installPython3(){
             yum install -y wget
         fi
 
-        https://www.python.org/ftp/python/${configPythonVERSION}/Python-${configPythonVERSION}.tgz
-        mkdir -p ${configPythonDownloadPath}
-        cd ${configPythonDownloadPath}
-        wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://www.python.org/ftp/python/${configPythonVERSION}/${configPythonDownloadFile}
 
-        tar -zxvf ${configPythonDownloadPath}/${configPythonDownloadFile}
-        cd Python-${configPythonVERSION}
-
-        # ./configure prefix=/usr/local/python3 --enable-optimizations
-        ./configure prefix=/usr/local/python3
-
-        make altinstall
-
-        /usr/local/python3/bin/python3.8 -m pip install --upgrade pip
-
-        export PATH=$PATH:/usr/local/python3/bin/
-
-
-        # 添加python3的软链接 
-        ln -s /usr/local/python3/bin/python3.8 /usr/bin/python3
-
-        # 添加 pip3 的软链接 
-        ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
-        
-        
-
-        pip install torch==1.7.1+cpu torchvision==0.8.1+cpu torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
     else 
 
-        green " =================================================="
-        green " 只支持centos"
+        sudo apt install software-properties-common
+        sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
+
     fi
+
+
+    mkdir -p ${configPythonDownloadPath}
+    cd ${configPythonDownloadPath}
+    wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://www.python.org/ftp/python/${configPythonVERSION}/${configPythonDownloadFile}
+
+    tar -zxvf ${configPythonDownloadPath}/${configPythonDownloadFile}
+    cd Python-${configPythonVERSION}
+
+    # ./configure prefix=/usr/local/python3 --enable-optimizations
+    ./configure prefix=/usr/local/python3
+
+    make altinstall
+
+    /usr/local/python3/bin/python3.8 -m pip install --upgrade pip
+
+    export PATH=$PATH:/usr/local/python3/bin
+
+    # 添加python3的软链接 
+    ln -s /usr/local/python3/bin/python3.8 /usr/bin/python3
+
+    # 添加 pip3 的软链接 
+    ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
+    
+    pip install torch==1.7.1+cpu torchvision==0.8.1+cpu torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 }
 
 
