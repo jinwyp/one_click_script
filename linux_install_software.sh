@@ -391,6 +391,33 @@ function installNodejs(){
 }
 
 
+configPythonDownloadPath="${HOME}/download/python3"
+configPythonDownloadFile="Python-3.9.1.tgz"
+installPython3(){
+    if [ "$osRelease" == "centos" ] ; then
+
+        yum install -y gcc make openssl-devel bzip2-devel libffi-devel 
+        yum install -y zlib-devel ncurses-devel sqlite-devel readline-devel tk-devel 
+        yum install -y wget
+        
+        mkdir -p ${configPythonDownloadPath}
+        cd ${configDockerPath}
+        wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://www.python.org/ftp/python/3.9.1/${configPythonDownloadFile}
+
+        tar -zxvf ${configPythonDownloadFile}
+        cd ${configPythonDownloadFile}
+
+
+        ./configure prefix=/usr/local/python3 --enable-optimizations
+
+        make && make install
+
+    else 
+
+        green " =================================================="
+    fi
+}
+
 configDockerPath="${HOME}/download"
 configV2rayPoseidonPath="${HOME}"
 
@@ -723,6 +750,7 @@ function start_menu(){
     green " 6. 安装 Vim Nano Micro 编辑器"
     green " 7. 安装 Nodejs 与 PM2"
     green " 8. 安装 Docker 与 Docker Compose"
+    green " 9. 安装 Python3.9 "
     echo
     green " 21. 安装 V2Ray-Poseidon 服务器端"
     green " 22. 编辑 V2Ray-Poseidon WS-TLS 模式配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
@@ -768,6 +796,9 @@ function start_menu(){
             setLinuxDateZone
             installSoftEditor
             installDocker
+        ;;
+        9 )
+            installPython3
         ;;
         21 )
             setLinuxDateZone
