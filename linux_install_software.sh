@@ -403,14 +403,14 @@ installPython3(){
         if [ "$osReleaseVersion" == "8" ]; then
             ${sudoCommand} sudo dnf groupinstall 'development tools'
             ${sudoCommand} dnf install bzip2-devel expat-devel gdbm-devel ncurses-devel openssl-devel sqlite-devel
-            ${sudoCommand} dnf install readline-devel wget tk-devel xz-devel zlib-devel libffi-devel
+            ${sudoCommand} dnf install readline-devel wget tk-devel xz-devel zlib-devel libffi-devel python-backports-lzma
         fi
 
 
         if [ "$osReleaseVersion" == "7" ]; then
             yum groupinstall 'development tools'
             yum install -y gcc make openssl-devel bzip2-devel libffi-devel 
-            yum install -y zlib-devel ncurses-devel sqlite-devel readline-devel tk-devel 
+            yum install -y zlib-devel ncurses-devel sqlite-devel readline-devel tk-devel xz-devel python-backports-lzma
             yum install -y wget
         fi
 
@@ -418,7 +418,7 @@ installPython3(){
     else 
 
         sudo apt install software-properties-common
-        sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
+        sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev liblzma-dev
 
     fi
 
@@ -447,6 +447,7 @@ installPython3(){
     
     python3.8 --version
     
+    pip install backports.lzma
     pip install torch==1.7.1+cpu torchvision==0.8.1+cpu torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 }
 
