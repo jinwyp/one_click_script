@@ -398,6 +398,9 @@ configPythonDownloadFile="Python-${configPythonVERSION}.tgz"
 
 
 installPython3(){
+    # 注意事项 1  阿里云无法访问github的代码 需要改host vi /etc/hosts 加入 199.232.68.133 raw.githubusercontent.com
+    # backports.lzma 库 如果报错出问题 需要替换python3 源代码 某些centos出问题，不是必须步骤
+    # torch 库下载速度慢, 可以人工下载 人工安装
 
     green " =================================================="
     yellow " 准备安装 Python ${configPythonVERSION} "
@@ -443,7 +446,7 @@ installPython3(){
 
     export PATH=$PATH:/usr/local/python3/bin
 
-
+    # backports.lzma 库 如果出现报错问题 需要替换python3 源代码
     wget -O ${configPythonDownloadPath}/lzma.py https://github.com/jinwyp/one_click_script/raw/master/download/lzma.py
     #cp ${configPythonDownloadPath}/lzma.py /usr/local/python3/lib/python3.8
 
@@ -454,7 +457,7 @@ installPython3(){
     # 添加 pip3 的软链接 
     ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
     
-    
+    # torch 库下载速度慢, 可以人工下载 人工安装
     #wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl  https://github.com/jinwyp/one_click_script/raw/master/download/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
     #pip install ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
 
