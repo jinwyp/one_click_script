@@ -406,6 +406,8 @@ installPython3(){
     yellow " 准备安装 Python ${configPythonVERSION} "
     green " =================================================="
 
+    $osSystemPackage update -y
+    
     if [ "$osRelease" == "centos" ] ; then
 
         if [ "$osReleaseVersion" == "8" ]; then
