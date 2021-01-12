@@ -481,12 +481,13 @@ installPython3(){
         wget -O ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torchvision-0.8.1%2Bcpu-cp38-cp38-win_amd64.whl
         pip install ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
         pip install ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl
+
+        pip install backports.lzma -i http://mirrors.aliyun.com/pypi/simple/
     else
         pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        pip install backports.lzma
     fi
 
-
-    pip install backports.lzma
     
 
     green " ================================================== "
