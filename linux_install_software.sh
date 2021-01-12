@@ -399,8 +399,8 @@ configPythonDownloadFile="Python-${configPythonVERSION}.tgz"
 
 installPython3(){
     # 注意事项 1  阿里云无法访问github的代码 需要改host vi /etc/hosts 加入 199.232.68.133 raw.githubusercontent.com
-    # backports.lzma 库 如果报错出问题 需要替换python3 源代码 某些centos出问题，不是必须步骤
-    # torch 库下载速度慢, 可以人工下载 人工安装
+    # 注意事项 2  backports.lzma 库 如果报错出问题 需要替换python3 源代码 某些centos出问题，不是必须步骤
+    # 注意事项 3 torch 库下载速度慢, 可以人工下载 人工安装
 
     green " =================================================="
     yellow " 准备安装 Python ${configPythonVERSION} "
