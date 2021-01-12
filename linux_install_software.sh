@@ -402,6 +402,13 @@ installPython3(){
     # 注意事项 2  backports.lzma 库 如果报错出问题 需要替换python3 源代码 某些centos出问题，不是必须步骤
     # 注意事项 3 torch 库下载速度慢, 可以人工下载 人工安装
 
+    read -p "是否使用国内安装源? 例如阿里云的VPS下载慢 默认为是 请输入[Y/n]?" isUsedChinaSource
+    isUsedChinaSource=${isUsedChinaSource:-Y}
+
+    if [[ $isUsedChinaSource == [Yy] ]]; then
+        echo "199.232.68.133 raw.githubusercontent.com">>/etc/hosts
+    fi
+
     green " =================================================="
     yellow " 准备安装 Python ${configPythonVERSION} "
     green " =================================================="
@@ -434,7 +441,13 @@ installPython3(){
 
     mkdir -p ${configPythonDownloadPath}
     cd ${configPythonDownloadPath}
-    wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://www.python.org/ftp/python/${configPythonVERSION}/${configPythonDownloadFile}
+
+    if [[ $isUsedChinaSource == [Yy] ]]; then
+        wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://mirrors.huaweicloud.com/python/${configPythonVERSION}/${configPythonDownloadFile}
+    else
+        wget -O ${configPythonDownloadPath}/${configPythonDownloadFile} https://www.python.org/ftp/python/${configPythonVERSION}/${configPythonDownloadFile}
+    fi
+    
 
     tar -zxvf ${configPythonDownloadPath}/${configPythonDownloadFile}
     cd Python-${configPythonVERSION}
@@ -459,15 +472,22 @@ installPython3(){
     # 添加 pip3 的软链接 
     ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
     
-    # torch 库下载速度慢, 可以人工下载 人工安装
-    #wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl https://github.com/jinwyp/one_click_script/raw/master/download/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
-    #wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torch-1.7.0%2Bcpu-cp38-cp38-linux_x86_64.whl
-    #wget -O ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torchvision-0.8.1%2Bcpu-cp38-cp38-win_amd64.whl
-    #pip install ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
-    #pip install ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl
+
+
+    if [[ $isUsedChinaSource == [Yy] ]]; then
+    
+        # torch 库下载速度慢, 可以人工下载 人工安装
+        wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torch-1.7.0%2Bcpu-cp38-cp38-linux_x86_64.whl
+        wget -O ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torchvision-0.8.1%2Bcpu-cp38-cp38-win_amd64.whl
+        pip install ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
+        pip install ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl
+    else
+        pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    fi
+
 
     pip install backports.lzma
-    pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+    
 
     green " ================================================== "
     green "    Python ${configPythonVERSION} 安装成功  !"
