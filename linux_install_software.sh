@@ -392,7 +392,7 @@ function installNodejs(){
 
 
 configPythonDownloadPath="${HOME}/download/python3"
-
+configU2netDownloadPath="${HOME}/.u2net"
 configPythonVERSION="3.8.7"
 configPythonDownloadFile="Python-${configPythonVERSION}.tgz"
 
@@ -473,22 +473,21 @@ installPython3(){
     ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
     
 
-
     if [[ $isUsedChinaSource == [Yy] ]]; then
     
         # torch 库下载速度慢, 可以人工下载 人工安装
-        wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torch-1.7.0%2Bcpu-cp38-cp38-linux_x86_64.whl
-        wget -O ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torchvision-0.8.1%2Bcpu-cp38-cp38-win_amd64.whl
+        wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl https://rt1.jinss2.cf/torch-1.7.0%2Bcpu-cp38-cp38-linux_x86_64.whl
+        wget -O ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl https://rt1.jinss2.cf/torchvision-0.8.1%2Bcpu-cp38-cp38-win_amd64.whl
         pip install ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
         pip install ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl
 
         pip install backports.lzma -i http://mirrors.aliyun.com/pypi/simple/
+
     else
         pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
         pip install backports.lzma
     fi
 
-    
 
     green " ================================================== "
     green "    Python ${configPythonVERSION} 安装成功  !"
@@ -505,8 +504,22 @@ installPython3Rembg(){
     ln -s /usr/local/python3/bin/rembg /usr/bin/rembg
     ln -s /usr/local/python3/bin/rembg-server /usr/bin/rembg-server
 
+    mkdir -p ${configU2netDownloadPath} 
+    wget -O ${configU2netDownloadPath}/u2netp.pth https://rt1.jinss2.cf/u2netp.pth
+    wget -O ${configU2netDownloadPath}/u2net.pth https://rt1.jinss2.cf/u2net.pth
+
     green " ================================================== "
     green "    rembg 安装成功  !"
+    echo "   "
+    green "    命令行运行  rembg -o output1.jpg test1.jpg"
+    green "    参数 -p 指定源文件目录, 批量转换该目录下的所有文件"
+    green "    参数 -m u2net 指定模型 共2种 u2net 或 u2netp 默认为 u2net"
+    green "    参数 -a 是否使用 alpha matting cutout 一种遮罩 例如 rembg -a -ae 15 > output.png"
+    green "    参数 -ae 默认10  erosion 图片侵蚀程度"
+    green "    参数 -af 默认240 foreground-threshold 图片前景阈值"
+    green "    参数 -ab 默认10 background-threshold 图片背景阈值"
+    echo "   "
+    green "    运行网站API服务命令 rembg-server 请开启5000端口防火墙, 或用nginx反向代理5000端口"
     green "    后台运行网站API服务命令 nohup rembg-server > /root/rembg.log 2>&1 &"
     green " ================================================== "
     
