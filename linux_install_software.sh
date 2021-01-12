@@ -458,8 +458,11 @@ installPython3(){
     ln -s /usr/local/python3/bin/pip3.8 /usr/bin/pip
     
     # torch 库下载速度慢, 可以人工下载 人工安装
-    #wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl  https://github.com/jinwyp/one_click_script/raw/master/download/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
+    #wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl https://github.com/jinwyp/one_click_script/raw/master/download/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
+    #wget -O ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torch-1.7.0%2Bcpu-cp38-cp38-linux_x86_64.whl
+    #wget -O ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl https://download.pytorch.org/whl/cpu/torchvision-0.8.1%2Bcpu-cp38-cp38-win_amd64.whl
     #pip install ${configPythonDownloadPath}/torch-1.7.0+cpu-cp38-cp38-linux_x86_64.whl 
+    #pip install ${configPythonDownloadPath}/torchvision-0.8.1+cpu-cp38-cp38-linux_x86_64.whl
 
     pip install backports.lzma
     pip install torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
