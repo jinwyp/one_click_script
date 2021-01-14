@@ -181,8 +181,8 @@ function testLinuxPortUsage(){
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
 
-        ${sudoCmd} $osSystemPackage install software-properties-common
-        ${sudoCmd} add-apt-repository ppa:nginx/stable
+        ${sudoCmd} $osSystemPackage install software-properties-common -y
+        ${sudoCmd} add-apt-repository ppa:nginx/stable -y
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz-utils -y
@@ -372,8 +372,9 @@ set enc=utf8
 set fencs=utf8,gbk,gb2312,gb18030
 
 syntax on
-set nu!
+set number
 colorscheme elflord
+se mouse+=a
 
 EOF
     fi
@@ -1521,7 +1522,7 @@ EOF
     fi
 
 	red "    Trojan 服务器端配置路径 ${configTrojanBasePath}/server.json "
-	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -u trojan${promptInfoTrojanName}.service 查看 !"
+	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -n 50 -u trojan${promptInfoTrojanName}.service 查看 !"
 	green "    Trojan 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
 	green "    Trojan 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
