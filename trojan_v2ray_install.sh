@@ -526,7 +526,8 @@ nginxConfigPath="/etc/nginx/nginx.conf"
 nginxAccessLogFilePath="${HOME}/nginx-access.log"
 nginxErrorLogFilePath="${HOME}/nginx-error.log"
 
-
+promptInfoXrayInstall="V2ray"
+promptInfoXrayVersion=""
 promptInfoXrayName="v2ray"
 isXray="no"
 
@@ -542,7 +543,6 @@ configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
 configV2rayVlessMode=""
-configV2rayInstallXrayOnly=""
 configReadme=${HOME}/trojan_v2ray_readme.txt
 
 
@@ -1698,7 +1698,7 @@ function installV2ray(){
     fi
 
 
-    if [[ $configV2rayVlessMode == "trojan" ]] ; then
+    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessonly" ) ]] ; then
         promptInfoXrayName="xray"
         isXray="yes"
     else
@@ -1733,11 +1733,15 @@ function installV2ray(){
         green " =================================================="
         green "    开始安装 V2ray Version: ${versionV2ray} !"
         green " =================================================="
+        promptInfoXrayInstall="V2ray"
+        promptInfoXrayVersion=${versionV2ray}
     else
         getTrojanAndV2rayVersion "xray"
         green " =================================================="
         green "    开始安装 Xray Version: ${versionXray} !"
         green " =================================================="
+        promptInfoXrayInstall="Xray"
+        promptInfoXrayVersion=${versionXray}
     fi
 
 
@@ -2048,7 +2052,7 @@ EOF
 
 
 
-    if [[ "$configV2rayVlessMode" == "trojan" ]]; then
+    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessonly" ) ]]; then
 
             cat > ${configV2rayPath}/config.json <<-EOF
 {
@@ -2322,7 +2326,7 @@ EOF
 
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-===========V2ray客户端配置参数=============
+=========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
     协议: ${configV2rayProtocol},
     地址: ${configSSLDomain},
@@ -2338,37 +2342,73 @@ EOF
 EOF
 
 
-if [[ "$configV2rayVlessMode" == "vlessws" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+
+if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 当选择了16. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
-当选择了20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS), 不安装nginx" 
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow:  // 选择了16 为空
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: tcp ,
+    WS路径:无,
+    底层传输协议:tls,   
+    别名:自己起个任意名称
+}
+
+=========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow:  // 选择了16 为空
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:tls,     
+    别名:自己起个任意名称
+}
+EOF
+fi
+
+
+if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+当选择了20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS), 不安装nginx
 当选择了21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx
 当选择了22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx
 当选择了23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx
 
-===========V2ray客户端 VLess-TCP-TLS 配置参数=============
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
     端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
+    流控flow: xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
     WS路径:无,
-    底层传输协议:tls,    // 选择了16 为tls, 选择了20-23 为xtls
+    底层传输协议:xtls, 
     别名:自己起个任意名称
 }
 
-===========V2ray客户端 VLess-WS-TLS 配置参数 支持CDN =============
+=========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
     端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
+    流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: ws,
     WS路径:/${configV2rayWebSocketPath},
@@ -2383,7 +2423,7 @@ fi
 if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 当选择了17. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx
-===========V2ray客户端 VLess-TCP-TLS 配置参数=============
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
@@ -2397,7 +2437,7 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     别名:自己起个任意名称
 }
 
-===========V2ray客户端 VMess-WS-TLS 配置参数 支持CDN =============
+=========== ${promptInfoXrayInstall}客户端 VMess-WS-TLS 配置参数 支持CDN =============
 {
     协议: VMess,
     地址: ${configSSLDomain},
@@ -2411,7 +2451,7 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     别名:自己起个任意名称
 }
 
-===========V2ray客户端 VMess-TCP-TLS 配置参数 支持CDN =============
+=========== ${promptInfoXrayInstall}客户端 VMess-TCP-TLS 配置参数 支持CDN =============
 {
     协议: VMess,
     地址: ${configSSLDomain},
@@ -2437,26 +2477,21 @@ fi
 
 
     green "======================================================================"
-
-    if [ "$isXray" = "no" ] ; then
-        green "    V2ray Version: ${versionV2ray} 安装成功 !!"
-    else
-        green "    Xray Version: ${versionXray} 安装成功 !!"
-    fi
+    green "    ${promptInfoXrayInstall} Version: ${promptInfoXrayVersion} 安装成功 !"
 
     if [[ ${isInstallNginx} == "true" ]]; then
         green "    伪装站点为 https://${configSSLDomain}!"
     fi
 	
-	red "    ${promptInfoXrayName} 服务器端配置路径 ${configV2rayPath}/config.json !"
-	red "    ${promptInfoXrayName} 访问日志 ${configV2rayAccessLogFilePath} !"
-	red "    ${promptInfoXrayName} 错误日志 ${configV2rayErrorLogFilePath} !"
-	green "    ${promptInfoXrayName} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service"
+	red "    ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json !"
+	red "    ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} !"
+	red "    ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath} !"
+	green "    ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service"
 	# green "    caddy 停止命令: systemctl stop caddy.service  启动命令: systemctl start caddy.service  重启命令: systemctl restart caddy.service"
-	green "    ${promptInfoXrayName} 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+	green "    ${promptInfoXrayInstall} 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
 	echo ""
-	yellow "${promptInfoXrayName} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
+	yellow "${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
 	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
 	yellow "用户ID或密码1: ${v2rayPassword1}"
 	yellow "用户ID或密码2: ${v2rayPassword2}"
@@ -2485,12 +2520,14 @@ fi
 
     cat >> ${configReadme} <<-EOF
 
-V2ray Version: ${versionV2ray} 安装成功 ! 
-V2ray 服务器端配置路径 ${configV2rayPath}/config.json 
-V2ray 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
-V2ray 停止命令: systemctl stop v2ray.service  启动命令: systemctl start v2ray.service  重启命令: systemctl restart v2ray.service
+${promptInfoXrayInstall} Version: ${versionV2ray} 安装成功 ! 
+${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json 
+${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
+${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service
 
-V2ray 服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
+${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !
+服务器地址: ${configSSLDomain}  
+端口: ${configV2rayPortShowInfo}"
 用户ID或密码1: ${v2rayPassword1}"
 用户ID或密码2: ${v2rayPassword2}"
 用户ID或密码3: ${v2rayPassword3}"
@@ -2502,25 +2539,12 @@ V2ray 服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
 用户ID或密码9: ${v2rayPassword9}"
 用户ID或密码10: ${v2rayPassword10}"
 
-===========V2ray客户端配置参数=============
-{
-    协议: ${configV2rayProtocol},
-    地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
-    uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
-    底层传输:${configV2rayIsTlsShowInfo},
-    别名:自己起个任意名称
-}
-
 
 EOF
 
+    cat "${configV2rayPath}/clientConfig.json" >> ${configReadme}
 }
-
+    
 
 function removeV2ray(){
     if [ -f "${configV2rayPath}/xray" ]; then
@@ -2849,7 +2873,7 @@ function getHTTPSNoNgix(){
     if [[ $1 == "v2ray" ]] ; then
         installV2ray
 
-        if [[ $configV2rayVlessMode == "trojan" && $configV2rayInstallXrayOnly == "" ]]; then
+        if [[ $configV2rayVlessMode == "trojan" ]]; then
             installTrojanServer
         fi
     fi
@@ -2970,8 +2994,7 @@ function startMenuOther(){
             getHTTPSNoNgix "v2ray"
         ;;    
         20 )
-            configV2rayVlessMode="trojan"
-            configV2rayInstallXrayOnly="yes"
+            configV2rayVlessMode="vlessonly"
             getHTTPSNoNgix "v2ray"
         ;; 
         21 )
@@ -3181,7 +3204,6 @@ function start_menu(){
         ;;
         28 )
             cat "${configReadme}"
-            cat "${configV2rayPath}/clientConfig.json"
         ;;        
         31 )
             setLinuxDateZone
