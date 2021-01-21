@@ -2381,11 +2381,6 @@ fi
 
 if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-当选择了20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS), 不安装nginx
-当选择了21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx
-当选择了22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx
-当选择了23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx
-
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
@@ -2520,7 +2515,7 @@ fi
 
     cat >> ${configReadme} <<-EOF
 
-${promptInfoXrayInstall} Version: ${versionV2ray} 安装成功 ! 
+${promptInfoXrayInstall} Version: ${promptInfoXrayVersion} 安装成功 ! 
 ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json 
 ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
 ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service
