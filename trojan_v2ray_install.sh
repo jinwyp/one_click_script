@@ -189,8 +189,8 @@ function testLinuxPortUsage(){
         $osSystemPackage install iputils-ping -y
 
 
-
     elif [ "$osRelease" == "debian" ]; then
+        ${sudoCmd} add-apt-repository ppa:nginx/stable -y
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz-utils -y
@@ -880,10 +880,10 @@ http {
 
 
         # Config for 0-RTT in TLSv1.3
-        ssl_early_data on;
-        ssl_stapling on;
-        ssl_stapling_verify on;
-        add_header Strict-Transport-Security "max-age=31536000";
+        # ssl_early_data on;
+        # ssl_stapling on;
+        # ssl_stapling_verify on;
+        # add_header Strict-Transport-Security "max-age=31536000";
         
         root $configWebsitePath;
         index index.php index.html index.htm;
