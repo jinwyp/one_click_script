@@ -182,7 +182,7 @@ function testLinuxPortUsage(){
         ${sudoCmd} systemctl disable ufw
 
         ${sudoCmd} $osSystemPackage install software-properties-common -y
-        ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz-utils -y
@@ -190,7 +190,7 @@ function testLinuxPortUsage(){
 
 
     elif [ "$osRelease" == "debian" ]; then
-        ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz-utils -y
