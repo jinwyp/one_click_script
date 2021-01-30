@@ -2425,8 +2425,7 @@ EOF
                 "decryption": "none",
                 "fallbacks": [
                     {
-                        "dest": 80,
-                        "xver": 1
+                        "dest": 80
                     },
                     {
                         "path": "/${configV2rayWebSocketPath}",
