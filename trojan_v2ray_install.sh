@@ -1016,8 +1016,8 @@ function installTrojanWholeProcess(){
 
         if [[ -z $1 ]] ; then
             if [ "$isNginxWithSSL" = "no" ] ; then
+                getHTTPSCertificate "standalone"
                 installWebServerNginx
-                getHTTPSCertificate
             else
                 getHTTPSCertificate "standalone"
                 installWebServerNginx "v2ray"
