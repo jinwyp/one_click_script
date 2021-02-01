@@ -74,6 +74,13 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
 
 
+## 高级用法 Advanced Usage 
+
+1. 如果机器上已经有nginx或已有网站服务, 或是与宝塔面板共同使用, 可以运行脚本后选择30, 然后单独安装不带有nginx的版本。 选择30后再选15, 则V2ray运行在其他端口没有加密, 然后在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径转发到V2ray 端口, 起到加密作用。
+2. 选择30后 再选择12-14 安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由trojan或trojan-go提供。
+3. 选择30后 再选择16-23 安装V2ray或Xray, 这样让V2ray或Xray 的 Vless协议服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由V2ray或Xray 的 Vless协议提供。 推荐选择20的 Xray的Xtls-direct 模式速度最快
+4. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
+
 
 ## 注意事项与常见问题 FAQ 
 
@@ -96,6 +103,7 @@ addEventListener(
     }
 )
 ```
+
 ## 关于Let's Encrypt证书
 本脚本使用的acme.sh来申请的Let's Encrypt免费证书。三个月需要续期，本脚本通过cron自动完成续期的，无需用户操作。但Let's Encrypt 申请证书有一些限制，如下：
 
