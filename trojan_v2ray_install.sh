@@ -1450,7 +1450,7 @@ WantedBy=multi-user.target
 EOF
     fi
 
-    chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
+    ${sudoCmd} chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl daemon-reload
     ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl enable trojan${promptInfoTrojanName}.service
@@ -2954,6 +2954,7 @@ function upgradeV2ray(){
     mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
     mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
 
+    ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
     ${sudoCmd} systemctl start ${promptInfoXrayName}.service
 
 
