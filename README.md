@@ -16,10 +16,9 @@
 8. trojan 和 v2ray 可视化管理面板安装. 
 9. 卸载后不留任何痕迹, 方便重复安装
 10. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
-11. 本脚本为安装trojan和v2ray的终极脚本, 包括各种模式, 其他脚本没有本脚本的全面
-12. 本脚本没有其他偷跑服务器流量的网页或其他屏蔽bt流量的限制等
-13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 不像其他多合一脚本写死固定端口容易被检测
-14. 本脚本不推荐安装多种v2ray的多种协议共存, 协议安装的越多安全性越低, 而且也不会提高速度, 没有必要使用多合一的脚本同时安装多个协议
+11. 本脚本没有其他偷跑服务器流量的网页或其他屏蔽bt流量的限制等
+12. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 不像其他多合一脚本写死固定端口容易被检测
+13. 本脚本不推荐安装多种v2ray的多种协议共存, 协议安装的越多安全性越低, 而且也不会提高速度, 没有必要使用多合一的脚本同时安装多个协议
 
 ## Features English 
 1. Install V2Ray or Xray using VLESS or VMess, support all condition: VLESS+TCP+TLS / VLESS+Websocket+TLS(CDN) / VMess+TCP+TLS / VMess+Websocket+TLS(CDN)  
@@ -58,28 +57,32 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ## 使用说明 Usage 
 
+### 安装命令行方式启动
 
 1. 该步骤可省略. 如果是使用google cloud 谷歌云服务器，默认无法使用root账号登陆， 可以选择32 开启root用户登录. 建议使用root用户运行该脚本. 安装bbr plus 需要root权限, 默认认为使用root执行, 非root用户请手动添加sudo执行 ```sudo ./tcp.sh ```和 ```sudo ./trojan_v2ray_install.sh ``` 脚本. （注意 证书申请也需要用root用户而不建议用sudo  [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo)  ).
 2. 安装 BBR plus. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后选择2 安装 BBRplus版内核, 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
 3. 使用BBRplus版加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择7 使用BBRplus版加速. 
 4. 该步骤可省略. 选择31, 安装 oh-my-zsh. 这样以后登录有命令提示, 方便新手操作. 安装完成后请退出VPS, 命令为```exit```.  重新登录VPS后继续下面操作. 
 5. 安装 trojan 或 v2ray. 根据提示 重新运行脚本 ```./trojan_v2ray_install.sh ```  选2 安装trojan, 或选6 安装trojan-go, 或选12 安装v2ray, 或选15 同时安装trojan和v2ray， 或选18 或19 同时安装trojan-go和v2ray.  强烈建议：如果VPS线路速度可以保证，不需要CDN，强烈建议选2 只安装trojan或只安装6 trojan-go (trojan-go速度已经很快了). 需要CDN可以选12只安装V2ray.  协议安装的越多安全性越低,而且也不会提高速度,适合自己的软件装一种最好. 完全没有必要使用多合一的脚本同时安装多个协议
-6. 在没有安装任何 trojan 和 v2ray 的新机器上(即没有执行过第5步, 执行过可以选择卸载), 选择29 进入子菜单安装 trojan 或 v2ray 可视化管理面板。(如果之前通过其他脚本安装过,再安装可视化管理面板则极易产生问题)
-7. 选择29后 然后再选择1 安装trojan-web可视化管理面板(建议使用centos7系统).根据提示输入域名后, 继续根据提示再选择1.Let's Encrypt 证书, 申请证书成功后. 继续根据提示再选择1.安装docker版mysql(mariadb). ariadb启动成功后,继续根据提示输入第一个trojan用户的账号密码,回车后出现"欢迎使用trojan管理程序" 需要不输入数字直接按回车,这样继续安装nginx直到完成. nginx安装成功会显示可视化管理面板网址,请保存下来. 如果没有显示管理面板网址则表明安装失败. 
-8. 选择29后 然后再选择6 安装v2ray-ui可视化管理面板. 安装成功后可以再次运行本脚本选择29后在选择11申请域名SSL证书. 然后再可视化管理面板新建添加vless账号或trojan账号, 填入证书文件路径 即可同时支持trojan和v2ray.
-9. 选择30后,再选择13或14后仅安装trojan-go.必须保证本机80端口有监听,否则trojan-go无法启动.这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
-20. 第一步安装 BBR plus 时出现的提示 "是否终止删除内核" 请选择 "NO". 就是要卸载掉目前的内核. 
+
+6. 第一步安装 BBR plus 时出现的提示 "是否终止删除内核" 请选择 "NO". 就是要卸载掉目前的内核. 
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
 
+### 安装管理面板 Install web admin panel
 
-## 高级用法 Advanced Usage 
+1. 在没有安装任何 trojan 和 v2ray 的新机器上(即没有执行过第5步, 执行过可以选择卸载), 选择29 进入子菜单安装 trojan 或 v2ray 可视化管理面板。(如果之前通过其他脚本安装过,再安装可视化管理面板则极易产生问题)
+2. 选择29后 然后再选择1 安装trojan-web可视化管理面板(建议使用centos7系统).根据提示输入域名后, 继续根据提示再选择1.Let's Encrypt 证书, 申请证书成功后. 继续根据提示再选择1.安装docker版mysql(mariadb). ariadb启动成功后,继续根据提示输入第一个trojan用户的账号密码,回车后出现"欢迎使用trojan管理程序" 需要不输入数字直接按回车,这样继续安装nginx直到完成. nginx安装成功会显示可视化管理面板网址,请保存下来. 如果没有显示管理面板网址则表明安装失败. 
+3. 选择29后 然后再选择6 安装v2ray-ui可视化管理面板. 安装成功后可以再次运行本脚本选择29后在选择11申请域名SSL证书. 然后再可视化管理面板新建添加vless账号或trojan账号, 填入证书文件路径 即可同时支持trojan和v2ray.
+
+### 高级用法 Advanced Usage 与现有网站共存
 
 1. 如果机器上已经有nginx或已有网站服务, 或是与宝塔面板共同使用, 可以运行脚本后选择30, 然后单独安装不带有nginx的版本。 选择30后再选15, 则V2ray运行在其他端口没有加密, 然后在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径转发到V2ray 端口, 起到加密作用。
 2. 选择30后 再选择12-14 安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由trojan或trojan-go提供。
-3. 选择30后 再选择16-23 安装V2ray或Xray, 这样让V2ray或Xray 的 Vless协议服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由V2ray或Xray 的 Vless协议提供。 推荐选择20的 Xray的Xtls-direct 模式速度最快
-4. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
+3. 选择30后, 再选择13或14后仅安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
+4. 选择30后 再选择16-23 安装V2ray或Xray, 这样让V2ray或Xray 的 Vless协议服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由V2ray或Xray 的 Vless协议提供。 推荐选择20的 Xray的Xtls-direct 模式速度最快
+5. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
 
 
 ## 注意事项与常见问题 FAQ 
