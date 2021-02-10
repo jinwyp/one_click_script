@@ -1,11 +1,10 @@
 # 锐角云安装PVE 最简单教程
 
-
 ### 准备工作
-1 下载 PVE镜像 proxmox.img.gz  地址 https://n3450.cloud/proxmox.img.gz
-2 下载 SystemRescue Linux 启动盘  地址 https://osdn.net/projects/systemrescuecd/storage/releases/7.01/systemrescue-7.01-amd64.iso 或  https://n3450.cloud/systemrescue-7.01-amd64.iso
+1. 下载 PVE镜像 proxmox.img.gz  地址 https://n3450.cloud/proxmox.img.gz
+2. 下载 SystemRescue Linux 启动盘  地址 https://osdn.net/projects/systemrescuecd/storage/releases/7.01/systemrescue-7.01-amd64.iso 或  https://n3450.cloud/systemrescue-7.01-amd64.iso
 
-3 下载autorun脚本 和 date.sh 脚本
+3. 下载autorun脚本 https://rt1.jinss2.cf/autorun
 
 
 ### 开始制作启动盘和安装PVE：
