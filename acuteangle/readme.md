@@ -24,3 +24,7 @@
 ```bash
 wget --no-check-certificate https://rt1.jinss2.cf/date.sh && chmod +x ./date.sh && ./date.sh firstrun 
 ```
+
+```bash
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/date.sh && chmod +x ./date.sh && ./date.sh firstrun 
+```
