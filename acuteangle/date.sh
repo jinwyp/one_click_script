@@ -117,6 +117,8 @@ EOF
 sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/issue
 sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/hosts
 
+
+sed -i "s/# alias/alias/g" /root/.bashrc
 }
 
 
