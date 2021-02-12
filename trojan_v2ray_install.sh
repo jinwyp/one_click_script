@@ -221,10 +221,10 @@ function setLinuxRootLogin(){
     if [[ $osIsRootLoginInput == [Yy] ]]; then
 
         if [ "$osRelease" == "centos" ] || [ "$osRelease" == "debian" ] ; then
-            ${sudoCmd} sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+            ${sudoCmd} sed -i 's/#\?PermitRootLogin \(Yes\|No\)/PermitRootLogin yes/g' /etc/ssh/sshd_config
         fi
         if [ "$osRelease" == "ubuntu" ]; then
-            ${sudoCmd} sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+            ${sudoCmd} sed -i 's/#\?PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
         fi
 
         green "设置允许root登陆成功!"
@@ -240,14 +240,12 @@ function setLinuxRootLogin(){
     fi
 
 
-    ${sudoCmd} sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
-    ${sudoCmd} sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?ClientAliveInterval [0-9]*/ClientAliveInterval 120/g' /etc/ssh/sshd_config
 
     if [ "$osRelease" == "centos" ] ; then
 
-        ${sudoCmd} sed -i 's/ClientAliveInterval 420/ClientAliveInterval 120/g' /etc/ssh/sshd_config
-        ${sudoCmd} sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
-        
         ${sudoCmd} service sshd restart
         ${sudoCmd} systemctl restart sshd
 
@@ -255,8 +253,6 @@ function setLinuxRootLogin(){
     fi
 
     if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
-
-        ${sudoCmd} sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
         
         ${sudoCmd} service ssh restart
         ${sudoCmd} systemctl restart ssh
@@ -359,7 +355,7 @@ function installSoftEditor(){
     fi
 
     if [ "$osRelease" == "centos" ]; then   
-        $osSystemPackage install -y xz 
+        $osSystemPackage install -y xz  vim-minimal vim-enhanced vim-common
     else
         $osSystemPackage install -y vim-gui-common vim-runtime vim 
     fi
@@ -372,9 +368,12 @@ set enc=utf8
 set fencs=utf8,gbk,gb2312,gb18030
 
 syntax on
-set number
 colorscheme elflord
-se mouse+=a
+
+if has('mouse')
+  se mouse+=a
+  set number
+endif
 
 EOF
     fi
