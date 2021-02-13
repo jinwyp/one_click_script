@@ -31,18 +31,9 @@ bold(){
 
 function main() {
 
-	if [ -n $1 ]; then
-		if [[ $1 == "datetofile" ]] ; then
-			saveDateToFile
-		else
-			setDateFromFile
-		fi
-
-	else
-		setup_env	
-		print_welcome
-		mount_usb
-	fi
+	setup_env	
+	print_welcome
+	mount_usb	
 }
 
 
@@ -180,9 +171,9 @@ function installpve(){
     isInstallPVEInput=${isInstallPVEInput:-Y}
 
     if [[ $isInstallPVEInput == [Yy] ]]; then
-        echo "cat $1 | gunzip | dd of=/dev/mmcblk1 && reboot"
-        green "Do Not Turn off the Power！ Wait for a long time please.  "
-        echo "It will reboot after finish !"
+        echo "Running Command: $1 | gunzip | dd of=/dev/mmcblk1 && reboot"
+        red "Do Not Turn off the Power! Wait for a long time please.  "
+        green "It will reboot after finish !"
         cat $1 | gunzip | dd of=/dev/mmcblk1 && reboot
     else
         red " ================================================== "
