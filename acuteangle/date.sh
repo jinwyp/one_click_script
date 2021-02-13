@@ -35,13 +35,13 @@ function main() {
 	if [[ -n $1 ]]; then
 		saveDateToFile
 
-		if [[ $1 == "firstrun" ]]; then
+		if [[ $1 == "reset" ]]; then
+			reset
+			apt-get install ifupdown2 -y
+			chmod +x /root/date.sh 
 			setCrontab
 			setIP
 
-			cp /mnt/usb1/date.sh /root/date.sh 
-			chmod +x /root/date.sh 
-			apt-get install ifupdown2
 		fi	
 	else
 		setDateFromFile
@@ -71,7 +71,6 @@ function setDateFromFile(){
 }
 
 
-
 function setCrontab(){
 	# 设置 cron 定时任务
     # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
@@ -79,31 +78,56 @@ function setCrontab(){
     # (crontab -l 2>/dev/null | grep -v '^[a-zA-Z]'; echo "15 4 * * 0,1,2,3,4,5,6 systemctl restart trojan.service") | sort - | uniq - | crontab -
     (crontab -l ; echo "@reboot /root/date.sh") | sort - | uniq - | crontab -
     (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 /root/date.sh savedate") | sort - | uniq - | crontab -
-
 }
+
 
 function setIP(){
 	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration
 
+	read -p "Choose IP Mode for DHCP ?  (default is static ip) 请输入[y/N]?" IPModeInput
+	IPModeInput=${isV2rayOrXrayInput:-n}
 
-	read -p "Please input IP address (default:192.168.7.200) ?" IPInput
-	read -p "Please input IP netmask (default:255.255.255.0) ?" netmaskInput
-	read -p "Please input IP gateway (default:192.168.7.1) ?" gatewayInput
-
-	IPInput=${IPInput:-192.168.7.200}
-	netmaskInput=${netmaskInput:-255.255.255.0}
-	gatewayInput=${gatewayInput:-192.168.7.1}
-
-
+	if [[ $IPModeInput == [Yy] ]]; then
     cat > /etc/network/interfaces <<-EOF
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
 
 source /etc/network/interfaces.d/*
 
-
+# The loopback network interface
 auto lo
 iface lo inet loopback
 
 
+# The primary network interface
+allow-hotplug enp1s0
+iface enp1s0 inet dhcp
+
+EOF
+	else
+
+		read -p "Please input IP address (default:192.168.7.200) ?" IPInput
+		read -p "Please input IP netmask (default:255.255.255.0) ?" netmaskInput
+		read -p "Please input IP gateway (default:192.168.7.1) ?" gatewayInput
+
+		IPInput=${IPInput:-192.168.7.200}
+		netmaskInput=${netmaskInput:-255.255.255.0}
+		gatewayInput=${gatewayInput:-192.168.7.1}
+
+
+    cat > /etc/network/interfaces <<-EOF
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
 allow-hotplug enp1s0
 iface enp1s0 inet static
     address ${IPInput}
@@ -116,6 +140,9 @@ EOF
 
 sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/issue
 sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/hosts
+	
+	fi
+
 
 
 sed -i "s/# alias/alias/g" /root/.bashrc
@@ -157,5 +184,26 @@ function mount_usb() {
 
 }
 
+
+function addMoreDisk(){
+	DISK="/dev/mmcblk1"
+	echo -e "d\n\nn\n\n\n\nw" | fdisk $DISK
+	xfs_growfs /
+}
+
+function reset(){
+	addMoreDisk
+
+	rm /etc/ssh/ssh_host_*
+	test -f /etc/ssh/ssh_host_dsa_key || dpkg-reconfigure openssh-server
+
+	pvecm updatecerts -f
+	systemctl disable reset
+	rm /etc/systemd/system/reset.service
+	systemctl daemon-reload
+	systemctl reset-failed
+	rm /reset.sh
+	
+}
 
 main $1
