@@ -76,11 +76,11 @@ function setup_env() {
 
 
 function print_welcome() {
-	echo "**************************************************************************************************************"
-	echo "STARTING AUTOMATIC Install PVE ! $DATE"
-	echo "This machine is identified by its mac address: $MACADDR"
-	echo "Size of Hard Disk in bytes: $HARDDISKSIZE"
-	echo "**************************************************************************************************************"
+	green "================================================== "
+	echo " STARTING AUTOMATIC Install PVE ! $DATE"
+	echo " This machine is identified by its mac address: $MACADDR"
+	echo " Size of Hard Disk in bytes: $HARDDISKSIZE"
+	green "================================================== "
 	echo
 }
 
@@ -97,16 +97,16 @@ function print_metadata() {
 
 
 function mount_usb() {
-	green " ================================================== "
-	echo "Run Command : lsblk"
+	green "============================================================ "
+	echo " Run Command : lsblk"
 	lsblk
 	echo
-	green " ================================================== "
-	echo "Run Command : blkid"
+	green "============================================================ "
+	echo " Run Command : blkid"
 	blkid
 	echo
-	green " ================================================== "
-	echo "  Starting mount usb drive to ${MountDIR1} and ${MountDIR2} "
+	green "============================================================ "
+	echo " Starting mount usb drive to ${MountDIR1} and ${MountDIR2} "
 
 
 	# if [ -b "$HDDP1" ]; then
@@ -164,8 +164,8 @@ function mount_usb() {
 
 
 function installpve(){
-	green " ================================================== "
-	echo "Starting Install PVE !"
+	green "============================================================ "
+	echo " Starting Install PVE !"
 
 	read -p "Comfirm to install PVE? Please input [Y/n]?" isInstallPVEInput
     isInstallPVEInput=${isInstallPVEInput:-Y}
@@ -176,9 +176,9 @@ function installpve(){
         green "It will reboot after finish !"
         cat $1 | gunzip | dd of=/dev/mmcblk1 && reboot
     else
-        red " ================================================== "
+        red "============================================================ "
         red " Exit PVE Installation !"
-        red " ================================================== "
+        red "============================================================ "
         exit 1
     fi
 
