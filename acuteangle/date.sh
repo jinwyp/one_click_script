@@ -43,6 +43,14 @@ function main() {
 			setIP
 
 		fi	
+
+		if [[ $1 == "firstrun" ]]; then
+			apt-get install ifupdown2 -y
+			chmod +x /root/date.sh 
+			setCrontab
+			setIP
+		fi	
+
 	else
 		setDateFromFile
 	fi
