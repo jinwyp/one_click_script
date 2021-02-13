@@ -85,7 +85,8 @@ function setIP(){
 	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration
 
 	read -p "Choose IP Mode for DHCP ?  (default is static ip) 请输入[y/N]?" IPModeInput
-	IPModeInput=${isV2rayOrXrayInput:-n}
+	IPModeInput=${IPModeInput:-n}
+	read -p "Please input IP address (default:192.168.7.200) ?" IPInput
 
 	if [[ $IPModeInput == [Yy] ]]; then
     cat > /etc/network/interfaces <<-EOF
@@ -107,7 +108,6 @@ iface enp1s0 inet dhcp
 EOF
 	else
 
-		read -p "Please input IP address (default:192.168.7.200) ?" IPInput
 		read -p "Please input IP netmask (default:255.255.255.0) ?" netmaskInput
 		read -p "Please input IP gateway (default:192.168.7.1) ?" gatewayInput
 
@@ -137,13 +137,11 @@ iface enp1s0 inet static
     bridge_stp off
     bridge_fd 0
 EOF
-
-sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/issue
-sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/hosts
 	
 	fi
 
-
+sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/issue
+sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/hosts
 
 sed -i "s/# alias/alias/g" /root/.bashrc
 }
