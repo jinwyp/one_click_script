@@ -92,7 +92,7 @@ function setCrontab(){
 function setIP(){
 	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration
 
-	read -p "Choose IP Mode for DHCP ?  (default is static ip) 请输入[y/N]?" IPModeInput
+	read -p "Choose IP Mode: DHCP(y) or Static(n) ? (default: static ip) Pls Input [y/N]?" IPModeInput
 	IPModeInput=${IPModeInput:-n}
 	read -p "Please input IP address (default:192.168.7.200) ?" IPInput
 
