@@ -92,9 +92,12 @@ function setCrontab(){
 function setIP(){
 	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration
 
+
+	green " ================================================== "
+
 	read -p "Choose IP Mode: DHCP(y) or Static(n) ? (default: static ip) Pls Input [y/N]?" IPModeInput
 	IPModeInput=${IPModeInput:-n}
-	read -p "Please input IP address (default:192.168.7.200) ?" IPInput
+	read -p "Please input IP address of your n3450 computer (default:192.168.7.200) ?" IPInput
 
 	if [[ $IPModeInput == [Yy] ]]; then
     cat > /etc/network/interfaces <<-EOF
@@ -114,6 +117,11 @@ allow-hotplug enp1s0
 iface enp1s0 inet dhcp
 
 EOF
+	green " ================================================== "
+	red "$IPInput is not the real ip. It only shows on the welcome message !"
+	red "Please check the real DHCP ip on the router !"
+
+	green " ================================================== "
 	else
 
 		read -p "Please input IP netmask (default:255.255.255.0) ?" netmaskInput
