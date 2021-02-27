@@ -113,8 +113,21 @@ iface lo inet loopback
 
 
 # The primary network interface
-allow-hotplug enp1s0
-iface enp1s0 inet dhcp
+iface enp1s0 inet manual
+
+auto vmbr0
+iface vmbr0 inet dhcp
+    bridge_ports enp1s0
+    bridge_stp off
+    bridge_fd 0
+
+
+# allow-hotplug wlp2s0
+# iface wlp2s0 inet dhcp
+# pre-up ip link set wlan0 up
+# pre-up iwconfig wlan0 essid ssid
+# wpa-ssid ssid
+# wpa-psk password
 
 EOF
 	green " ================================================== "
@@ -144,14 +157,18 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
-allow-hotplug enp1s0
-iface enp1s0 inet static
+iface enp1s0 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
     address ${IPInput}
     netmask ${netmaskInput}
     gateway ${gatewayInput}
-    bridge_ports eno1
+    bridge_ports enp1s0
     bridge_stp off
     bridge_fd 0
+	
+
 EOF
 	
 	fi
