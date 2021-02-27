@@ -450,9 +450,16 @@ function installSoftOhMyZsh(){
 
 # 网络测速
 
+function vps_netflix(){
+    # bash <(curl -sSL "https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh")
+	wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
+    # wget -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
+}
+
+
 function vps_superspeed(){
 	bash <(curl -Lso- https://git.io/superspeed)
-	wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+	#wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 }
 
 function vps_bench(){
@@ -3275,11 +3282,13 @@ function startMenuOther(){
     echo
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
-    green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 32. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
-	green " 33. testrace 回程路由测试 （四网路由测试）"
-	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
-    green " 35. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+    green " 31. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
+    green " 32. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
+    green " 33. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
+	green " 34. testrace 回程路由测试 （四网路由测试）"
+	green " 35. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    green " 36. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+
     echo
     green " 41. 安装新版本 BBR-PLUS 加速6合一脚本"
     echo
@@ -3374,20 +3383,23 @@ function startMenuOther(){
         ;;
         29 )
             removeV2ray
-        ;;                                                   
+        ;;  
         31 )
+            vps_netflix
+        ;;                                                         
+        32 )
             vps_superspeed
         ;;
-        32 )
+        33 )
             vps_bench
         ;;        
-        33 )
+        34 )
             vps_testrace
         ;;
-        34 )
+        35 )
             vps_LemonBench
         ;;
-        35 )
+        36 )
             vps_zbench
         ;;        
         41 )
@@ -3423,9 +3435,8 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 2021-01-30 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray 一键安装脚本 2021-02-27 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
-    red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
     green " 1. 安装 BBR-PLUS 加速4合一脚本"
     echo
@@ -3455,13 +3466,13 @@ function start_menu(){
     echo
     green " 28. 查看已安装的配置和用户密码等信息"
     green " 29. 安装 trojan 和 v2ray 可视化管理面板"
-    green " 30. 不安装nginx,只安装trojan或v2ray,可选择是否安装SSL证书"
+    green " 30. 不安装nginx,只安装trojan或v2ray或xray(xtls),可选择是否安装SSL证书"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 32. 设置可以使用root登陆"
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
-    green " 41. VPS 测网速工具"
+    green " 41. VPS 测网速工具 和 VPS是否支持Netflix 测试工具"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
