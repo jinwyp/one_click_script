@@ -52,7 +52,7 @@ function getLinuxOSRelease(){
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-        osReleaseVersionCodeName="buster"
+        osReleaseVersionCodeName=""
     elif cat /etc/issue | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
@@ -67,7 +67,7 @@ function getLinuxOSRelease(){
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-        osReleaseVersionCodeName="buster"
+        osReleaseVersionCodeName=""
     elif cat /proc/version | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
@@ -82,7 +82,7 @@ function getLinuxOSRelease(){
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-        osReleaseVersionCodeName="buster"
+        osReleaseVersionCodeName=""
     fi
 
     getLinuxOSVersion
