@@ -89,8 +89,7 @@ function getLinuxOSRelease(){
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
-    echo "OS info: ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osSystemPackage}, ${osSystemMdPath}， ${osSystemShell}"
-    echo "OS info: ${osInfo}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}"
+    echo "OS info: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
 getLinuxOSVersion(){
