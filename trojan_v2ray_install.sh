@@ -36,50 +36,100 @@ bold(){
 
 
 
-
+osInfo=""
 osRelease=""
+osReleaseVersion=""
+osReleaseVersionNo=""
+osReleaseVersionCodeName=""
 osSystemPackage=""
 osSystemMdPath=""
 osSystemShell="bash"
 
 # 系统检测版本
-function getLinuxOSVersion(){
+function getLinuxOSRelease(){
     # copy from 秋水逸冰 ss scripts
     if [[ -f /etc/redhat-release ]]; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-    elif cat /etc/issue | grep -Eqi "debian"; then
+        osReleaseVersionCodeName="buster"
+    elif cat /etc/issue | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
     elif cat /etc/issue | grep -Eqi "ubuntu"; then
         osRelease="ubuntu"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
     elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-    elif cat /proc/version | grep -Eqi "debian"; then
+        osReleaseVersionCodeName="buster"
+    elif cat /proc/version | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
     elif cat /proc/version | grep -Eqi "ubuntu"; then
         osRelease="ubuntu"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
     elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
     fi
+
+    getLinuxOSVersion
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
-    echo "OS info: ${osRelease}, ${osSystemPackage}, ${osSystemMdPath}， ${osSystemShell}"
+    echo "OS info: ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osSystemPackage}, ${osSystemMdPath}， ${osSystemShell}"
+    echo "OS info: ${osInfo}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}"
 }
 
+getLinuxOSVersion(){
+    if [[ -s /etc/redhat-release ]]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/issue)
+    fi
+
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        . /etc/os-release
+        osInfo=$NAME
+        osReleaseVersionNo=$VERSION_ID
+
+        if [ -n $VERSION_CODENAME ]; then
+            osReleaseVersionCodeName=$VERSION_CODENAME
+        fi
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        osInfo=$(lsb_release -si)
+        osReleaseVersionNo=$(lsb_release -sr)
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        . /etc/lsb-release
+        osInfo=$DISTRIB_ID
+        osReleaseVersionNo=$DISTRIB_RELEASE
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        osInfo=Debian
+        osReleaseVersionNo=$(cat /etc/debian_version)
+    elif [ -f /etc/redhat-release ]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        osInfo=$(uname -s)
+        osReleaseVersionNo=$(uname -r)
+    fi
+}
 
 osPort80=""
 osPort443=""
@@ -158,7 +208,17 @@ function testLinuxPortUsage(){
 
         ${sudoCmd} systemctl stop firewalld
         ${sudoCmd} systemctl disable firewalld
-        rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+
+        ${sudoCmd}  $osSystemPackage install -y epel-release
+        # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+
+cat <<EOF >> /etc/yum.repos.d/nginx.repo
+[nginx]
+name=nginx repo
+baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/$basearch/
+gpgcheck=0
+enabled=1
+EOF        
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz -y
@@ -180,6 +240,13 @@ function testLinuxPortUsage(){
 
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
+        
+        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+cat <<EOF >> /etc/apt/sources.list.d/nginx.list
+deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+EOF
 
         ${sudoCmd} $osSystemPackage install software-properties-common -y
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
@@ -191,6 +258,15 @@ function testLinuxPortUsage(){
 
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+cat <<EOF >> /etc/apt/sources.list.d/nginx.list
+deb http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+EOF
+        
+
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
         $osSystemPackage install xz-utils -y
@@ -221,7 +297,7 @@ function setLinuxRootLogin(){
     if [[ $osIsRootLoginInput == [Yy] ]]; then
 
         if [ "$osRelease" == "centos" ] || [ "$osRelease" == "debian" ] ; then
-            ${sudoCmd} sed -i 's/#\?PermitRootLogin \(Yes\|No\)/PermitRootLogin yes/g' /etc/ssh/sshd_config
+            ${sudoCmd} sed -i 's/#\?PermitRootLogin \(yes\|no\|Yes\|No\|prohibit-password\)/PermitRootLogin yes/g' /etc/ssh/sshd_config
         fi
         if [ "$osRelease" == "ubuntu" ]; then
             ${sudoCmd} sed -i 's/#\?PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
@@ -235,7 +311,7 @@ function setLinuxRootLogin(){
     osIsRootLoginWithPasswordInput=${osIsRootLoginWithPasswordInput:-Y}
 
     if [[ $osIsRootLoginWithPasswordInput == [Yy] ]]; then
-        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        sed -i 's/#\?PasswordAuthentication \(yes\|no\)/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         green "设置允许root使用密码登陆成功!"
     fi
 
@@ -277,13 +353,16 @@ function changeLinuxSSHPort(){
             yum -y install policycoreutils-python
 
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            firewall-cmd --add-port=$osSSHLoginPortInput/tcp --permanent
+            firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
             firewall-cmd --reload
             ${sudoCmd} service sshd restart
             ${sudoCmd} systemctl restart sshd
         fi
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
+            semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
+            sudo ufw allow $osSSHLoginPortInput/tcp
+
             ${sudoCmd} service ssh restart
             ${sudoCmd} systemctl restart ssh
         fi
@@ -3430,7 +3509,7 @@ function start_menu(){
     clear
 
     if [[ $1 == "first" ]] ; then
-        getLinuxOSVersion
+        getLinuxOSRelease
         ${osSystemPackage} -y install wget curl git 
     fi
 
