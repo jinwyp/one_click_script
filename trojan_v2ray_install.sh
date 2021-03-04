@@ -13,7 +13,7 @@ fi
 
 uninstall() {
   ${sudoCmd} $(which rm) -rf $1
-  printf "Removed: %s\n" $1
+  printf "File or Folder Deleted: %s\n" $1
 }
 
 
@@ -208,21 +208,6 @@ function testLinuxPortUsage(){
         ${sudoCmd} systemctl stop firewalld
         ${sudoCmd} systemctl disable firewalld
 
-        ${sudoCmd}  $osSystemPackage install -y epel-release
-        # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
-
-cat <<EOF >> /etc/yum.repos.d/nginx.repo
-[nginx]
-name=nginx repo
-baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/$basearch/
-gpgcheck=0
-enabled=1
-EOF        
-        $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz -y
-        $osSystemPackage install iputils-ping -y
-
     elif [ "$osRelease" == "ubuntu" ]; then
         if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
             red "==============="
@@ -240,36 +225,10 @@ EOF
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
         
-        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
-
-cat <<EOF >> /etc/apt/sources.list.d/nginx.list
-deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
-deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
-EOF
-
-        ${sudoCmd} $osSystemPackage install software-properties-common -y
-        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
-        $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
-
-
+    
     elif [ "$osRelease" == "debian" ]; then
-        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
-        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
-        # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
-
-cat <<EOF >> /etc/apt/sources.list.d/nginx.list
-deb http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
-deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
-EOF
-        
-
         $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
+
     fi
 
 }
@@ -418,6 +377,66 @@ function installBBR2(){
     wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
+
+function installPackage(){
+    if [ "$osRelease" == "centos" ]; then
+       
+        # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+
+        cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
+[nginx]
+name=nginx repo
+baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/\$basearch/
+gpgcheck=0
+enabled=1
+
+EOF
+
+        $osSystemPackage update -y
+
+        ${sudoCmd}  $osSystemPackage install -y epel-release
+
+        $osSystemPackage install curl wget git unzip zip tar -y
+        $osSystemPackage install xz -y
+        $osSystemPackage install iputils-ping -y
+
+    elif [ "$osRelease" == "ubuntu" ]; then
+        
+        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+EOF
+
+        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+
+        $osSystemPackage update -y
+        ${sudoCmd} $osSystemPackage install software-properties-common -y
+        $osSystemPackage install curl wget git unzip zip tar -y
+        $osSystemPackage install xz-utils -y
+        $osSystemPackage install iputils-ping -y
+
+
+    elif [ "$osRelease" == "debian" ]; then
+        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+
+        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF 
+deb http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+EOF
+        
+        $osSystemPackage update -y
+        $osSystemPackage install curl wget git unzip zip tar -y
+        $osSystemPackage install xz-utils -y
+        $osSystemPackage install iputils-ping -y
+    fi
+}
+
+
 function installSoftEditor(){
     # 安装 micro 编辑器
     if [[ ! -f "${HOME}/bin/micro" ]] ;  then
@@ -494,7 +513,7 @@ function installSoftOhMyZsh(){
         # 配置 zshrc 文件
         zshConfig=${HOME}/.zshrc
         zshTheme="maran"
-        sed -i 's/ZSH_THEME=.*/ZSH_THEME="'${zshTheme}'"/' $zshConfig
+        sed -i 's/ZSH_THEME=.*/ZSH_THEME="'"${zshTheme}"'"/' $zshConfig
         sed -i 's/plugins=(git)/plugins=(git cp history z rsync colorize nvm zsh-autosuggestions)/' $zshConfig
 
         zshAutosuggestionsConfig=${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -512,7 +531,7 @@ function installSoftOhMyZsh(){
         fi
 
 
-        echo 'alias lla="ll -ah"' >> ${HOME}/.zshrc
+        echo 'alias lla="ls -ahl"' >> ${HOME}/.zshrc
         echo 'alias mi="micro"' >> ${HOME}/.zshrc
 
         green " =================================================="
@@ -522,7 +541,6 @@ function installSoftOhMyZsh(){
     fi
 
 }
-
 
 
 
@@ -1087,6 +1105,7 @@ function installTrojanWholeProcess(){
 
     stopServiceNginx
     testLinuxPortUsage
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -3073,6 +3092,7 @@ function installTrojanWeb(){
 
     stopServiceNginx
     testLinuxPortUsage
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -3215,6 +3235,7 @@ function installV2rayUI(){
 
     stopServiceNginx
     testLinuxPortUsage
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -3252,6 +3273,7 @@ function getHTTPSNoNgix(){
     #stopServiceNginx
     #testLinuxPortUsage
 
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
@@ -3650,6 +3672,7 @@ function start_menu(){
         31 )
             setLinuxDateZone
             testLinuxPortUsage
+            installPackage
             installSoftEditor
             installSoftOhMyZsh
         ;;
@@ -3679,6 +3702,9 @@ function start_menu(){
         ;;
         77 )
             editLinuxLoginWithPublicKey
+        ;;
+        78 )
+            installPackage
         ;;
         88 )
             installBBR2

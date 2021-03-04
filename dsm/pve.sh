@@ -80,7 +80,7 @@ function rebootSystem(){
 	isRebootInput=${isRebootInput:-Y}
 
 	if [[ $isRebootInput == [Yy] ]]; then
-		reboot
+		${sudoCmd} reboot
 	else 
 		exit
 	fi
@@ -333,7 +333,7 @@ function genPVEVMDiskWithQM(){
 		if [[ -f "/root/img2kvm" ]]; then
 			img2kvmRealPath="/root/img2kvm"
 		elif [[ -f "${img2kvmPath}" ]]; then
-			img2kvmRealPath=img2kvmPath
+			img2kvmRealPath=${img2kvmPath}
 		else 
 			green " 没有找到 img2kvm 命令, 开始自动下载 img2kvm 命令到 ${HOME} 目录 "
 			mkdir -p  ${HOME}/
@@ -558,7 +558,6 @@ echo " 当前已切换到 \$(whoami) 用户"
 synouser --setpw root ${dsmRootUserPasswordInput}
 sed -i 's/#\?PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 
-systemctl restart ssh
 EOF
 
 			echo
@@ -574,24 +573,216 @@ EOF
 }
 
 
-function DSMSetSSHRootLogin(){
+function DSMFixCPUInfo(){
+	green " ================================================== "
+	green " 准备开始修复 群晖系统信息中心 CPU型号显示错误"
+	green " 请尽量通过root 用户登录SSH 运行本命令"
+	echo
+	green " 可通过群晖网页 共享文件夹上传 ch_cpuinfo 工具到共享目录/tools下, 实际路径一般为/volume1/tools/ch_cpuinfo "
+	green " 通过群晖网页上传 ch_cpuinfo 成功后, 右键点击 ch_cpuinfo 文件“属性” -> “位置” 可查看到实际的储存路径, 一般为/volume1/tools/ch_cpuinfo "
+	echo
+	green " 或者通过SSH WinSCP等软件上传 ch_cpuinfo 工具到当前目录下或/root目录下 "
+	echo
+	green " 如果用户没有上传会自动从网上下载该命令 "
+	green " ================================================== "
+
+	cpuInfoChangePath="./ch_cpuinfo"
+
+	if [[ -f "/root/ch_cpuinfo" ]]; then
+		cpuInfoChangeRealPath="/root/ch_cpuinfo"
+
+	elif [[ -f "${cpuInfoChangePath}" ]]; then
+		cpuInfoChangeRealPath="${cpuInfoChangePath}"
+
+	elif [[ -f "/volume1/tools/ch_cpuinfo" ]]; then
+		cpuInfoChangeRealPath="/volume1/tools/ch_cpuinfo"	
+
+	else 
+		echo
+		green " 请输入已上传 ch_cpuinfo 的路径: 直接回车默认为/volume1/tools/ch_cpuinfo "
+		green " 如果实际没有上传会自动从网上下载 ch_cpuinfo 命令, 直接回车即可 "
+		echo
+		read -p " 请输入已上传 ch_cpuinfo 的路径: (末尾不要有/)" dsmChangeCPUInfoPathInput
+		dsmChangeCPUInfoPathInput=${dsmChangeCPUInfoPathInput:-"/volume1/tools/ch_cpuinfo"}
+
+		if [[ -f "${dsmChangeCPUInfoPathInput}" ]]; then
+			cpuInfoChangeRealPath="${dsmChangeCPUInfoPathInput}"
+		else
+			green " 没有找到 ch_cpuinfo 命令, 开始自动下载 ch_cpuinfo 命令到 ${HOME} 目录 "
+			mkdir -p  ${HOME}
+			wget -P  ${HOME} https://github.com/FOXBI/ch_cpuinfo/raw/master/ch_cpuinfo_2.2.1/ch_cpuinfo.tar
+
+			tar xvf ch_cpuinfo.tar
+			cpuInfoChangeRealPath="${HOME}/ch_cpuinfo"
+		fi
+	fi
+
+	${sudoCmd} chmod +x ${cpuInfoChangeRealPath}
+
+	echo
+	green " 根据下面提示: 选择1后在输入y 修复CPU信息显示 "
+	green " 选择2 恢复原始CPU信息后 再次修复CPU信息显示"
+	green " 选择3 恢复到原始CPU信息"
+	sleep 8
+	${cpuInfoChangeRealPath}
+
+	green " 修复CPU信息成功, 请重启群晖后在群晖“控制面板”->“信息中心” 查看"
+	green " ================================================== "
+
+	rebootSystem
+}
+
+
+
+function DSMFixNvmeSSD(){
+	green " ================================================== "
+	green " 准备开始修复 群晖 识别 Nvme 固态硬盘问题"
+	green " 请尽量通过root 用户登录SSH 运行本命令"
+	red " 该补丁如果插两块NVMe SSD会出现问题, 请谨慎使用"
+	echo
+	green " 可通过群晖网页 共享文件夹上传 libsynonvme.so.1 到共享目录/tools下, 实际路径一般为/volume1/tools/libsynonvme.so.1 "
+	green " 通过群晖网页上传 libsynonvme.so.1 成功后, 右键点击 libsynonvme.so.1 文件“属性” -> “位置” 可查看到实际的储存路径, 一般为/volume1/tools/libsynonvme.so.1 "
+	echo
+	green " 或者通过SSH WinSCP等软件上传 libsynonvme.so.1 到当前目录下或/root目录下 "
+	echo
+	green " 如果用户没有上传会自动从网上下载 libsynonvme.so.1 文件 "
+	green " ================================================== "
+
+
+	if [[ -f "/root/libsynonvme.so.1" ]]; then
+		nvmeSSDPatchRealPath="/root/libsynonvme.so.1"
+
+	elif [[ -f "./libsynonvme.so.1" ]]; then
+		nvmeSSDPatchRealPath="./libsynonvme.so.1"
+
+	elif [[ -f "/volume1/tools/libsynonvme.so.1" ]]; then
+		nvmeSSDPatchRealPath="/volume1/tools/libsynonvme.so.1"	
+
+	else 
+		echo
+		green " 请输入已上传 libsynonvme.so.1 的路径: 直接回车默认为/volume1/tools/libsynonvme.so.1 "
+		green " 如果实际没有上传会自动从网上下载 libsynonvme.so.1, 直接回车即可 "
+		echo
+		read -p " 请输入已上传 libsynonvme.so.1 的路径: (末尾不要有/)" dsmNvmeSSDPatchPathInput
+		dsmNvmeSSDPatchPathInput=${dsmNvmeSSDPatchPathInput:-"/volume1/tools/libsynonvme.so.1"}
+
+		if [[ -f "${dsmNvmeSSDPatchPathInput}" ]]; then
+			nvmeSSDPatchRealPath="${dsmNvmeSSDPatchPathInput}"
+		else
+			green " 没有找到 libsynonvme.so.1 , 开始自动下载 libsynonvme.so.1 到 ${HOME} 目录 "
+			mkdir -p  ${HOME}
+			wget -P  ${HOME} https://github.com/jinwyp/one_click_script/raw/master/dsm/libsynonvme.so.1
+
+			nvmeSSDPatchRealPath="${HOME}/libsynonvme.so.1"
+		fi
+	fi
+
+
+	echo
+
+	if [[ -f "/usr/lib64/libsynonvme.so.1" ]]; then
+		green " 原系统已存在 /usr/lib64/libsynonvme.so.1, 备份到 /usr/lib64/libsynonvme.so.1.bak "
+		${sudoCmd}  mv -f /usr/lib64/libsynonvme.so.1 /usr/lib64/libsynonvme.so.1.bak
+	fi
+	${sudoCmd} cp ${nvmeSSDPatchRealPath} /usr/lib64	
+	echo
+	green " 修复识别 Nvme 固态硬盘成功, 请重启群晖!"
+	green " ================================================== "
+
+	rebootSystem
+
+}
+
+
+
+function DSMFixSNAndMac(){
+	green " ================================================== "
+	green " 准备开始半洗白群晖 需要准备好SN 序列号和网卡Mac地址"
+	green " 请尽量通过root 用户登录SSH 运行本命令"
+	green " ================================================== "	
+
+	echo
+	echo "Run Command : blkid"
+	echo
+	blkid
+	echo
+
+	green " 请根据上面信息 查看已有的硬盘设备, 需要挂载群晖引导盘分区 一般为/dev/sda1"
+
+	read -p " 请输入群晖引导盘分区 直接回车默认为/dev/sda1: (末尾不要有/)" dsmDeviceIDInput
+	dsmDeviceIDInput=${dsmDeviceIDInput:-"/dev/sda1"}
+
+	if [ -b "/dev/sda1" ]; then
+		green "/dev/sda1 is a block device. Mount to /mnt/disk1"
+		mkdir -p /mnt/disk1
+		mount -o rw "/dev/sda1" /mnt/disk1
+	fi
+
+	# if [ -b "/dev/sda2" ]; then
+	# 	echo "/dev/sda2 is a block device. . Mount to ${MountDIR2}"
+	# 	mkdir -p /mnt/disk2
+	# 	mount -o rw /dev/sda2 /mnt/disk2
+	# fi
+
+	if [[ $dsmDeviceIDInput == *"/dev/sda1"* ]]; then
+		echo ""
+	else
+		if [ -b "${dsmDeviceIDInput}" ]; then
+			echo "${dsmDeviceIDInput} is a block device. . Mount to /mnt/disk2"
+			mkdir -p /mnt/disk2
+			mount -o rw ${dsmDeviceIDInput} /mnt/disk2
+		fi	
+	fi
+
+
+	grubConfigFilePath="/mnt/disk1/grub/grub.cfg"
+	if [[ -f "/mnt/disk1/grub/grub.cfg" ]]; then
+		grubConfigFilePath="/mnt/disk1/grub/grub.cfg"
+		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk1/grub/grub.cfg"
 	
-	${sudoCmd} sed -i 's/#\?PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+	elif  [[ -f "/mnt/disk2/grub/grub.cfg" ]]; then
+		grubConfigFilePath="/mnt/disk2/grub/grub.cfg"
+		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk2/grub/grub.cfg"
+	else
+		green " ================================================== "
+		red " 没有找到群晖引导分区配置文件 grub.cfg, 修改失败 !"
+		green " ================================================== "
+		exit		
+	fi
 
+	read -p " 请输入群晖洗白的SN序列号: 直接回车默认为空:" dsmSNInput
+	dsmSNInput=${dsmSNInput:-""}
+
+	read -p " 请输入群晖洗白的网卡MAC地址: 直接回车默认为空: (中间不要有:或-)" dsmMACInput
+	dsmMACInput=${dsmMACInput:-""}
+
+	if [[ -z "$dsmSNInput" ]]; then
+		green " ================================================== "
+		red " 输入的群晖洗白的SN序列号为空, 修改失败 请重新运行"
+		green " ================================================== "
+		exit		
+    fi
+
+	if [[ -z "$dsmMACInput" ]]; then
+		green " ================================================== "
+		red " 输入的群晖洗白的网卡 MAC 地址 为空, 修改失败 请重新运行"
+		green " ================================================== "
+		exit		
+    fi
+
+	${sudoCmd} sed -i "s/set sn=.*/set sn=${dsmSNInput}/g" ${grubConfigFilePath}
+	${sudoCmd} sed -i "s/set mac1=.*/set mac1=${dsmMACInput}/g" ${grubConfigFilePath}
+
+	echo
+	green " ================================================== "
+	green " 群晖洗白成功, 请重启群晖!"
+	green " ================================================== "
+
+	rebootSystem
 
 }
 
 
-
-function save(){
-	mkdir -p /mnt/disk1
-	mkdir -p /mnt/disk2
-	mkdir -p /mnt/disk3
-	mkdir -p /mnt/disk4
-	mount -rw /dev/sda1 /mnt/disk1
-	mount -rw /dev/sda2 /mnt/disk2
-
-}
 
 
 function start_menu(){
@@ -614,8 +805,9 @@ function start_menu(){
 	green " 8. PVE安装群晖 添加直通硬盘 生成硬盘设备"
 	echo
 	green " 11. 群晖补丁 开启ssh root登录"
-	green " 12. 群晖补丁 修正CPU型号显示错误"
+	green " 12. 群晖补丁 修复CPU型号显示错误"
 	green " 13. 群晖补丁 填入洗白的序列号和网卡Mac地址"
+	green " 14. 群晖补丁 正确识别 Nvme 固态硬盘"
 	echo
     green " 0. 退出脚本"
     echo
@@ -647,6 +839,15 @@ function start_menu(){
         ;;	
         11 )
             DSMOpenSSHRoot
+        ;;				
+        12 )
+            DSMFixCPUInfo
+        ;;				
+        13 )
+            DSMFixSNAndMac
+        ;;				
+        14 )
+            DSMFixNvmeSSD
         ;;				
         0 )
             exit 1
