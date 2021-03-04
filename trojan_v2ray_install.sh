@@ -402,6 +402,8 @@ EOF
 
     elif [ "$osRelease" == "ubuntu" ]; then
         
+        # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
+        
         $osSystemPackage install -y gnupg2
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
@@ -982,10 +984,10 @@ http {
 
 
         # Config for 0-RTT in TLSv1.3
-        # ssl_early_data on;
-        # ssl_stapling on;
-        # ssl_stapling_verify on;
-        # add_header Strict-Transport-Security "max-age=31536000";
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
         
         root $configWebsitePath;
         index index.php index.html index.htm;
