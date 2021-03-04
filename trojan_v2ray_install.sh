@@ -402,14 +402,13 @@ EOF
 
     elif [ "$osRelease" == "ubuntu" ]; then
         
-        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        $osSystemPackage install -y gnupg2
+        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
         cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
 deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
-
-        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
 
         $osSystemPackage update -y
         ${sudoCmd} $osSystemPackage install software-properties-common -y
@@ -421,7 +420,8 @@ EOF
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
 
-        wget -O - http://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        $osSystemPackage install -y gnupg2
+        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
         # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
         cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF 
