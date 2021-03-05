@@ -8,7 +8,7 @@
 
 1. 系统要求：centos7+/debian9+/ubuntu16.04+
 2. 支持 trojan， trojan-go 和v2ray 的 安装 升级 完全卸载
-3. 支持 trojan 或 trojan-go 与 v2ray 共存
+3. 支持 trojan 或 trojan-go 与 v2ray 共存, nginx全面支持TLS1.3 保证安全性, 支持SNI分流
 4. 支持 v2ray 新的vless协议 , 支持v2ray作为前端 同时转发trojan 和 websocket 
 5. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
 6. 可以仅安装 trojan 或 v2ray 而不安装nginx
