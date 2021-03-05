@@ -51,6 +51,10 @@ function main() {
 			setIP
 		fi	
 
+		if [[ $1 == "deljob" ]]; then
+			removeCrontab
+		fi	
+
 	else
 		setDateFromFile
 	fi
@@ -88,6 +92,11 @@ function setCrontab(){
     (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 /root/date.sh savedate") | sort - | uniq - | crontab -
 }
 
+
+function removeCrontab(){
+	# 清楚 cron 定时任务
+	crontab -r
+}
 
 function setIP(){
 	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration

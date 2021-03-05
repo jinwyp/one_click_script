@@ -403,6 +403,7 @@ EOF
     elif [ "$osRelease" == "ubuntu" ]; then
         
         # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
+        # https://www.nginx.com/resources/wiki/start/topics/tutorials/install/
         
         $osSystemPackage install -y gnupg2
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -

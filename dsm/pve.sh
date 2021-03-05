@@ -133,9 +133,9 @@ function checkIOMMU(){
 			green " 状态显示--当前是否开启Intel VT-d: $pveStatusVTIntel"
 		else
 			pveStatusVTIntel="yes"
-			green " 状态显示--当前是否开启Intel VT-d: $pveStatusVTIntel. "
+			green " 状态显示--当前是否开启Intel VT-d: $pveStatusVTIntel "
 			green " dmesg | grep VT-d "
-			green " Info: $pveStatusVTIntelText"
+			echo "$pveStatusVTIntelText"
 		fi
 		
     else
@@ -144,9 +144,9 @@ function checkIOMMU(){
 			green " 状态显示--当前是否开启AMD-Vi: $pveStatusVTAMD"
 		else
 			pveStatusVTAMD="yes"
-			green " 状态显示--当前是否开启AMD-Vi: $pveStatusVTAMD. "
+			green " 状态显示--当前是否开启AMD-Vi: $pveStatusVTAMD"
 			green " dmesg | grep AMD-Vi "
-			green " Info: $pveStatusVTAMDText"
+			echo "$pveStatusVTAMDText"
 		fi
 		
     fi
@@ -165,7 +165,10 @@ function checkIOMMUDMAR(){
 		green " 状态显示--当前是否开启IOMMU DMAR: $pveStatusIOMMUDMAR "
 	else
         pveStatusIOMMUDMAR="yes"
-		green " 状态显示--当前是否开启IOMMU DMAR: $pveStatusIOMMUDMAR. Info: $pveStatusIOMMUDMARText"
+		green " 状态显示--当前是否开启IOMMU DMAR: $pveStatusIOMMUDMAR "
+		green " dmesg | grep -e DMAR -e IOMMU "
+		echo "$pveStatusIOMMUDMARText"
+
     fi
 }
 
@@ -794,7 +797,7 @@ function start_menu(){
 	checkCPU
 
     green " =================================================="
-    green " PVE 虚拟机 和 群晖 工具脚本 2021-03-03 更新. By jinwyp. 系统支持：PVE / debian10"
+    green " PVE 虚拟机 和 群晖 工具脚本 2021-03-06 更新. By jinwyp. 系统支持：PVE / debian10"
     green " =================================================="
     green " 1. PVE 开启IOMMU 用于支持直通, 需要在BIOS先开启VT-d"
     green " 2. PVE 关闭IOMMU 关闭直通 恢复默认设置"
@@ -821,6 +824,7 @@ function start_menu(){
         ;;
         3 )
             checkIOMMU
+			checkIOMMUDMAR
         ;;
         4 )
             checkIOMMU

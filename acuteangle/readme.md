@@ -34,4 +34,6 @@ chmod +x ./mnt/usb1/date.sh && /mnt/usb1/date.sh firstrun
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/date.sh && chmod +x ./date.sh && ./date.sh firstrun 
 ```
 
-2. 以后使用其他电脑在浏览器就可以管理PVE,登陆方式：https://你设置的IP:8006，用户名/密码分别是“root/password”进行登陆。
+2. 以后使用其他电脑在浏览器就可以管理PVE,登陆方式：https://你设置的IP:8006，用户名/密码分别是"root/password"进行登陆。
+
+3. 如果已经给机器加上了bios电池, 不需要再修复系统时间问题, 运行 ```crontab -r ```  清除自动运行修复时间的脚本, 注意 ```crontab -r ``` 会清除所有定时任务, 如果还有其他定时任务 请运行```crontab -e ```手动修改 删除或注释掉 包含 date.sh 的两行脚本即可  

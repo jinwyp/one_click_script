@@ -1,6 +1,8 @@
 # PVE 和 群晖 安装工具
 
 
+![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/pve1.jpg?raw=true)
+
 
 ## 运行方法 Installation 
 
