@@ -386,7 +386,6 @@ function genPVEVMDiskWithQM(){
 	isHaveStorageLocalLvm=$(cat /etc/pve/storage.cfg | grep local-lvm) 
 	isHaveStorageLocal=$(cat /etc/pve/storage.cfg | grep local) 
 
-	dsmBootImgStoragePathInput="local-lvm"
 
 	echo
 	echo "cat /etc/pve/storage.cfg"
@@ -589,13 +588,12 @@ function DSMFixCPUInfo(){
 	green " 如果用户没有上传会自动从网上下载该命令 "
 	green " ================================================== "
 
-	cpuInfoChangePath="./ch_cpuinfo"
 
 	if [[ -f "/root/ch_cpuinfo" ]]; then
 		cpuInfoChangeRealPath="/root/ch_cpuinfo"
 
-	elif [[ -f "${cpuInfoChangePath}" ]]; then
-		cpuInfoChangeRealPath="${cpuInfoChangePath}"
+	elif [[ -f "./ch_cpuinfo" ]]; then
+		cpuInfoChangeRealPath="./ch_cpuinfo"
 
 	elif [[ -f "/volume1/tools/ch_cpuinfo" ]]; then
 		cpuInfoChangeRealPath="/volume1/tools/ch_cpuinfo"	
@@ -615,7 +613,7 @@ function DSMFixCPUInfo(){
 			mkdir -p  ${HOME}
 			wget -P  ${HOME} https://github.com/FOXBI/ch_cpuinfo/raw/master/ch_cpuinfo_2.2.1/ch_cpuinfo.tar
 
-			tar xvf ch_cpuinfo.tar
+			tar xvf ${HOME}/ch_cpuinfo.tar
 			cpuInfoChangeRealPath="${HOME}/ch_cpuinfo"
 		fi
 	fi
@@ -623,10 +621,12 @@ function DSMFixCPUInfo(){
 	${sudoCmd} chmod +x ${cpuInfoChangeRealPath}
 
 	echo
-	green " 根据下面提示: 选择1后在输入y 修复CPU信息显示 "
+	green " 选择1 然后在输入y 修复CPU信息显示 "
 	green " 选择2 恢复原始CPU信息后 再次修复CPU信息显示"
 	green " 选择3 恢复到原始CPU信息"
-	sleep 8
+	echo
+	green " 请根据随后的英文提示 等待5秒后选择1-3: "
+	sleep 10
 	${cpuInfoChangeRealPath}
 
 	green " 修复CPU信息成功, 请重启群晖后在群晖“控制面板”->“信息中心” 查看"
@@ -805,7 +805,7 @@ function start_menu(){
 	echo
 	green " 6. PVE安装群晖 使用 qm 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 7. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
-	green " 8. PVE安装群晖 添加直通硬盘 生成硬盘设备"
+	green " 8. PVE安装群晖 添加整个硬盘(直通) 生成硬盘设备"
 	echo
 	green " 11. 群晖补丁 开启ssh root登录"
 	green " 12. 群晖补丁 修复CPU型号显示错误"
