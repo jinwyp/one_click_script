@@ -568,6 +568,7 @@ function genPVEVMDiskPT(){
 
 
 
+
 function DSMOpenSSHRoot(){
 	green " ================================================== "
 	green " 准备开启群晖系统的 root 用户登陆SSH "
@@ -615,6 +616,120 @@ EOF
 		exit
 	fi
 
+}
+
+
+function DSMFixSNAndMac(){
+	green " ================================================== "
+	green " 准备开始半洗白群晖 需要准备好SN 序列号和网卡Mac地址"
+	green " 请尽量通过root 用户登录SSH 运行本命令"
+	green " ================================================== "	
+
+	echo
+	echo "Run Command : blkid"
+	echo
+	blkid
+	echo
+
+	green " 请根据上面信息 查看已有的硬盘设备, 需要挂载群晖引导盘分区 一般为/dev/sda1"
+	green " 如果通过本脚本14 修复过 /dev/synoboot 设备盘, 则为/dev/synoboot1:"
+
+	read -p " 请输入群晖引导盘分区 直接回车默认为/dev/sda1: (末尾不要有/)" dsmDeviceIDInput
+	dsmDeviceIDInput=${dsmDeviceIDInput:-"/dev/sda1"}
+
+	if [ -b "/dev/sda1" ]; then
+		green "/dev/sda1 is a block device. Mount to /mnt/disk3"
+		mkdir -p /mnt/disk3
+		mount -o rw "/dev/sda1" /mnt/disk3
+	fi
+
+	if [ -b "/dev/synoboot1" ]; then
+		green "/dev/synoboot1 is a block device. Mount to /mnt/disk2"
+		mkdir -p /mnt/disk2
+		cd /dev
+		mount -t vfat "synoboot1" /mnt/disk2
+	fi
+
+	if [[ $dsmDeviceIDInput == *"/dev/sda1"* ]]; then
+		echo ""
+	elif [[ $dsmDeviceIDInput == *"/dev/synoboot1"* ]]; then
+		echo ""
+	else
+		if [ -b "${dsmDeviceIDInput}" ]; then
+			echo "${dsmDeviceIDInput} is a block device. . Mount to /mnt/disk1"
+			mkdir -p /mnt/disk1
+			mount -o rw ${dsmDeviceIDInput} /mnt/disk1
+		fi	
+	fi
+
+
+	grubConfigFilePath="/mnt/disk1/grub/grub.cfg"
+	if [[ -f "/mnt/disk1/grub/grub.cfg" ]]; then
+		grubConfigFilePath="/mnt/disk1/grub/grub.cfg"
+		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk1/grub/grub.cfg"
+	
+	elif  [[ -f "/mnt/disk2/grub/grub.cfg" ]]; then
+		grubConfigFilePath="/mnt/disk2/grub/grub.cfg"
+		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk2/grub/grub.cfg"
+
+	elif  [[ -f "/mnt/disk3/grub/grub.cfg" ]]; then
+		grubConfigFilePath="/mnt/disk3/grub/grub.cfg"
+		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk3/grub/grub.cfg"
+				
+	else
+		green " ================================================== "
+		red " 没有找到群晖引导分区配置文件 grub.cfg, 修改失败 !"
+		green " ================================================== "
+		exit		
+	fi
+
+    if [[ $1 == "vi" ]] ; then
+		echo
+		green " ================================================== "
+		red " 注意: 编辑引导文件grub.cfg 如果为了隐藏引导盘 修改了 SataPortMap 和 DiskIdxMap 参数后"
+		red " 会导致命令行下无法挂载引导分区 !"
+		red " 从而无法再次使用本工具编辑该引导文件 grub.cfg !"
+		echo
+		red " 可以通过其他方法 例如 WinPE 下的 DiskGenius 修改 !"
+		red " 或通过PVE 把引导盘sata5 顺序提前到sata1 不隐藏引导盘来修改 !"
+		green " ================================================== "
+		echo
+		promptContinueOpeartion
+        vi $grubConfigFilePath
+
+	else
+
+		read -p " 请输入群晖洗白的SN序列号: 直接回车默认为空:" dsmSNInput
+		dsmSNInput=${dsmSNInput:-""}
+
+		read -p " 请输入群晖洗白的网卡MAC地址: 直接回车默认为空: (中间不要有:或-)" dsmMACInput
+		dsmMACInput=${dsmMACInput:-""}
+
+		if [[ -z "$dsmSNInput" ]]; then
+			green " ================================================== "
+			red " 输入的群晖洗白的SN序列号为空, 修改失败 请重新运行"
+			green " ================================================== "
+			exit		
+		fi
+
+		if [[ -z "$dsmMACInput" ]]; then
+			green " ================================================== "
+			red " 输入的群晖洗白的网卡 MAC 地址 为空, 修改失败 请重新运行"
+			green " ================================================== "
+			exit		
+		fi
+
+		${sudoCmd} sed -i "s/set sn=.*/set sn=${dsmSNInput}/g" ${grubConfigFilePath}
+		${sudoCmd} sed -i "s/set mac1=.*/set mac1=${dsmMACInput}/g" ${grubConfigFilePath}
+
+		echo
+		green " ================================================== "
+		green " 群晖洗白成功, 请重启群晖!"
+		green " ================================================== "
+
+		rebootSystem
+
+    fi
 }
 
 
@@ -683,7 +798,6 @@ function DSMFixCPUInfo(){
 }
 
 
-
 function DSMFixDevSynoboot(){
 	green " ================================================== "
 	green " 准备开始修复 群晖 DSM 6.2.3 找不到 /dev/synoboot 引导盘问题 "
@@ -701,9 +815,10 @@ function DSMFixDevSynoboot(){
 		green " 群晖状态显示--当前是否有 /dev/synoboot 引导盘: $DSMStatusSynoboot "
 	else
         DSMStatusSynoboot="yes"
-		green " 群晖状态显示--当前是否有 /dev/synoboot 引导盘: $DSMStatusSynoboot "
+		green " 群晖状态显示--当前是否有 /dev/synoboot 引导盘: $DSMStatusSynoboot 无需修复" 
 		green " ls /dev/synoboot* "
 		echo "$DSMStatusIsSynobootText"
+		echo
     fi
 	
 	if [[ -z "$DSMStatusIsSynobootText" ]]; then
@@ -795,117 +910,6 @@ function DSMFixNvmeSSD(){
 
 
 
-function DSMFixSNAndMac(){
-	green " ================================================== "
-	green " 准备开始半洗白群晖 需要准备好SN 序列号和网卡Mac地址"
-	green " 请尽量通过root 用户登录SSH 运行本命令"
-	green " ================================================== "	
-
-	echo
-	echo "Run Command : blkid"
-	echo
-	blkid
-	echo
-
-	green " 请根据上面信息 查看已有的硬盘设备, 需要挂载群晖引导盘分区 一般为/dev/sda1"
-	green " 如果通过本脚本14 修复过 /dev/synoboot 设备盘, 则为/dev/synoboot1:"
-
-	read -p " 请输入群晖引导盘分区 直接回车默认为/dev/sda1: (末尾不要有/)" dsmDeviceIDInput
-	dsmDeviceIDInput=${dsmDeviceIDInput:-"/dev/sda1"}
-
-	if [ -b "/dev/sda1" ]; then
-		green "/dev/sda1 is a block device. Mount to /mnt/disk1"
-		mkdir -p /mnt/disk1
-		mount -o rw "/dev/sda1" /mnt/disk1
-	fi
-
-	if [ -b "/dev/synoboot1" ]; then
-		echo "/dev/synoboot1 is a block device. . Mount to /mnt/disk2"
-		mkdir -p /mnt/disk2
-		mount -o rw /dev/synoboot1 /mnt/disk2
-	fi
-
-	if [[ $dsmDeviceIDInput == *"/dev/sda1"* ]]; then
-		echo ""
-	elif [[ $dsmDeviceIDInput == *"/dev/synoboot1"* ]]; then
-		echo ""
-	else
-		if [ -b "${dsmDeviceIDInput}" ]; then
-			echo "${dsmDeviceIDInput} is a block device. . Mount to /mnt/disk3"
-			mkdir -p /mnt/disk3
-			mount -o rw ${dsmDeviceIDInput} /mnt/disk3
-		fi	
-	fi
-
-
-	grubConfigFilePath="/mnt/disk1/grub/grub.cfg"
-	if [[ -f "/mnt/disk1/grub/grub.cfg" ]]; then
-		grubConfigFilePath="/mnt/disk1/grub/grub.cfg"
-		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk1/grub/grub.cfg"
-	
-	elif  [[ -f "/mnt/disk2/grub/grub.cfg" ]]; then
-		grubConfigFilePath="/mnt/disk2/grub/grub.cfg"
-		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk2/grub/grub.cfg"
-
-	elif  [[ -f "/mnt/disk3/grub/grub.cfg" ]]; then
-		grubConfigFilePath="/mnt/disk3/grub/grub.cfg"
-		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk3/grub/grub.cfg"
-				
-	else
-		green " ================================================== "
-		red " 没有找到群晖引导分区配置文件 grub.cfg, 修改失败 !"
-		green " ================================================== "
-		exit		
-	fi
-
-    if [[ $1 == "vi" ]] ; then
-		echo
-		green " ================================================== "
-		red " 注意: 编辑引导文件grub.cfg 如果为了隐藏引导盘 修改了 SataPortMap 和 DiskIdxMap 参数后"
-		red " 会导致命令行下无法挂载引导分区 !"
-		red " 从而无法再次使用本工具编辑该引导文件 grub.cfg !"
-		echo
-		red " 可以通过其他方法 例如 WinPE 下的 DiskGenius 修改 !"
-		red " 或通过PVE 把引导盘sata5 顺序提前到sata1 不隐藏引导盘来修改 !"
-		green " ================================================== "
-		echo
-		promptContinueOpeartion
-        vi $grubConfigFilePath
-
-	else
-
-		read -p " 请输入群晖洗白的SN序列号: 直接回车默认为空:" dsmSNInput
-		dsmSNInput=${dsmSNInput:-""}
-
-		read -p " 请输入群晖洗白的网卡MAC地址: 直接回车默认为空: (中间不要有:或-)" dsmMACInput
-		dsmMACInput=${dsmMACInput:-""}
-
-		if [[ -z "$dsmSNInput" ]]; then
-			green " ================================================== "
-			red " 输入的群晖洗白的SN序列号为空, 修改失败 请重新运行"
-			green " ================================================== "
-			exit		
-		fi
-
-		if [[ -z "$dsmMACInput" ]]; then
-			green " ================================================== "
-			red " 输入的群晖洗白的网卡 MAC 地址 为空, 修改失败 请重新运行"
-			green " ================================================== "
-			exit		
-		fi
-
-		${sudoCmd} sed -i "s/set sn=.*/set sn=${dsmSNInput}/g" ${grubConfigFilePath}
-		${sudoCmd} sed -i "s/set mac1=.*/set mac1=${dsmMACInput}/g" ${grubConfigFilePath}
-
-		echo
-		green " ================================================== "
-		green " 群晖洗白成功, 请重启群晖!"
-		green " ================================================== "
-
-		rebootSystem
-
-    fi
-}
 
 
 
