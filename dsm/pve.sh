@@ -98,6 +98,40 @@ function promptContinueOpeartion(){
 }
 
 
+
+
+function updatePVEAptSource(){
+	green " ================================================== "
+	green " 准备关闭企业更新源, 添加非订阅版更新源 "
+	${sudoCmd} sed -i 's|deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|g' /etc/apt/sources.list.d/pve-enterprise.list
+
+	#echo 'deb http://download.proxmox.com/debian/pve buster pve-no-subscription' > /etc/apt/sources.list.d/pve-no-subscription.list
+	echo "deb https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian buster pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+
+	wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+
+	green " 更新源成功 "
+	green " ================================================== "
+
+	cat > /etc/apt/sources.list <<-EOF
+
+# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+
+deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free
+deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free
+deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free
+deb https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free
+# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free
+
+EOF
+
+}
+
+
+
 function checkIOMMU(){
 	green " ================================================== "
 	green " 准备检测当前系统是否开启IOMMU, 用于PCI直通. 需要先重启进入BIOS, 开启IOMMU. "
@@ -374,9 +408,6 @@ function genPVEVMDiskWithQM(){
 	elif [[ -f "/var/lib/vz/template/iso/${dsmBootImgFilenameInput}" ]]; then
         dsmBootImgFileRealPath="/var/lib/vz/template/iso/${dsmBootImgFilenameInput}"
 
-	elif [[ -f "/mnt/sda1/template/iso/${dsmBootImgFilenameInput}" ]]; then
-		dsmBootImgFileRealPath="/mnt/sda1/template/iso/${dsmBootImgFilenameInput}"
-
 	else
 		read -p "请输入已上传的群晖引导镜像的路径, 直接回车默认为${promptTextDefaultDsmBootImgFilePath} : (末尾不要有/)" dsmBootImgFilePathInput
 		dsmBootImgFilePathInput=${dsmBootImgFilePathInput:-"${promptTextDefaultDsmBootImgFilePath}"}
@@ -622,8 +653,8 @@ function DSMFixCPUInfo(){
 			cpuInfoChangeRealPath="${dsmChangeCPUInfoPathInput}"
 		else
 			green " 没有找到 ch_cpuinfo 命令, 开始自动下载 ch_cpuinfo 命令到 ${HOME} 目录 "
-			mkdir -p  ${HOME}
-			wget -P  ${HOME} https://github.com/FOXBI/ch_cpuinfo/raw/master/ch_cpuinfo_2.2.1/ch_cpuinfo.tar
+			mkdir -p ${HOME}
+			wget -P ${HOME} https://github.com/FOXBI/ch_cpuinfo/raw/master/ch_cpuinfo_2.2.1/ch_cpuinfo.tar
 
 			tar xvf ${HOME}/ch_cpuinfo.tar
 			cpuInfoChangeRealPath="${HOME}/ch_cpuinfo"
@@ -631,7 +662,7 @@ function DSMFixCPUInfo(){
 	fi
 
 	${sudoCmd} chmod +x ${cpuInfoChangeRealPath}
-
+	echo
 	green " 随后的英文提示信息为: "
 	echo
 	green " 选择1 然后在输入y 修复CPU信息显示 "
@@ -651,6 +682,56 @@ function DSMFixCPUInfo(){
 	rebootSystem
 }
 
+
+
+function DSMFixDevSynoboot(){
+	green " ================================================== "
+	green " 准备开始修复 群晖 DSM 6.2.3 找不到 /dev/synoboot 引导盘问题 "
+	red " 此问题在虚拟机 (例如PVE 或 ESXi) 安装 6.2.3 就会出现, 实体机安装也偶尔出现 "
+	red " 由于/dev/synoboot 引导盘缺失, 导致 6.2.3-25426 Update 3 升级失败"
+	echo
+	green " 可通过群晖网页 共享文件夹上传 libsynonvme.so.1 到共享目录/tools下, 实际路径一般为/volume1/tools/libsynonvme.so.1 "
+	green " 通过群晖网页上传 libsynonvme.so.1 成功后, 右键点击 libsynonvme.so.1 文件“属性” -> “位置” 可查看到实际的储存路径, 一般为/volume1/tools/libsynonvme.so.1 "
+	echo
+	green " 或者通过SSH WinSCP等软件上传 libsynonvme.so.1 到当前目录下或/root目录下 "
+	echo
+	green " 如果用户没有上传会自动从网上下载 libsynonvme.so.1 文件 "
+	green " ================================================== "
+
+	# https://xpenology.com/forum/topic/28183-running-623-on-esxi-synoboot-is-broken-fix-available/
+
+	DSMStatusIsSynobootText=$(ls /dev/synoboot* | grep synoboot)
+
+	if [[ -z "$DSMStatusIsSynobootText" ]]; then
+		DSMStatusSynoboot="no"
+		green " 群晖状态显示--当前是否有 /dev/synoboot 引导盘: $DSMStatusSynoboot "
+	else
+        DSMStatusSynoboot="yes"
+		green " 群晖状态显示--当前是否有 /dev/synoboot 引导盘: $DSMStatusSynoboot "
+		green " ls /dev/synoboot* "
+		echo "$DSMStatusIsSynobootText"
+    fi
+	
+	if [[ -z "$DSMStatusIsSynobootText" ]]; then
+		green " 准备开始修复 /dev/synoboot 引导盘 缺失问题 "
+		green " 开始自动下载 FixSynoboot.sh 修复脚本到 ${HOME} 目录 "
+
+		mkdir -p  ${HOME}
+
+		# https://github.com/vlombardino/Proxmox/raw/master/Xpenology/files/FixSynoboot.sh
+		wget -P ${HOME} https://github.com/jinwyp/one_click_script/raw/master/dsm/FixSynoboot.sh
+
+		${sudoCmd} chmod +x ${HOME}/FixSynoboot.sh
+		${sudoCmd} cp ${HOME}/FixSynoboot.sh /usr/local/etc/rc.d
+		${sudoCmd} chmod 0755 /usr/local/etc/rc.d/FixSynoboot.sh
+
+		echo
+		green " 修复成功! 请重启群晖后, 在群晖“控制面板”->“更新和还原” 即可正常更新!"
+		green " ================================================== "
+    fi
+
+
+}
 
 
 function DSMFixNvmeSSD(){
@@ -772,12 +853,12 @@ function DSMFixSNAndMac(){
     if [[ $1 == "vi" ]] ; then
 		echo
 		green " ================================================== "
-		red " 注意: 编辑引导文件grub.cfg  如果是为了隐藏引导盘 会导致无法加载引导分区 !"
-		echo
-		red " 从而导致无法再次使用本工具编辑该文件 !"
+		red " 注意: 编辑引导文件grub.cfg 如果为了隐藏引导盘 修改了 SataPortMap 和 DiskIdxMap 参数后"
+		red " 会导致命令行下无法挂载引导分区 !"
+		red " 从而无法再次使用本工具编辑该引导文件 grub.cfg !"
 		echo
 		red " 可以通过其他方法 例如 WinPE 下的 DiskGenius 修改 !"
-		red " 或通过PVE 把引导盘sata5 顺序提前到sata1 !"
+		red " 或通过PVE 把引导盘sata5 顺序提前到sata1 不隐藏引导盘来修改 !"
 		green " ================================================== "
 		echo
 		promptContinueOpeartion
@@ -832,36 +913,40 @@ function start_menu(){
     green " =================================================="
     green " PVE 虚拟机 和 群晖 工具脚本 2021-03-06 更新. By jinwyp. 系统支持：PVE / debian10"
     green " =================================================="
-    green " 1. PVE 开启IOMMU 用于支持直通, 需要在BIOS先开启VT-d"
-    green " 2. PVE 关闭IOMMU 关闭直通 恢复默认设置"
-    green " 3. 检测主板是否支持 IOMMU, VT-d VT-d"
+	green " 1. PVE 关闭企业更新源, 添加非订阅版更新源"
+    green " 2. PVE 开启IOMMU 用于支持直通, 需要在BIOS先开启VT-d"
+    green " 3. PVE 关闭IOMMU 关闭直通 恢复默认设置"
+    green " 4. 检测主板是否支持 IOMMU, VT-d VT-d"
+
 	echo
 	green " 6. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 7. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 8. PVE安装群晖 使用 qm set 命令添加整个硬盘(直通) 生成硬盘设备"
 	echo
 	green " 11. 群晖补丁 开启ssh root登录"
-	green " 12. 群晖补丁 修复CPU型号显示错误"
-	green " 13. 群晖补丁 填入洗白的序列号和网卡Mac地址"
-	green " 14. 群晖补丁 使用vi 编辑/grub/grub.cfg 引导文件"
-	green " 15. 群晖补丁 正确识别 Nvme 固态硬盘"	
+	green " 12. 群晖补丁 填入洗白的序列号和网卡Mac地址"
+	green " 13. 群晖补丁 使用vi 编辑/grub/grub.cfg 引导文件"
+	green " 14. 群晖补丁 修复DSM 6.2.3 找不到/dev/synoboot 从而升级失败问题"
+	green " 15. 群晖补丁 修复CPU型号显示错误"
+	green " 16. 群晖补丁 正确识别 Nvme 固态硬盘"	
+	green " 17. 群晖检测是否有集成核显"	
 	echo
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
     case "$menuNumberInput" in
         1 )
+            updatePVEAptSource
+        ;;	
+        2 )
             enableIOMMU
         ;;
-        2 )
-            disableIOMMU
-        ;;
         3 )
-            checkIOMMU
-			checkIOMMUDMAR
+            disableIOMMU
         ;;
         4 )
             checkIOMMU
+			checkIOMMUDMAR
         ;;
         5 )
             checkIOMMU
@@ -879,17 +964,23 @@ function start_menu(){
             DSMOpenSSHRoot
         ;;				
         12 )
-            DSMFixCPUInfo
+            DSMFixSNAndMac 
         ;;				
         13 )
-            DSMFixSNAndMac
+            DSMFixSNAndMac "vi"
         ;;				
         14 )
-            DSMFixSNAndMac "vi"
+            DSMFixCPUInfo 
         ;;	
         15 )
-            DSMFixNvmeSSD
+            DSMFixDevSynoboot
         ;;						
+        16 )
+            DSMFixNvmeSSD
+        ;;		
+        17 )
+            ls /dev/dri
+        ;;							
         0 )
             exit 1
         ;;
