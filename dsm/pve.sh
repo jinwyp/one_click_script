@@ -86,6 +86,18 @@ function rebootSystem(){
 	fi
 }
 
+function promptContinueOpeartion(){
+	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]?" isContinueInput
+	isContinueInput=${isContinueInput:-Y}
+
+	if [[ $isContinueInput == [Yy] ]]; then
+		echo ""
+	else 
+		exit
+	fi
+}
+
+
 function checkIOMMU(){
 	green " ================================================== "
 	green " 准备检测当前系统是否开启IOMMU, 用于PCI直通. 需要先重启进入BIOS, 开启IOMMU. "
@@ -620,13 +632,17 @@ function DSMFixCPUInfo(){
 
 	${sudoCmd} chmod +x ${cpuInfoChangeRealPath}
 
+	green " 随后的英文提示信息为: "
 	echo
 	green " 选择1 然后在输入y 修复CPU信息显示 "
+	echo
 	green " 选择2 恢复原始CPU信息后 再次修复CPU信息显示"
+	echo
 	green " 选择3 恢复到原始CPU信息"
 	echo
-	green " 请根据随后的英文提示 等待5秒后选择1-3: "
-	sleep 10
+	green " 请根据随后的英文提示 选择1-3: "
+	echo
+	promptContinueOpeartion
 	${cpuInfoChangeRealPath}
 
 	green " 修复CPU信息成功, 请重启群晖后在群晖“控制面板”->“信息中心” 查看"
@@ -753,36 +769,53 @@ function DSMFixSNAndMac(){
 		exit		
 	fi
 
-	read -p " 请输入群晖洗白的SN序列号: 直接回车默认为空:" dsmSNInput
-	dsmSNInput=${dsmSNInput:-""}
-
-	read -p " 请输入群晖洗白的网卡MAC地址: 直接回车默认为空: (中间不要有:或-)" dsmMACInput
-	dsmMACInput=${dsmMACInput:-""}
-
-	if [[ -z "$dsmSNInput" ]]; then
+    if [[ $1 == "vi" ]] ; then
+		echo
 		green " ================================================== "
-		red " 输入的群晖洗白的SN序列号为空, 修改失败 请重新运行"
+		red " 注意: 编辑引导文件grub.cfg  如果是为了隐藏引导盘 会导致无法加载引导分区 !"
+		echo
+		red " 从而导致无法再次使用本工具编辑该文件 !"
+		echo
+		red " 可以通过其他方法 例如 WinPE 下的 DiskGenius 修改 !"
+		red " 或通过PVE 把引导盘sata5 顺序提前到sata1 !"
 		green " ================================================== "
-		exit		
+		echo
+		promptContinueOpeartion
+        vi $grubConfigFilePath
+
+	else
+
+		read -p " 请输入群晖洗白的SN序列号: 直接回车默认为空:" dsmSNInput
+		dsmSNInput=${dsmSNInput:-""}
+
+		read -p " 请输入群晖洗白的网卡MAC地址: 直接回车默认为空: (中间不要有:或-)" dsmMACInput
+		dsmMACInput=${dsmMACInput:-""}
+
+		if [[ -z "$dsmSNInput" ]]; then
+			green " ================================================== "
+			red " 输入的群晖洗白的SN序列号为空, 修改失败 请重新运行"
+			green " ================================================== "
+			exit		
+		fi
+
+		if [[ -z "$dsmMACInput" ]]; then
+			green " ================================================== "
+			red " 输入的群晖洗白的网卡 MAC 地址 为空, 修改失败 请重新运行"
+			green " ================================================== "
+			exit		
+		fi
+
+		${sudoCmd} sed -i "s/set sn=.*/set sn=${dsmSNInput}/g" ${grubConfigFilePath}
+		${sudoCmd} sed -i "s/set mac1=.*/set mac1=${dsmMACInput}/g" ${grubConfigFilePath}
+
+		echo
+		green " ================================================== "
+		green " 群晖洗白成功, 请重启群晖!"
+		green " ================================================== "
+
+		rebootSystem
+
     fi
-
-	if [[ -z "$dsmMACInput" ]]; then
-		green " ================================================== "
-		red " 输入的群晖洗白的网卡 MAC 地址 为空, 修改失败 请重新运行"
-		green " ================================================== "
-		exit		
-    fi
-
-	${sudoCmd} sed -i "s/set sn=.*/set sn=${dsmSNInput}/g" ${grubConfigFilePath}
-	${sudoCmd} sed -i "s/set mac1=.*/set mac1=${dsmMACInput}/g" ${grubConfigFilePath}
-
-	echo
-	green " ================================================== "
-	green " 群晖洗白成功, 请重启群晖!"
-	green " ================================================== "
-
-	rebootSystem
-
 }
 
 
@@ -803,14 +836,15 @@ function start_menu(){
     green " 2. PVE 关闭IOMMU 关闭直通 恢复默认设置"
     green " 3. 检测主板是否支持 IOMMU, VT-d VT-d"
 	echo
-	green " 6. PVE安装群晖 使用 qm 命令导入引导文件synoboot.img, 生成硬盘设备"
+	green " 6. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 7. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
-	green " 8. PVE安装群晖 添加整个硬盘(直通) 生成硬盘设备"
+	green " 8. PVE安装群晖 使用 qm set 命令添加整个硬盘(直通) 生成硬盘设备"
 	echo
 	green " 11. 群晖补丁 开启ssh root登录"
 	green " 12. 群晖补丁 修复CPU型号显示错误"
 	green " 13. 群晖补丁 填入洗白的序列号和网卡Mac地址"
-	green " 14. 群晖补丁 正确识别 Nvme 固态硬盘"
+	green " 14. 群晖补丁 使用vi 编辑/grub/grub.cfg 引导文件"
+	green " 15. 群晖补丁 正确识别 Nvme 固态硬盘"	
 	echo
     green " 0. 退出脚本"
     echo
@@ -851,8 +885,11 @@ function start_menu(){
             DSMFixSNAndMac
         ;;				
         14 )
+            DSMFixSNAndMac "vi"
+        ;;	
+        15 )
             DSMFixNvmeSSD
-        ;;				
+        ;;						
         0 )
             exit 1
         ;;
