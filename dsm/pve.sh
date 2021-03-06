@@ -689,18 +689,12 @@ function DSMFixDevSynoboot(){
 	green " 准备开始修复 群晖 DSM 6.2.3 找不到 /dev/synoboot 引导盘问题 "
 	red " 此问题在虚拟机 (例如PVE 或 ESXi) 安装 6.2.3 就会出现, 实体机安装也偶尔出现 "
 	red " 由于/dev/synoboot 引导盘缺失, 导致 6.2.3-25426 Update 3 升级失败"
-	echo
-	green " 可通过群晖网页 共享文件夹上传 libsynonvme.so.1 到共享目录/tools下, 实际路径一般为/volume1/tools/libsynonvme.so.1 "
-	green " 通过群晖网页上传 libsynonvme.so.1 成功后, 右键点击 libsynonvme.so.1 文件“属性” -> “位置” 可查看到实际的储存路径, 一般为/volume1/tools/libsynonvme.so.1 "
-	echo
-	green " 或者通过SSH WinSCP等软件上传 libsynonvme.so.1 到当前目录下或/root目录下 "
-	echo
-	green " 如果用户没有上传会自动从网上下载 libsynonvme.so.1 文件 "
 	green " ================================================== "
 
+	# https://archive.synology.com/download/Os/DSM
 	# https://xpenology.com/forum/topic/28183-running-623-on-esxi-synoboot-is-broken-fix-available/
 
-	DSMStatusIsSynobootText=$(ls /dev/synoboot* | grep synoboot)
+	DSMStatusIsSynobootText=$(ls /dev/synoboot* | grep "synoboot")
 
 	if [[ -z "$DSMStatusIsSynobootText" ]]; then
 		DSMStatusSynoboot="no"
@@ -714,22 +708,28 @@ function DSMFixDevSynoboot(){
 	
 	if [[ -z "$DSMStatusIsSynobootText" ]]; then
 		green " 准备开始修复 /dev/synoboot 引导盘 缺失问题 "
-		green " 开始自动下载 FixSynoboot.sh 修复脚本到 ${HOME} 目录 "
 
-		mkdir -p  ${HOME}
+		dsmFixSynobootPathInput="${HOME}/FixSynoboot.sh"
+		if [[ -f "${dsmFixSynobootPathInput}" ]]; then
+			dsmFixSynobootPathInput="${dsmFixSynobootPathInput}"
+			green " 本地已存在 FixSynoboot.sh 修复脚本, 位置在 ${dsmFixSynobootPathInput} "
+		else
+			green " 没有找到 FixSynoboot.sh, 开始自动下载 FixSynoboot.sh 脚本到 ${HOME} 目录 "
+			mkdir -p  ${HOME}
 
-		# https://github.com/vlombardino/Proxmox/raw/master/Xpenology/files/FixSynoboot.sh
-		wget -P ${HOME} https://github.com/jinwyp/one_click_script/raw/master/dsm/FixSynoboot.sh
+			# https://github.com/vlombardino/Proxmox/raw/master/Xpenology/files/FixSynoboot.sh
+			wget -P ${HOME} https://github.com/jinwyp/one_click_script/raw/master/dsm/FixSynoboot.sh
+		fi
 
-		${sudoCmd} chmod +x ${HOME}/FixSynoboot.sh
-		${sudoCmd} cp ${HOME}/FixSynoboot.sh /usr/local/etc/rc.d
+		
+		${sudoCmd} chmod +x ${dsmFixSynobootPathInput}
+		${sudoCmd} cp ${dsmFixSynobootPathInput} /usr/local/etc/rc.d
 		${sudoCmd} chmod 0755 /usr/local/etc/rc.d/FixSynoboot.sh
 
 		echo
 		green " 修复成功! 请重启群晖后, 在群晖“控制面板”->“更新和还原” 即可正常更新!"
 		green " ================================================== "
     fi
-
 
 }
 
@@ -808,6 +808,7 @@ function DSMFixSNAndMac(){
 	echo
 
 	green " 请根据上面信息 查看已有的硬盘设备, 需要挂载群晖引导盘分区 一般为/dev/sda1"
+	green " 如果通过本脚本14 修复过 /dev/synoboot 设备盘, 则为/dev/synoboot1:"
 
 	read -p " 请输入群晖引导盘分区 直接回车默认为/dev/sda1: (末尾不要有/)" dsmDeviceIDInput
 	dsmDeviceIDInput=${dsmDeviceIDInput:-"/dev/sda1"}
@@ -818,19 +819,21 @@ function DSMFixSNAndMac(){
 		mount -o rw "/dev/sda1" /mnt/disk1
 	fi
 
-	# if [ -b "/dev/sda2" ]; then
-	# 	echo "/dev/sda2 is a block device. . Mount to ${MountDIR2}"
-	# 	mkdir -p /mnt/disk2
-	# 	mount -o rw /dev/sda2 /mnt/disk2
-	# fi
+	if [ -b "/dev/synoboot1" ]; then
+		echo "/dev/synoboot1 is a block device. . Mount to /mnt/disk2"
+		mkdir -p /mnt/disk2
+		mount -o rw /dev/synoboot1 /mnt/disk2
+	fi
 
 	if [[ $dsmDeviceIDInput == *"/dev/sda1"* ]]; then
 		echo ""
+	elif [[ $dsmDeviceIDInput == *"/dev/synoboot1"* ]]; then
+		echo ""
 	else
 		if [ -b "${dsmDeviceIDInput}" ]; then
-			echo "${dsmDeviceIDInput} is a block device. . Mount to /mnt/disk2"
-			mkdir -p /mnt/disk2
-			mount -o rw ${dsmDeviceIDInput} /mnt/disk2
+			echo "${dsmDeviceIDInput} is a block device. . Mount to /mnt/disk3"
+			mkdir -p /mnt/disk3
+			mount -o rw ${dsmDeviceIDInput} /mnt/disk3
 		fi	
 	fi
 
@@ -843,6 +846,11 @@ function DSMFixSNAndMac(){
 	elif  [[ -f "/mnt/disk2/grub/grub.cfg" ]]; then
 		grubConfigFilePath="/mnt/disk2/grub/grub.cfg"
 		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk2/grub/grub.cfg"
+
+	elif  [[ -f "/mnt/disk3/grub/grub.cfg" ]]; then
+		grubConfigFilePath="/mnt/disk3/grub/grub.cfg"
+		green " 已找到群晖引导分区配置文件 grub.cfg, 位置为 /mnt/disk3/grub/grub.cfg"
+				
 	else
 		green " ================================================== "
 		red " 没有找到群晖引导分区配置文件 grub.cfg, 修改失败 !"
@@ -970,10 +978,10 @@ function start_menu(){
             DSMFixSNAndMac "vi"
         ;;				
         14 )
-            DSMFixCPUInfo 
+            DSMFixDevSynoboot  
         ;;	
         15 )
-            DSMFixDevSynoboot
+            DSMFixCPUInfo
         ;;						
         16 )
             DSMFixNvmeSSD
