@@ -115,16 +115,32 @@ function updatePVEAptSource(){
 
 	cat > /etc/apt/sources.list <<-EOF
 
-# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
+deb http://mirrors.aliyun.com/debian/ buster main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ buster main contrib non-free
 
-deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free
-# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ buster main contrib non-free
-deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free
-# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-updates main contrib non-free
-deb https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free
-# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ buster-backports main contrib non-free
-deb https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free
-# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian-security buster/updates main contrib non-free
+deb http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
+
+deb http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
+
+deb http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
+
+
+
+deb http://deb.debian.org/debian buster main contrib non-free
+deb-src http://deb.debian.org/debian buster main contrib non-free
+
+deb http://deb.debian.org/debian buster-updates main contrib non-free
+deb-src http://deb.debian.org/debian buster-updates main contrib non-free
+
+deb http://deb.debian.org/debian buster-backports main contrib non-free
+deb-src http://deb.debian.org/debian buster-backports main contrib non-free
+
+deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free
+deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free
+
 
 EOF
 
@@ -180,7 +196,7 @@ function checkIOMMU(){
 		else
 			pveStatusVTIntel="yes"
 			green " 状态显示--当前是否开启Intel VT-d: $pveStatusVTIntel "
-			green " dmesg | grep VT-d "
+			echo " dmesg | grep VT-d "
 			echo "$pveStatusVTIntelText"
 		fi
 		
@@ -191,12 +207,11 @@ function checkIOMMU(){
 		else
 			pveStatusVTAMD="yes"
 			green " 状态显示--当前是否开启AMD-Vi: $pveStatusVTAMD"
-			green " dmesg | grep AMD-Vi "
+			echo " dmesg | grep AMD-Vi "
 			echo "$pveStatusVTAMDText"
 		fi
 		
     fi
-
 
 	green " ================================================== "
 
@@ -229,13 +244,12 @@ function displayIOMMUInfo(){
 	echo "cat /etc/default/grub | grep iommu"
 	cat /etc/default/grub | grep iommu
 	echo " "
-	echo " "
 	echo "dmesg | grep -e DMAR -e IOMMU"
 	dmesg | grep -e DMAR -e IOMMU
 	echo " "
 	echo " "
-	echo "lspci -vnn | grep Ethernet"
-	lspci -vnn | grep Ethernet
+	echo "lspci -vnn | grep -E \"Ethernet|VGA|Audio\""
+	lspci -vnn | grep -E "Ethernet|VGA|Audio"
 	echo " "
 	echo " "
 	echo "ls -al /sys/kernel/iommu_groups"
@@ -249,6 +263,47 @@ function displayIOMMUInfo(){
 }
 
 
+function checkVfio(){
+	green " ================================================== "
+	green " 准备检测当前系统是否开启显卡直通 "
+	green " ================================================== "
+
+	echo
+	green " 显示 vfio 信息, 用于开启显卡直通 检查模块是否正常加载 "
+	echo "lsmod | grep vfio"
+	lsmod | grep vfio
+
+	echo " "
+	green " 显示显卡和声卡设备信息, 用于开启显卡直通 "
+	echo "lspci -nn | grep -E \"VGA|Audio\" "
+	lspci -nn | grep -E "VGA|Audio"
+
+	echo " "
+	echo "lspci -nn | grep -E \"0300|0403\" "
+	lspci -nn | grep -E "0300|0403"
+
+	echo " "
+	green " 显示显卡信息, 请查看 Kernel driver in use 这一行"
+	echo "lspci -vvv -s 00:02.0"
+	lspci -vvv -s 00:02.0
+
+	pveStatusVfioText=$(lspci -vvv -s 00:02.0 | grep "Kernel driver in use")
+
+	if [[ $pveStatusVfioText == *"i915"* ]]; then
+		pveStatusVifo="no"
+    else
+        pveStatusVifo="yes"
+    fi
+
+	green " 上面信息 Kernel driver in use 这一行是 vfio-pic, 则显卡设备被PVE屏蔽成功, 可以直通显卡 "
+	green " 上面信息 Kernel driver in use 这一行是  i915 则显卡设备没有被PVE屏蔽, 无法直通显卡"
+	green " 状态显示--当前是否可以直通显卡: $pveStatusVifo "
+
+	green " ================================================== "
+	echo
+	echo
+}
+
 function enableIOMMU(){
 	checkIOMMU
 
@@ -260,6 +315,7 @@ function enableIOMMU(){
 	green " PT模式 (pass-through using SR-IOV): PCIe设备只在需要时进行IOMMU转换, 开启可提高性能, 添加 'iommu=pt' 参数开启 "
 	echo
 	green " 开启显卡核显直通: 可以添加 'video=efifb:off,vesafb:off' 参数开启 "
+	yellow " 注意: 开启显卡直通, 虚拟机不能设置自动随着宿主机开机自动启动, 否则宿主机会与虚拟机抢占显卡设备导致死机无法启动 "
 	echo
 	yellow " If you don't have dedicated IOMMU groups, you can try: "
 	yellow " 1) moving the card to another pci slot "
@@ -287,11 +343,68 @@ function enableIOMMU(){
 		isAddPcieText="${isAddPcieText} pcie_acs_override=downstream"
 	fi
 
+
+	# https://www.proxmox.wiki/?thread-32.htm
+	# http://www.dannysite.com/blog/257/
+	# https://www.10bests.com/pve-libreelec-kodi-htpc/
+
 	read -p "是否增加video=efifb:off 参数用于显卡直通? 默认否, 请输入[y/N]?" isAddPcieVideoInput
 	isAddPcieVideoInput=${isAddPcieVideoInput:-n}
 
 	if [[ $isAddPcieVideoInput == [Yy] ]]; then
 		isAddPcieText="${isAddPcieText} video=efifb:off,vesafb:off"
+
+		echo
+		yellow " 添加模块黑名单，即让GPU设备在下次系统启动之后不使用这些驱动，把设备腾出来给vfio驱动用: "
+		read -p "请输入直通的显卡是Intel核显, nVidia, AMD? 默认Intel, 请输入[I/n/a]?" isAddPcieVideoCardBrandInput
+		isAddPcieVideoCardBrandInput=${isAddPcieVideoCardBrandInput:-i}
+
+		# 添加模块（驱动）黑名单，即让GPU设备在下次系统启动之后不使用这些驱动，把设备腾出来给vfio驱动用：
+
+		if [[ $isAddPcieVideoCardBrandInput == [Ii] ]]; then
+			# Intel核显：
+			echo "blacklist snd_hda_intel" >> /etc/modprobe.d/pve-blacklist.conf
+			echo "blacklist snd_hda_codec_hdmi" >> /etc/modprobe.d/pve-blacklist.conf
+			echo "blacklist i915" >> /etc/modprobe.d/pve-blacklist.conf
+
+		elif [[ $isAddPcieVideoCardBrandInput == [Nn] ]]; then
+			# N卡/A卡：
+			echo "blacklist nouveau" >> /etc/modprobe.d/pve-blacklist.conf
+			echo "options kvm ignore_msrs=1" > /etc/modprobe.d/kvm.conf
+		else
+			# /A卡：
+			echo "blacklist radeon" >> /etc/modprobe.d/pve-blacklist.conf
+		fi
+
+		echo
+		yellow " 添加模块黑名单，是否添加直通显卡所带声卡和麦克风: "
+		read -p "是否直通显卡所带声卡和麦克风, 直接回车默认是, 请输入[Y/n]?" isAddPcieVideoCardAudioInput
+		isAddPcieVideoCardAudioInput=${isAddPcieVideoCardAudioInput:-y}
+		
+		if [[ $isAddPcieVideoCardAudioInput == [Yy] ]]; then
+			echo "blacklist snd_soc_skl" >> /etc/modprobe.d/pve-blacklist.conf
+		fi
+
+		pveVfioVideoId=$(lspci -n | grep -E "0300" | awk '{print $3}' )
+		pveVfioAudioId=$(lspci -n | grep -E "0403" | awk '{print $3}' )
+
+		echo
+		echo
+		green " 绑定显卡和声卡设备到vfio模块, 用于显卡直通 "
+		green " 显卡设备ID为 ${pveVfioVideoId} "
+		green " 声卡设备ID为 ${pveVfioAudioId} "
+
+		read -p "是否同时绑定显卡和声卡设备, 输入n为仅绑定显卡. 直接回车默认是, 请输入[Y/n]?" isAddPcieVideoAudoVfioInput
+		isAddPcieVideoAudoVfioInput=${isAddPcieVideoAudoVfioInput:-y}
+		
+		if [[ $isAddPcieVideoAudoVfioInput == [Yy] ]]; then
+			echo "options vfio-pci ids=${pveVfioVideoId},${pveVfioAudioId}" > /etc/modprobe.d/vfio.conf
+		else 
+			echo "options vfio-pci ids=${pveVfioVideoId}" > /etc/modprobe.d/vfio.conf
+		fi
+
+		update-initramfs -u
+
 	fi
 
     if [[ $osCPU == "intel" ]]; then
@@ -300,19 +413,26 @@ function enableIOMMU(){
 		${sudoCmd} sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet.*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on '"${isAddPcieText}"'"/g' /etc/default/grub
 	fi
 
-	cat >> "/etc/modules" <<-EOF
+	pveIsAddedVfioModule=$(cat /etc/modules | grep vfio )
 
+	if [[ -z "$pveIsAddedVfioModule" ]]; then
+		cat >> "/etc/modules" <<-EOF
 vfio
 vfio_iommu_type1
 vfio_pci
 vfio_virqfd
 
 EOF
+
+    fi
+
+
 	update-grub
 	green " ================================================== "
 	green " 开启IOMMU成功 需要重启生效!"
 	checkIOMMUDMAR
 	green " ================================================== "
+	echo
 	displayIOMMUInfo
 
 	rebootSystem
@@ -334,6 +454,21 @@ function disableIOMMU(){
 	fi
 
 	${sudoCmd} sed -i 's/vfio.*/ /g' /etc/modules
+
+
+	# 恢复显卡直通文件
+	rm /etc/modprobe.d/kvm.conf
+	rm /etc/modprobe.d/vfio.conf
+
+	cat > "/etc/modprobe.d/pve-blacklist.conf" <<-EOF
+
+# This file contains a list of modules which are not supported by Proxmox VE
+
+# nidiafb see bugreport https://bugzilla.proxmox.com/show_bug.cgi?id=701
+blacklist nvidiafb
+
+EOF
+
 
 	update-grub
 	green "关闭IOMMU成功 需要重启生效!"
@@ -569,6 +704,7 @@ function genPVEVMDiskPT(){
 
 
 
+
 function DSMOpenSSHRoot(){
 	green " ================================================== "
 	green " 准备开启群晖系统的 root 用户登陆SSH "
@@ -622,7 +758,7 @@ EOF
 function DSMFixSNAndMac(){
 	green " ================================================== "
 	green " 准备开始半洗白群晖 需要准备好SN 序列号和网卡Mac地址"
-	green " 请尽量通过root 用户登录SSH 运行本命令"
+	green " 请用root 用户登录群晖系统的SSH 运行本命令"
 	green " ================================================== "	
 
 	echo
@@ -644,6 +780,8 @@ function DSMFixSNAndMac(){
 	fi
 
 	if [ -b "/dev/synoboot1" ]; then
+		# https://xpenology.com/forum/topic/3461-how-to-hide-your-xpenoboot-usb-drive-from-dsm/
+
 		green "/dev/synoboot1 is a block device. Mount to /mnt/disk2"
 		mkdir -p /mnt/disk2
 		cd /dev
@@ -736,7 +874,7 @@ function DSMFixSNAndMac(){
 function DSMFixCPUInfo(){
 	green " ================================================== "
 	green " 准备开始修复 群晖系统信息中心 CPU型号显示错误"
-	green " 请尽量通过root 用户登录SSH 运行本命令"
+	green " 请用root 用户登录群晖系统的SSH 运行本命令"
 	echo
 	green " 可通过群晖网页 共享文件夹上传 ch_cpuinfo 工具到共享目录/tools下, 实际路径一般为/volume1/tools/ch_cpuinfo "
 	green " 通过群晖网页上传 ch_cpuinfo 成功后, 右键点击 ch_cpuinfo 文件“属性” -> “位置” 可查看到实际的储存路径, 一般为/volume1/tools/ch_cpuinfo "
@@ -852,7 +990,7 @@ function DSMFixDevSynoboot(){
 function DSMFixNvmeSSD(){
 	green " ================================================== "
 	green " 准备开始修复 群晖 识别 Nvme 固态硬盘问题"
-	green " 请尽量通过root 用户登录SSH 运行本命令"
+	green " 请用root 用户登录群晖系统的SSH 运行本命令"
 	red " 该补丁如果插两块NVMe SSD会出现问题, 请谨慎使用"
 	echo
 	green " 可通过群晖网页 共享文件夹上传 libsynonvme.so.1 到共享目录/tools下, 实际路径一般为/volume1/tools/libsynonvme.so.1 "
@@ -909,6 +1047,26 @@ function DSMFixNvmeSSD(){
 }
 
 
+function DSMDisplayVideo(){
+	green " ================================================== "
+	green " 检测群晖系统中 是否有显卡或显卡直通已成功"
+	green " 请用root 用户登录群晖系统的SSH 运行本命令"
+	green " ================================================== "
+
+	DSMStatusVideoCardText=$(ls /dev/dri | grep "grep render")
+
+	if [[ $DSMStatusVideoCardText == *"i915"* ]]; then
+		DSMStatusVideoCard="no"
+    else
+        DSMStatusVideoCard="yes"
+		echo "ls /dev/dri"
+		ls /dev/dri
+    fi
+	
+	echo
+	green " 群晖状态显示--当前显卡直通是否成功: $DSMStatusVideoCard "
+	green " ================================================== "
+}
 
 
 
@@ -923,12 +1081,13 @@ function start_menu(){
 	checkCPU
 
     green " =================================================="
-    green " PVE 虚拟机 和 群晖 工具脚本 2021-03-06 更新. By jinwyp. 系统支持：PVE / debian10"
+    green " PVE 虚拟机 和 群晖 工具脚本 2021-03-08 更新. By jinwyp. 系统支持：PVE / debian10"
     green " =================================================="
 	green " 1. PVE 关闭企业更新源, 添加非订阅版更新源"
     green " 2. PVE 开启IOMMU 用于支持直通, 需要在BIOS先开启VT-d"
     green " 3. PVE 关闭IOMMU 关闭直通 恢复默认设置"
-    green " 4. 检测主板是否支持 IOMMU, VT-d VT-d"
+    green " 4. 检测系统是否支持 IOMMU, VT-d VT-d"
+    green " 5. 检测系统是否开启显卡直通"
 
 	echo
 	green " 6. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
@@ -941,7 +1100,7 @@ function start_menu(){
 	green " 14. 群晖补丁 修复DSM 6.2.3 找不到/dev/synoboot 从而升级失败问题"
 	green " 15. 群晖补丁 修复CPU型号显示错误"
 	green " 16. 群晖补丁 正确识别 Nvme 固态硬盘"	
-	green " 17. 群晖检测是否有集成核显"	
+	green " 17. 群晖检测 是否有显卡或是否显卡直通成功 支持硬解"	
 	echo
     green " 0. 退出脚本"
     echo
@@ -961,7 +1120,7 @@ function start_menu(){
 			checkIOMMUDMAR
         ;;
         5 )
-            checkIOMMU
+            checkVfio
         ;;
         6 )
             genPVEVMDiskWithQM
@@ -991,7 +1150,7 @@ function start_menu(){
             DSMFixNvmeSSD
         ;;		
         17 )
-            ls /dev/dri
+            DSMDisplayVideo 
         ;;							
         0 )
             exit 1
