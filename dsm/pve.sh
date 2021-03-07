@@ -386,6 +386,7 @@ function enableIOMMU(){
 		fi
 
 		pveVfioVideoId=$(lspci -n | grep -E "0300" | awk '{print $3}' )
+		pveVfioVideoIdText=$(lspci -n | grep -E "0300" | awk '{print $1, $3}' )
 		pveVfioAudioId=$(lspci -n | grep -E "0403" | awk '{print $3}' )
 
 		echo
@@ -430,6 +431,7 @@ EOF
 	update-grub
 	green " ================================================== "
 	green " 开启IOMMU成功 需要重启生效!"
+	green " 重启后 在PVE 虚拟机添加PCI设备 ${pveVfioVideoIdText} 即可实现显卡直通!"
 	checkIOMMUDMAR
 	green " ================================================== "
 	echo
@@ -1049,18 +1051,18 @@ function DSMFixNvmeSSD(){
 
 function DSMDisplayVideo(){
 	green " ================================================== "
-	green " 检测群晖系统中 是否有显卡或显卡直通已成功"
+	green " 检测群晖系统中 是否有显卡或显卡直通是否开启成功"
 	green " 请用root 用户登录群晖系统的SSH 运行本命令"
 	green " ================================================== "
 
-	DSMStatusVideoCardText=$(ls /dev/dri | grep "grep render")
+	DSMStatusVideoCardText=$(ls /dev/dri | grep "render")
 
 	if [[ $DSMStatusVideoCardText == *"i915"* ]]; then
-		DSMStatusVideoCard="no"
-    else
-        DSMStatusVideoCard="yes"
+		DSMStatusVideoCard="yes"
 		echo "ls /dev/dri"
 		ls /dev/dri
+    else
+		DSMStatusVideoCard="no"
     fi
 	
 
