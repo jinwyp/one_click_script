@@ -1057,7 +1057,7 @@ function DSMDisplayVideo(){
 
 	DSMStatusVideoCardText=$(ls /dev/dri | grep "render")
 
-	if [[ $DSMStatusVideoCardText == *"i915"* ]]; then
+	if [[ $DSMStatusVideoCardText == *"renderD128"* ]]; then
 		DSMStatusVideoCard="yes"
 		echo "ls /dev/dri"
 		ls /dev/dri
