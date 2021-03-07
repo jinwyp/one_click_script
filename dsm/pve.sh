@@ -1063,8 +1063,36 @@ function DSMDisplayVideo(){
 		ls /dev/dri
     fi
 	
+
+	DSMStatusVideoCardSoftDecodeText=$(cat /usr/syno/etc/codec/activation.conf | grep "\"success\":true")
+
+	if [[ $DSMStatusVideoCardSoftDecodeText == *"true"* ]]; then
+		DSMStatusVideoCardSoftDecode="yes"
+		echo
+		echo "cat /usr/syno/etc/codec/activation.conf"
+		cat /usr/syno/etc/codec/activation.conf
+    else
+		DSMStatusVideoCardSoftDecode="no"
+    fi
+
+
+	DSMStatusVideoCardHardwareDecodeText=$(cat /sys/kernel/debug/dri/0/i915_frequency_info | grep "HW control enabled")
+
+	if [[ $DSMStatusVideoCardHardwareDecodeText == *"yes"* ]]; then
+		
+		DSMStatusVideoCardHardwareDecode="yes"
+		echo
+		echo "cat /sys/kernel/debug/dri/0/i915_frequency_info"
+		cat /sys/kernel/debug/dri/0/i915_frequency_info
+    else
+        DSMStatusVideoCardHardwareDecode="no"
+    fi
+
+
 	echo
 	green " 群晖状态显示--当前显卡直通是否成功: $DSMStatusVideoCard "
+	green " 群晖状态显示--Video station 软解是否支持: $DSMStatusVideoCardSoftDecode, 如不支持请洗白序列号 "
+	green " 群晖状态显示--Video station 硬解是否支持: $DSMStatusVideoCardHardwareDecode, 如不支持请开启显卡直通 "
 	green " ================================================== "
 }
 
