@@ -192,8 +192,6 @@ function testLinuxPortUsage(){
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
         $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
     fi
 
 }
@@ -302,9 +300,16 @@ function installBBR2(){
 
 function installSoftEditor(){
 
+    if [ "$osRelease" == "ubuntu" ]; then
+        
+        ${sudoCmd} $osSystemPackage install software-properties-common -y
+        ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+    fi
+
     $osSystemPackage update -y
     $osSystemPackage install -y curl wget git unzip zip tar nano
     $osSystemPackage install -y iputils-ping 
+
 
     if [ "$osRelease" == "centos" ]; then   
         
@@ -312,7 +317,10 @@ function installSoftEditor(){
     else
         $osSystemPackage install -y vim-gui-common vim-runtime vim 
         $osSystemPackage install -y xz-utils
+        
     fi
+
+
 
     # 安装 micro 编辑器
     if [[ ! -f "${HOME}/bin/micro" ]] ;  then
@@ -337,8 +345,9 @@ set enc=utf8
 set fencs=utf8,gbk,gb2312,gb18030
 
 syntax on
-set nu!
+set number
 colorscheme elflord
+se mouse+=a
 
 EOF
     fi
@@ -389,6 +398,7 @@ function installNodejs(){
     green " ================================================== "
 
 }
+
 
 
 configDockerPath="${HOME}/download"
@@ -768,6 +778,13 @@ function start_menu(){
             setLinuxDateZone
             installSoftEditor
             installDocker
+        ;;
+        9 )
+            installPython3
+        ;;
+        10 )
+            installPython3
+            installPython3Rembg
         ;;
         21 )
             setLinuxDateZone

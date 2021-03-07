@@ -1,0 +1,191 @@
+#!/bin/bash
+
+
+# source https://gist.github.com/saltlakeryan/e12aafd09528ff77c346
+
+# set -e
+# set -o pipefail
+
+export LC_ALL=C
+export LANG=C
+export LANGUAGE=en_US.UTF-8
+
+
+# fonts color
+red(){
+    echo -e "\033[31m\033[01m$1\033[0m"
+}
+green(){
+    echo -e "\033[32m\033[01m$1\033[0m"
+}
+yellow(){
+    echo -e "\033[33m\033[01m$1\033[0m"
+}
+blue(){
+    echo -e "\033[34m\033[01m$1\033[0m"
+}
+bold(){
+    echo -e "\033[1m\033[01m$1\033[0m"
+}
+
+
+function main() {
+
+	setup_env	
+	print_welcome
+	mount_usb	
+}
+
+
+
+function setup_env() {
+	PASSWORD="mypass"
+	USERNAME="autoback"
+	DIRECTORY_BASE="/fab/office/imaging/other/autoback"
+	SERVER="storage.nanofab.utah.edu"
+	DATE=`date +%Y-%m-%d_%H_%M_%S`
+	MACADDR=$(ls /sys/class/net/*/address | grep -v lo | sort | head -1 | xargs cat | perl -pe 's/:/-/g')
+	BACKUPDIR="/mnt/backup/$MACADDR/$DATE"
+
+	HDDP1="/dev/mmcblk1p1"
+	HDDP2="/dev/mmcblk1p2"
+	HDDP3="/dev/mmcblk1p3"	
+	HDDP4="/dev/mmcblk1p4"
+
+	MountDisk1="/mnt/disk1"
+	MountDisk2="/mnt/disk2"
+	MountDisk3="/mnt/disk3"
+	MountDisk4="/mnt/disk4"
+
+	MountDIR1="/mnt/usb1"
+	MountDIR2="/mnt/usb2"
+
+	PVEIMGFilenamePath1="/mnt/usb1/proxmox.img.gz"
+	PVEIMGFilenamePath2="/mnt/usb2/proxmox.img.gz"
+	PVEIMGFilenameReal="proxmox.img.gz"
+
+
+	HARDDISK=$(ls ${HDDP1} 2> /dev/null || true)
+	if [ "$HARDDISK" == "" ]
+	then
+		echo "No disk found"
+		exit 1
+	fi
+	HARDDISKSIZE=$(blockdev --getsize64 ${HDDP1})
+}
+
+
+function print_welcome() {
+	green "================================================== "
+	echo " STARTING AUTOMATIC Install PVE ! $DATE"
+	echo " This machine is identified by its mac address: $MACADDR"
+	echo " Size of Hard Disk in bytes: $HARDDISKSIZE"
+	green "================================================== "
+	echo
+}
+
+
+function print_metadata() {
+	echo "Size of Hard Disk in bytes: $HARDDISKSIZE"
+	IPADDR=$(ip addr show | grep 'inet ' | grep -v 'lo$' | awk '{print $2}' | perl -pe 's!/.*!!')
+	echo "IP: $IPADDR"
+	IPHOST=`getent hosts $IPADDR || true`
+	echo "HOST by IP: $IPHOST"
+}
+
+
+
+
+function mount_usb() {
+	green "============================================================ "
+	echo " Run Command : lsblk"
+	lsblk
+	echo
+	green "============================================================ "
+	echo " Run Command : blkid"
+	blkid
+	echo
+	green "============================================================ "
+	echo " Starting mount usb drive to ${MountDIR1} and ${MountDIR2} "
+
+
+	# if [ -b "$HDDP1" ]; then
+	# 	green "$HDDP1 is a block device. Mount to ${MountDisk1}"
+	# 	mkdir -p $MountDisk1
+	# 	mount -o rw $HDDP1 $MountDisk1
+	# fi
+
+	# if [ -b "$HDDP2" ]; then
+	# 	green "$HDDP2 is a block device. Mount to ${MountDisk2}"
+	# 	mkdir -p $MountDisk2
+	# 	mount -o rw $HDDP2 $MountDisk2
+	# fi	
+
+	# if [ -b "$HDDP3" ]; then
+	# 	green "$HDDP3 is a block device. Mount to ${MountDisk3}"
+	# 	mkdir -p $MountDisk3
+	# 	mount -o rw $HDDP3 $MountDisk3
+	# fi
+
+	# if [ -b "$HDDP4" ]; then
+	# 	green "$HDDP4 is a block device. Mount to ${MountDisk4}"
+	# 	mkdir -p $MountDisk4
+	# 	mount -o rw $HDDP4 $MountDisk4
+	# fi
+
+	deviceUSB1="/dev/sda1"
+	deviceUSB2="/dev/sdb1"
+
+	if [ -b "$deviceUSB1" ]; then
+		green "$deviceUSB1 is a block device. Mount to ${MountDIR1}"
+		mkdir -p $MountDIR1
+		mount -o rw $deviceUSB1 $MountDIR1
+	fi
+
+	if [ -b "$deviceUSB2" ]; then
+		echo "$deviceUSB2 is a block device. . Mount to ${MountDIR2}"
+		mkdir -p $MountDIR2
+		mount -o rw $deviceUSB2 $MountDIR2
+	fi
+
+
+	if [ -f "$PVEIMGFilenamePath1" ]; then
+		PVEIMGFilenameReal=$PVEIMGFilenamePath1
+    	installpve $PVEIMGFilenameReal
+	elif [ -f "$PVEIMGFilenamePath2" ]; then
+		echo "$PVEIMGFilenamePath1 does not exist !"
+		PVEIMGFilenameReal=$PVEIMGFilenamePath2
+		installpve $PVEIMGFilenameReal
+	else
+		echo "$PVEIMGFilenamePath2 does not exist !"
+	fi
+
+}
+
+
+function installpve(){
+	green "============================================================ "
+	echo " Starting Install PVE !"
+
+	read -p "Comfirm to install PVE? Please input [Y/n]?" isInstallPVEInput
+    isInstallPVEInput=${isInstallPVEInput:-Y}
+
+    if [[ $isInstallPVEInput == [Yy] ]]; then
+        echo "Running Command: $1 | gunzip | dd of=/dev/mmcblk1 && reboot"
+        red "Do Not Turn off the Power! Wait for a long time please.  "
+        green "It will reboot after finish !"
+        cat $1 | gunzip | dd of=/dev/mmcblk1 && reboot
+    else
+        red "============================================================ "
+        red " Exit PVE Installation !"
+        red "============================================================ "
+        exit 1
+    fi
+
+}
+
+
+
+
+
+main $1

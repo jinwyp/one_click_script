@@ -1,7 +1,8 @@
 #!/bin/bash
 
 export LC_ALL=C
-export LANG=C
+#export LANG=C
+export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
@@ -12,7 +13,7 @@ fi
 
 uninstall() {
   ${sudoCmd} $(which rm) -rf $1
-  printf "Removed: %s\n" $1
+  printf "File or Folder Deleted: %s\n" $1
 }
 
 
@@ -35,50 +36,99 @@ bold(){
 
 
 
-
+osInfo=""
 osRelease=""
+osReleaseVersion=""
+osReleaseVersionNo=""
+osReleaseVersionCodeName=""
 osSystemPackage=""
 osSystemMdPath=""
 osSystemShell="bash"
 
 # 系统检测版本
-function getLinuxOSVersion(){
+function getLinuxOSRelease(){
     # copy from 秋水逸冰 ss scripts
     if [[ -f /etc/redhat-release ]]; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-    elif cat /etc/issue | grep -Eqi "debian"; then
+        osReleaseVersionCodeName=""
+    elif cat /etc/issue | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
     elif cat /etc/issue | grep -Eqi "ubuntu"; then
         osRelease="ubuntu"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
     elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-    elif cat /proc/version | grep -Eqi "debian"; then
+        osReleaseVersionCodeName=""
+    elif cat /proc/version | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
     elif cat /proc/version | grep -Eqi "ubuntu"; then
         osRelease="ubuntu"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
     elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
+        osReleaseVersionCodeName=""
     fi
+
+    getLinuxOSVersion
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
-    echo "OS info: ${osRelease}, ${osSystemPackage}, ${osSystemMdPath}， ${osSystemShell}"
+    echo "OS info: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
+getLinuxOSVersion(){
+    if [[ -s /etc/redhat-release ]]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/issue)
+    fi
+
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        . /etc/os-release
+        osInfo=$NAME
+        osReleaseVersionNo=$VERSION_ID
+
+        if [ -n $VERSION_CODENAME ]; then
+            osReleaseVersionCodeName=$VERSION_CODENAME
+        fi
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        osInfo=$(lsb_release -si)
+        osReleaseVersionNo=$(lsb_release -sr)
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        . /etc/lsb-release
+        osInfo=$DISTRIB_ID
+        osReleaseVersionNo=$DISTRIB_RELEASE
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        osInfo=Debian
+        osReleaseVersionNo=$(cat /etc/debian_version)
+    elif [ -f /etc/redhat-release ]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        osInfo=$(uname -s)
+        osReleaseVersionNo=$(uname -r)
+    fi
+}
 
 osPort80=""
 osPort443=""
@@ -157,11 +207,6 @@ function testLinuxPortUsage(){
 
         ${sudoCmd} systemctl stop firewalld
         ${sudoCmd} systemctl disable firewalld
-        rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
-        $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz -y
-        $osSystemPackage install iputils-ping -y
 
     elif [ "$osRelease" == "ubuntu" ]; then
         if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
@@ -179,16 +224,11 @@ function testLinuxPortUsage(){
 
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
-        $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
-
+        
+    
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
+
     fi
 
 }
@@ -215,10 +255,10 @@ function setLinuxRootLogin(){
     if [[ $osIsRootLoginInput == [Yy] ]]; then
 
         if [ "$osRelease" == "centos" ] || [ "$osRelease" == "debian" ] ; then
-            ${sudoCmd} sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+            ${sudoCmd} sed -i 's/#\?PermitRootLogin \(yes\|no\|Yes\|No\|prohibit-password\)/PermitRootLogin yes/g' /etc/ssh/sshd_config
         fi
         if [ "$osRelease" == "ubuntu" ]; then
-            ${sudoCmd} sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+            ${sudoCmd} sed -i 's/#\?PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
         fi
 
         green "设置允许root登陆成功!"
@@ -229,19 +269,17 @@ function setLinuxRootLogin(){
     osIsRootLoginWithPasswordInput=${osIsRootLoginWithPasswordInput:-Y}
 
     if [[ $osIsRootLoginWithPasswordInput == [Yy] ]]; then
-        sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+        sed -i 's/#\?PasswordAuthentication \(yes\|no\)/PasswordAuthentication yes/g' /etc/ssh/sshd_config
         green "设置允许root使用密码登陆成功!"
     fi
 
 
-    ${sudoCmd} sed -i 's/#TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
-    ${sudoCmd} sed -i 's/#ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?ClientAliveInterval [0-9]*/ClientAliveInterval 120/g' /etc/ssh/sshd_config
 
     if [ "$osRelease" == "centos" ] ; then
 
-        ${sudoCmd} sed -i 's/ClientAliveInterval 420/ClientAliveInterval 120/g' /etc/ssh/sshd_config
-        ${sudoCmd} sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
-        
         ${sudoCmd} service sshd restart
         ${sudoCmd} systemctl restart sshd
 
@@ -249,8 +287,6 @@ function setLinuxRootLogin(){
     fi
 
     if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
-
-        ${sudoCmd} sed -i 's/#ClientAliveInterval 0/ClientAliveInterval 120/g' /etc/ssh/sshd_config
         
         ${sudoCmd} service ssh restart
         ${sudoCmd} systemctl restart ssh
@@ -275,13 +311,16 @@ function changeLinuxSSHPort(){
             yum -y install policycoreutils-python
 
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            firewall-cmd --add-port=$osSSHLoginPortInput/tcp --permanent
+            firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
             firewall-cmd --reload
             ${sudoCmd} service sshd restart
             ${sudoCmd} systemctl restart sshd
         fi
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
+            semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
+            sudo ufw allow $osSSHLoginPortInput/tcp
+
             ${sudoCmd} service ssh restart
             ${sudoCmd} systemctl restart ssh
         fi
@@ -338,6 +377,69 @@ function installBBR2(){
     wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
+
+function installPackage(){
+    if [ "$osRelease" == "centos" ]; then
+       
+        # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+
+        cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
+[nginx]
+name=nginx repo
+baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/\$basearch/
+gpgcheck=0
+enabled=1
+
+EOF
+
+        $osSystemPackage update -y
+
+        ${sudoCmd}  $osSystemPackage install -y epel-release
+
+        $osSystemPackage install curl wget git unzip zip tar -y
+        $osSystemPackage install xz -y
+        $osSystemPackage install iputils-ping -y
+
+    elif [ "$osRelease" == "ubuntu" ]; then
+        
+        # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
+        # https://www.nginx.com/resources/wiki/start/topics/tutorials/install/
+        
+        $osSystemPackage install -y gnupg2
+        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+EOF
+
+        $osSystemPackage update -y
+        ${sudoCmd} $osSystemPackage install software-properties-common -y
+        $osSystemPackage install curl wget git unzip zip tar -y
+        $osSystemPackage install xz-utils -y
+        $osSystemPackage install iputils-ping -y
+
+
+    elif [ "$osRelease" == "debian" ]; then
+        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+
+        $osSystemPackage install -y gnupg2
+        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF 
+deb http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+EOF
+        
+        $osSystemPackage update -y
+        $osSystemPackage install curl wget git unzip zip tar -y
+        $osSystemPackage install xz-utils -y
+        $osSystemPackage install iputils-ping -y
+    fi
+}
+
+
 function installSoftEditor(){
     # 安装 micro 编辑器
     if [[ ! -f "${HOME}/bin/micro" ]] ;  then
@@ -353,7 +455,7 @@ function installSoftEditor(){
     fi
 
     if [ "$osRelease" == "centos" ]; then   
-        $osSystemPackage install -y xz 
+        $osSystemPackage install -y xz  vim-minimal vim-enhanced vim-common
     else
         $osSystemPackage install -y vim-gui-common vim-runtime vim 
     fi
@@ -366,8 +468,12 @@ set enc=utf8
 set fencs=utf8,gbk,gb2312,gb18030
 
 syntax on
-set nu!
 colorscheme elflord
+
+if has('mouse')
+  se mouse+=a
+  set number
+endif
 
 EOF
     fi
@@ -410,7 +516,7 @@ function installSoftOhMyZsh(){
         # 配置 zshrc 文件
         zshConfig=${HOME}/.zshrc
         zshTheme="maran"
-        sed -i 's/ZSH_THEME=.*/ZSH_THEME="'${zshTheme}'"/' $zshConfig
+        sed -i 's/ZSH_THEME=.*/ZSH_THEME="'"${zshTheme}"'"/' $zshConfig
         sed -i 's/plugins=(git)/plugins=(git cp history z rsync colorize nvm zsh-autosuggestions)/' $zshConfig
 
         zshAutosuggestionsConfig=${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
@@ -428,7 +534,7 @@ function installSoftOhMyZsh(){
         fi
 
 
-        echo 'alias lla="ll -ah"' >> ${HOME}/.zshrc
+        echo 'alias lla="ls -ahl"' >> ${HOME}/.zshrc
         echo 'alias mi="micro"' >> ${HOME}/.zshrc
 
         green " =================================================="
@@ -441,12 +547,18 @@ function installSoftOhMyZsh(){
 
 
 
-
 # 网络测速
+
+function vps_netflix(){
+    # bash <(curl -sSL "https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh")
+	wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
+    # wget -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
+}
+
 
 function vps_superspeed(){
 	bash <(curl -Lso- https://git.io/superspeed)
-	wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+	#wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 }
 
 function vps_bench(){
@@ -519,7 +631,8 @@ nginxConfigPath="/etc/nginx/nginx.conf"
 nginxAccessLogFilePath="${HOME}/nginx-access.log"
 nginxErrorLogFilePath="${HOME}/nginx-error.log"
 
-
+promptInfoXrayInstall="V2ray"
+promptInfoXrayVersion=""
 promptInfoXrayName="v2ray"
 isXray="no"
 
@@ -535,7 +648,6 @@ configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
 configV2rayVlessMode=""
-configV2rayInstallXrayOnly=""
 configReadme=${HOME}/trojan_v2ray_readme.txt
 
 
@@ -868,15 +980,16 @@ http {
 
         ssl_certificate       ${configSSLCertPath}/fullchain.cer;
         ssl_certificate_key   ${configSSLCertPath}/private.key;
-        ssl_protocols         TLSv1.2;
-        ssl_ciphers           TLS13-AES-256-GCM-SHA384:TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-128-GCM-SHA256:TLS13-AES-128-CCM-8-SHA256:TLS13-AES-128-CCM-SHA256:EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+ECDSA+AES128:EECDH+aRSA+AES128:RSA+AES128:EECDH+ECDSA+AES256:EECDH+aRSA+AES256:RSA+AES256:EECDH+ECDSA+3DES:EECDH+aRSA+3DES:RSA+3DES:!MD5;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
 
         # Config for 0-RTT in TLSv1.3
         ssl_early_data on;
         ssl_stapling on;
         ssl_stapling_verify on;
         add_header Strict-Transport-Security "max-age=31536000";
-
+        
         root $configWebsitePath;
         index index.php index.html index.htm;
 
@@ -943,11 +1056,19 @@ Web服务器 nginx 安装成功! 伪装站点为 ${configSSLDomain}
 nginx 配置路径 ${nginxConfigPath}, nginx 访问日志 ${nginxAccessLogFilePath}, nginx 错误日志 ${nginxErrorLogFilePath}
 nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service
 
-如果安装了Trojan-web ${versionTrojanWeb} 可视化管理面板,访问地址  ${configSSLDomain}/${configTrojanWebNginxPath}
+EOF
+
+
+	if [[ $1 == "trojan-web" ]] ; then
+        cat >> ${configReadme} <<-EOF
+
+安装的Trojan-web ${versionTrojanWeb} 可视化管理面板,访问地址  ${configSSLDomain}/${configTrojanWebNginxPath}
 Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service
 
 
 EOF
+	fi
+
 }
 
 function removeNginx(){
@@ -962,7 +1083,7 @@ function removeNginx(){
         yum remove -y nginx
     else
         apt autoremove -y --purge nginx nginx-common nginx-core
-        apt-get remove --purge nginx nginx-full nginx-common
+        apt-get remove --purge nginx nginx-full nginx-common nginx-core
     fi
 
     rm -rf ${configSSLCertPath}
@@ -987,6 +1108,7 @@ function installTrojanWholeProcess(){
 
     stopServiceNginx
     testLinuxPortUsage
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -1000,8 +1122,8 @@ function installTrojanWholeProcess(){
 
         if [[ -z $1 ]] ; then
             if [ "$isNginxWithSSL" = "no" ] ; then
+                getHTTPSCertificate "standalone"
                 installWebServerNginx
-                getHTTPSCertificate
             else
                 getHTTPSCertificate "standalone"
                 installWebServerNginx "v2ray"
@@ -1084,6 +1206,8 @@ function installTrojanServer(){
 
 
     if [ "$configV2rayVlessMode" != "trojan" ] ; then
+        configV2rayTrojanPort=443
+    elif [ "$configV2rayVlessMode" != "vlesstrojan" ] ; then
         configV2rayTrojanPort=443
     fi
 
@@ -1432,7 +1556,7 @@ WantedBy=multi-user.target
 EOF
     fi
 
-    chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
+    ${sudoCmd} chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl daemon-reload
     ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl enable trojan${promptInfoTrojanName}.service
@@ -1515,7 +1639,7 @@ EOF
     fi
 
 	red "    Trojan 服务器端配置路径 ${configTrojanBasePath}/server.json "
-	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -u trojan${promptInfoTrojanName}.service 查看 !"
+	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -n 50 -u trojan${promptInfoTrojanName}.service 查看 !"
 	green "    Trojan 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
 	green "    Trojan 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
@@ -1690,7 +1814,7 @@ function installV2ray(){
     fi
 
 
-    if [[ $configV2rayVlessMode == "trojan" ]] ; then
+    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessonly" ) || ( $configV2rayVlessMode == "vlesstrojan" ) ]] ; then
         promptInfoXrayName="xray"
         isXray="yes"
     else
@@ -1725,11 +1849,15 @@ function installV2ray(){
         green " =================================================="
         green "    开始安装 V2ray Version: ${versionV2ray} !"
         green " =================================================="
+        promptInfoXrayInstall="V2ray"
+        promptInfoXrayVersion=${versionV2ray}
     else
         getTrojanAndV2rayVersion "xray"
         green " =================================================="
         green "    开始安装 Xray Version: ${versionXray} !"
         green " =================================================="
+        promptInfoXrayInstall="Xray"
+        promptInfoXrayVersion=${versionXray}
     fi
 
 
@@ -1750,85 +1878,341 @@ function installV2ray(){
 
     # 增加 v2ray 服务器端配置
 
-    read -r -d '' userpasswordInput << EOM
-                        {
-                            "id": "${v2rayPassword1}",
-                            "level": 0,
-                            "email": "password11@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword2}",
-                            "level": 0,
-                            "email": "password12@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword3}",
-                            "level": 0,
-                            "email": "password13@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword4}",
-                            "level": 0,
-                            "email": "password14@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword5}",
-                            "level": 0,
-                            "email": "password15@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword6}",
-                            "level": 0,
-                            "email": "password16@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword7}",
-                            "level": 0,
-                            "email": "password17@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword8}",
-                            "level": 0,
-                            "email": "password18@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword9}",
-                            "level": 0,
-                            "email": "password19@gmail.com"
-                        },
-                        {
-                            "id": "${v2rayPassword10}",
-                            "level": 0,
-                            "email": "password20@gmail.com"
-                        }
+    trojanPassword1=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword2=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword3=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword4=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword5=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword6=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword7=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword8=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+    trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+
+    read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
+                    {
+                        "password": "${trojanPassword1}",
+                        "level": 0,
+                        "email": "password111@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword2}",
+                        "level": 0,
+                        "email": "password112@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword3}",
+                        "level": 0,
+                        "email": "password113@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword4}",
+                        "level": 0,
+                        "email": "password114@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword5}",
+                        "level": 0,
+                        "email": "password115@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword6}",
+                        "level": 0,
+                        "email": "password116@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword7}",
+                        "level": 0,
+                        "email": "password117@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword8}",
+                        "level": 0,
+                        "email": "password118@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword9}",
+                        "level": 0,
+                        "email": "password119@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword10}",
+                        "level": 0,
+                        "email": "password120@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202000",
+                        "level": 0,
+                        "email": "password200@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202001",
+                        "level": 0,
+                        "email": "password201@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202002",
+                        "level": 0,
+                        "email": "password202@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202003",
+                        "level": 0,
+                        "email": "password203@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202004",
+                        "level": 0,
+                        "email": "password204@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202005",
+                        "level": 0,
+                        "email": "password205@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202006",
+                        "level": 0,
+                        "email": "password206@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202007",
+                        "level": 0,
+                        "email": "password207@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202008",
+                        "level": 0,
+                        "email": "password208@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202009",
+                        "level": 0,
+                        "email": "password209@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202010",
+                        "level": 0,
+                        "email": "password210@gmail.com"
+                    },
+                        "password": "${configTrojanPasswordPrefixInput}202011",
+                        "level": 0,
+                        "email": "password211@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202012",
+                        "level": 0,
+                        "email": "password212@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202013",
+                        "level": 0,
+                        "email": "password213@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202014",
+                        "level": 0,
+                        "email": "password214@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202015",
+                        "level": 0,
+                        "email": "password215@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202016",
+                        "level": 0,
+                        "email": "password216@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202017",
+                        "level": 0,
+                        "email": "password217@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202018",
+                        "level": 0,
+                        "email": "password218@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202019",
+                        "level": 0,
+                        "email": "password219@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202020",
+                        "level": 0,
+                        "email": "password220@gmail.com"
+                    },
+                        "password": "${configTrojanPasswordPrefixInput}202021",
+                        "level": 0,
+                        "email": "password221@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202022",
+                        "level": 0,
+                        "email": "password222@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202023",
+                        "level": 0,
+                        "email": "password223@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202024",
+                        "level": 0,
+                        "email": "password224@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202025",
+                        "level": 0,
+                        "email": "password225@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202026",
+                        "level": 0,
+                        "email": "password226@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202027",
+                        "level": 0,
+                        "email": "password227@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202028",
+                        "level": 0,
+                        "email": "password228@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202029",
+                        "level": 0,
+                        "email": "password229@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202030",
+                        "level": 0,
+                        "email": "password230@gmail.com"
+                    }
 EOM
 
-    if [[ -z "$configV2rayVlessMode" ]]; then
-        cat > ${configV2rayPath}/config.json <<-EOF
-{
-    "log" : {
-        "access": "${configV2rayAccessLogFilePath}",
-        "error": "${configV2rayErrorLogFilePath}",
-        "loglevel": "warning"
-    },
-    "inbounds": [
-        {
-            "port": ${configV2rayPort},
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    ${userpasswordInput}
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "ws",
-                "wsSettings": {
-                    "path": "/${configV2rayWebSocketPath}"
-                }
-            }
-        }
-    ],
+
+    read -r -d '' v2rayConfigUserpasswordInput << EOM
+                    {
+                        "id": "${v2rayPassword1}",
+                        "level": 0,
+                        "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}",
+                        "level": 0,
+                        "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}",
+                        "level": 0,
+                        "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}",
+                        "level": 0,
+                        "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}",
+                        "level": 0,
+                        "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}",
+                        "level": 0,
+                        "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}",
+                        "level": 0,
+                        "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}",
+                        "level": 0,
+                        "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}",
+                        "level": 0,
+                        "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}",
+                        "level": 0,
+                        "email": "password20@gmail.com"
+                    }
+EOM
+
+    read -r -d '' v2rayConfigUserpasswordDirectInput << EOM
+                    {
+                        "id": "${v2rayPassword1}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}",
+                        "flow": "xtls-rprx-direct",
+                        "level": 0,
+                        "email": "password20@gmail.com"
+                    }
+EOM
+
+    read -r -d '' v2rayConfigOutboundInput << EOM
     "outbounds": [
         {
             "tag": "direct",
@@ -1841,6 +2225,42 @@ EOM
             "settings": {}
         }
     ]
+EOM
+
+    read -r -d '' v2rayConfigLogInput << EOM
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+EOM
+
+
+
+
+    if [[ -z "$configV2rayVlessMode" ]]; then
+        cat > ${configV2rayPath}/config.json <<-EOF
+{
+    ${v2rayConfigLogInput}
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/${configV2rayWebSocketPath}"
+                }
+            }
+        }
+    ],
+    ${v2rayConfigOutboundInput}
 }
 EOF
     fi
@@ -1849,18 +2269,14 @@ EOF
     if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
         cat > ${configV2rayPath}/config.json <<-EOF
 {
-    "log" : {
-        "access": "${configV2rayAccessLogFilePath}",
-        "error": "${configV2rayErrorLogFilePath}",
-        "loglevel": "warning"
-    },
+    ${v2rayConfigLogInput}
     "inbounds": [
         {
             "port": 443,
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
-                    ${userpasswordInput}
+                    ${v2rayConfigUserpasswordInput}
                 ],
                 "decryption": "none",
                 "fallbacks": [
@@ -1896,7 +2312,7 @@ EOF
             "protocol": "vless",
             "settings": {
                 "clients": [
-                    ${userpasswordInput}
+                    ${v2rayConfigUserpasswordInput}
                 ],
                 "decryption": "none"
             },
@@ -1910,18 +2326,7 @@ EOF
             }
         }
     ],
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
-        },
-        {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
-        }
-    ]
+    ${v2rayConfigOutboundInput}
 }
 EOF
     fi
@@ -1930,18 +2335,14 @@ EOF
     if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
         cat > ${configV2rayPath}/config.json <<-EOF
 {
-    "log" : {
-        "access": "${configV2rayAccessLogFilePath}",
-        "error": "${configV2rayErrorLogFilePath}",
-        "loglevel": "warning"
-    },
+    ${v2rayConfigLogInput}
     "inbounds": [
         {
             "port": 443,
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
-                    ${userpasswordInput}
+                    ${v2rayConfigUserpasswordInput}
                 ],
                 "decryption": "none",
                 "fallbacks": [
@@ -1982,7 +2383,7 @@ EOF
             "protocol": "vmess",
             "settings": {
                 "clients": [
-                    ${userpasswordInput}
+                    ${v2rayConfigUserpasswordInput}
                 ]
             },
             "streamSettings": {
@@ -1999,7 +2400,7 @@ EOF
             "protocol": "vmess",
             "settings": {
                 "clients": [
-                    ${userpasswordInput}
+                    ${v2rayConfigUserpasswordInput}
                 ]
             },
             "streamSettings": {
@@ -2019,111 +2420,118 @@ EOF
             }
         }
     ],
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
-        },
-        {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
-        }
-    ]
+    ${v2rayConfigOutboundInput}
 }
 EOF
     fi
 
 
 
-
-
-
-    if [[ "$configV2rayVlessMode" == "trojan" ]]; then
-
+    if [[  $configV2rayVlessMode == "vlesstrojan" ]]; then
             cat > ${configV2rayPath}/config.json <<-EOF
 {
-    "log" : {
-        "access": "${configV2rayAccessLogFilePath}",
-        "error": "${configV2rayErrorLogFilePath}",
-        "loglevel": "warning"
-    },
+    ${v2rayConfigLogInput}
     "inbounds": [
         {
             "port": 443,
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
-                    {
-                        "id": "${v2rayPassword1}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password20@gmail.com"
-                    }
+                    ${v2rayConfigUserpasswordDirectInput}
                 ],
                 "decryption": "none",
                 "fallbacks": [
                     {
-                        "dest": ${configV2rayTrojanPort}
+                        "dest": ${configV2rayTrojanPort},
+                        "xver": 1
                     },
                     {
-                        "path": "/${configTrojanGoWebSocketPath}",
-                        "dest": ${configV2rayTrojanPort}
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayPort},
+                        "xver": 1
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "xtls",
+                "xtlsSettings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
+                            "keyFile": "${configSSLCertPath}/private.key"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "port": ${configV2rayTrojanPort},
+            "listen": "127.0.0.1",
+            "protocol": "trojan",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordTrojanInput}
+                ],
+                "fallbacks": [
+                    {
+                        "dest": 80 
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "none",
+                "tcpSettings": {
+                    "acceptProxyProtocol": true
+                }
+            }
+        },
+        {
+            "port": ${configV2rayPort},
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "acceptProxyProtocol": true,
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
+        }
+    ],
+    ${v2rayConfigOutboundInput}
+}
+EOF
+    fi
+
+
+    if [[  $configV2rayVlessMode == "vlessonly" ]]; then
+            cat > ${configV2rayPath}/config.json <<-EOF
+{
+    ${v2rayConfigLogInput}
+    "inbounds": [
+        {
+            "port": 443,
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordDirectInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
                     },
                     {
                         "path": "/${configV2rayWebSocketPath}",
@@ -2154,56 +2562,7 @@ EOF
             "protocol": "vless",
             "settings": {
                 "clients": [
-                    {
-                        "id": "${v2rayPassword1}",
-                        "level": 0,
-                        "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}",
-                        "level": 0,
-                        "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}",
-                        "level": 0,
-                        "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}",
-                        "level": 0,
-                        "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}",
-                        "level": 0,
-                        "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}",
-                        "level": 0,
-                        "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}",
-                        "level": 0,
-                        "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}",
-                        "level": 0,
-                        "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}",
-                        "level": 0,
-                        "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}",
-                        "level": 0,
-                        "email": "password20@gmail.com"
-                    }
+                    ${v2rayConfigUserpasswordInput}
                 ],
                 "decryption": "none"
             },
@@ -2217,18 +2576,80 @@ EOF
             }
         }
     ],
-    "outbounds": [
+    ${v2rayConfigOutboundInput}
+}
+EOF
+    fi
+
+
+    if [[ $configV2rayVlessMode == "trojan" ]]; then
+
+            cat > ${configV2rayPath}/config.json <<-EOF
+{
+    ${v2rayConfigLogInput}
+    "inbounds": [
         {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
+            "port": 443,
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordDirectInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": ${configV2rayTrojanPort},
+                        "xver": 1
+                    },
+                    {
+                        "path": "/${configTrojanGoWebSocketPath}",
+                        "dest": ${configV2rayTrojanPort},
+                        "xver": 1
+                    },
+                    {
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayPort},
+                        "xver": 1
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "xtls",
+                "xtlsSettings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
+                            "keyFile": "${configSSLCertPath}/private.key"
+                        }
+                    ]
+                }
+            }
         },
         {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
+            "port": ${configV2rayPort},
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "acceptProxyProtocol": true,
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
         }
-    ]
+    ],
+    ${v2rayConfigOutboundInput}
 }
 EOF
 
@@ -2314,7 +2735,7 @@ EOF
 
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-===========V2ray客户端配置参数=============
+=========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
     协议: ${configV2rayProtocol},
     地址: ${configSSLDomain},
@@ -2330,52 +2751,11 @@ EOF
 EOF
 
 
-if [[ "$configV2rayVlessMode" == "vlessws" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
-    cat > ${configV2rayPath}/clientConfig.json <<-EOF
-当选择了16. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
-当选择了20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS), 不安装nginx" 
-当选择了21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct ) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx
-当选择了22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx
-当选择了23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx
-
-===========V2ray客户端 VLess-TCP-TLS 配置参数=============
-{
-    协议: VLess,
-    地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
-    uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
-    加密方式: none,  // 如果是Vless协议则为none
-    传输协议: tcp ,
-    WS路径:无,
-    底层传输协议:tls,    // 选择了16 为tls, 选择了20-23 为xtls
-    别名:自己起个任意名称
-}
-
-===========V2ray客户端 VLess-WS-TLS 配置参数 支持CDN =============
-{
-    协议: VLess,
-    地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
-    uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
-    加密方式: none,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
-    底层传输:tls,     
-    别名:自己起个任意名称
-}
-EOF
-fi
-
-
 
 if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 当选择了17. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx
-===========V2ray客户端 VLess-TCP-TLS 配置参数=============
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
@@ -2389,7 +2769,7 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     别名:自己起个任意名称
 }
 
-===========V2ray客户端 VMess-WS-TLS 配置参数 支持CDN =============
+=========== ${promptInfoXrayInstall}客户端 VMess-WS-TLS 配置参数 支持CDN =============
 {
     协议: VMess,
     地址: ${configSSLDomain},
@@ -2403,7 +2783,7 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     别名:自己起个任意名称
 }
 
-===========V2ray客户端 VMess-TCP-TLS 配置参数 支持CDN =============
+=========== ${promptInfoXrayInstall}客户端 VMess-TCP-TLS 配置参数 支持CDN =============
 {
     协议: VMess,
     地址: ${configSSLDomain},
@@ -2420,6 +2800,128 @@ EOF
 fi
 
 
+if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+当选择了16. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow:  // 选择了16 为空
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: tcp ,
+    WS路径:无,
+    底层传输协议:tls,   
+    别名:自己起个任意名称
+}
+
+=========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow:  // 选择了16 为空
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:tls,     
+    别名:自己起个任意名称
+}
+EOF
+fi
+
+
+if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow: xtls-rprx-direct
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: tcp ,
+    WS路径:无,
+    底层传输协议:xtls, 
+    别名:自己起个任意名称
+}
+
+=========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:tls,     
+    别名:自己起个任意名称
+}
+EOF
+fi
+
+if [[ "$configV2rayVlessMode" == "vlesstrojan" ]]; then
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow: xtls-rprx-direct
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: tcp ,
+    WS路径:无,
+    底层传输协议:xtls, 
+    别名:自己起个任意名称
+}
+
+=========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
+    加密方式: none,  // 如果是Vless协议则为none
+    传输协议: ws,
+    WS路径:/${configV2rayWebSocketPath},
+    底层传输:tls,     
+    别名:自己起个任意名称
+}
+
+
+Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
+
+密码1: ${trojanPassword1}
+密码2: ${trojanPassword2}
+密码3: ${trojanPassword3}
+密码4: ${trojanPassword4}
+密码5: ${trojanPassword5}
+密码6: ${trojanPassword6}
+密码7: ${trojanPassword7}
+密码8: ${trojanPassword8}
+密码9: ${trojanPassword9}
+密码10: ${trojanPassword10}
+您指定前缀的密码若干: 从 ${configTrojanPasswordPrefixInput}202010 到 ${configTrojanPasswordPrefixInput}202030 都可以使用
+
+EOF
+fi
+
+
+
 
 
     # 设置 cron 定时任务
@@ -2429,26 +2931,21 @@ fi
 
 
     green "======================================================================"
-
-    if [ "$isXray" = "no" ] ; then
-        green "    V2ray Version: ${versionV2ray} 安装成功 !!"
-    else
-        green "    Xray Version: ${versionXray} 安装成功 !!"
-    fi
+    green "    ${promptInfoXrayInstall} Version: ${promptInfoXrayVersion} 安装成功 !"
 
     if [[ ${isInstallNginx} == "true" ]]; then
         green "    伪装站点为 https://${configSSLDomain}!"
     fi
 	
-	red "    ${promptInfoXrayName} 服务器端配置路径 ${configV2rayPath}/config.json !"
-	red "    ${promptInfoXrayName} 访问日志 ${configV2rayAccessLogFilePath} !"
-	red "    ${promptInfoXrayName} 错误日志 ${configV2rayErrorLogFilePath} !"
-	green "    ${promptInfoXrayName} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service"
+	red "    ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json !"
+	red "    ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} !"
+	red "    ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath} ! 或运行 journalctl -n 50 -u ${promptInfoXrayName}.service 查看 !"
+	green "    ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service"
 	# green "    caddy 停止命令: systemctl stop caddy.service  启动命令: systemctl start caddy.service  重启命令: systemctl restart caddy.service"
-	green "    ${promptInfoXrayName} 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+	green "    ${promptInfoXrayInstall} 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
 	echo ""
-	yellow "${promptInfoXrayName} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
+	yellow "${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
 	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
 	yellow "用户ID或密码1: ${v2rayPassword1}"
 	yellow "用户ID或密码2: ${v2rayPassword2}"
@@ -2477,12 +2974,14 @@ fi
 
     cat >> ${configReadme} <<-EOF
 
-V2ray Version: ${versionV2ray} 安装成功 ! 
-V2ray 服务器端配置路径 ${configV2rayPath}/config.json 
-V2ray 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
-V2ray 停止命令: systemctl stop v2ray.service  启动命令: systemctl start v2ray.service  重启命令: systemctl restart v2ray.service
+${promptInfoXrayInstall} Version: ${promptInfoXrayVersion} 安装成功 ! 
+${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json 
+${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
+${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service
 
-V2ray 服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
+${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !
+服务器地址: ${configSSLDomain}  
+端口: ${configV2rayPortShowInfo}"
 用户ID或密码1: ${v2rayPassword1}"
 用户ID或密码2: ${v2rayPassword2}"
 用户ID或密码3: ${v2rayPassword3}"
@@ -2494,25 +2993,12 @@ V2ray 服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
 用户ID或密码9: ${v2rayPassword9}"
 用户ID或密码10: ${v2rayPassword10}"
 
-===========V2ray客户端配置参数=============
-{
-    协议: ${configV2rayProtocol},
-    地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
-    uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
-    底层传输:${configV2rayIsTlsShowInfo},
-    别名:自己起个任意名称
-}
-
 
 EOF
 
+    cat "${configV2rayPath}/clientConfig.json" >> ${configReadme}
 }
-
+    
 
 function removeV2ray(){
     if [ -f "${configV2rayPath}/xray" ]; then
@@ -2574,6 +3060,7 @@ function upgradeV2ray(){
     mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
     mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
 
+    ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
     ${sudoCmd} systemctl start ${promptInfoXrayName}.service
 
 
@@ -2608,6 +3095,7 @@ function installTrojanWeb(){
 
     stopServiceNginx
     testLinuxPortUsage
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -2750,6 +3238,7 @@ function installV2rayUI(){
 
     stopServiceNginx
     testLinuxPortUsage
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
@@ -2787,6 +3276,7 @@ function getHTTPSNoNgix(){
     #stopServiceNginx
     #testLinuxPortUsage
 
+    installPackage
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
@@ -2841,7 +3331,7 @@ function getHTTPSNoNgix(){
     if [[ $1 == "v2ray" ]] ; then
         installV2ray
 
-        if [[ $configV2rayVlessMode == "trojan" && $configV2rayInstallXrayOnly=="" ]]; then
+        if [[ $configV2rayVlessMode == "trojan" ]]; then
             installTrojanServer
         fi
     fi
@@ -2885,6 +3375,7 @@ function startMenuOther(){
     green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx"    
     green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx"   
     green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
+    green " 24. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan 支持VLess的CDN, 不安装nginx"    
 
     red " 27. 卸载 trojan"    
     red " 28. 卸载 trojan-go"   
@@ -2894,11 +3385,13 @@ function startMenuOther(){
     echo
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
-    green " 31. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 32. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
-	green " 33. testrace 回程路由测试 （四网路由测试）"
-	green " 34. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
-    green " 35. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+    green " 31. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
+    green " 32. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
+    green " 33. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
+	green " 34. testrace 回程路由测试 （四网路由测试）"
+	green " 35. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    green " 36. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+
     echo
     green " 41. 安装新版本 BBR-PLUS 加速6合一脚本"
     echo
@@ -2962,8 +3455,7 @@ function startMenuOther(){
             getHTTPSNoNgix "v2ray"
         ;;    
         20 )
-            configV2rayVlessMode="trojan"
-            configV2rayInstallXrayOnly="yes"
+            configV2rayVlessMode="vlessonly"
             getHTTPSNoNgix "v2ray"
         ;; 
         21 )
@@ -2980,7 +3472,11 @@ function startMenuOther(){
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
             getHTTPSNoNgix "v2ray"
-        ;;     
+        ;;
+        24 )
+            configV2rayVlessMode="vlesstrojan"
+            getHTTPSNoNgix "v2ray"
+        ;;          
         27 )
             removeTrojan
         ;;    
@@ -2990,20 +3486,23 @@ function startMenuOther(){
         ;;
         29 )
             removeV2ray
-        ;;                                                   
+        ;;  
         31 )
+            vps_netflix
+        ;;                                                         
+        32 )
             vps_superspeed
         ;;
-        32 )
+        33 )
             vps_bench
         ;;        
-        33 )
+        34 )
             vps_testrace
         ;;
-        34 )
+        35 )
             vps_LemonBench
         ;;
-        35 )
+        36 )
             vps_zbench
         ;;        
         41 )
@@ -3034,14 +3533,13 @@ function start_menu(){
     clear
 
     if [[ $1 == "first" ]] ; then
-        getLinuxOSVersion
+        getLinuxOSRelease
         ${osSystemPackage} -y install wget curl git 
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 2020-12-6 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray 一键安装脚本 2021-03-06 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
-    red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
     green " 1. 安装 BBR-PLUS 加速4合一脚本"
     echo
@@ -3052,8 +3550,8 @@ function start_menu(){
     echo
     green " 6. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket (兼容trojan客户端)"
     green " 7. 修复证书 并继续安装 trojan-go 不支持CDN, 不开启websocket"
-    green " 8. 安装 trojan-go 和 nginx 支持CDN, 开启websocket (兼容trojan客户端, 但不兼容websocket)"
-    green " 9. 修复证书 并继续安装 trojan-go 支持CDN, 开启websocket "
+    green " 8. 安装 trojan-go 和 nginx 支持CDN 开启websocket (兼容trojan客户端但不兼容websocket)"
+    green " 9. 修复证书 并继续安装 trojan-go 支持CDN, 开启websocket"
     green " 10. 升级 trojan-go 到最新版本"
     red " 11. 卸载 trojan-go 与 nginx"
     echo
@@ -3069,15 +3567,15 @@ function start_menu(){
     green " 20. 升级 v2ray或xray 和 trojan-go 到最新版本"
     red " 21. 卸载 trojan-go, v2ray或xray 和 nginx"
     echo
-    green " 28. 查看已安装的配置用户密码信息"
+    green " 28. 查看已安装的配置和用户密码等信息"
     green " 29. 安装 trojan 和 v2ray 可视化管理面板"
-    green " 30. 不安装nginx,只安装trojan或v2ray,可选择是否安装SSL证书"
+    green " 30. 不安装nginx,只安装trojan或v2ray或xray(xtls),可选择是否安装SSL证书"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 32. 设置可以使用root登陆"
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
-    green " 41. VPS 测网速工具"
+    green " 41. VPS 测网速工具 和 VPS是否支持Netflix 测试工具"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -3173,11 +3671,11 @@ function start_menu(){
         ;;
         28 )
             cat "${configReadme}"
-            cat "${configV2rayPath}/clientConfig.json"
         ;;        
         31 )
             setLinuxDateZone
             testLinuxPortUsage
+            installPackage
             installSoftEditor
             installSoftOhMyZsh
         ;;
@@ -3207,6 +3705,9 @@ function start_menu(){
         ;;
         77 )
             editLinuxLoginWithPublicKey
+        ;;
+        78 )
+            installPackage
         ;;
         88 )
             installBBR2
