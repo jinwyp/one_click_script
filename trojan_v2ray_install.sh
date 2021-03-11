@@ -365,6 +365,8 @@ function setLinuxDateZone(){
 
 # 软件安装
 
+
+
 function installBBR(){
     wget -O tcp_old.sh -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp_old.sh && ./tcp_old.sh
 }
@@ -397,7 +399,7 @@ EOF
         ${sudoCmd}  $osSystemPackage install -y epel-release
 
         $osSystemPackage install -y curl wget git unzip zip tar
-        $osSystemPackage install -y xz jq 
+        $osSystemPackage install -y xz jq redhat-lsb-core 
         $osSystemPackage install -y iputils-ping
 
     elif [ "$osRelease" == "ubuntu" ]; then
@@ -416,7 +418,7 @@ EOF
         $osSystemPackage update -y
         ${sudoCmd} $osSystemPackage install -y software-properties-common
         $osSystemPackage install -y curl wget git unzip zip tar
-        $osSystemPackage install -y xz-utils jq
+        $osSystemPackage install -y xz-utils jq lsb-core lsb-release
         $osSystemPackage install -y iputils-ping
 
 
@@ -434,7 +436,7 @@ EOF
         
         $osSystemPackage update -y
         $osSystemPackage install -y curl wget git unzip zip tar
-        $osSystemPackage install -y xz-utils jq
+        $osSystemPackage install -y xz-utils jq lsb-core lsb-release
         $osSystemPackage install -y iputils-ping
     fi
 }
@@ -550,8 +552,10 @@ function installSoftOhMyZsh(){
 # 网络测速
 
 function vps_netflix(){
+    # bash <(curl -sSL https://raw.githubusercontent.com/Netflixxp/NF/main/nf.sh)
     # bash <(curl -sSL "https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh")
 	# wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
+
 	wget -O netflix.sh -N --no-check-certificate https://github.com/CoiaPrant/MediaUnlock_Test/raw/main/check.sh && chmod +x netflix.sh && ./netflix.sh
 
     # wget -N -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
@@ -578,6 +582,101 @@ function vps_testrace(){
 function vps_LemonBench(){
     wget -O LemonBench.sh -N --no-check-certificate https://ilemonra.in/LemonBenchIntl && chmod +x LemonBench.sh && ./LemonBench.sh fast
 }
+
+
+
+
+
+versionWgcf="2.2.2"
+downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
+configWgcfPath="/usr/local/bin"
+
+
+function installWireguard(){
+
+    getTrojanAndV2rayVersion("wgcf")
+    green " =================================================="
+    green "    开始安装 Wgcf ${versionWgcf} 和 wireguard !"
+    red "    需要先使用安装BBR脚本 安装原版本BBR,不能安装bbr plus"
+    red "    Centos 7 推荐安装4.14 内核, 使用BBR脚本安装原版BBR即可"
+    red "    Debian或Ubuntu 也可以直接使用新版BBR安装脚本安装原版BBR, 内核在5.4以上"
+    red "    安装内核有风险, 导致VPS无法启动, 请慎重使用"
+    green " =================================================="
+
+    mkdir -p ${configWgcfPath}
+    cd ${HOME}
+
+    # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
+    wget -O ${configWgcfPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionTrojanWeb}/${downloadFilenameWgcf}"
+    ${sudoCmd} chmod +x ${configWgcfPath}/wgcf
+
+    if [[ -f ${configWgcfPath}/wgcf ]]; then
+
+        
+        green "  Wgcf ${versionWgcf} 下载成功!"
+
+        ${configWgcfPath}/wgcf register --config "/root/wgcf-account.toml"
+        ${configWgcfPath}/wgcf generate --config "/root/wgcf-profile.conf"
+
+    else
+        ren "  Wgcf ${versionWgcf} 下载失败!"
+        exit
+    fi
+
+    bash <(curl -sSL https://raw.githubusercontent.com/jinwyp/one_click_script/master/wireguard.sh)
+    # wget -O wireguard.sh -N --no-check-certificate "https://raw.githubusercontent.com/teddysun/across/master/wireguard.sh" && chmod 755 wireguard.sh && ./wireguard.sh -r
+
+
+    echo "nameserver 8.8.8.8" >>  /etc/resolv.conf
+    echo "nameserver 8.8.4.4" >>  /etc/resolv.conf
+    echo "nameserver 1.1.1.1" >>  /etc/resolv.conf
+    echo "nameserver 9.9.9.9" >>  /etc/resolv.conf
+    echo "nameserver 9.9.9.10" >>  /etc/resolv.conf
+    echo "nameserver 8.8.8.8" >>  /etc/resolv.conf
+
+
+    cp /root/wgcf-profile.conf /etc/wireguard/wgcf.conf 
+
+    echo 
+    green " =================================================="
+    echo 
+    green "  验证 wireguard 是否启动正常 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
+
+    ${sudoCmd} wg-quick up wgcf
+
+    isWireguardIpv6Working=$(cat /etc/modules | grep CLOUDFLARENET )
+    echo "curl -6 ip.p3terx.com"
+    curl -6 ip.p3terx.com 
+
+    ${sudoCmd} wg-quick down wgcf
+
+
+	if [[ -n "$isWireguardIpv6Working" ]]; then	
+		green " Wireguard 启动正常! "
+	else 
+		green " ================================================== "
+		red " Wireguard 启动失败, 请检查linux 内核安装是否正确, 卸载后重新安装"
+		green " ================================================== "
+		exit
+	fi
+
+    # 启用守护进程
+    ${sudoCmd} systemctl start wg-quick@wgcf
+
+    # 设置开机启动
+    ${sudoCmd} systemctl enable wg-quick@wgcf
+
+
+    green " ================================================== "
+    green "  Wgcf ${versionWgcf} 和 wireguard 安装成功 !"
+    # green "  请选择是否替换xray 配置文件 解除 google 验证码 和 Netflix 解锁问题 !"
+    green "  请自行替换 v2ray或xray配置文件!"
+    green " ================================================== "
+
+
+    
+}
+
 
 
 
@@ -726,6 +825,12 @@ function getTrojanAndV2rayVersion(){
         versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
         downloadFilenameTrojanWeb="trojan"
         echo "versionTrojanWeb: ${versionTrojanWeb}"
+    fi
+
+    if [[ $1 == "wgcf" ]] ; then
+        versionWgcf=$(getGithubLatestReleaseVersion "ViRb3/wgcf")
+        downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
+        echo "versionWgcf: ${versionWgcf}"
     fi
 
 }
@@ -3396,7 +3501,8 @@ function startMenuOther(){
     green " 36. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
 
     echo
-    green " 41. 安装新版本 BBR-PLUS 加速6合一脚本"
+    green " 41. 安装新版本 BBR-PLUS 加速6合一脚本" 
+    green " 42. 安装 WireGuard, 用于解锁google 验证码和Netflix 限制" 
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -3511,7 +3617,10 @@ function startMenuOther(){
         ;;        
         41 )
             installBBR2
-        ;;        
+        ;; 
+        42 )
+            installWireguard
+        ;;                 
         9)
             start_menu
         ;;
@@ -3723,6 +3832,7 @@ function start_menu(){
             getTrojanAndV2rayVersion "trojan-web"
             getTrojanAndV2rayVersion "v2ray"
             getTrojanAndV2rayVersion "xray"
+            getTrojanAndV2rayVersion "wgcf"
         ;;
         0 )
             exit 1
