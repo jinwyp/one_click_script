@@ -590,7 +590,8 @@ function vps_LemonBench(){
 versionWgcf="2.2.2"
 downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
 configWgcfPath="/usr/local/bin"
-
+configWgcfAccountFilePath="/root/wgcf-account.toml"
+configWgcfProfileFilePath="/root/wgcf-profile.conf"
 
 function installWireguard(){
 
@@ -612,17 +613,20 @@ function installWireguard(){
 
     if [[ -f ${configWgcfPath}/wgcf ]]; then
 
-        
         green "  Wgcf ${versionWgcf} 下载成功!"
 
-        ${configWgcfPath}/wgcf register --config "/root/wgcf-account.toml"
-        ${configWgcfPath}/wgcf generate --config "/root/wgcf-profile.conf"
+        ${configWgcfPath}/wgcf register --config "${configWgcfAccountFilePath}"
+        ${configWgcfPath}/wgcf generate --config "${configWgcfProfileFilePath}"
+
+        sed -i 'AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
+        sed -i "s/engage\.cloudflareclient\.com/162\.159\.192\.1/g"  ${configWgcfProfileFilePath}
 
     else
         ren "  Wgcf ${versionWgcf} 下载失败!"
         exit
     fi
 
+    green "  开始安装 wireguard !"
     bash <(curl -sSL https://raw.githubusercontent.com/jinwyp/one_click_script/master/wireguard.sh)
     # wget -O wireguard.sh -N --no-check-certificate "https://raw.githubusercontent.com/teddysun/across/master/wireguard.sh" && chmod 755 wireguard.sh && ./wireguard.sh -r
 
@@ -635,7 +639,7 @@ function installWireguard(){
     echo "nameserver 8.8.8.8" >>  /etc/resolv.conf
 
 
-    cp /root/wgcf-profile.conf /etc/wireguard/wgcf.conf 
+    cp ${configWgcfProfileFilePath} /etc/wireguard/wgcf.conf 
 
     echo 
     green " =================================================="
@@ -2102,6 +2106,7 @@ function installV2ray(){
                         "level": 0,
                         "email": "password210@gmail.com"
                     },
+                    {
                         "password": "${configTrojanPasswordPrefixInput}202011",
                         "level": 0,
                         "email": "password211@gmail.com"
@@ -2151,6 +2156,7 @@ function installV2ray(){
                         "level": 0,
                         "email": "password220@gmail.com"
                     },
+                    {
                         "password": "${configTrojanPasswordPrefixInput}202021",
                         "level": 0,
                         "email": "password221@gmail.com"
