@@ -615,8 +615,11 @@ function installWireguard(){
 
         green "  Wgcf ${versionWgcf} 下载成功!"
 
-        ${configWgcfPath}/wgcf register --config "${configWgcfAccountFilePath}"
-        ${configWgcfPath}/wgcf generate --config "${configWgcfProfileFilePath}"
+        # ${configWgcfPath}/wgcf register --config "${configWgcfAccountFilePath}"
+        # ${configWgcfPath}/wgcf generate --config "${configWgcfProfileFilePath}"
+
+        ${configWgcfPath}/wgcf register 
+        ${configWgcfPath}/wgcf generate 
 
         sed -i 'AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
         sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g'  ${configWgcfProfileFilePath}
