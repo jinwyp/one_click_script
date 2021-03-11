@@ -595,7 +595,7 @@ configWgcfProfileFilePath="/root/wgcf-profile.conf"
 
 function installWireguard(){
 
-    getTrojanAndV2rayVersion("wgcf")
+    getTrojanAndV2rayVersion "wgcf"
     green " =================================================="
     green "    开始安装 Wgcf ${versionWgcf} 和 wireguard !"
     red "    需要先使用安装BBR脚本 安装原版本BBR,不能安装bbr plus"
