@@ -756,6 +756,14 @@ EOF
 
 }
 
+function DSMEditHosts(){
+	green " ================================================== "
+	green " 准备打开VI 编辑/etc/hosts"
+	green " 请用root 用户登录群晖系统的SSH 运行本命令"
+	green " ================================================== "
+
+	vi /etc/hosts
+}
 
 function DSMFixSNAndMac(){
 	green " ================================================== "
@@ -1049,7 +1057,7 @@ function DSMFixNvmeSSD(){
 }
 
 
-function DSMDisplayVideo(){
+function DSMCheckVideoCardPassThrough(){
 	green " ================================================== "
 	green " 检测群晖系统中 是否有显卡或显卡直通是否开启成功"
 	green " 请用root 用户登录群晖系统的SSH 运行本命令"
@@ -1127,10 +1135,11 @@ function start_menu(){
 	green " 11. 群晖补丁 开启ssh root登录"
 	green " 12. 群晖补丁 填入洗白的序列号和网卡Mac地址"
 	green " 13. 群晖补丁 使用vi 编辑/grub/grub.cfg 引导文件"
-	green " 14. 群晖补丁 修复DSM 6.2.3 找不到/dev/synoboot 从而升级失败问题"
-	green " 15. 群晖补丁 修复CPU型号显示错误"
-	green " 16. 群晖补丁 正确识别 Nvme 固态硬盘"	
-	green " 17. 群晖检测 是否有显卡或是否显卡直通成功 支持硬解"	
+	green " 14. 群晖补丁 使用vi 编辑/etc/host 文件"
+	green " 15. 群晖补丁 修复DSM 6.2.3 找不到/dev/synoboot 从而升级失败问题"
+	green " 16. 群晖补丁 修复CPU型号显示错误"
+	green " 17. 群晖补丁 正确识别 Nvme 固态硬盘"	
+	green " 18. 群晖检测 是否有显卡或是否显卡直通成功 支持硬解"	
 	echo
     green " 0. 退出脚本"
     echo
@@ -1169,18 +1178,21 @@ function start_menu(){
         ;;				
         13 )
             DSMFixSNAndMac "vi"
-        ;;				
+        ;;	
         14 )
+            DSMEditHosts
+        ;;				
+        15 )
             DSMFixDevSynoboot  
         ;;	
-        15 )
+        16 )
             DSMFixCPUInfo
         ;;						
-        16 )
+        17 )
             DSMFixNvmeSSD
         ;;		
-        17 )
-            DSMDisplayVideo 
+        18 )
+            DSMCheckVideoCardPassThrough 
         ;;							
         0 )
             exit 1

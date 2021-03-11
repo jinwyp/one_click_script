@@ -275,8 +275,8 @@ function setLinuxRootLogin(){
 
 
     ${sudoCmd} sed -i 's/#\?TCPKeepAlive yes/TCPKeepAlive yes/g' /etc/ssh/sshd_config
-    ${sudoCmd} sed -i 's/#\?ClientAliveCountMax 3/ClientAliveCountMax 300/g' /etc/ssh/sshd_config
-    ${sudoCmd} sed -i 's/#\?ClientAliveInterval [0-9]*/ClientAliveInterval 120/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?ClientAliveCountMax 3/ClientAliveCountMax 30/g' /etc/ssh/sshd_config
+    ${sudoCmd} sed -i 's/#\?ClientAliveInterval [0-9]*/ClientAliveInterval 40/g' /etc/ssh/sshd_config
 
     if [ "$osRelease" == "centos" ] ; then
 
@@ -396,9 +396,9 @@ EOF
 
         ${sudoCmd}  $osSystemPackage install -y epel-release
 
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz -y
-        $osSystemPackage install iputils-ping -y
+        $osSystemPackage install -y curl wget git unzip zip tar
+        $osSystemPackage install -y xz jq 
+        $osSystemPackage install -y iputils-ping
 
     elif [ "$osRelease" == "ubuntu" ]; then
         
@@ -414,10 +414,10 @@ deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
 
         $osSystemPackage update -y
-        ${sudoCmd} $osSystemPackage install software-properties-common -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
+        ${sudoCmd} $osSystemPackage install -y software-properties-common
+        $osSystemPackage install -y curl wget git unzip zip tar
+        $osSystemPackage install -y xz-utils jq
+        $osSystemPackage install -y iputils-ping
 
 
     elif [ "$osRelease" == "debian" ]; then
@@ -433,9 +433,9 @@ deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 EOF
         
         $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
-        $osSystemPackage install xz-utils -y
-        $osSystemPackage install iputils-ping -y
+        $osSystemPackage install -y curl wget git unzip zip tar
+        $osSystemPackage install -y xz-utils jq
+        $osSystemPackage install -y iputils-ping
     fi
 }
 
@@ -551,8 +551,10 @@ function installSoftOhMyZsh(){
 
 function vps_netflix(){
     # bash <(curl -sSL "https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh")
-	wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
-    # wget -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
+	# wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
+	wget -O netflix.sh -N --no-check-certificate https://github.com/CoiaPrant/MediaUnlock_Test/raw/main/check.sh && chmod +x netflix.sh && ./netflix.sh
+
+    # wget -N -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
 }
 
 
@@ -3386,6 +3388,7 @@ function startMenuOther(){
     green " 以下是 VPS 测网速工具"
     red " 脚本测速会大量消耗 VPS 流量，请悉知！"
     green " 31. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
+    echo
     green " 32. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
     green " 33. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
 	green " 34. testrace 回程路由测试 （四网路由测试）"
@@ -3488,6 +3491,7 @@ function startMenuOther(){
             removeV2ray
         ;;  
         31 )
+            installPackage
             vps_netflix
         ;;                                                         
         32 )
@@ -3568,14 +3572,15 @@ function start_menu(){
     red " 21. 卸载 trojan-go, v2ray或xray 和 nginx"
     echo
     green " 28. 查看已安装的配置和用户密码等信息"
-    green " 29. 安装 trojan 和 v2ray 可视化管理面板"
-    green " 30. 不安装nginx,只安装trojan或v2ray或xray(xtls),可选择是否安装SSL证书"
+    green " 29. 子菜单 安装 trojan 和 v2ray 可视化管理面板"
+    green " 30. 不安装nginx,只安装trojan或v2ray或xray,可选安装SSL证书, 方便与现有网站或宝塔面板集成"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
-    green " 32. 设置可以使用root登陆"
+    green " 32. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
-    green " 41. VPS 测网速工具 和 VPS是否支持Netflix 测试工具"
+    green " 35. 用 VI 编辑 authorized_keys 文件, 方便填入公钥, 免密码登录, 增加安全性"
+    green " 41. 子菜单 VPS 测网速工具 和 VPS是否支持Netflix 测试工具"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -3694,6 +3699,9 @@ function start_menu(){
             sleep 4s
             start_menu
         ;;
+        35 )
+            editLinuxLoginWithPublicKey
+        ;;        
         29 )
             startMenuOther
         ;;
@@ -3703,10 +3711,7 @@ function start_menu(){
         41 )
             startMenuOther
         ;;
-        77 )
-            editLinuxLoginWithPublicKey
-        ;;
-        78 )
+        89 )
             installPackage
         ;;
         88 )
