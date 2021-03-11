@@ -1955,6 +1955,31 @@ function installV2ray(){
     fi
 
 
+
+
+    read -p "是否使用IPV6 解锁Google 验证码 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]?" isV2rayUnlockGoogleInput
+    isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-n}
+
+    V2rayUnlockText=""
+
+    if [[ $isV2rayUnlockGoogleInput == [Yy] ]]; then
+        V2rayUnlockText="\"geosite:google\""
+    fi
+
+
+    read -p "是否使用IPV6 解锁Netflix 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]?" isV2rayUnlockNetflixInput
+    isV2rayUnlockNetflixInput=${isV2rayUnlockNetflixInput:-n}
+    
+    if [[ $isV2rayUnlockNetflixInput == [Yy] ]]; then
+        V2rayUnlockText="\"geosite:netflix\""
+    fi
+
+    if [[ $isV2rayUnlockGoogleInput == [Yy] && $isV2rayUnlockNetflixInput == [Yy] ]]; then
+        V2rayUnlockText="\"geosite:netflix\", \"geosite:google\""
+    fi
+
+
+
     if [ "$isXray" = "no" ] ; then
         getTrojanAndV2rayVersion "v2ray"
         green " =================================================="
@@ -2325,7 +2350,10 @@ EOM
                     }
 EOM
 
-    read -r -d '' v2rayConfigOutboundInput << EOM
+
+    if [[ $isV2rayUnlockGoogleInput == [Nn] && $isV2rayUnlockNetflixInput == [Nn] ]]; then
+        
+        read -r -d '' v2rayConfigOutboundInput << EOM
     "outbounds": [
         {
             "tag": "direct",
@@ -2339,6 +2367,43 @@ EOM
         }
     ]
 EOM
+    else
+
+        read -r -d '' v2rayConfigOutboundInput << EOM
+    "outbounds": [
+        {
+            "tag":"IP4_out",
+            "protocol": "freedom",
+            "settings": {}
+        },
+        {
+            "tag":"IP6_out",
+            "protocol": "freedom",
+            "settings": {
+                "domainStrategy": "UseIPv6" 
+            }
+        }
+    ],    
+    "routing": {
+        "rules": [
+            {
+                "type": "field",
+                "outboundTag": "IP6_out",
+                "domain": [${V2rayUnlockText}] 
+            },
+            {
+                "type": "field",
+                "outboundTag": "IP4_out",
+                "network": "udp,tcp"
+            }
+        ]
+    }
+EOM
+        
+    fi
+
+
+
 
     read -r -d '' v2rayConfigLogInput << EOM
     "log" : {
