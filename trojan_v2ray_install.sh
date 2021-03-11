@@ -608,7 +608,7 @@ function installWireguard(){
     cd ${HOME}
 
     # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
-    wget -O ${configWgcfPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionTrojanWeb}/${downloadFilenameWgcf}"
+    wget -O ${configWgcfPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
     ${sudoCmd} chmod +x ${configWgcfPath}/wgcf
 
     if [[ -f ${configWgcfPath}/wgcf ]]; then
@@ -619,7 +619,7 @@ function installWireguard(){
         ${configWgcfPath}/wgcf generate --config "${configWgcfProfileFilePath}"
 
         sed -i 'AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
-        sed -i "s/engage\.cloudflareclient\.com/162\.159\.192\.1/g"  ${configWgcfProfileFilePath}
+        sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g'  ${configWgcfProfileFilePath}
 
     else
         ren "  Wgcf ${versionWgcf} 下载失败!"
