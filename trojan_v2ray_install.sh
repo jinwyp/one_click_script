@@ -599,11 +599,25 @@ function installWireguard(){
     getTrojanAndV2rayVersion "wgcf"
     green " =================================================="
     green "    开始安装 Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} !"
-    red "    需要先使用安装BBR脚本 安装原版本BBR,不能安装bbr plus"
-    red "    Centos 7 推荐安装4.14 内核, 使用BBR脚本安装原版BBR即可"
-    red "    Debian或Ubuntu 也可以直接使用新版BBR安装脚本安装原版BBR, 内核在5.4以上"
+    red "    需要先使用安装BBR脚本 安装原版本BBR, 不能安装bbr plus"
+    red "    Centos 7 推荐安装4.11 内核, 使用本脚本第一项BBR脚本安装原版BBR即可"
+    red "    Debian或Ubuntu 也可以使用 本脚本里的新版BBR安装脚本安装原版BBR, 内核在5.4以上"
     red "    安装内核有风险, 导致VPS无法启动, 请慎重使用"
     green " =================================================="
+
+    green "当前Linux内核版本为: $(uname -r)"
+    green "当前Linux kernel devel 内核版本为: $(ls /usr/src/kernels)"
+    green "安装 Wireguard 需要保证kernel，kernel-devel，kernel-headers 版本一致"
+
+	read -p "是否继续操作? 请先确认linux内核已正确安装 直接回车默认继续操作, 请输入[Y/n]?" isContinueInput
+	isContinueInput=${isContinueInput:-Y}
+
+	if [[ $isContinueInput == [Yy] ]]; then
+		echo ""
+	else 
+        green " 请先用本脚本第一项安装BBR的脚本 安装原版BBR, linux内核更改为4.11 !"
+		exit
+	fi
 
     mkdir -p ${configWgcfConfigFilePath}
     mkdir -p ${configWgcfBinPath}
@@ -3812,7 +3826,7 @@ function start_menu(){
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
     green " 35. 用 VI 编辑 authorized_keys 文件, 方便填入公钥, 免密码登录, 增加安全性"
-    green " 41. 子菜单 VPS 测网速工具 和 VPS是否支持Netflix 测试工具"
+    green " 41. 子菜单 测网速工具, Netflix 测试工具, 解锁Netflix和去除google验证码工具"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
