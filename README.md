@@ -15,7 +15,7 @@
 7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
 8. trojan 和 v2ray 可视化管理面板安装. 
 9. 卸载后不留任何痕迹, 方便重复安装
-10. 一键安装wireguard, 解决google 验证码和Netflix限制问题
+10. 一键安装wireguard, 解决google 验证码和 Netflix 限制问题
 11. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
 12. 本脚本没有其他偷跑服务器流量的网页或其他屏蔽bt流量的限制等
 13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 不像其他多合一脚本写死固定端口容易被检测
@@ -133,7 +133,7 @@ Let's Encrypt证书申请频率的限制
 6. 脚本感谢 https://github.com/p4gefau1t/trojan-go
 7. 脚本感谢 https://github.com/ylx2016/Linux-NetSpeed
 8. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
-
+9. 脚本感谢 JCNF的博客 https://ybfl.xyz/111.html
 
 
 
