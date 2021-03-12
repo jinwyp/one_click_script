@@ -589,9 +589,10 @@ function vps_LemonBench(){
 
 versionWgcf="2.2.2"
 downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
-configWgcfPath="/usr/local/bin"
-configWgcfAccountFilePath="/root/wgcf-account.toml"
-configWgcfProfileFilePath="/root/wgcf-profile.conf"
+configWgcfBinPath="/usr/local/bin"
+configWgcfConfigFilePath="${HOME}/wireguard"
+configWgcfAccountFilePath="$configWgcfConfigFilePath/wgcf-account.toml"
+configWgcfProfileFilePath="$configWgcfConfigFilePath/wgcf-profile.conf"
 
 function installWireguard(){
 
@@ -604,8 +605,9 @@ function installWireguard(){
     red "    安装内核有风险, 导致VPS无法启动, 请慎重使用"
     green " =================================================="
 
-    mkdir -p ${configWgcfPath}
-    cd ${HOME}
+    mkdir -p ${configWgcfConfigFilePath}
+    mkdir -p ${configWgcfBinPath}
+    cd ${configWgcfConfigFilePath}
 
     # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
     wget -O ${configWgcfPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
@@ -683,6 +685,49 @@ function installWireguard(){
 
     
 }
+
+
+function removeWireguard(){
+    green " ================================================== "
+    red " 准备卸载已安装 Wireguard 和 Wgcf 工具 "
+    green " ================================================== "
+
+    if [ -f "${configWgcfBinPath}/wgcf" ]; then
+        ${sudoCmd} systemctl stop wg-quick@wgcf.service
+        ${sudoCmd} systemctl disable wg-quick@wgcf.service
+    else 
+        red " 系统没有安装 Wireguard 和 Wgcf, 退出卸载"
+        exit
+    fi
+
+    $osSystemPackage -y remove wireguard-dkms
+    $osSystemPackage -y remove wireguard-tools
+
+    rm -rf ${configWgcfConfigFilePath}
+
+    rm -f ${osSystemMdPath}wg-quick@wgcf.service
+
+    rm -f /usr/bin/wg
+    rm -f /usr/bin/wg-quick
+    rm -f /usr/share/man/man8/wg.8
+    rm -f /usr/share/man/man8/wg-quick.8
+
+    [ -d "/etc/wireguard" ] && "rm -fr /etc/wireguard"
+
+    modprobe -r wireguard
+
+
+    green " ================================================== "
+    green "  Wireguard 和 Wgcf 卸载完毕 !"
+    green " ================================================== "
+
+
+
+  
+}
+
+
+
 
 
 
@@ -3576,7 +3621,8 @@ function startMenuOther(){
 
     echo
     green " 41. 安装新版本 BBR-PLUS 加速6合一脚本" 
-    green " 42. 安装 WireGuard, 用于解锁google 验证码和Netflix 限制" 
+    green " 42. 安装 WireGuard, 用于解锁 google 验证码 和 Netflix 限制" 
+    green " 43. 卸载 WireGuard" 
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -3694,7 +3740,10 @@ function startMenuOther(){
         ;; 
         42 )
             installWireguard
-        ;;                 
+        ;;   
+        43 )
+            removeWireguard
+        ;;                       
         9)
             start_menu
         ;;
