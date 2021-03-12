@@ -623,7 +623,7 @@ function installWireguard(){
         ${configWgcfPath}/wgcf register 
         ${configWgcfPath}/wgcf generate 
 
-        sed -i 'AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
+        sed -i '/AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
         sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g'  ${configWgcfProfileFilePath}
 
     else
@@ -653,7 +653,7 @@ function installWireguard(){
 
     ${sudoCmd} wg-quick up wgcf
 
-    isWireguardIpv6Working=$(cat /etc/modules | grep CLOUDFLARENET )
+    isWireguardIpv6Working=$(curl -6 ip.p3terx.com | grep CLOUDFLARENET )
     echo "curl -6 ip.p3terx.com"
     curl -6 ip.p3terx.com 
 
@@ -669,6 +669,9 @@ function installWireguard(){
 		exit
 	fi
 
+
+    ${sudoCmd} systemctl daemon-reload
+
     # 启用守护进程
     ${sudoCmd} systemctl start wg-quick@wgcf
 
@@ -678,11 +681,9 @@ function installWireguard(){
 
     green " ================================================== "
     green "  Wgcf ${versionWgcf} 和 wireguard 安装成功 !"
-    # green "  请选择是否替换xray 配置文件 解除 google 验证码 和 Netflix 解锁问题 !"
-    green "  请自行替换 v2ray或xray配置文件!"
+    green "  用本脚本安装v2ray或xray 可以选择是否解除 google 验证码 和 Netflix 的限制 !"
+    green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
     green " ================================================== "
-
-
     
 }
 
