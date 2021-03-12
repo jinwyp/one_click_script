@@ -598,7 +598,7 @@ function installWireguard(){
 
     getTrojanAndV2rayVersion "wgcf"
     green " =================================================="
-    green "    开始安装 Wgcf ${versionWgcf} 和 wireguard !"
+    green "    开始安装 Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} !"
     red "    需要先使用安装BBR脚本 安装原版本BBR,不能安装bbr plus"
     red "    Centos 7 推荐安装4.14 内核, 使用BBR脚本安装原版BBR即可"
     red "    Debian或Ubuntu 也可以直接使用新版BBR安装脚本安装原版BBR, 内核在5.4以上"
@@ -615,7 +615,7 @@ function installWireguard(){
 
     if [[ -f ${configWgcfPath}/wgcf ]]; then
 
-        green "  Wgcf ${versionWgcf} 下载成功!"
+        green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
 
         # ${configWgcfPath}/wgcf register --config "${configWgcfAccountFilePath}"
         # ${configWgcfPath}/wgcf generate --config "${configWgcfProfileFilePath}"
@@ -631,7 +631,7 @@ function installWireguard(){
         exit
     fi
 
-    green "  开始安装 wireguard !"
+    green "  开始安装 Wireguard !"
     bash <(curl -sSL https://raw.githubusercontent.com/jinwyp/one_click_script/master/wireguard.sh)
     # wget -O wireguard.sh -N --no-check-certificate "https://raw.githubusercontent.com/teddysun/across/master/wireguard.sh" && chmod 755 wireguard.sh && ./wireguard.sh -r
 
@@ -648,20 +648,22 @@ function installWireguard(){
 
     echo 
     green " =================================================="
-    echo 
-    green "  验证 wireguard 是否启动正常 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
-
+    
     ${sudoCmd} wg-quick up wgcf
 
+    echo 
+    green "  验证 Wireguard 是否启动正常 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
     isWireguardIpv6Working=$(curl -6 ip.p3terx.com | grep CLOUDFLARENET )
+    echo
     echo "curl -6 ip.p3terx.com"
     curl -6 ip.p3terx.com 
-
-    ${sudoCmd} wg-quick down wgcf
-
+    echo
 
 	if [[ -n "$isWireguardIpv6Working" ]]; then	
 		green " Wireguard 启动正常! "
+
+        ${sudoCmd} wg-quick down wgcf
+        echo
 	else 
 		green " ================================================== "
 		red " Wireguard 启动失败, 请检查linux 内核安装是否正确, 卸载后重新安装"
@@ -680,7 +682,7 @@ function installWireguard(){
 
 
     green " ================================================== "
-    green "  Wgcf ${versionWgcf} 和 wireguard 安装成功 !"
+    green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
     green "  用本脚本安装v2ray或xray 可以选择是否解除 google 验证码 和 Netflix 的限制 !"
     green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
     green " ================================================== "
@@ -690,7 +692,7 @@ function installWireguard(){
 
 function removeWireguard(){
     green " ================================================== "
-    red " 准备卸载已安装 Wireguard 和 Wgcf 工具 "
+    red " 准备卸载已安装 Wireguard 和 Cloudflare Warp 命令行工具 Wgcf "
     green " ================================================== "
 
     if [ -f "${configWgcfBinPath}/wgcf" ]; then
@@ -717,12 +719,9 @@ function removeWireguard(){
 
     modprobe -r wireguard
 
-
     green " ================================================== "
-    green "  Wireguard 和 Wgcf 卸载完毕 !"
+    green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf 卸载完毕 !"
     green " ================================================== "
-
-
 
   
 }
