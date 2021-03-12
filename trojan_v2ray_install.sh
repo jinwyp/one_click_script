@@ -713,7 +713,7 @@ function removeWireguard(){
     rm -f /usr/share/man/man8/wg.8
     rm -f /usr/share/man/man8/wg-quick.8
 
-    [ -d "/etc/wireguard" ] && "rm -fr /etc/wireguard"
+    [ -d "/etc/wireguard" ] && ("rm -rf /etc/wireguard")
 
     modprobe -r wireguard
 
