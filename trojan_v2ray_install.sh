@@ -605,8 +605,9 @@ function installWireguard(){
     red "    安装内核有风险, 导致VPS无法启动, 请慎重使用"
     green " =================================================="
 
-    green "当前Linux内核版本为: $(uname -r)"
     green "当前Linux kernel devel 内核版本为: $(ls /usr/src/kernels)"
+    green "当前Linux内核版本为: $(uname -r)"
+    echo ""
     green "安装 Wireguard 需要保证kernel，kernel-devel，kernel-headers 版本一致"
 
 	read -p "是否继续操作? 请先确认linux内核已正确安装 直接回车默认继续操作, 请输入[Y/n]?" isContinueInput
