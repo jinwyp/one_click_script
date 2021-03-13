@@ -678,12 +678,10 @@ function installWireguard(){
 
 	if [[ -n "$isWireguardIpv6Working" ]]; then	
 		green " Wireguard 启动正常! "
-
-
         echo
 	else 
 		green " ================================================== "
-		red " Wireguard 通过 curl -6 ip.p3terx.com, 检测IPV6失败"
+		red " Wireguard 通过 curl -6 ip.p3terx.com, 检测使用CLOUDFLARENET的IPV6 访问失败"
         red " 请检查linux 内核安装是否正确, 卸载后重新安装"
         red " 安装会继续运行, 也有可能安装成功, 只是IPV6 没有使用"
 		green " ================================================== "
@@ -702,6 +700,9 @@ function installWireguard(){
 
     green " ================================================== "
     green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
+    green "  Wireguard 停止命令: systemctl stop wg-quick@wgcf  启动命令: systemctl start wg-quick@wgcf  重启命令: systemctl restart wg-quick@wgcf"
+    green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf 查看运行状态: systemctl status wg-quick@wgcf"
+    
     green "  用本脚本安装v2ray或xray 可以选择是否解除 google 验证码 和 Netflix 的限制 !"
     green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
     green " ================================================== "
