@@ -673,17 +673,21 @@ function installWireguard(){
     echo "curl -6 ip.p3terx.com"
     curl -6 ip.p3terx.com 
     echo
+    ${sudoCmd} wg-quick down wgcf
+
 
 	if [[ -n "$isWireguardIpv6Working" ]]; then	
 		green " Wireguard 启动正常! "
 
-        ${sudoCmd} wg-quick down wgcf
+
         echo
 	else 
 		green " ================================================== "
-		red " Wireguard 启动失败, 请检查linux 内核安装是否正确, 卸载后重新安装"
+		red " Wireguard 通过 curl -6 ip.p3terx.com, 检测IPV6失败"
+        red " 请检查linux 内核安装是否正确, 卸载后重新安装"
+        red " 安装会继续运行, 也有可能安装成功, 只是IPV6 没有使用"
 		green " ================================================== "
-		exit
+		
 	fi
 
 
