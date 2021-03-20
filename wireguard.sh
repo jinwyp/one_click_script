@@ -262,11 +262,11 @@ install_wg_pkgs() {
     case "$(_os)" in
         ubuntu|debian|raspbian)
             _error_detect "apt-get update"
-            _error_detect "apt-get -y install qrencode"
-            _error_detect "apt-get -y install iptables"
-            _error_detect "apt-get -y install bc"
-            _error_detect "apt-get -y install gcc"
-            _error_detect "apt-get -y install make"
+            # _error_detect "apt-get -y install qrencode"
+            # _error_detect "apt-get -y install iptables"
+            # _error_detect "apt-get -y install bc"
+            # _error_detect "apt-get -y install gcc"
+            # _error_detect "apt-get -y install make"
             _error_detect "apt-get -y install libmnl-dev"
             _error_detect "apt-get -y install libelf-dev"
             if [ ! -d "/usr/src/linux-headers-$(uname -r)" ]; then
@@ -278,20 +278,20 @@ install_wg_pkgs() {
             fi
             ;;
         fedora)
-            _error_detect "dnf -y install qrencode"
-            _error_detect "dnf -y install bc"
-            _error_detect "dnf -y install gcc"
-            _error_detect "dnf -y install make"
+            #_error_detect "dnf -y install qrencode"
+            # _error_detect "dnf -y install bc"
+            # _error_detect "dnf -y install gcc"
+            # _error_detect "dnf -y install make"
             _error_detect "dnf -y install libmnl-devel"
             _error_detect "dnf -y install elfutils-libelf-devel"
             [ ! -d "/usr/src/kernels/$(uname -r)" ] && _error_detect "dnf -y install kernel-headers" && _error_detect "dnf -y install kernel-devel"
             ;;
         centos)
             _error_detect "yum -y install epel-release"
-            _error_detect "yum -y install qrencode"
-            _error_detect "yum -y install bc"
-            _error_detect "yum -y install gcc"
-            _error_detect "yum -y install make"
+            #_error_detect "yum -y install qrencode"
+            #_error_detect "yum -y install bc"
+            #_error_detect "yum -y install gcc"
+            # _error_detect "yum -y install make"
             _error_detect "yum -y install yum-utils"
             if [ -n "$(_os_ver)" -a "$(_os_ver)" -eq 8 ]; then
                 yum-config-manager --enable PowerTools > /dev/null 2>&1 || yum-config-manager --enable powertools > /dev/null 2>&1

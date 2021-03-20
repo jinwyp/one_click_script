@@ -45,9 +45,9 @@ osSystemPackage=""
 osSystemMdPath=""
 osSystemShell="bash"
 
-# 系统检测版本
+
+# 检测系统发行版
 function getLinuxOSRelease(){
-    # copy from 秋水逸冰 ss scripts
     if [[ -f /etc/redhat-release ]]; then
         osRelease="centos"
         osSystemPackage="yum"
@@ -92,12 +92,15 @@ function getLinuxOSRelease(){
     echo "OS info: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
+# 检测系统版本号
 getLinuxOSVersion(){
     if [[ -s /etc/redhat-release ]]; then
         osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
     else
         osReleaseVersion=$(grep -oE '[0-9.]+' /etc/issue)
     fi
+
+    # https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
 
     if [ -f /etc/os-release ]; then
         # freedesktop.org and systemd
@@ -116,11 +119,13 @@ getLinuxOSVersion(){
         # For some versions of Debian/Ubuntu without lsb_release command
         . /etc/lsb-release
         osInfo=$DISTRIB_ID
+        
         osReleaseVersionNo=$DISTRIB_RELEASE
     elif [ -f /etc/debian_version ]; then
         # Older Debian/Ubuntu/etc.
         osInfo=Debian
-        osReleaseVersionNo=$(cat /etc/debian_version)
+        osReleaseVersion=$(cat /etc/debian_version)
+        osReleaseVersionNo=$(sed 's/\..*//' /etc/debian_version)
     elif [ -f /etc/redhat-release ]; then
         osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
     else

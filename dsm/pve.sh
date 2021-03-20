@@ -42,8 +42,8 @@ fi
 
 
 
-
-osSystemPackage="apt-get"
+osRelease="dsm"
+osSystemPackage="no"
 osCPU="intel"
 
 pveStatusIOMMU=""
@@ -51,6 +51,39 @@ pveStatusIOMMUDMAR=""
 pveStatusVTX=""
 pveStatusVTIntel=""
 pveStatusVTAMD=""
+
+
+# 检测系统发行版
+function getLinuxOSRelease(){
+	
+    if [[ -f /etc/redhat-release ]]; then
+        osRelease="centos"
+        osSystemPackage="yum"
+    elif [[ -f /etc/redhat-release ]] && (cat /etc/issue | grep -Eqi "debian|raspbian|Proxmox"); then
+        osRelease="debian"
+        osSystemPackage="apt-get"
+    elif [[ -f /etc/redhat-release ]] && (cat /etc/issue | grep -Eqi "ubuntu"); then
+        osRelease="ubuntu"
+        osSystemPackage="apt-get"
+    elif [[ -f /etc/redhat-release ]] && (cat /etc/issue | grep -Eqi "centos|red hat|redhat"); then
+        osRelease="centos"
+        osSystemPackage="yum"
+    elif cat /proc/version | grep -Eqi "debian|raspbian"; then
+        osRelease="debian"
+        osSystemPackage="apt-get"
+    elif cat /proc/version | grep -Eqi "ubuntu"; then
+        osRelease="ubuntu"
+        osSystemPackage="apt-get"
+    elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
+        osRelease="centos"
+        osSystemPackage="yum"
+    fi
+
+    [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
+
+    echo "OS info:  ${osRelease}, ${osSystemShell}, ${osSystemPackage}"
+}
+
 
 function checkCPU(){
 
@@ -64,15 +97,34 @@ function checkCPU(){
 	green " Status 状态显示--当前CPU是: $osCPU"
 }
 
-
 function installSoft(){
+	if [[ ${osRelease} != "dsm" ]] ; then
+
 	${osSystemPackage} -y install wget curl 
 
 	# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 	${osSystemPackage} -y install cpu-checker
 
 	# ${osSystemPackage} -y install git
-	
+
+    fi
+}
+
+function installiperf3(){
+    if [[ ${osRelease} == "dsm" ]] ; then
+		${sudoCmd} wget -O /usr/lib/libiperf.so.0 https://iperf.fr/download/ubuntu/libiperf.so.0_3.1.3
+		${sudoCmd} wget -O /usr/bin/iperf3 https://iperf.fr/download/ubuntu/iperf3_3.1.3
+		${sudoCmd} chmod +x /usr/bin/iperf3
+    else
+		${osSystemPackage} -y install iperf3   
+    fi
+
+	green " ================================================== "
+	green " 测网速软件iperf3 安装成功, 使用方法如下 "
+	green " 启动服务器端 运行 iperf3 -s "
+	green " 在另一台机器启动上传测速 运行 iperf3 -c 192.168.xx.xx, ip为服务端机器的ip即可"
+	green " 在另一台机器启动下载测速 运行 iperf3 -R -c 192.168.xx.xx, ip为服务端机器的ip即可"
+	green " ================================================== "
 }
 
 function rebootSystem(){
@@ -147,6 +199,95 @@ EOF
 }
 
 
+ 
+function lvextendDevRoot(){
+	echo
+	read -p "是否把多余空间都扩容到/dev/pve/root, 直接回车默认为是, 请输入[Y/n]?" isExtendDevRootInput
+	isExtendDevRootInput=${isExtendDevRootInput:-Y}
+
+	if [[ $isExtendDevRootInput == [Yy] ]]; then
+		lvextend -l +100%FREE -f pve/root  
+		resize2fs /dev/mapper/pve-root 
+		green " 已成功删除 $1 逻辑卷, 并扩容给 /dev/pve/root"
+	else 
+        green " 已成功删除 $1 逻辑卷, 多余空间请自行处理扩容"
+		exit
+	fi
+}
+
+function deleteVGLVPVESwap(){
+	green " ================================================== "
+	green " 准备删除 /dev/pve/swap 逻辑卷, 得到的空间都会增加给/dev/pve/root "
+
+	${sudoCmd} sed -i 's|/dev/pve/swap none swap|#/dev/pve/swap none swap|g' /etc/fstab
+
+	green " 请重启后 继续运行本脚本选择 第2项 继续完成删除"
+	
+	read -p "是否立即重启? 请输入[Y/n]?" isRebootInput
+	isRebootInput=${isRebootInput:-Y}
+
+	if [[ $isRebootInput == [Yy] ]]; then
+		${sudoCmd} reboot
+	fi
+
+	echo
+	echo "free"
+	free
+	
+	green " 请查看上面信息 swap 分区的 total, used, free 是否为0, 表明系统不在使用swap分区" 
+	echo ""
+
+	green " 删除 /dev/pve/swap 逻辑卷"
+	echo "lvremove /dev/pve/swap"
+	lvremove /dev/pve/swap
+
+	echo
+	green " 请查看删除swap分区后 多出来的空间容量"
+	vgdisplay pve | grep Free
+
+	lvextendDevRoot "/dev/pve/swap"
+
+	green " ================================================== "
+}
+
+
+function deleteVGLVPVEData(){
+	green " ================================================== "
+	green " 准备删除 /dev/pve/data 逻辑卷, 得到的空间都会增加给/dev/pve/root "
+
+	cp /etc/pve/storage.cfg /etc/pve/storage.cfg.bak
+
+	${sudoCmd} sed -i 's|content iso,vztmpl,backup|content backup,vztmpl,snippets,iso,images,rootdir|g' /etc/pve/storage.cfg
+
+	${sudoCmd} sed -i '/lvmthin/d' /etc/pve/storage.cfg
+	${sudoCmd} sed -i '/thinpool data/d' /etc/pve/storage.cfg
+	${sudoCmd} sed -i '/vgname pve/d' /etc/pve/storage.cfg
+	${sudoCmd} sed -i '/content rootdir,images/d' /etc/pve/storage.cfg
+
+
+	green " 请重启后 继续运行本脚本选择 第2项 继续完成删除"
+	 lvremove /dev/pve/data
+
+	echo "free"
+	free
+	
+	green " 请查看上面信息 swap 分区的 total, used, free 是否为0, 表明系统不在使用swap分区" 
+	echo ""
+
+	green " 删除 /dev/pve/data 逻辑卷"
+	echo "lvremove /dev/pve/data"
+	lvremove /dev/pve/data
+
+	echo
+	green " 请查看删除 /dev/pve/data 逻辑卷后 多出来的空间容量"
+	vgdisplay pve | grep Free 
+
+	lvextendDevRoot "/dev/pve/data"
+
+	green " ================================================== "
+}
+
+
 
 function checkIOMMU(){
 	green " ================================================== "
@@ -176,7 +317,7 @@ function checkIOMMU(){
 
 
 	pveStatusIOMMUText=$(dmesg | grep IOMMU)
-	pveStatusVTIntelText=$(dmesg | grep VT-d)
+	pveStatusVTIntelText=$(dmesg | grep x2apic )
 	pveStatusVTAMDText=$(dmesg | grep AMD-Vi)
 
 	if [[ -z "$pveStatusIOMMUText" ]]; then
@@ -196,7 +337,7 @@ function checkIOMMU(){
 		else
 			pveStatusVTIntel="yes"
 			green " 状态显示--当前是否开启Intel VT-d: $pveStatusVTIntel "
-			echo " dmesg | grep VT-d "
+			echo " dmesg | grep x2apic "
 			echo "$pveStatusVTIntelText"
 		fi
 		
@@ -295,8 +436,8 @@ function checkVfio(){
         pveStatusVifo="yes"
     fi
 
-	green " 上面信息 Kernel driver in use 这一行是 vfio-pic, 则显卡设备被PVE屏蔽成功, 可以直通显卡 "
-	green " 上面信息 Kernel driver in use 这一行是  i915 则显卡设备没有被PVE屏蔽, 无法直通显卡"
+	green " 上面信息 Kernel driver in use 这一行如果是 vfio-pic, 则显卡设备被PVE屏蔽成功, 可以直通显卡 "
+	green " 上面信息 Kernel driver in use 这一行如果是 i915, 则显卡设备没有被PVE屏蔽, 无法直通显卡"
 	green " 状态显示--当前是否可以直通显卡: $pveStatusVifo "
 
 	green " ================================================== "
@@ -368,7 +509,7 @@ function enableIOMMU(){
 			echo "blacklist i915" >> /etc/modprobe.d/pve-blacklist.conf
 
 		elif [[ $isAddPcieVideoCardBrandInput == [Nn] ]]; then
-			# N卡/A卡：
+			# N卡：
 			echo "blacklist nouveau" >> /etc/modprobe.d/pve-blacklist.conf
 			echo "options kvm ignore_msrs=1" > /etc/modprobe.d/kvm.conf
 		else
@@ -455,7 +596,7 @@ function disableIOMMU(){
 		${sudoCmd} sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet.*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/g' /etc/default/grub
 	fi
 
-	${sudoCmd} sed -i 's/vfio.*/ /g' /etc/modules
+	${sudoCmd} sed -i '/vfio.*/d' /etc/modules
 
 
 	# 恢复显卡直通文件
@@ -471,6 +612,7 @@ blacklist nvidiafb
 
 EOF
 
+	update-initramfs -u
 
 	update-grub
 	green "关闭IOMMU成功 需要重启生效!"
@@ -480,6 +622,9 @@ EOF
 
 	rebootSystem
 }
+
+
+
 
 
 
@@ -646,7 +791,7 @@ function genPVEVMDiskPT(){
 
 
 	green " ================================================== "
-	green " 请查看列出硬盘的ID"
+	green " 请查看列出硬盘的ID.  Run Command : ls -l /dev/disk/by-id/"
 	# echo "Run Command : ls -l /dev/disk/by-id/"
 
 
@@ -701,6 +846,8 @@ function genPVEVMDiskPT(){
 		exit
 	fi
 }
+
+
 
 
 
@@ -898,6 +1045,9 @@ function DSMFixCPUInfo(){
 	if [[ -f "/root/ch_cpuinfo" ]]; then
 		cpuInfoChangeRealPath="/root/ch_cpuinfo"
 
+	elif [[ -f "${HOME}/download/ch_cpuinfo" ]]; then
+		cpuInfoChangeRealPath="${HOME}/download/ch_cpuinfo"
+
 	elif [[ -f "./ch_cpuinfo" ]]; then
 		cpuInfoChangeRealPath="./ch_cpuinfo"
 
@@ -915,12 +1065,12 @@ function DSMFixCPUInfo(){
 		if [[ -f "${dsmChangeCPUInfoPathInput}" ]]; then
 			cpuInfoChangeRealPath="${dsmChangeCPUInfoPathInput}"
 		else
-			green " 没有找到 ch_cpuinfo 命令, 开始自动下载 ch_cpuinfo 命令到 ${HOME} 目录 "
-			mkdir -p ${HOME}
-			wget -P ${HOME} https://github.com/FOXBI/ch_cpuinfo/raw/master/ch_cpuinfo_2.2.1/ch_cpuinfo.tar
+			green " 没有找到 ch_cpuinfo 命令, 开始自动下载 ch_cpuinfo 命令到 ${HOME}/download 目录 "
+			mkdir -p ${HOME}/download
+			wget -P ${HOME}/download https://github.com/FOXBI/ch_cpuinfo/raw/master/ch_cpuinfo_2.2.1/ch_cpuinfo.tar
 
-			tar xvf ${HOME}/ch_cpuinfo.tar
-			cpuInfoChangeRealPath="${HOME}/ch_cpuinfo"
+			tar xvf ${HOME}/download/ch_cpuinfo.tar
+			cpuInfoChangeRealPath="${HOME}/download/ch_cpuinfo"
 		fi
 	fi
 
@@ -1060,7 +1210,9 @@ function DSMFixNvmeSSD(){
 function DSMCheckVideoCardPassThrough(){
 	green " ================================================== "
 	green " 检测群晖系统中 是否有显卡或显卡直通是否开启成功"
+	green " 请先在 PVE 控制台 添加PCI 显卡设备到群晖虚拟机"
 	green " 请用root 用户登录群晖系统的SSH 运行本命令"
+	red " Video station 软解检测 需要至少播放一次转码, 即在播放时选择[播放质量]为非[原始]例如选择[中]画质播放一次"
 	green " ================================================== "
 
 	DSMStatusVideoCardText=$(ls /dev/dri | grep "render")
@@ -1114,6 +1266,7 @@ function start_menu(){
     clear
 
     if [[ $1 == "first" ]] ; then
+		getLinuxOSRelease
         installSoft
     fi
 	checkCPU
@@ -1122,24 +1275,28 @@ function start_menu(){
     green " PVE 虚拟机 和 群晖 工具脚本 2021-03-08 更新. By jinwyp. 系统支持：PVE / debian10"
     green " =================================================="
 	green " 1. PVE 关闭企业更新源, 添加非订阅版更新源"
-    green " 2. PVE 开启IOMMU 用于支持直通, 需要在BIOS先开启VT-d"
-    green " 3. PVE 关闭IOMMU 关闭直通 恢复默认设置"
-    green " 4. 检测系统是否支持 IOMMU, VT-d VT-d"
-    green " 5. 检测系统是否开启显卡直通"
-
+	green " 2. PVE 删除 swap 分区（/dev/pve/swap 逻辑卷) 并全部扩容给 /dev/pve/root 逻辑卷"
+	green " 3. PVE 删除 local-lvm 储存盘 (/dev/pve/data 逻辑卷) 并全部扩容给 /dev/pve/root 逻辑卷"
 	echo
-	green " 6. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
-	green " 7. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
-	green " 8. PVE安装群晖 使用 qm set 命令添加整个硬盘(直通) 生成硬盘设备"
+    green " 6. PVE 开启IOMMU 用于支持直通, 需要在BIOS先开启VT-d"
+    green " 7. PVE 关闭IOMMU 关闭直通 恢复默认设置"
+    green " 8. 检测系统是否支持 IOMMU, VT-d VT-d"
+    green " 9. 检测系统是否开启显卡直通"
 	echo
-	green " 11. 群晖补丁 开启ssh root登录"
-	green " 12. 群晖补丁 填入洗白的序列号和网卡Mac地址"
-	green " 13. 群晖补丁 使用vi 编辑/grub/grub.cfg 引导文件"
-	green " 14. 群晖补丁 使用vi 编辑/etc/host 文件"
-	green " 15. 群晖补丁 修复DSM 6.2.3 找不到/dev/synoboot 从而升级失败问题"
-	green " 16. 群晖补丁 修复CPU型号显示错误"
-	green " 17. 群晖补丁 正确识别 Nvme 固态硬盘"	
-	green " 18. 群晖检测 是否有显卡或是否显卡直通成功 支持硬解"	
+	green " 15. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
+	green " 16. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
+	green " 17. PVE安装群晖 使用 qm set 命令添加整个硬盘(直通) 生成硬盘设备"
+	echo
+	green " 21. 群晖补丁 开启ssh root登录"
+	green " 22. 群晖补丁 填入洗白的序列号和网卡Mac地址"
+	green " 23. 群晖补丁 使用vi 编辑/grub/grub.cfg 引导文件"
+	green " 24. 群晖补丁 使用vi 编辑/etc/host 文件"
+	green " 25. 群晖补丁 修复DSM 6.2.3 找不到/dev/synoboot 从而升级失败问题"
+	green " 26. 群晖补丁 修复CPU型号显示错误"
+	green " 27. 群晖补丁 正确识别 Nvme 固态硬盘"	
+	green " 28. 群晖检测 是否有显卡或是否显卡直通成功 支持硬解"	
+	echo
+	green " 41. 局域网测速 安装测速软件 iperf3"	
 	echo
     green " 0. 退出脚本"
     echo
@@ -1149,51 +1306,61 @@ function start_menu(){
             updatePVEAptSource
         ;;	
         2 )
+            deleteVGLVPVESwap
+        ;;	
+        3 )
+            deleteVGLVPVEData
+        ;;					
+        6 )
             enableIOMMU
         ;;
-        3 )
+        7 )
             disableIOMMU
         ;;
-        4 )
+        8 )
             checkIOMMU
 			checkIOMMUDMAR
         ;;
-        5 )
+        9 )
             checkVfio
         ;;
-        6 )
+        15 )
             genPVEVMDiskWithQM
         ;;
-        7 )
+        16 )
             genPVEVMDiskWithQM "Img2kvm"
         ;;
-        8 )
+        17 )
             genPVEVMDiskPT
         ;;	
-        11 )
+        21 )
             DSMOpenSSHRoot
         ;;				
-        12 )
+        22 )
             DSMFixSNAndMac 
         ;;				
-        13 )
+        23 )
             DSMFixSNAndMac "vi"
         ;;	
-        14 )
+        24 )
             DSMEditHosts
         ;;				
-        15 )
+        25 )
             DSMFixDevSynoboot  
         ;;	
-        16 )
+        26 )
             DSMFixCPUInfo
         ;;						
-        17 )
+        27 )
             DSMFixNvmeSSD
         ;;		
-        18 )
+        28 )
             DSMCheckVideoCardPassThrough 
-        ;;							
+        ;;
+        41 )
+            installiperf3 
+        ;;				
+								
         0 )
             exit 1
         ;;
