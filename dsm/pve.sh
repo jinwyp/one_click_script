@@ -201,23 +201,36 @@ EOF
 
  
 function lvextendDevRoot(){
-	echo
-	read -p "是否把多余空间都扩容到/dev/pve/root, 直接回车默认为是, 请输入[Y/n]?" isExtendDevRootInput
-	isExtendDevRootInput=${isExtendDevRootInput:-Y}
+	echo "准备把剩余空间扩容给 /dev/pve/root 或 /dev/pve/data"
 
+	read -p "是否把剩余空间都扩容到/dev/pve/root 或 /dev/pve/data, 否为不处理扩容空间. 直接回车默认为是, 请输入[Y/n]?" isExtendDevRootInput
+	isExtendDevRootInput=${isExtendDevRootInput:-Y}
+	
+	toExtendDevVolume="root"
 	if [[ $isExtendDevRootInput == [Yy] ]]; then
-		lvextend -l +100%FREE -f pve/root  
-		resize2fs /dev/mapper/pve-root 
-		green " 已成功删除 $1 逻辑卷, 并扩容给 /dev/pve/root"
+
+		if [[ $1 == "/dev/pve/swap" ]]; then
+			read -p "把剩余空间扩容到 /pve/root 还是 /pve/data?, 直接回车默认为是 /dev/root 盘, 否为/dev/data盘, 请输入[Y/n]?" isExtendDevDataInput
+			isExtendDevDataInput=${isExtendDevDataInput:-Y}
+
+			if [[ $isExtendDevDataInput == [Nn] ]]; then
+				toExtendDevVolume="data"
+			fi
+		fi
+
+		echo "lvextend -l +100%FREE -f pve/${toExtendDevVolume}"
+		lvextend -l +100%FREE -f "pve/${toExtendDevVolume}"  
+		resize2fs "/dev/mapper/pve-${toExtendDevVolume}" 
+		green " 已成功删除 $1 逻辑卷, 并扩容给 /dev/pve/${toExtendDevVolume}"
 	else 
-        green " 已成功删除 $1 逻辑卷, 多余空间请自行处理扩容"
+        green " 已成功删除 $1 逻辑卷, 剩余空间请自行处理扩容"
 		exit
 	fi
 }
 
 function deleteVGLVPVESwap(){
 	green " ================================================== "
-	green " 准备删除 /dev/pve/swap 逻辑卷, 得到的空间都会增加给/dev/pve/root "
+	green " 准备删除 /dev/pve/swap 逻辑卷, 得到的空间都会增加给/dev/pve/root 或 /dev/pve/data "
 
 	${sudoCmd} sed -i 's|/dev/pve/swap none swap|#/dev/pve/swap none swap|g' /etc/fstab
 
@@ -266,7 +279,7 @@ function deleteVGLVPVEData(){
 
 
 	green " 请重启后 继续运行本脚本选择 第2项 继续完成删除"
-	 lvremove /dev/pve/data
+	lvremove /dev/pve/data
 
 	echo "free"
 	free
@@ -455,6 +468,8 @@ function enableIOMMU(){
 	echo
 	green " PT模式 (pass-through using SR-IOV): PCIe设备只在需要时进行IOMMU转换, 开启可提高性能, 添加 'iommu=pt' 参数开启 "
 	echo
+	green " 如果AMD的CPU 例如Ryzen II 4750G 遇到 AMD-Vi: Unable to read/write to IOMMU perf counter. , 添加 'iommu=soft' 参数解决 "
+	echo
 	green " 开启显卡核显直通: 可以添加 'video=efifb:off,vesafb:off' 参数开启 "
 	yellow " 注意: 开启显卡直通, 虚拟机不能设置自动随着宿主机开机自动启动, 否则宿主机会与虚拟机抢占显卡设备导致死机无法启动 "
 	echo
@@ -475,14 +490,25 @@ function enableIOMMU(){
 	read -p "是否增加iommu=pt 参数? 默认否, 请输入[y/N]?" isAddPciePTInput
 	isAddPciePTInput=${isAddPciePTInput:-n}
 
+	read -p "是否增加iommu=soft 参数解决 AMD CPU的 Unable to read/write to IOMMU perf counter问题, 默认否, 请输入[y/N]?" isAddAMDCPUFixedPerfCounterInput
+	isAddAMDCPUFixedPerfCounterInput=${isAddAMDCPUFixedPerfCounterInput:-n}
+
+	read -p "是否增加acpi=off 参数解决 ACPI BIOS Error 问题, 默认否, 请输入[y/N]?" isAddAMDCPUFixedACPIInput
+	isAddAMDCPUFixedACPIInput=${isAddAMDCPUFixedACPIInput:-n}
+	
 	isAddPcieText=""
 	if [[ $isAddPciePTInput == [Yy] ]]; then
 		isAddPcieText="iommu=pt"
 	fi
 
+	if [[ $isAddAMDCPUFixedACPIInput == [Yy] ]]; then
+		isAddPcieText="${isAddPcieText} acpi=off"
+	fi
+
 	if [[ $isAddPcieGroupsInput == [Yy] ]]; then
 		isAddPcieText="${isAddPcieText} pcie_acs_override=downstream"
 	fi
+
 
 
 	# https://www.proxmox.wiki/?thread-32.htm
@@ -552,7 +578,13 @@ function enableIOMMU(){
     if [[ $osCPU == "intel" ]]; then
 		${sudoCmd} sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet.*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on '"${isAddPcieText}"'"/g' /etc/default/grub
 	else
-		${sudoCmd} sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet.*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on '"${isAddPcieText}"'"/g' /etc/default/grub
+
+		if [[ $isAddAMDCPUFixedPerfCounterInput == [Yy] ]]; then
+			${sudoCmd} sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet.*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet iommu=soft '"${isAddPcieText}"'"/g' /etc/default/grub
+		else
+			${sudoCmd} sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet.*"/GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on '"${isAddPcieText}"'"/g' /etc/default/grub
+		fi
+
 	fi
 
 	pveIsAddedVfioModule=$(cat /etc/modules | grep vfio )
@@ -1296,7 +1328,7 @@ function start_menu(){
 	green " 27. 群晖补丁 正确识别 Nvme 固态硬盘"	
 	green " 28. 群晖检测 是否有显卡或是否显卡直通成功 支持硬解"	
 	echo
-	green " 41. 局域网测速 安装测速软件 iperf3"	
+	green " 51. 局域网测速 安装测速软件 iperf3"	
 	echo
     green " 0. 退出脚本"
     echo
@@ -1357,10 +1389,12 @@ function start_menu(){
         28 )
             DSMCheckVideoCardPassThrough 
         ;;
-        41 )
+        51 )
             installiperf3 
         ;;				
-								
+        88 )
+            lvextendDevRoot "/dev/pve/swap"	 
+        ;;								
         0 )
             exit 1
         ;;
