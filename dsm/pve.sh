@@ -545,11 +545,17 @@ function enableIOMMU(){
 
 		echo
 		yellow " 添加模块黑名单，是否添加直通显卡所带声卡和麦克风: "
-		read -p "是否直通显卡所带声卡和麦克风, 直接回车默认是, 请输入[Y/n]?" isAddPcieVideoCardAudioInput
+		read -p "是否屏蔽显卡所带声卡和麦克风 用于直通, 直接回车默认是, 请输入[Y/n]?" isAddPcieVideoCardAudioInput
 		isAddPcieVideoCardAudioInput=${isAddPcieVideoCardAudioInput:-y}
 		
 		if [[ $isAddPcieVideoCardAudioInput == [Yy] ]]; then
 			echo "blacklist snd_soc_skl" >> /etc/modprobe.d/pve-blacklist.conf
+
+			if [[ $isAddAMDCPUFixedPerfCounterInput == [Yy] ]]; then
+				echo "blacklist snd_pci_acp3x" >> /etc/modprobe.d/pve-blacklist.conf
+				echo "blacklist snd_rn_pci_acp3x" >> /etc/modprobe.d/pve-blacklist.conf
+			fi
+
 		fi
 
 		pveVfioVideoId=$(lspci -n | grep -E "0300" | awk '{print $3}' )
