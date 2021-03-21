@@ -1304,7 +1304,7 @@ function start_menu(){
 	checkCPU
 
     green " =================================================="
-    green " PVE 虚拟机 和 群晖 工具脚本 2021-03-08 更新. By jinwyp. 系统支持：PVE / debian10"
+    green " PVE 虚拟机 和 群晖 工具脚本 2021-03-22 更新. By jinwyp. 系统支持：PVE / debian10"
     green " =================================================="
 	green " 1. PVE 关闭企业更新源, 添加非订阅版更新源"
 	green " 2. PVE 删除 swap 分区（/dev/pve/swap 逻辑卷) 并全部扩容给 /dev/pve/root 逻辑卷"
