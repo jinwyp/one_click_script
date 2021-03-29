@@ -399,14 +399,15 @@ enabled=1
 
 EOF
 
-        $osSystemPackage update -y
+        ${osSystemPackage} update -y
 
-        ${sudoCmd}  $osSystemPackage install -y epel-release
+        ${sudoCmd}  ${osSystemPackage} install -y epel-release
 
-        $osSystemPackage install -y curl wget git unzip zip tar
-        $osSystemPackage install -y xz jq redhat-lsb-core 
-        $osSystemPackage install -y iputils-ping
-
+        ${osSystemPackage} install -y curl wget git unzip zip tar
+        ${osSystemPackage} install -y xz jq redhat-lsb-core 
+        ${osSystemPackage} install -y iputils-ping
+        ${osSystemPackage} -y install iperf3
+        
     elif [ "$osRelease" == "ubuntu" ]; then
         
         # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
@@ -420,17 +421,17 @@ deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
 
-        $osSystemPackage update -y
-        ${sudoCmd} $osSystemPackage install -y software-properties-common
-        $osSystemPackage install -y curl wget git unzip zip tar
-        $osSystemPackage install -y xz-utils jq lsb-core lsb-release
-        $osSystemPackage install -y iputils-ping
-
+        ${osSystemPackage} update -y
+        ${sudoCmd} ${osSystemPackage} install -y software-properties-common
+        ${osSystemPackage} install -y curl wget git unzip zip tar
+        ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
+        ${osSystemPackage} install -y iputils-ping
+        ${osSystemPackage} -y install iperf3
 
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
 
-        $osSystemPackage install -y gnupg2
+        ${osSystemPackage} install -y gnupg2
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
         # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
@@ -439,10 +440,11 @@ deb http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 EOF
         
-        $osSystemPackage update -y
-        $osSystemPackage install -y curl wget git unzip zip tar
-        $osSystemPackage install -y xz-utils jq lsb-core lsb-release
-        $osSystemPackage install -y iputils-ping
+        ${osSystemPackage} update -y
+        ${osSystemPackage} install -y curl wget git unzip zip tar
+        ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
+        ${osSystemPackage} install -y iputils-ping
+        ${osSystemPackage} -y install iperf3
     fi
 }
 

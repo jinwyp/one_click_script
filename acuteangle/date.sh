@@ -141,7 +141,7 @@ iface vmbr0 inet dhcp
 EOF
 	green " ================================================== "
 	red "$IPInput is not the real ip. It only shows on the welcome message !"
-	red "Please check the real DHCP ip on the router !"
+	red "Please run command 'ifconfig' to show the real IP or check the real ip on the router !"
 
 	green " ================================================== "
 	else
@@ -182,10 +182,15 @@ EOF
 	
 	fi
 
-sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/issue
+sed -i -e "s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/${IPInput}/g" /etc/issue
 sed -i "s/10\.100\.99\.1/${IPInput}/g" /etc/hosts
 
 sed -i "s/# alias/alias/g" /root/.bashrc
+
+green " ================================================== "
+green " Change IP to ${IPInput} success !"
+echo "Please Check file /etc/hosts and make sure the IP of your hostname is correct"
+green " ================================================== "
 }
 
 

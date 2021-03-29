@@ -32,6 +32,17 @@ bold(){
     echo -e "\033[1m\033[01m$1\033[0m"
 }
 
+function set_text_color(){
+    COLOR_RED='\E[1;31m'
+    COLOR_GREEN='\E[1;32m'
+    COLOR_YELOW='\E[1;33m'
+    COLOR_BLUE='\E[1;34m'
+    COLOR_PINK='\E[1;35m'
+    COLOR_PINKBACK_WHITEFONT='\033[45;37m'
+    COLOR_GREEN_LIGHTNING='\033[32m \033[05m'
+    COLOR_END='\E[0m'
+}
+
 
 
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
@@ -44,6 +55,7 @@ fi
 
 osRelease="dsm"
 osSystemPackage="no"
+osSystemMdPath="/lib/systemd/system/"
 osCPU="intel"
 
 pveStatusIOMMU=""
@@ -59,6 +71,7 @@ function getLinuxOSRelease(){
     if [[ -f /etc/redhat-release ]]; then
         osRelease="centos"
         osSystemPackage="yum"
+		osSystemMdPath="/usr/lib/systemd/system/"
     elif [[ -f /etc/redhat-release ]] && (cat /etc/issue | grep -Eqi "debian|raspbian|Proxmox"); then
         osRelease="debian"
         osSystemPackage="apt-get"
@@ -68,6 +81,7 @@ function getLinuxOSRelease(){
     elif [[ -f /etc/redhat-release ]] && (cat /etc/issue | grep -Eqi "centos|red hat|redhat"); then
         osRelease="centos"
         osSystemPackage="yum"
+		osSystemMdPath="/usr/lib/systemd/system/"
     elif cat /proc/version | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
@@ -77,6 +91,7 @@ function getLinuxOSRelease(){
     elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
         osRelease="centos"
         osSystemPackage="yum"
+		osSystemMdPath="/usr/lib/systemd/system/"
     fi
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
@@ -86,7 +101,6 @@ function getLinuxOSRelease(){
 
 
 function checkCPU(){
-
 	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
 	if [[ $osCPUText =~ "GenuineIntel" ]]; then
 		osCPU="intel"
@@ -97,15 +111,18 @@ function checkCPU(){
 	green " Status 状态显示--当前CPU是: $osCPU"
 }
 
+
 function installSoft(){
 	if [[ ${osRelease} != "dsm" ]] ; then
 
-	${osSystemPackage} -y install wget curl 
-
-	# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
-	${osSystemPackage} -y install cpu-checker
+	${osSystemPackage} -y install wget curl  
 
 	# ${osSystemPackage} -y install git
+
+		if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
+			${osSystemPackage} -y install cpu-checker
+		fi
 
     fi
 }
@@ -149,6 +166,107 @@ function promptContinueOpeartion(){
 	fi
 }
 
+
+
+
+function setPVEIP(){
+	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration
+
+	green " ================================================== "
+
+	green " 请选择使用静态IP模式还是DHCP自动获取IP模式, 直接回车默认静态IP模式 "
+	read -p "Choose IP Mode: DHCP(y) or Static(n) ? (default: static ip) Pls Input [y/N]?" IPModeInput
+	IPModeInput=${IPModeInput:-n}
+	green " 请输入指定的IP地址, 如果已选择了DHCP模式 输入的IP不是实际的IP地址,仅作为在开机欢迎语中的IP显示"
+	read -p "Please input IP address of your n3450 computer (default:192.168.7.200) ?" IPInput
+
+	if [[ $IPModeInput == [Yy] ]]; then
+    cat > /etc/network/interfaces <<-EOF
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+
+# The primary network interface
+iface enp1s0 inet manual
+
+auto vmbr0
+iface vmbr0 inet dhcp
+    bridge_ports enp1s0
+    bridge_stp off
+    bridge_fd 0
+
+
+# allow-hotplug wlp2s0
+# iface wlp2s0 inet dhcp
+# pre-up ip link set wlan0 up
+# pre-up iwconfig wlan0 essid ssid
+# wpa-ssid ssid
+# wpa-psk password
+
+EOF
+	green " ================================================== "
+	red "$IPInput is not the real ip. It only shows on the welcome message !"
+	red "Please run command 'ifconfig' to show the real IP or check the real ip on the router !"
+	red "$IPInput 不是实际的IP, 仅在开机欢迎语中显示, 实际的IP请运行命令 'ifconfig' 或通过路由器查看"
+
+	green " ================================================== "
+	else
+
+		read -p "Please input IP netmask (default:255.255.255.0) ?" netmaskInput
+		read -p "Please input IP gateway (default:192.168.7.1) ?" gatewayInput
+
+		IPInput=${IPInput:-192.168.7.200}
+		netmaskInput=${netmaskInput:-255.255.255.0}
+		gatewayInput=${gatewayInput:-192.168.7.1}
+
+
+    cat > /etc/network/interfaces <<-EOF
+
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+iface enp1s0 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+    address ${IPInput}
+    netmask ${netmaskInput}
+    gateway ${gatewayInput}
+    bridge_ports enp1s0
+    bridge_stp off
+    bridge_fd 0
+	
+
+EOF
+	
+	fi
+
+
+# https://unix.stackexchange.com/questions/340347/sed-replace-any-ip-address-with-127-0-0-1
+
+sed -i -e "s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/${IPInput}/g" /etc/issue
+
+sed -i "s/# alias l/alias l/g" /root/.bashrc
+
+	green " ================================================== "
+	green " IP修改成功, 已修改为 ${IPInput}"
+	green " 请手工修改 /etc/hosts 文件, 确保 hostname 也改为新IP"
+	green " ================================================== "
+}
 
 
 
@@ -506,10 +624,10 @@ function enableIOMMU(){
 	fi
 
 	if [[ $isAddPcieGroupsInput == [Yy] ]]; then
-		isAddPcieText="${isAddPcieText} pcie_acs_override=downstream"
+		isAddPcieText="${isAddPcieText} pcie_acs_override=downstream,multifunction "
 	fi
 
-
+	# https://www.reddit.com/r/homelab/comments/b5xpua/the_ultimate_beginners_guide_to_gpu_passthrough/
 
 	# https://www.proxmox.wiki/?thread-32.htm
 	# http://www.dannysite.com/blog/257/
@@ -536,12 +654,16 @@ function enableIOMMU(){
 
 		elif [[ $isAddPcieVideoCardBrandInput == [Nn] ]]; then
 			# N卡：
+			echo "blacklist nvidia" >> /etc/modprobe.d/pve-blacklist.conf
 			echo "blacklist nouveau" >> /etc/modprobe.d/pve-blacklist.conf
-			echo "options kvm ignore_msrs=1" > /etc/modprobe.d/kvm.conf
+
 		else
 			# /A卡：
 			echo "blacklist radeon" >> /etc/modprobe.d/pve-blacklist.conf
 		fi
+
+		echo "options vfio_iommu_type1 allow_unsafe_interrupts=1" > /etc/modprobe.d/iommu_unsafe_interrupts.conf
+		echo "options kvm ignore_msrs=1" > /etc/modprobe.d/kvm.conf
 
 		echo
 		yellow " 添加模块黑名单，是否添加直通显卡所带声卡和麦克风: "
@@ -572,10 +694,12 @@ function enableIOMMU(){
 		isAddPcieVideoAudoVfioInput=${isAddPcieVideoAudoVfioInput:-y}
 		
 		if [[ $isAddPcieVideoAudoVfioInput == [Yy] ]]; then
-			echo "options vfio-pci ids=${pveVfioVideoId},${pveVfioAudioId}" > /etc/modprobe.d/vfio.conf
+			echo "options vfio-pci ids=${pveVfioVideoId},${pveVfioAudioId} disable_vga=1" > /etc/modprobe.d/vfio.conf
 		else 
-			echo "options vfio-pci ids=${pveVfioVideoId}" > /etc/modprobe.d/vfio.conf
+			echo "options vfio-pci ids=${pveVfioVideoId} disable_vga=1" > /etc/modprobe.d/vfio.conf
 		fi
+
+
 
 		update-initramfs -u
 
@@ -639,6 +763,7 @@ function disableIOMMU(){
 
 	# 恢复显卡直通文件
 	rm /etc/modprobe.d/kvm.conf
+	rm /etc/modprobe.d/iommu_unsafe_interrupts.conf
 	rm /etc/modprobe.d/vfio.conf
 
 	cat > "/etc/modprobe.d/pve-blacklist.conf" <<-EOF
@@ -1300,9 +1425,589 @@ function DSMCheckVideoCardPassThrough(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function getGithubLatestReleaseVersion(){
+    # https://github.com/p4gefau1t/trojan-go/issues/63
+    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
+}
+
+
+function checkPortInUse { 
+
+	if [[ $1 -gt 1 && $1 -le 65535 ]]; then
+		
+		netstat -tulpn | grep [0-9]:$1 -q ; 
+		if [ $? -eq 1 ]; then 
+			green "端口号 $1 没有被占用, 继续安装..." 
+			false 
+		else 
+			red "输入的端口号 $1 已被占用! 请检查端口是否被占用, 然后重新运行脚本安装" 
+			true
+			exit
+		fi
+	else
+		red "输入的端口号错误! 必须是[1-65535]. 请重新输入" 
+		inputFrpServerPort $2
+	fi
+}
+
+
+
+function inputFrpServerPort {
+
+	echo ""
+	if [[ $1 == "text_FRP_bind_port" ]]; then
+		read -p "请输入 Frps 服务器 通讯端口, 必须是纯数字 范围[1-65535], 默认7000. 请输入纯数字?" FRP_bind_port
+		FRP_bind_port=${FRP_bind_port:-7000}
+		checkPortInUse "${FRP_bind_port}" $1 
+	fi
+
+	if [[ $1 == "text_FRP_vhost_http_port" ]]; then
+		read -p "请输入 Frps 服务器 Web Http 监听端口, 必须是纯数字 范围[1-65535], 默认80. 请输入纯数字?" FRP_vhost_http_port
+		FRP_vhost_http_port=${FRP_vhost_http_port:-80}
+		checkPortInUse "${FRP_vhost_http_port}" $1 
+	fi
+
+	if [[ $1 == "text_FRP_vhost_https_port" ]]; then
+		read -p "请输入 Frps 服务器 Web Https 监听端口, 必须是纯数字 范围[1-65535], 默认443. 请输入纯数字?" FRP_vhost_https_port
+		FRP_vhost_https_port=${FRP_vhost_https_port:-443}
+		checkPortInUse "${FRP_vhost_https_port}" $1 
+	fi
+
+	if [[ $1 == "text_FRP_bind_udp_port" ]]; then
+		FRP_bind_udp_port=7001
+		let FRP_bind_udp_port=FRP_bind_port+1
+		if [ $FRP_bind_udp_port -gt 65535 ]; then
+			FRP_bind_udp_port=7001
+		fi
+		checkPortInUse "${FRP_bind_udp_port}" $1 
+	fi
+
+
+	if [[ $1 == "text_FRP_dashboard_port" ]]; then
+		read -p "请输入 Frps 服务器 管理界面端口, 必须是纯数字 范围[1-65535], 默认7500. 请输入纯数字?" FRP_dashboard_port
+		FRP_dashboard_port=${FRP_dashboard_port:-7500}
+		checkPortInUse "${FRP_dashboard_port}" $1 
+	fi
+
+	if [[ $1 == "text_FRP_dashboard_user" ]]; then
+		read -p "请输入 Frps 服务器 登录管理界面的用户名, 默认为 admin. 请输入?" FRP_dashboard_user 
+		FRP_dashboard_user=${FRP_dashboard_user:-admin}
+	fi
+
+	if [[ $1 == "text_FRP_dashboard_pwd" ]]; then
+		read -p "请输入 Frps 服务器 登录管理界面的 ${FRP_dashboard_user} 用户的密码, 默认为 admin. 请输入?" FRP_dashboard_pwd
+		FRP_dashboard_pwd=${FRP_dashboard_pwd:-admin}
+	fi
+
+	if [[ $1 == "text_FRP_token" ]]; then
+		tempFrpToken=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+		read -p "请输入 Frps 服务器与客户端通讯的 token 密码, 默认为8位随机数. 请输入?" FRP_token
+		FRP_token=${FRP_token:-$tempFrpToken}
+	fi
+
+}
+
+
+# https://github.com/stilleshan/frpc/blob/master/frpc_linux_install.sh
+
+configFrpPath="${HOME}/frp"
+configFrpPathBin="/usr/bin"
+configFrpPathIni="/etc/frp"
+configFrpLogFile="${HOME}/frp/frps.log"
+
+versionFRP="0.36.2"
+downloadFilenameFRP="frp_${versionFRP}_linux_amd64.tar.gz"
+downloadFilenameFRPFolder="frp_${versionFRP}_linux_amd64"
+
+installFrpType="frpc"
+installFrpPromptText="Frp 的 linux 客户端 frpc"
+
+function installFRP(){
+
+	if [[ $1 == "frps" ]] ; then
+		installFrpType="frps"
+		installFrpPromptText="Frp 的 linux 服务器端 frps"
+	fi
+
+   	if [ -f ${configFrpPathBin}/${installFrpType} ]; then
+        green " =================================================="
+   	 	red "    已安装过 ${installFrpPromptText}, 如需继续安装, 请卸载后重新安装 "
+    	green " =================================================="
+        exit
+    fi
+
+
+	versionFRP=$(getGithubLatestReleaseVersion "fatedier/frp")
+	downloadFilenameFRP="frp_${versionFRP}_linux_amd64.tar.gz"
+	downloadFilenameFRPFolder="frp_${versionFRP}_linux_amd64"
+
+	FRP_SERVER_IP=$(wget -qO- ip.clang.cn | sed -r 's/\r//')
+
+	green " =================================================="
+    green "   开始安装 ${installFrpPromptText} ${versionFRP} "
+    echo -e "   当前服务器IP: ${COLOR_GREEN} ${FRP_SERVER_IP} ${COLOR_END}"
+    green " =================================================="
+	echo ""
+
+	inputFrpServerPort "text_FRP_bind_port"
+
+	inputFrpServerPort "text_FRP_token"
+
+	inputFrpServerPort "text_FRP_bind_udp_port"
+
+	inputFrpServerPort "text_FRP_vhost_http_port"
+	inputFrpServerPort "text_FRP_vhost_https_port"
+
+	inputFrpServerPort "text_FRP_dashboard_port"
+	inputFrpServerPort "text_FRP_dashboard_user"
+	inputFrpServerPort "text_FRP_dashboard_pwd"
+
+
+	mkdir -p ${configFrpPath} 
+	mkdir -p ${configFrpPathBin} 
+	mkdir -p ${configFrpPathIni} 
+
+	cd ${configFrpPath} 
+
+	# 下载并移动frpc文件
+	# https://github.com/fatedier/frp/releases/download/v0.36.2/frp_0.36.2_linux_amd64.tar.gz
+
+	wget -P ${configFrpPath} https://github.com/fatedier/frp/releases/download/v${versionFRP}/${downloadFilenameFRP}
+	tar -zxf ${configFrpPath}/${downloadFilenameFRP} -C ${configFrpPath}
+	
+	cd ${downloadFilenameFRPFolder}
+
+
+
+
+	if [[ $1 == "frps" ]] ; then
+
+		# 配置 frps.ini
+	    cat > ${configFrpPathIni}/${installFrpType}.ini <<-EOF
+[common]
+
+bind_port = ${FRP_bind_port}
+bind_udp_port = ${FRP_bind_udp_port}
+kcp_bind_port = ${FRP_bind_port}
+
+token = ${FRP_token}
+
+vhost_http_port = ${FRP_vhost_http_port}
+vhost_https_port = ${FRP_vhost_https_port}
+
+
+dashboard_port = ${FRP_dashboard_port}
+dashboard_user = ${FRP_dashboard_user}
+dashboard_pwd = ${FRP_dashboard_pwd}
+
+log_file = ${configFrpLogFile}
+log_level = info
+log_max_days = 7
+
+max_pool_count = 20
+
+
+EOF
+
+
+        # 增加启动脚本
+        cat > ${osSystemMdPath}frps.service <<-EOF
+[Unit]
+Description=Frp Server Service
+After=network.target syslog.target
+Wants=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=5s
+ExecStart=${configFrpPathBin}/frps -c ${configFrpPathIni}/${installFrpType}.ini
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+	else
+		installFrpType="frpc"
+	fi
+
+
+	${sudoCmd} chown root:nobody ${configFrpPath}/${downloadFilenameFRPFolder}/frps
+	${sudoCmd} chown root:nobody ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
+	${sudoCmd} chown root:nobody ${configFrpPathIni}/${installFrpType}.ini
+
+	${sudoCmd} chmod +rx ${configFrpPath}/${downloadFilenameFRPFolder}/frps
+	${sudoCmd} chmod +rx ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
+	${sudoCmd} chmod +rx ${configFrpPathIni}/${installFrpType}.ini
+
+	${sudoCmd} chcon -t bin_t ${configFrpPath}/${downloadFilenameFRPFolder}/frps
+	${sudoCmd} chcon -t bin_t ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
+	${sudoCmd} chcon -t etc_t ${configFrpPathIni}/${installFrpType}.ini
+
+
+
+	mv ${configFrpPath}/${downloadFilenameFRPFolder}/frpc ${configFrpPathBin}
+	mv ${configFrpPath}/${downloadFilenameFRPFolder}/frps ${configFrpPathBin}
+
+	rm -rf ${configFrpPath}/${downloadFilenameFRPFolder}
+	${sudoCmd} chmod +x ${osSystemMdPath}${installFrpType}.service
+	${sudoCmd} systemctl daemon-reload
+	${sudoCmd} systemctl enable ${installFrpType}.service 
+	${sudoCmd} systemctl start ${installFrpType}.service
+	${sudoCmd} systemctl status ${installFrpType}.service 
+
+	echo
+	green "======================================================================"
+	green "    ${installFrpPromptText} ${versionFRP} 安装成功 !"
+	green "    ${installFrpPromptText} 可执行文件路径 ${configFrpPathBin}/${installFrpType}"
+	green "    ${installFrpPromptText} 配置路径 ${configFrpPathIni}/${installFrpType}.ini "
+	green "    ${installFrpPromptText} 访问日志 ${configFrpLogFile} 或运行 journalctl -n 50 -u ${installFrpType}.service 查看 !"
+	green "    ${installFrpPromptText} 停止命令: systemctl stop ${installFrpType}  启动命令: systemctl start ${installFrpType} "
+	green "    ${installFrpPromptText} 重启命令: systemctl restart ${installFrpType}"
+	green "======================================================================"
+	echo
+	green "    ${installFrpPromptText} 配置具体如下: "
+	green "    bind_udp_port = ${FRP_bind_port} "
+	green "    token = ${FRP_token} "
+	green "    vhost_http_port = ${FRP_vhost_http_port} "
+	green "    vhost_https_port = ${FRP_vhost_https_port} "
+	green "    dashboard_port = ${FRP_dashboard_port} "
+	green "    dashboard_user = ${FRP_dashboard_user} "
+	green "    dashboard_pwd = ${FRP_dashboard_pwd} "
+	green "    log_file = ${configFrpLogFile} "
+	echo
+	green "======================================================================"
+
+
+	# https://stackoverflow.com/questions/9381463/how-to-create-a-file-in-linux-from-terminal-window
+
+    cat > ${configFrpPath}/frp_readme.txt <<-EOF
+
+${installFrpPromptText} ${versionFRP} 安装成功
+${installFrpPromptText} 可执行文件路径 ${configFrpPathBin}/${installFrpType}
+${installFrpPromptText} 配置路径 ${configFrpPathIni}/${installFrpType}.ini 
+
+${installFrpPromptText} 访问日志 ${configFrpLogFile} 或运行 journalctl -n 50 -u ${installFrpType}.service 查看
+
+${installFrpPromptText} 停止命令: systemctl stop ${installFrpType}  
+${installFrpPromptText} 启动命令: systemctl start ${installFrpType}
+${installFrpPromptText} 重启命令: systemctl restart ${installFrpType}
+
+
+${installFrpPromptText} 服务器端 配置如下:
+
+[common]
+
+bind_port = ${FRP_bind_port}
+bind_udp_port = ${FRP_bind_udp_port}
+kcp_bind_port = ${FRP_bind_port}
+
+token: ${FRP_token}
+
+vhost_http_port = ${FRP_vhost_http_port}
+vhost_https_port = ${FRP_vhost_https_port}
+
+dashboard_port = ${FRP_dashboard_port}
+dashboard_user = ${FRP_dashboard_user}
+dashboard_pwd = ${FRP_dashboard_pwd}
+
+log_file = ${configFrpLogFile}
+log_level = info
+log_max_days = 7
+
+max_pool_count = 20
+
+
+
+EOF
+
+}
+
+
+function checkFRPInstalledStatus(){
+   	if [ -f ${osSystemMdPath}frps.service ]; then
+		installFrpType="frps"
+		installFrpPromptText="Frp 的 linux 服务器端 frps"
+
+	elif [ -f ${osSystemMdPath}frpc.service ]; then
+		echo ""
+	else
+		echo ""
+		red " 当前系统中 没有安装 FRP ，请检查 ! "	
+		echo ""
+		exit 255
+	fi
+}
+
+function removeFRP(){
+	checkFRPInstalledStatus
+
+    ${sudoCmd} systemctl stop ${installFrpType}.service
+    ${sudoCmd} systemctl disable ${installFrpType}.service
+
+    green " ================================================== "
+    red " 准备卸载已安装的 ${installFrpPromptText}"
+    green " ================================================== "
+
+    rm -rf ${configFrpPath}
+    rm -f ${osSystemMdPath}${installFrpType}.service
+    rm -f ${configFrpPathBin}/frps
+    rm -f ${configFrpPathBin}/frpc
+    rm -f ${configFrpPathIni}/${installFrpType}.ini
+
+    green " ================================================== "
+    green "  ${installFrpPromptText} 已成功卸载 !"
+    green " ================================================== "
+}
+
+
+function upgradeFRP(){
+   	checkFRPInstalledStatus
+
+	versionFRP=$(getGithubLatestReleaseVersion "fatedier/frp")
+	downloadFilenameFRP="frp_${versionFRP}_linux_amd64.tar.gz"
+	downloadFilenameFRPFolder="frp_${versionFRP}_linux_amd64"
+
+   	if [ -f ${configFrpPath}/${downloadFilenameFRP} ]; then
+		green " =================================================="
+		red "    当前 ${installFrpPromptText} 已是最新版本 ${versionFRP}, 无需升级 "
+		green " =================================================="
+		exit
+	fi
+
+	green " =================================================="
+    green "    开始升级 ${installFrpPromptText} ${versionFRP} "
+    green " =================================================="
+
+	${sudoCmd} systemctl stop ${installFrpType}.service
+
+	cd ${configFrpPath} 
+
+	# 下载并移动frpc文件
+	# https://github.com/fatedier/frp/releases/download/v0.36.2/frp_0.36.2_linux_amd64.tar.gz
+
+	wget -P ${configFrpPath} https://github.com/fatedier/frp/releases/download/v${versionFRP}/${downloadFilenameFRP}
+	tar -zxf ${configFrpPath}/${downloadFilenameFRP} -C ${configFrpPath}
+	
+	cd ${downloadFilenameFRPFolder}
+
+	${sudoCmd} chmod +x ${configFrpPath}/${downloadFilenameFRPFolder}/frps
+	${sudoCmd} chmod +x ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
+
+	mv ${configFrpPath}/${downloadFilenameFRPFolder}/frpc ${configFrpPathBin}
+	mv ${configFrpPath}/${downloadFilenameFRPFolder}/frps ${configFrpPathBin}
+
+	rm -rf ${configFrpPath}/${downloadFilenameFRPFolder}
+
+	${sudoCmd} systemctl start ${installFrpType}.service
+
+    green " ================================================== "
+    green "     ${installFrpPromptText} 升级成功 Version: ${versionFRP} !"
+    green " ================================================== "
+
+}
+
+function systemRunFRP(){
+	checkFRPInstalledStatus
+
+	${sudoCmd} systemctl $1 ${installFrpType}.service
+
+    green " ================================================== "
+	echo "systemctl $1 ${installFrpType}.service"
+    green "     ${installFrpPromptText} $1 运行成功 !"
+    green " ================================================== "
+}
+
+function checkLogFRP(){
+   	checkFRPInstalledStatus
+
+	if [[ $1 == "ini" ]] ; then
+		echo
+		cat ${configFrpPath}/frp_readme.txt
+		echo
+		echo
+		# cat ${configFrpPathIni}/${installFrpType}.ini
+	else
+		echo ""
+		green " 查看日志操作说明"
+		echo ""
+		red " 退出查看日志 请按 Ctrl+C 后, 再按 q 键" 
+		echo ""
+		red " 按 Ctrl+C 后, 通过'上下'键浏览, 'f,b' 键前后翻整页, 'd,u' 键翻半页 " 
+		echo ""
+		red " 更多用法请查看 less 命令 " 
+		echo ""
+		promptContinueOpeartion
+		less +F ${configFrpLogFile}
+	fi
+}
+
+
+function subMenuInstallFRP(){
+    clear
+    green " =================================================="
+    green " 1. 安装 Frp 服务器端版本 frps"
+    green " 2. 安装 Frp 客户端版本 frpc"
+	echo
+    green " 3. 升级 Frp 到最新版本"
+    red " 4. 卸载 Frp "
+    echo
+	green " 5. 启动 Frp"
+	green " 6. 停止 Frp"
+	green " 7. 重启 Frp"
+	echo
+	green " 8. 查看 Frp 配置信息"
+	green " 9. 查看 Frp 日志"
+    echo
+    green " 10. 返回上级菜单"
+    green " 0. 退出脚本"
+    echo
+    read -p "请输入数字:" menuNumberInput
+    case "$menuNumberInput" in
+        1 )
+            installFRP "frps"
+        ;;
+        2 )
+            installFRP
+        ;;
+        3 )
+            upgradeFRP
+        ;;
+        4 )
+            removeFRP
+        ;;
+        5 )
+            systemRunFRP "start"
+        ;;
+        6 )
+            systemRunFRP "stop"
+        ;;
+        7 )
+            systemRunFRP "restart"
+        ;;
+        8 )
+            checkLogFRP "ini"
+        ;;             
+        9)
+            checkLogFRP
+        ;;
+        10)
+            start_menu
+        ;;
+        0 )
+            exit 1
+        ;;
+        * )
+            clear
+            red "请输入正确数字 !"
+            sleep 2s
+            subMenuInstallFRP
+        ;;
+    esac
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function start_menu(){
     clear
-
+	set_text_color
+	
     if [[ $1 == "first" ]] ; then
 		getLinuxOSRelease
         installSoft
@@ -1315,6 +2020,7 @@ function start_menu(){
 	green " 1. PVE 关闭企业更新源, 添加非订阅版更新源"
 	green " 2. PVE 删除 swap 分区（/dev/pve/swap 逻辑卷) 并全部扩容给 /dev/pve/root 逻辑卷"
 	green " 3. PVE 删除 local-lvm 储存盘 (/dev/pve/data 逻辑卷) 并全部扩容给 /dev/pve/root 逻辑卷"
+	green " 4. PVE 修改IP地址 "
 	echo
     green " 6. PVE 开启IOMMU 用于支持直通, 需要在BIOS先开启VT-d"
     green " 7. PVE 关闭IOMMU 关闭直通 恢复默认设置"
@@ -1335,6 +2041,7 @@ function start_menu(){
 	green " 28. 群晖检测 是否有显卡或是否显卡直通成功 支持硬解"	
 	echo
 	green " 51. 局域网测速 安装测速软件 iperf3"	
+	green " 52. 子菜单 安装 FRP 内网穿透工具"	
 	echo
     green " 0. 退出脚本"
     echo
@@ -1348,6 +2055,9 @@ function start_menu(){
         ;;	
         3 )
             deleteVGLVPVEData
+        ;;					
+        4 )
+            setPVEIP
         ;;					
         6 )
             enableIOMMU
@@ -1397,6 +2107,9 @@ function start_menu(){
         ;;
         51 )
             installiperf3 
+        ;;		
+        52 )
+            subMenuInstallFRP 
         ;;				
         88 )
             lvextendDevRoot "/dev/pve/swap"	 
@@ -1416,4 +2129,6 @@ function start_menu(){
 
 
 start_menu "first"
+
+
 
