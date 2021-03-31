@@ -3,9 +3,9 @@
 
 ## 目录 Table of Contents
 
-* [Trojan和V2ray 一键安装脚本](#installation-安装方法)
+* [Trojan 和 V2ray xray 一键安装脚本](#installation-安装方法)
 * [V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本](#installation-soga)
-* [PVE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
+* [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
 * [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
 
@@ -30,7 +30,7 @@
 2. Using Trojan or Nginx or v2ray-core / Xray-core as frontend listening port 443
 3. Install trojan or trojan-go and V2Ray or Xray on the same server to support all protocol.
 4. Support Debian9+, Ubuntu 16+ and CentOS 7+ operation systems
-
+5. install wireguard and wgcf to solve google CAPTCHA and netflix ip unlock
 
 ## Installation 安装方法  
 
