@@ -35,16 +35,40 @@ bold(){
 }
 
 
-
+osCPU="intel"
+osArchitecture="arm"
 osInfo=""
 osRelease=""
 osReleaseVersion=""
 osReleaseVersionNo=""
-osReleaseVersionCodeName=""
+osReleaseVersionCodeName="CodeName"
 osSystemPackage=""
 osSystemMdPath=""
 osSystemShell="bash"
 
+
+function checkArchitecture(){
+	# https://stackoverflow.com/questions/48678152/how-to-detect-386-amd64-arm-or-arm64-os-architecture-via-shell-bash
+
+	case $(uname -m) in
+		i386)   osArchitecture="386" ;;
+		i686)   osArchitecture="386" ;;
+		x86_64) osArchitecture="amd64" ;;
+		arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+		* )     osArchitecture="arm" ;;
+	esac
+}
+
+function checkCPU(){
+	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
+	if [[ $osCPUText =~ "GenuineIntel" ]]; then
+		osCPU="intel"
+    else
+        osCPU="amd"
+    fi
+
+	# green " Status 状态显示--当前CPU是: $osCPU"
+}
 
 # 检测系统发行版
 function getLinuxOSRelease(){
@@ -86,10 +110,12 @@ function getLinuxOSRelease(){
     fi
 
     getLinuxOSVersion
+    checkArchitecture
+	checkCPU
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
-    echo "OS info: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
+    green " 系统信息: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
 # 检测系统版本号
@@ -254,7 +280,7 @@ function editLinuxLoginWithPublicKey(){
 
 function setLinuxRootLogin(){
 
-    read -p "是否设置允许root登陆(ssh密钥方式 或 密码方式登陆 )? 请输入[Y/n]?" osIsRootLoginInput
+    read -p "是否设置允许root登陆(ssh密钥方式 或 密码方式登陆 )? 请输入[Y/n]:" osIsRootLoginInput
     osIsRootLoginInput=${osIsRootLoginInput:-Y}
 
     if [[ $osIsRootLoginInput == [Yy] ]]; then
@@ -270,7 +296,7 @@ function setLinuxRootLogin(){
     fi
 
 
-    read -p "是否设置允许root使用密码登陆(上一步请先设置允许root登陆才可以)? 请输入[Y/n]?" osIsRootLoginWithPasswordInput
+    read -p "是否设置允许root使用密码登陆(上一步请先设置允许root登陆才可以)? 请输入[Y/n]:" osIsRootLoginWithPasswordInput
     osIsRootLoginWithPasswordInput=${osIsRootLoginWithPasswordInput:-Y}
 
     if [[ $osIsRootLoginWithPasswordInput == [Yy] ]]; then
@@ -350,7 +376,7 @@ function setLinuxDateZone(){
         green " =================================================="
         # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 
-        read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]?" osTimezoneInput
+        read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]:" osTimezoneInput
         osTimezoneInput=${osTimezoneInput:-Y}
 
         if [[ $osTimezoneInput == [Yy] ]]; then
@@ -384,6 +410,24 @@ function installBBR2(){
     wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
+
+
+function installSoftDownload(){
+	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+		if ! dpkg -l | grep -qw wget; then
+			${osSystemPackage} -y install wget curl git
+			
+			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
+			${osSystemPackage} -y install cpu-checker
+		fi
+
+	elif [[ "${osRelease}" == "centos" ]]; then
+		if ! rpm -qa | grep -qw wget; then
+			${osSystemPackage} -y install wget curl git
+		fi
+	fi
+
+}
 
 function installPackage(){
     if [ "$osRelease" == "centos" ]; then
@@ -617,7 +661,7 @@ function installWireguard(){
     echo ""
     green "安装 Wireguard 需要保证kernel，kernel-devel，kernel-headers 版本一致"
 
-	read -p "是否继续操作? 请先确认linux内核已正确安装 直接回车默认继续操作, 请输入[Y/n]?" isContinueInput
+	read -p "是否继续操作? 请先确认linux内核已正确安装 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
 	isContinueInput=${isContinueInput:-Y}
 
 	if [[ $isContinueInput == [Yy] ]]; then
@@ -945,7 +989,7 @@ function isTrojanGoInstall(){
 function compareRealIpWithLocalIp(){
 
     yellow " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
-    read -p "是否检测域名指向的IP正确? 请输入[Y/n]?" isDomainValidInput
+    read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
     isDomainValidInput=${isDomainValidInput:-Y}
 
     if [[ $isDomainValidInput == [Yy] ]]; then
@@ -2004,7 +2048,7 @@ function installV2ray(){
         promptInfoXrayName="xray"
         isXray="yes"
     else
-        read -p "是否使用Xray内核(默认为V2ray内核 )? 请输入[y/N]?" isV2rayOrXrayInput
+        read -p "是否使用Xray内核(默认为V2ray内核 )? 请输入[y/N]:" isV2rayOrXrayInput
         isV2rayOrXrayInput=${isV2rayOrXrayInput:-n}
 
         if [[ $isV2rayOrXrayInput == [Yy] ]]; then
@@ -2018,7 +2062,7 @@ function installV2ray(){
          configV2rayProtocol="vless"
     else 
 
-        read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[y/N]?" isV2rayUseVLessInput
+        read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[y/N]:" isV2rayUseVLessInput
         isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
 
         if [[ $isV2rayUseVLessInput == [Yy] ]]; then
@@ -2032,7 +2076,7 @@ function installV2ray(){
 
 
 
-    read -p "是否使用IPV6 解锁Google 验证码 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]?" isV2rayUnlockGoogleInput
+    read -p "是否使用IPV6 解锁Google 验证码 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]:" isV2rayUnlockGoogleInput
     isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-n}
 
     V2rayUnlockText=""
@@ -2042,7 +2086,7 @@ function installV2ray(){
     fi
 
 
-    read -p "是否使用IPV6 解锁Netflix 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]?" isV2rayUnlockNetflixInput
+    read -p "是否使用IPV6 解锁Netflix 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]:" isV2rayUnlockNetflixInput
     isV2rayUnlockNetflixInput=${isV2rayUnlockNetflixInput:-n}
     
     if [[ $isV2rayUnlockNetflixInput == [Yy] ]]; then
@@ -3537,7 +3581,7 @@ function getHTTPSNoNgix(){
 
     read configSSLDomain
 
-    read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]?" isDomainSSLRequestInput
+    read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]:" isDomainSSLRequestInput
     isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
     isInstallNginx="false"
@@ -3797,7 +3841,7 @@ function start_menu(){
 
     if [[ $1 == "first" ]] ; then
         getLinuxOSRelease
-        ${osSystemPackage} -y install wget curl git 
+        installSoftDownload
     fi
 
     green " =================================================="
