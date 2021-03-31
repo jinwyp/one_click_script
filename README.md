@@ -1,15 +1,12 @@
 # Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
 
-# Trojan (支持 trojan-go) 和 V2ray (支持 xray) 一键安装脚本
-
-# 支持 V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本
 
 ## 目录 Table of Contents
 
 * [Trojan和V2ray 一键安装脚本](#installation-安装方法)
 * [V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本](#installation-soga)
-* [PVE虚拟机 群晖NAS 安装工具脚本](/pve/readme.md)
-* [FRP 内网穿透工具 一键安装脚本](/pve/readme.md)
+* [PVE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
+* [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
 * [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
 
 
