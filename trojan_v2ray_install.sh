@@ -3845,7 +3845,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 2021-03-12 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray 一键安装脚本 2021-04-02 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " =================================================="
     green " 1. 安装 BBR-PLUS 加速4合一脚本"
