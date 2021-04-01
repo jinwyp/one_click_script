@@ -1,55 +1,45 @@
 # Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
 
-# Trojan (支持 trojan-go版本) 和 V2ray (支持 xray版本) 一键安装脚本
 
-# 支持 V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本
+## 目录 Table of Contents
+
+* [Trojan 和 V2ray xray 一键安装脚本](#installation-安装方法)
+* [V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本](#installation-soga)
+* [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
+* [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
+* [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
+
 
 ## 功能说明 Features 
 
-1. 系统要求：centos7+/debian9+/ubuntu16.04+
-2. 支持 trojan， trojan-go 和v2ray 的 安装 升级 完全卸载
-3. 支持 trojan 或 trojan-go 与 v2ray 共存, nginx全面支持TLS1.3 保证安全性, 支持SNI分流
-4. 支持 v2ray 新的vless协议 , 支持v2ray作为前端 同时转发trojan 和 websocket 
+1. 支持 trojan，trojan-go 和 v2ray, xray 的安装 升级 卸载. 卸载后不留任何痕迹, 方便重复安装.
+2. 支持 trojan 或 trojan-go 与 v2ray 共存, nginx全面支持TLS1.3 保证安全性, 支持SNI分流
+3. 可以仅安装 trojan 或 v2ray, 可以不安装nginx. 方便与宝塔面板或现有网站共存.
+4. 支持 v2ray 和 xray 新的vless协议, 支持v2ray作为前端 监听443端口 同时转发trojan 和 websocket 
 5. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
-6. 可以仅安装 trojan 或 v2ray 而不安装nginx
-7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
-8. trojan 和 v2ray 可视化管理面板安装. 
-9. 卸载后不留任何痕迹, 方便重复安装
-10. 一键安装wireguard, 解决google 验证码和 Netflix 限制问题
-11. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
-12. 本脚本没有其他偷跑服务器流量的网页或其他屏蔽bt流量的限制等
-13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 不像其他多合一脚本写死固定端口容易被检测
-14. 本脚本不推荐安装多种v2ray的多种协议共存, 协议安装的越多安全性越低, 而且也不会提高速度, 没有必要使用多合一的脚本同时安装多个协议
+6. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
+7. trojan 和 v2ray 可视化管理面板安装. 
+8. 一键安装wireguard, 解决google 验证码和 Netflix 限制问题
+9. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
+12. 本脚本没有偷跑服务器流量的网页或其他屏蔽bt流量的等限制. 默认网页仅为bootstarp最简单的模板
+13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 而其他脚本写死固定端口容易被检测
+14. 本脚本不推荐安装多种v2ray的多种协议共存, 协议越多安全性越低, 而且也不会提高速度, 没有必要使用多合一的脚本同时安装多个协议
 
 ## Features English 
 1. Install V2Ray or Xray using VLESS or VMess, support all condition: VLESS+TCP+TLS / VLESS+Websocket+TLS(CDN) / VMess+TCP+TLS / VMess+Websocket+TLS(CDN)  
 2. Using Trojan or Nginx or v2ray-core / Xray-core as frontend listening port 443
 3. Install trojan or trojan-go and V2Ray or Xray on the same server to support all protocol.
 4. Support Debian9+, Ubuntu 16+ and CentOS 7+ operation systems
+5. install wireguard and wgcf to solve google CAPTCHA and netflix ip unlock
 
-
-## 安装方法 Installation 
-
-####  通过 curl 命令安装  via curl to install script
-
-```bash
-curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
-
-```
-
-或
+## Installation 安装方法  
 
 #### 通过 wget 命令安装 via wget to install script
 
 ```bash
-wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod 700 ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
 
 ```
-
-
-
-
-
 
 
 ![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
@@ -58,9 +48,10 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ![功能列表2](https://github.com/jinwyp/one_click_script/blob/master/docs/readme2.png?raw=true)
 
 
+
 ## 使用说明 Usage 
 
-### 安装命令行方式启动
+### 安装命令行方式 启动 trojan 或 v2ray
 
 1. 该步骤可省略. 如果是使用google cloud 谷歌云服务器，默认无法使用root账号登陆， 可以选择32 开启root用户登录. 建议使用root用户运行该脚本. 安装bbr plus 需要root权限, 默认认为使用root执行, 非root用户请手动添加sudo执行 ```sudo ./tcp.sh ```和 ```sudo ./trojan_v2ray_install.sh ``` 脚本. （注意 证书申请也需要用root用户而不建议用sudo  [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo)  ).
 2. 安装 BBR plus. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后选择2 安装 BBRplus版内核, 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
@@ -72,6 +63,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
+
 
 ### 安装管理面板 Install web admin panel
 
@@ -139,7 +131,7 @@ Let's Encrypt证书申请频率的限制
 
 
 
-
+## Installation Soga 
 ## 安装其他 Linux 软件 和 V2board 服务器端 V2Ray-Poseidon 或 soga 
 
 #### via curl 安装命令 
