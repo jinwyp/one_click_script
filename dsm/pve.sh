@@ -83,6 +83,8 @@ function promptContinueOpeartion(){
 osCPU="intel"
 osArchitecture="arm"
 osRelease="dsm"
+osReleaseVersionNo=""
+osReleaseVersionCodeName="CodeName"
 osSystemPackage="no"
 osSystemMdPath="/lib/systemd/system/"
 
@@ -146,11 +148,15 @@ function getLinuxOSRelease(){
 		osSystemMdPath="/usr/lib/systemd/system/"
     fi
 
+	osReleaseVersionNo=$(lsb_release -r --short)
+	osReleaseVersionCodeName=$(lsb_release -c --short)
+	
+
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
 	checkArchitecture
 	checkCPU
-    green " Status 系统信息:  ${osRelease}, ${osSystemShell}, ${osSystemPackage}, ${osCPU} CPU ${osArchitecture}"
+    green " Status 系统信息:  ${osRelease}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}, ${osSystemPackage}, ${osCPU} CPU ${osArchitecture}"
 }
 
 
@@ -320,6 +326,106 @@ Del_iptables(){
 
 
 
+
+function updateUbuntuAptSource(){
+	green " ================================================== "
+	green " 准备更新源 为阿里云 "
+
+	${sudoCmd} cp /etc/apt/sources.list /etc/apt/sources.list.bak
+	
+	cat > /etc/apt/sources.list <<-EOF
+
+deb http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName} main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName} main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-security main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-updates main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-proposed main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ ${osReleaseVersionCodeName}-backports main restricted universe multiverse
+
+
+EOF
+
+	${sudoCmd} apt-get update
+
+	green " 更新源成功 "
+	green " ================================================== "
+
+# deb http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse
+# deb-src http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse
+
+# deb http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse
+# deb-src http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse
+
+# deb http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse
+# deb-src http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse
+
+# deb http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse
+# deb-src http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse
+
+# deb http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse
+# deb-src http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse
+}
+
+
+
+function updatePVEAptSource(){
+	green " ================================================== "
+	green " 准备关闭企业更新源, 添加非订阅版更新源 "
+	${sudoCmd} sed -i 's|deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|g' /etc/apt/sources.list.d/pve-enterprise.list
+
+	#echo 'deb http://download.proxmox.com/debian/pve buster pve-no-subscription' > /etc/apt/sources.list.d/pve-no-subscription.list
+	echo "deb https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian buster pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+
+	wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+
+	green " 更新源成功 "
+	green " ================================================== "
+	cp /etc/apt/sources.list /etc/apt/sources.list.bak
+
+	cat > /etc/apt/sources.list <<-EOF
+
+deb http://mirrors.aliyun.com/debian/ buster main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ buster main contrib non-free
+
+deb http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
+
+deb http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
+
+deb http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
+
+
+
+deb http://deb.debian.org/debian buster main contrib non-free
+deb-src http://deb.debian.org/debian buster main contrib non-free
+
+deb http://deb.debian.org/debian buster-updates main contrib non-free
+deb-src http://deb.debian.org/debian buster-updates main contrib non-free
+
+deb http://deb.debian.org/debian buster-backports main contrib non-free
+deb-src http://deb.debian.org/debian buster-backports main contrib non-free
+
+deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free
+deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free
+
+
+EOF
+
+}
+
+
+
+
 function setPVEIP(){
 	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration
 
@@ -421,51 +527,6 @@ sed -i "s/# alias l/alias l/g" /root/.bashrc
 
 
 
-function updatePVEAptSource(){
-	green " ================================================== "
-	green " 准备关闭企业更新源, 添加非订阅版更新源 "
-	${sudoCmd} sed -i 's|deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|g' /etc/apt/sources.list.d/pve-enterprise.list
-
-	#echo 'deb http://download.proxmox.com/debian/pve buster pve-no-subscription' > /etc/apt/sources.list.d/pve-no-subscription.list
-	echo "deb https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian buster pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
-
-	wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
-
-	green " 更新源成功 "
-	green " ================================================== "
-
-	cat > /etc/apt/sources.list <<-EOF
-
-deb http://mirrors.aliyun.com/debian/ buster main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ buster main contrib non-free
-
-deb http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
-
-deb http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
-
-deb http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
-deb-src http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
-
-
-
-deb http://deb.debian.org/debian buster main contrib non-free
-deb-src http://deb.debian.org/debian buster main contrib non-free
-
-deb http://deb.debian.org/debian buster-updates main contrib non-free
-deb-src http://deb.debian.org/debian buster-updates main contrib non-free
-
-deb http://deb.debian.org/debian buster-backports main contrib non-free
-deb-src http://deb.debian.org/debian buster-backports main contrib non-free
-
-deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free
-deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free
-
-
-EOF
-
-}
 
 
  
@@ -1767,6 +1828,8 @@ function inputFrpServerPort(){
 
 configFrpPath="${HOME}/frp"
 configFrpPathBin="/usr/bin"
+configFrpDSMPathBin="/var/packages/gofrpc/target/bin/arch"
+configFrpDSMFilename="frpc_x64"
 configFrpPathIni="/etc/frp"
 configFrpLogFile="${HOME}/frp/frpc.log"
 
@@ -1775,15 +1838,52 @@ downloadFilenameFRP="frp_${versionFRP}_linux_amd64.tar.gz"
 downloadFilenameFRPFolder="frp_${versionFRP}_linux_amd64"
 
 installFrpType="frpc"
-installFrpPromptText="Frp 的 linux 客户端 frpc"
+installFrpPromptText="Frp 的 linux 客户端frpc"
+
+
+
+function getVersionFRPFilename(){
+	versionFRP=$(getGithubLatestReleaseVersion "fatedier/frp")
+
+	# https://github.com/fatedier/frp/releases/download/v0.36.2/frp_0.36.2_linux_arm.tar.gz
+	# https://github.com/fatedier/frp/releases/download/v0.36.2/frp_0.36.2_linux_arm64.tar.gz
+
+	if [[ ${osArchitecture} == "arm64" ]] ; then
+		downloadFilenameFRP="frp_${versionFRP}_linux_arm64.tar.gz"
+		downloadFilenameFRPFolder="frp_${versionFRP}_linux_arm64"
+		configFrpDSMFilename="frpc_arm64"
+	elif [[ ${osArchitecture} == "arm" ]] ; then
+		downloadFilenameFRP="frp_${versionFRP}_linux_arm.tar.gz"
+		downloadFilenameFRPFolder="frp_${versionFRP}_linux_arm"
+		configFrpDSMFilename="frpc_arm"
+	else
+		downloadFilenameFRP="frp_${versionFRP}_linux_amd64.tar.gz"
+		downloadFilenameFRPFolder="frp_${versionFRP}_linux_amd64"
+	fi
+}
 
 function installFRP(){
 
 	if [[ $1 == "frps" ]] ; then
 		installFrpType="frps"
-		installFrpPromptText="Frp 的 linux 服务器端 frps"
+		installFrpPromptText="Frp 的 linux 服务器端frps"
 
 		configFrpLogFile="${HOME}/frp/frps.log"
+
+	else
+	    if [[ ${osRelease} == "dsm" ]] ; then
+			green " =================================================="
+			echo
+			red "    如果要在群晖系统中安装 ${installFrpPromptText}, 建议直接通过frpc的SPK包文件安装, 而不要继续安装命令行版本的frpc客户端 "
+			echo
+			red "    frpc的SPK包文件 下载地址:  https://github.com/jinwyp/one_click_script/raw/master/dsm/frpc-noarch_v0.35.0.spk "
+			echo
+			red "    安装SPK包方法: 群晖系统中 打开 ‘套件中心’, 然后点击右上角的 ‘手动安装’, 上传安装上面下载的Frpc的SPK文件 即可 "
+			echo
+			green "    是否继续安装命令行版本的 ${installFrpPromptText} ?"
+			echo
+			promptContinueOpeartion
+		fi	
 	fi
 
    	if [ -f ${configFrpPathBin}/${installFrpType} ]; then
@@ -1795,22 +1895,8 @@ function installFRP(){
 
 	disableSelinux
 
-	versionFRP=$(getGithubLatestReleaseVersion "fatedier/frp")
-
-	# https://github.com/fatedier/frp/releases/download/v0.36.2/frp_0.36.2_linux_arm.tar.gz
-	# https://github.com/fatedier/frp/releases/download/v0.36.2/frp_0.36.2_linux_arm64.tar.gz
-
-	if [[ ${osArchitecture} == "arm64" ]] ; then
-		downloadFilenameFRP="frp_${versionFRP}_linux_arm64.tar.gz"
-		downloadFilenameFRPFolder="frp_${versionFRP}_linux_arm64"
-	elif [[ ${osArchitecture} == "arm" ]] ; then
-		downloadFilenameFRP="frp_${versionFRP}_linux_arm.tar.gz"
-		downloadFilenameFRPFolder="frp_${versionFRP}_linux_arm"
-	else
-		downloadFilenameFRP="frp_${versionFRP}_linux_amd64.tar.gz"
-		downloadFilenameFRPFolder="frp_${versionFRP}_linux_amd64"
-	fi
-
+	getVersionFRPFilename
+	
 
 	FRP_SERVER_IP=$(wget -qO- ip.clang.cn | sed -r 's/\r//')
 	FRP_Client_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
@@ -2142,9 +2228,13 @@ EOF
 function checkFRPInstalledStatus(){
    	if [ -f ${osSystemMdPath}frps.service ]; then
 		installFrpType="frps"
-		installFrpPromptText="Frp 的 linux 服务器端 frps"
+		installFrpPromptText="Frp 的 linux 服务器端frps"
 
 	elif [ -f ${osSystemMdPath}frpc.service ]; then
+		echo ""
+	elif [ -f ${configFrpDSMPathBin}/${configFrpDSMFilename} ]; then
+		echo ""
+	elif [ -f ${configFrpDSMPathBin}/frpc_arm64 ]; then
 		echo ""
 	else
 		echo ""
@@ -2153,6 +2243,8 @@ function checkFRPInstalledStatus(){
 		exit 255
 	fi
 }
+
+
 
 function removeFRP(){
 	checkFRPInstalledStatus
@@ -2178,10 +2270,7 @@ function removeFRP(){
 
 function upgradeFRP(){
    	checkFRPInstalledStatus
-
-	versionFRP=$(getGithubLatestReleaseVersion "fatedier/frp")
-	downloadFilenameFRP="frp_${versionFRP}_linux_amd64.tar.gz"
-	downloadFilenameFRPFolder="frp_${versionFRP}_linux_amd64"
+	getVersionFRPFilename
 
    	if [ -f ${configFrpPath}/${downloadFilenameFRP} ]; then
 		green " =================================================="
@@ -2194,8 +2283,12 @@ function upgradeFRP(){
     green "    开始升级 ${installFrpPromptText} ${versionFRP} "
     green " =================================================="
 
-	${sudoCmd} systemctl stop ${installFrpType}.service
-
+	if [ "$1" != "dsmspk" ] ; then
+		${sudoCmd} systemctl stop ${installFrpType}.service
+	fi
+	
+	
+	mkdir -p ${configFrpPath} 
 	cd ${configFrpPath} 
 
 	# 下载并移动frpc文件
@@ -2206,15 +2299,36 @@ function upgradeFRP(){
 	
 	cd ${downloadFilenameFRPFolder}
 
-	${sudoCmd} chmod +x ${configFrpPath}/${downloadFilenameFRPFolder}/frps
-	${sudoCmd} chmod +x ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
+	${sudoCmd} chown root:nobody ${configFrpPath}/${downloadFilenameFRPFolder}/frps
+	${sudoCmd} chown root:nobody ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
 
-	mv ${configFrpPath}/${downloadFilenameFRPFolder}/frpc ${configFrpPathBin}
-	mv ${configFrpPath}/${downloadFilenameFRPFolder}/frps ${configFrpPathBin}
+	${sudoCmd} chmod 777 ${configFrpPath}/${downloadFilenameFRPFolder}/frps
+	${sudoCmd} chmod 777 ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
+
+
+	if [[ $1 == "dsmspk" ]] ; then
+		if [[ ${osRelease} == "dsm" ]] ; then
+			green " ================================================== "
+			green "     群晖系统中 开始升级通过SPK安装的 frpc 客户端"
+			echo
+
+			${sudoCmd} chown ufrpc:gofrpc ${configFrpPath}/${downloadFilenameFRPFolder}/frps
+			${sudoCmd} chown ufrpc:gofrpc ${configFrpPath}/${downloadFilenameFRPFolder}/frpc
+
+			mv -f ${configFrpPath}/${downloadFilenameFRPFolder}/frpc ${configFrpDSMPathBin}/${configFrpDSMFilename}
+		else
+			red "当前系统不是群晖系统, 升级失败! "
+			exit 1
+		fi
+	else
+		mv -f ${configFrpPath}/${downloadFilenameFRPFolder}/frpc ${configFrpPathBin}
+		mv -f ${configFrpPath}/${downloadFilenameFRPFolder}/frps ${configFrpPathBin}
+
+		${sudoCmd} systemctl start ${installFrpType}.service
+	fi
 
 	rm -rf ${configFrpPath}/${downloadFilenameFRPFolder}
 
-	${sudoCmd} systemctl start ${installFrpType}.service
 
     green " ================================================== "
     green "     ${installFrpPromptText} 升级成功 Version: ${versionFRP} !"
@@ -2272,15 +2386,16 @@ function subMenuInstallFRP(){
     green " 2. 安装 Frp 客户端版本 frpc"
 	echo
     green " 3. 升级 Frp 到最新版本"
-    red " 4. 卸载 Frp "
+    green " 4. 群晖系统中 升级通过SPK安装的 Frpc 到最新版本"
+    red " 5. 卸载 Frp "
     echo
-	green " 5. 启动 Frp"
-	green " 6. 停止 Frp"
-	green " 7. 重启 Frp"
+	green " 6. 启动 Frp"
+	green " 7. 停止 Frp"
+	green " 8. 重启 Frp"
 	echo
-	green " 8. 查看 Frp 配置信息"
-	green " 9. 编辑 Frp 配置信息"
-	green " 10. 查看 Frp 日志"
+	green " 9. 查看 Frp 配置信息"
+	green " 10. 编辑 Frp 配置信息"
+	green " 11. 查看 Frp 日志"
     echo
     green " 20. 返回上级菜单"
     green " 0. 退出脚本"
@@ -2297,24 +2412,27 @@ function subMenuInstallFRP(){
             upgradeFRP
         ;;
         4 )
-            removeFRP
+            upgradeFRP "dsmspk"
         ;;
         5 )
-            systemRunFRP "start"
+            removeFRP
         ;;
         6 )
-            systemRunFRP "stop"
+            systemRunFRP "start"
         ;;
         7 )
-            systemRunFRP "restart"
+            systemRunFRP "stop"
         ;;
         8 )
-            checkLogFRP "ini"
+            systemRunFRP "restart"
         ;;
         9 )
+            checkLogFRP "ini"
+        ;;
+        10 )
             checkLogFRP "edit"
         ;;     		             
-        10)
+        11)
             checkLogFRP
         ;;
         20)
@@ -2487,6 +2605,9 @@ function start_menu(){
         ;;				
         88 )
             checkFirewallStatus
+        ;;								
+        89 )
+            updateUbuntuAptSource
         ;;								
         0 )
             exit 1
