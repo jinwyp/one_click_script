@@ -173,15 +173,17 @@ function installSoft(){
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 			${osSystemPackage} -y install cpu-checker
+
+			${osSystemPackage} install -y vim-gui-common vim-runtime vim 
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
 		if ! rpm -qa | grep -qw wget; then
-			${osSystemPackage} -y install wget curl  
+			${osSystemPackage} -y install wget curl vim-minimal vim-enhanced vim-common
 		fi
 	fi
 
-
+	sed -i "s/# alias l/alias l/g" ${HOME}/.bashrc
 
 	# 设置vim 中文乱码
     if [[ ! -d "${HOME}/.vimrc" ]] ;  then
@@ -327,6 +329,20 @@ Del_iptables(){
 
 
 
+function updateYumAptSource(){
+	if [[ "${osRelease}" == "centos" ]]; then
+
+		echo
+
+	elif [[ "${osRelease}" == "debian" ]]; then
+		updatePVEAptSource
+
+	elif [[ "${osRelease}" == "ubuntu" ]]; then
+		updateUbuntuAptSource
+	fi
+
+}
+
 function updateUbuntuAptSource(){
 	green " ================================================== "
 	green " 准备更新源 为阿里云 "
@@ -355,6 +371,7 @@ EOF
 
 	${sudoCmd} apt-get update
 
+	green " ================================================== "
 	green " 更新源成功 "
 	green " ================================================== "
 
@@ -377,17 +394,23 @@ EOF
 
 
 function updatePVEAptSource(){
+
+	isPVESystem=$(cat /etc/issue | grep "Proxmox")
+
 	green " ================================================== "
-	green " 准备关闭企业更新源, 添加非订阅版更新源 "
-	${sudoCmd} sed -i 's|deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|g' /etc/apt/sources.list.d/pve-enterprise.list
 
-	#echo 'deb http://download.proxmox.com/debian/pve buster pve-no-subscription' > /etc/apt/sources.list.d/pve-no-subscription.list
-	echo "deb https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian buster pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+	if [[ -n "${isPVESystem}" ]]; then 
+		green " 准备关闭企业更新源, 添加非订阅版更新源 "
+		${sudoCmd} sed -i 's|deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|g' /etc/apt/sources.list.d/pve-enterprise.list
 
-	wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+		#echo 'deb http://download.proxmox.com/debian/pve buster pve-no-subscription' > /etc/apt/sources.list.d/pve-no-subscription.list
+		echo "deb https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian buster pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
 
-	green " 更新源成功 "
-	green " ================================================== "
+		wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+	fi
+
+
+
 	cp /etc/apt/sources.list /etc/apt/sources.list.bak
 
 	cat > /etc/apt/sources.list <<-EOF
@@ -404,22 +427,26 @@ deb-src http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
 deb http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
 deb-src http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
 
-
-
-deb http://deb.debian.org/debian buster main contrib non-free
-deb-src http://deb.debian.org/debian buster main contrib non-free
-
-deb http://deb.debian.org/debian buster-updates main contrib non-free
-deb-src http://deb.debian.org/debian buster-updates main contrib non-free
-
-deb http://deb.debian.org/debian buster-backports main contrib non-free
-deb-src http://deb.debian.org/debian buster-backports main contrib non-free
-
-deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free
-deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free
-
-
 EOF
+
+	${sudoCmd} apt-get update
+
+	green " ================================================== "
+	green " 更新源成功 "
+	green " ================================================== "
+
+
+# deb http://deb.debian.org/debian buster main contrib non-free
+# deb-src http://deb.debian.org/debian buster main contrib non-free
+
+# deb http://deb.debian.org/debian buster-updates main contrib non-free
+# deb-src http://deb.debian.org/debian buster-updates main contrib non-free
+
+# deb http://deb.debian.org/debian buster-backports main contrib non-free
+# deb-src http://deb.debian.org/debian buster-backports main contrib non-free
+
+# deb http://deb.debian.org/debian-security/ buster/updates main contrib non-free
+# deb-src http://deb.debian.org/debian-security/ buster/updates main contrib non-free
 
 }
 
@@ -516,8 +543,6 @@ EOF
 # https://unix.stackexchange.com/questions/340347/sed-replace-any-ip-address-with-127-0-0-1
 
 sed -i -e "s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/${IPInput}/g" /etc/issue
-
-sed -i "s/# alias l/alias l/g" /root/.bashrc
 
 	green " ================================================== "
 	green " IP修改成功, 已修改为 ${IPInput}"
@@ -2507,7 +2532,7 @@ function start_menu(){
     fi
 	
     green " ===================================================================================================="
-    green " PVE 虚拟机 和 群晖 工具脚本 | 2021-04-02 | By jinwyp | 系统支持：PVE / debian10 "
+    green " PVE 虚拟机 和 群晖 工具脚本 | 2021-04-05 | By jinwyp | 系统支持：PVE / debian10 "
     green " ===================================================================================================="
 	green " 1. PVE 关闭企业更新源, 添加非订阅版更新源"
 	green " 2. PVE 删除 swap 分区（/dev/pve/swap 逻辑卷) 并全部扩容给 /dev/pve/root 逻辑卷"
@@ -2534,6 +2559,7 @@ function start_menu(){
 	echo
 	green " 51. 局域网测速工具 安装测速软件 iperf3"	
 	green " 52. 子菜单 安装 FRP 内网穿透工具"	
+	green " 70. 更换系统软件源为阿里云"	
 	echo
     green " 0. 退出脚本"
     echo
@@ -2602,13 +2628,14 @@ function start_menu(){
         ;;		
         52 )
             subMenuInstallFRP 
-        ;;				
+        ;;
+        70 )
+            updateYumAptSource
+        ;;					
         88 )
             checkFirewallStatus
         ;;								
-        89 )
-            updateUbuntuAptSource
-        ;;								
+								
         0 )
             exit 1
         ;;
