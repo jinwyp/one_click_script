@@ -148,9 +148,21 @@ function getLinuxOSRelease(){
 		osSystemMdPath="/usr/lib/systemd/system/"
     fi
 
-	osReleaseVersionNo=$(lsb_release -r --short)
-	osReleaseVersionCodeName=$(lsb_release -c --short)
-	
+	if [[  "${osRelease}" == "ubuntu" ]]; then
+		osReleaseVersionNo=$(lsb_release -r --short)
+		osReleaseVersionCodeName=$(lsb_release -c --short)
+
+	elif [[ "${osRelease}" == "debian" || "${osRelease}" == "centos" ]]; then
+        source /etc/os-release
+
+        osReleaseVersionNo=$VERSION_ID
+
+        if [ -n $VERSION_CODENAME ]; then
+            osReleaseVersionCodeName=$VERSION_CODENAME
+        fi
+	fi
+
+
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
@@ -183,10 +195,14 @@ function installSoft(){
 		fi
 	fi
 
-	sed -i "s/# alias l/alias l/g" ${HOME}/.bashrc
 
-	# 设置vim 中文乱码
-    if [[ ! -d "${HOME}/.vimrc" ]] ;  then
+    if [[ ${osRelease} == "dsm" ]] ; then
+		echo
+    else
+		sed -i "s/# alias l/alias l/g" ${HOME}/.bashrc
+
+		# 设置vim 中文乱码
+    	if [[ ! -d "${HOME}/.vimrc" ]] ;  then
         cat > "${HOME}/.vimrc" <<-EOF
 set fileencodings=utf-8,gb2312,gb18030,gbk,ucs-bom,cp936,latin1
 set enc=utf8
@@ -201,7 +217,10 @@ if has('mouse')
 endif
 
 EOF
+    	fi
+
     fi
+
 }
 
 function installIperf3(){
@@ -317,6 +336,16 @@ Del_iptables(){
 	iptables -D INPUT -m state --state NEW -m tcp -p tcp --dport ${port} -j ACCEPT
 	iptables -D INPUT -m state --state NEW -m udp -p udp --dport ${port} -j ACCEPT
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -975,7 +1004,7 @@ EOF
 	checkIOMMUDMAR
 	green " ================================================== "
 	echo
-	displayIOMMUInfo
+	# displayIOMMUInfo
 
 	rebootSystem
 
@@ -2543,6 +2572,7 @@ function start_menu(){
     green " 7. PVE 关闭IOMMU 关闭直通 恢复默认设置"
     green " 8. 检测系统是否支持 IOMMU, VT-d VT-d"
     green " 9. 检测系统是否开启显卡直通"
+    green " 10. 显示系统信息 用于查看直通设备"
 	echo
 	green " 15. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 16. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
@@ -2589,6 +2619,9 @@ function start_menu(){
         ;;
         9 )
             checkVfio
+        ;;
+        10 )
+            displayIOMMUInfo
         ;;
         15 )
             genPVEVMDiskWithQM

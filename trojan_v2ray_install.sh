@@ -130,7 +130,7 @@ getLinuxOSVersion(){
 
     if [ -f /etc/os-release ]; then
         # freedesktop.org and systemd
-        . /etc/os-release
+        source /etc/os-release
         osInfo=$NAME
         osReleaseVersionNo=$VERSION_ID
 
