@@ -553,11 +553,15 @@ function installSoftOhMyZsh(){
     fi
 
     green " =================================================="
-    yellow " ZSH 安装成功, 准备安装 oh-my-zsh"
+    yellow " ZSH 安装成功"
     green " =================================================="
 
     # 安装 oh-my-zsh
     if [[ ! -d "${HOME}/.oh-my-zsh" ]] ;  then
+
+        green " =================================================="
+        yellow " 准备安装 oh-my-zsh"
+        green " =================================================="
         curl -Lo ${HOME}/ohmyzsh_install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         chmod +x ${HOME}/ohmyzsh_install.sh
         sh ${HOME}/ohmyzsh_install.sh --unattended
@@ -807,6 +811,7 @@ configNetworkRealIp=""
 configNetworkLocalIp=""
 configSSLDomain=""
 
+configSSLAcmeScriptPath="${HOME}/.acme.sh"
 configSSLCertPath="${HOME}/website/cert"
 configWebsitePath="${HOME}/website/html"
 configTrojanWindowsCliPrefixPath=$(cat /dev/urandom | head -1 | md5sum | head -c 20)
@@ -1040,21 +1045,23 @@ function getHTTPSCertificate(){
 
 	if [[ $1 == "standalone" ]] ; then
 	    green "  开始重新申请证书 acme.sh standalone mode !"
-	    ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --standalone
+	    ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --standalone
 
-        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
+        ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
         --key-file   ${configSSLCertPath}/private.key \
         --fullchain-file ${configSSLCertPath}/fullchain.cer
 
 	else
 	    green "  开始第一次申请证书 acme.sh nginx mode !"
-        ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
+        ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
 
-        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
+        ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
         --key-file   ${configSSLCertPath}/private.key \
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
     fi
+    
+    green "=========================================="
 }
 
 
@@ -1324,8 +1331,8 @@ function removeNginx(){
     rm -f ${configReadme}
 
     rm -rf "/etc/nginx"
-    ${sudoCmd} bash /root/.acme.sh/acme.sh --uninstall
-    uninstall /root/.acme.sh
+    ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+    uninstall ${configSSLAcmeScriptPath}
     rm -rf ${configDownloadTempPath}
 
     green " ================================================== "
@@ -3450,7 +3457,7 @@ EOF
         # 命令补全环境变量
         echo "export PATH=$PATH:${configTrojanWebPath}" >> ${HOME}/.${osSystemShell}rc
 
-        # (crontab -l ; echo '25 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null') | sort - | uniq - | crontab -
+        # (crontab -l ; echo '25 0 * * * "${configSSLAcmeScriptPath}"/acme.sh --cron --home "${configSSLAcmeScriptPath}" > /dev/null') | sort - | uniq - | crontab -
         (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart trojan-web.service") | sort - | uniq - | crontab -
 
     else
