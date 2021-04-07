@@ -70,7 +70,7 @@ function checkCPU(){
 	# green " Status 状态显示--当前CPU是: $osCPU"
 }
 
-# 检测系统发行版
+# 检测系统发行版代号
 function getLinuxOSRelease(){
     if [[ -f /etc/redhat-release ]]; then
         osRelease="centos"
@@ -680,24 +680,26 @@ function installWireguard(){
     cd ${configWgcfConfigFilePath}
 
     # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
-    wget -O ${configWgcfPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
-    ${sudoCmd} chmod +x ${configWgcfPath}/wgcf
+    wget -O ${configWgcfConfigFilePath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
+    
 
-    if [[ -f ${configWgcfPath}/wgcf ]]; then
+    if [[ -f ${configWgcfConfigFilePath}/wgcf ]]; then
+
+        ${sudoCmd} chmod +x ${configWgcfConfigFilePath}/wgcf
 
         green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
 
-        # ${configWgcfPath}/wgcf register --config "${configWgcfAccountFilePath}"
-        # ${configWgcfPath}/wgcf generate --config "${configWgcfProfileFilePath}"
+        # ${configWgcfConfigFilePath}/wgcf register --config "${configWgcfAccountFilePath}"
+        # ${configWgcfConfigFilePath}/wgcf generate --config "${configWgcfProfileFilePath}"
 
-        ${configWgcfPath}/wgcf register 
-        ${configWgcfPath}/wgcf generate 
+        ${configWgcfConfigFilePath}/wgcf register 
+        ${configWgcfConfigFilePath}/wgcf generate 
 
         sed -i '/AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
         sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g'  ${configWgcfProfileFilePath}
 
     else
-        ren "  Wgcf ${versionWgcf} 下载失败!"
+        red "  Wgcf ${versionWgcf} 下载失败!"
         exit
     fi
 
@@ -711,7 +713,6 @@ function installWireguard(){
     echo "nameserver 1.1.1.1" >>  /etc/resolv.conf
     echo "nameserver 9.9.9.9" >>  /etc/resolv.conf
     echo "nameserver 9.9.9.10" >>  /etc/resolv.conf
-    echo "nameserver 8.8.8.8" >>  /etc/resolv.conf
 
 
     cp ${configWgcfProfileFilePath} /etc/wireguard/wgcf.conf 
@@ -778,9 +779,11 @@ function removeWireguard(){
         exit
     fi
 
+    $osSystemPackage -y remove kmod-wireguard
     $osSystemPackage -y remove wireguard-dkms
     $osSystemPackage -y remove wireguard-tools
 
+    rm -f ${configWgcfBinPath}/wgcf
     rm -rf ${configWgcfConfigFilePath}
 
     rm -f ${osSystemMdPath}wg-quick@wgcf.service
@@ -1060,7 +1063,7 @@ function getHTTPSCertificate(){
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
         --reloadcmd  "systemctl force-reload  nginx.service"
     fi
-    
+
     green "=========================================="
 }
 
@@ -2479,23 +2482,7 @@ EOM
 EOM
 
 
-    if [[ $isV2rayUnlockGoogleInput == [Nn] && $isV2rayUnlockNetflixInput == [Nn] ]]; then
-        
-        read -r -d '' v2rayConfigOutboundInput << EOM
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
-        },
-        {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
-        }
-    ]
-EOM
-    else
+    if [[ $isV2rayUnlockGoogleInput == [Yy] || $isV2rayUnlockNetflixInput == [Yy] ]]; then
 
         read -r -d '' v2rayConfigOutboundInput << EOM
     "outbounds": [
@@ -2526,6 +2513,22 @@ EOM
             }
         ]
     }
+EOM
+
+    else
+        read -r -d '' v2rayConfigOutboundInput << EOM
+    "outbounds": [
+        {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+        },
+        {
+            "tag": "blocked",
+            "protocol": "blackhole",
+            "settings": {}
+        }
+    ]
 EOM
         
     fi

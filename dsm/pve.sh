@@ -597,7 +597,9 @@ function lvextendDevRoot(){
 			read -p "把剩余空间扩容到 /pve/root 还是 /pve/data?, 直接回车默认为是 /dev/root 盘, 否为/dev/data盘, 请输入[Y/n]:" isExtendDevDataInput
 			isExtendDevDataInput=${isExtendDevDataInput:-Y}
 
-			if [[ $isExtendDevDataInput == [Nn] ]]; then
+			if [[ $isExtendDevDataInput == [Yy] ]]; then
+				toExtendDevVolume="root"
+			else
 				toExtendDevVolume="data"
 			fi
 		fi
@@ -922,7 +924,6 @@ function enableIOMMU(){
 			# N卡：
 			echo "blacklist nvidia" >> /etc/modprobe.d/pve-blacklist.conf
 			echo "blacklist nouveau" >> /etc/modprobe.d/pve-blacklist.conf
-
 		else
 			# /A卡：
 			echo "blacklist radeon" >> /etc/modprobe.d/pve-blacklist.conf
@@ -1240,7 +1241,6 @@ function genPVEVMDiskPT(){
 			COUNTER1=$[${COUNTER1} +1]
 			COUNTER2=1
 		fi
-
 	done
 
 	echo
