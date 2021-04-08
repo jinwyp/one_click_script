@@ -1,5 +1,9 @@
 ---
 name: Bug report 问题报告
+about: 用来解决BUG和新功能需求
+title: ''
+labels: ''
+assignees: jinwyp
 
 ---
 
