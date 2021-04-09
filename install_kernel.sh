@@ -1162,7 +1162,8 @@ function installDebianUbuntuKernel(){
 
 function removeDebianKernelOthers(){
     removeDebianKernel "linux-headers"
-    removeDebianKernel "linux-kbuild"
+    removeDebianKernel "linux-modules"
+    # removeDebianKernel "linux-kbuild"
     # removeDebianKernel "linux-compiler"
     # removeDebianKernel "linux-libc"
     removeDebianKernel
@@ -1481,6 +1482,7 @@ function removeWireguard(){
         ${sudoCmd} systemctl disable wg-quick@wgcf.service
     else 
         red " 系统没有安装 Wireguard 和 Wgcf, 退出卸载"
+        echo
         exit
     fi
 
