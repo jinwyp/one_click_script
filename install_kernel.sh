@@ -617,9 +617,9 @@ function downloadFile(){
 
     echo "${userHomePath}/${linuxKernelToInstallVersionFull}/${tempFilename}"
     if [ -f "${userHomePath}/${linuxKernelToInstallVersionFull}/${tempFilename}" ]; then
-        echo "文件已存在, 不需要下载, 文件原下载地址: $1 "
+        green "文件已存在, 不需要下载, 文件原下载地址: $1 "
     else 
-        echo "文件下载中... 下载地址: $1 "
+        green "文件下载中... 下载地址: $1 "
         wget -N --no-check-certificate -P ${userHomePath}/${linuxKernelToInstallVersionFull} $1 
     fi 
     echo
@@ -1093,8 +1093,7 @@ function removeCentosKernel(){
     grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
     echo
-    echo
-    grenn "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
+    green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
 
     echo "rpm -qa | grep ${removeKernelNameText} | grep -v ${grepExcludelinuxKernelVersion} | grep -v noarch | wc -l"
     rpmOldKernelNumber=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${grepExcludelinuxKernelVersion}" | grep -v "noarch" | wc -l)
@@ -1436,13 +1435,13 @@ function removeDebianKernelOthers(){
 }
 
 function removeDebianKernel(){
-    echo
-    echo
+
     removeKernelNameText="linux-image"
     removeKernelNameText=$1
     grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
-    grenn "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
+    echo
+    green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
 
     echo "dpkg --get-selections | grep ${removeKernelNameText} | grep -Ev '${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64' | awk '{print \$1}' "
     rpmOldKernelNumber=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64" | wc -l)
@@ -1564,7 +1563,7 @@ function installWireguard(){
 		echo ""
         green " 开始安装 WireGuard Tools "
 	else 
-        green " 请先用本脚本安装 linux kernel 5.6以上的内核 !"
+        green " 建议请先用本脚本安装 linux kernel 5.6 以上的内核 !"
 		exit
 	fi
 
@@ -1969,6 +1968,4 @@ function start_menu(){
 }
 
 
-
 start_menu "first"
-
