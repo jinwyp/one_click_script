@@ -4,6 +4,7 @@
 ## 目录 Table of Contents
 
 * [Trojan 和 V2ray xray 一键安装脚本](#installation-安装方法)
+* [更换Linux 内核, BBR和BBR Plus 内核,  和 wireguard, 解决google 验证码和 Netflix 限制问题 一键安装脚本](#installation-linux-kernel-wireguard)
 * [V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本](#installation-soga)
 * [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
@@ -37,7 +38,7 @@
 #### 通过 wget 命令安装 via wget to install script
 
 ```bash
-wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod 700 ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
 
 ```
 
@@ -47,6 +48,16 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ![功能列表2](https://github.com/jinwyp/one_click_script/blob/master/docs/readme2.png?raw=true)
 
+
+## Installation Linux kernel Wireguard 
+
+
+#### 通过 wget 命令安装 Linux 内核 和 Wireguard 
+
+```bash
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+
+```
 
 
 ## 使用说明 Usage 
