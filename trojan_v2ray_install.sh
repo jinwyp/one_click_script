@@ -331,7 +331,7 @@ function setLinuxRootLogin(){
 
 # 修改SSH 端口号
 function changeLinuxSSHPort(){
-    green "修改的SSH登陆的端口号, 不要使用常用的端口号. 例如 20|21|23|25|53|69|80|110|443|123!"
+    green " 修改的SSH登陆的端口号, 不要使用常用的端口号. 例如 20|21|23|25|53|69|80|110|443|123!"
     read -p "请输入要修改的端口号(必须是纯数字并且在1024~65535之间或22):" osSSHLoginPortInput
     osSSHLoginPortInput=${osSSHLoginPortInput:-0}
 
@@ -371,8 +371,8 @@ function setLinuxDateZone(){
         yellow "当前时区已经为北京时间  $tempCurrentDateZone | $(date -R) "
     else 
         green " =================================================="
-        yellow "当前时区为: $tempCurrentDateZone | $(date -R) "
-        yellow "是否设置时区为北京时间 +0800区, 以便cron定时重启脚本按照北京时间运行."
+        yellow " 当前时区为: $tempCurrentDateZone | $(date -R) "
+        yellow " 是否设置时区为北京时间 +0800区, 以便cron定时重启脚本按照北京时间运行."
         green " =================================================="
         # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 
@@ -1893,7 +1893,7 @@ function installV2ray(){
 
     if [ -f "${configV2rayPath}/v2ray" ] || [ -f "/usr/local/bin/v2ray" ] || [ -f "/usr/bin/v2ray" ]; then
         green " =================================================="
-        green "  已安装过 V2ray 或 Xray, 退出安装 !"
+        green "     已安装过 V2ray 或 Xray, 退出安装 !"
         green " =================================================="
         exit
     fi
@@ -3566,7 +3566,8 @@ function startMenuOther(){
     green " 36. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
 
     echo
-    green " 41. 安装新版本 BBR-PLUS 加速6合一脚本" 
+    green " 41. 安装 BBR-PLUS 加速4合一脚本 by chiakge" 
+    green " 42. 安装新版本 BBR-PLUS 加速6合一脚本 by ylx2016" 
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -3680,8 +3681,11 @@ function startMenuOther(){
             vps_zbench
         ;;        
         41 )
+            installBBR
+        ;;
+        42 )
             installBBR2
-        ;;                      
+        ;;                              
         9)
             start_menu
         ;;
@@ -3725,7 +3729,7 @@ function start_menu(){
     green " Trojan Trojan-go V2ray 一键安装脚本 | 2021-04-15 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
-    green " 1. 安装 BBR-PLUS 加速4合一脚本"
+    green " 1. 安装 linux 内核 BBR-PLUS, 安装 WireGuard, 用于解锁 google 验证码 和 Netflix 限制"
     echo
     green " 2. 安装 trojan 和 nginx 不支持CDN"
     green " 3. 修复证书 并继续安装 trojan"
@@ -3760,13 +3764,12 @@ function start_menu(){
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
     green " 35. 用 VI 编辑 authorized_keys 文件, 方便填入公钥, 免密码登录, 增加安全性"
-    green " 41. 安装 WireGuard, 用于解锁 google 验证码 和 Netflix 限制" 
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
     case "$menuNumberInput" in
         1 )
-            installBBR
+            installWireguard
         ;;
         2 )
             installTrojanWholeProcess
@@ -3888,14 +3891,14 @@ function start_menu(){
         30 )
             startMenuOther
         ;;        
-        41 )
-            installWireguard
+        86 )
+            installBBR
         ;;
-        89 )
-            installPackage
-        ;;
-        88 )
+        87 )
             installBBR2
+        ;;        
+        88 )
+            installPackage
         ;;
         99 )
             getTrojanAndV2rayVersion "trojan"

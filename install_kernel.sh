@@ -25,6 +25,9 @@
 # ubuntu20 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
 # debian10 安装完成默认内核  4.19.0-16-amd64
 
+# UJX6N 编译的bbr plus 内核  5.10.27-bbrplus    5.9.16    5.4.86  
+# UJX6N 编译的bbr plus 内核  4.19.164   4.14.213    4.9.264-1.bbrplus
+# https://github.com/cx9208/bbrplus/issues/27
 
 
 # BBR 速度评测 
@@ -353,6 +356,7 @@ function listAvailableLinuxKernel(){
 function listInstalledLinuxKernel(){
     green " =================================================="
     green " 状态显示--当前已安装的 Linux 内核: "
+    echo
 
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
         dpkg --get-selections | grep linux-
@@ -387,14 +391,22 @@ function showLinuxKernelInfoNoDisplay(){
 	net_congestion_control=`cat /proc/sys/net/ipv4/tcp_congestion_control | awk '{print $1}'`
 	net_qdisc=`cat /proc/sys/net/core/default_qdisc | awk '{print $1}'`
 
+    if [[ ${osKernelVersionBackup} == *4.14.129* ]]; then
+        # isBBREnabled=$(grep "net.ipv4.tcp_congestion_control" /etc/sysctl.conf | awk -F "=" '{print $2}')
+        # isBBREnabled=$(sysctl net.ipv4.tcp_available_congestion_control | awk -F "=" '{print $2}')
 
-    # isBBREnabled=$(grep "net.ipv4.tcp_congestion_control" /etc/sysctl.conf | awk -F "=" '{print $2}')
-    isBBRTcpEnabled=$(lsmod | grep "bbr" | awk '{print $1}')
-    isBBRPlusTcpEnabled=$(lsmod | grep "bbrplus" | awk '{print $1}')
+        isBBRTcpEnabled=$(lsmod | grep "bbr" | awk '{print $1}')
+        isBBRPlusTcpEnabled=$(lsmod | grep "bbrplus" | awk '{print $1}')
+    else
+        isBBRTcpEnabled=$(sysctl net.ipv4.tcp_congestion_control | grep "bbr" | awk -F "=" '{print $2}' | awk '{$1=$1;print}')
+        isBBRPlusTcpEnabled=$(sysctl net.ipv4.tcp_congestion_control | grep "bbrplus" | awk -F "=" '{print $2}' | awk '{$1=$1;print}')
+    fi
+
+
 
     if [[ ${net_congestion_control} == "bbr" ]]; then
         
-        if [[ ${isBBRTcpEnabled} == "tcp_bbr" ]]; then
+        if [[ ${isBBRTcpEnabled} == *"bbr"* ]]; then
             systemBBRRunningStatus="bbr"
             systemBBRRunningStatusText="BBR 已启动成功"            
         else 
@@ -402,7 +414,8 @@ function showLinuxKernelInfoNoDisplay(){
         fi
 
     elif [[ ${net_congestion_control} == "bbrplus" ]]; then
-        if [[ ${isBBRPlusTcpEnabled} == "tcp_bbrplus" ]]; then
+
+        if [[ ${isBBRPlusTcpEnabled} == *"bbrplus"* ]]; then
             systemBBRRunningStatus="bbrplus"
             systemBBRRunningStatusText="BBR Plus 已启动成功"            
         else 
@@ -470,6 +483,11 @@ function showLinuxKernelInfo(){
 
 
 enableBBRSysctlConfig() {
+    # https://hostloc.com/thread-644985-1-1.html
+    # 优质线路用5.5+cake和原版bbr带宽跑的更足，不过cake的话就算高峰也不会像原版bbr那样跑不动，相比plus能慢些，但是区别不大，
+    # bbr plus的话美西或者一些延迟高的，用起来更好，锐速针对丢包高的有奇效
+    # 带宽大，并且延迟低不丢包的话5.5+cake在我这比较好，延迟高用plus更好，丢包多锐速最好. 一般130ms以下用cake不错，以上的话用plus更好些
+
     removeBbrSysctlConfig
     currentBBRText="bbr"
     currentQueueText="fq"
@@ -518,8 +536,6 @@ enableBBRSysctlConfig() {
     # rebootSystem
 }
 
-
-
 # 卸载 bbr+锐速 配置
 removeBbrSysctlConfig(){
     sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
@@ -558,10 +574,31 @@ removeBbrSysctlConfig(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 isInstallFromRepo="no"
 userHomePath="${HOME}/linux_kernel"
 linuxKernelByUser="elrepo"
-linuxKernelBBRType="bbr"
+linuxKernelToBBRType=""
 linuxKernelToInstallVersion="5.10"
 linuxKernelToInstallVersionFull=""
 
@@ -583,23 +620,44 @@ function downloadFile(){
         echo "文件已存在, 不需要下载, 文件原下载地址: $1 "
     else 
         echo "文件下载中... 下载地址: $1 "
-        wget -P ${userHomePath}/${linuxKernelToInstallVersionFull} $1 
+        wget -N --no-check-certificate -P ${userHomePath}/${linuxKernelToInstallVersionFull} $1 
     fi 
     echo
 }
 
 
-
-
-
 function installKernel(){
+
+    if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
+        bbrplusKernelVersion="5.10.27-1"
+        
+    elif [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
+        bbrplusKernelVersion="5.9.16-5"
+        
+    elif [ "${linuxKernelToInstallVersion}" = "5.4" ]; then 
+        bbrplusKernelVersion="5.4.109-1"
+
+    elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then 
+        bbrplusKernelVersion="4.19.184-1"
+
+    elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
+        bbrplusKernelVersion="4.14.228-1"
+
+    elif [ "${linuxKernelToInstallVersion}" = "4.9" ]; then 
+        bbrplusKernelVersion="4.9.264-1"
+    fi    
+
+
 
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		
         installDebianUbuntuKernel
 
 	elif [[ "${osRelease}" == "centos" ]]; then
-        getLatestCentosKernelVersion
+        if [ "${linuxKernelToBBRType}" != "bbrplus" ]; then 
+            getLatestCentosKernelVersion
+        fi
+        
         if [ "${isInstallFromRepo}" = "yes" ]; then 
             installCentosKernelFromRepo
         else
@@ -607,7 +665,6 @@ function installKernel(){
         fi
 	fi
 }
-
 
 
 function getLatestCentosKernelVersion(){
@@ -672,7 +729,7 @@ function installCentosKernelFromRepo(){
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
 
-            removeCentosKernelOthers
+            removeCentosKernelMulti
             listAvailableLinuxKernel
 
             ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}
@@ -684,7 +741,7 @@ function installCentosKernelFromRepo(){
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm
 
-            removeCentosKernelOthers
+            removeCentosKernelMulti
             listAvailableLinuxKernel
 
             ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}
@@ -703,7 +760,7 @@ function installCentosKernelFromRepo(){
 
         showLinuxKernelInfo
         listInstalledLinuxKernel
-        removeCentosKernel
+        removeCentosKernelMulti "kernel"
         listInstalledLinuxKernel
         rebootSystem
     fi
@@ -718,7 +775,8 @@ function installCentosKernelManual(){
     green " =================================================="
     green "    开始手动安装 linux 内核, 不支持Centos6 "
     green " =================================================="
-       
+    echo
+
     yum install -y linux-firmware
     
     mkdir -p ${userHomePath}
@@ -726,14 +784,21 @@ function installCentosKernelManual(){
 
     kernelVersionFirstletter=${linuxKernelToInstallVersion:0:1}
 
-    if [ "${kernelVersionFirstletter}" = "5" ]; then 
-        linuxKernelByUser="elrepo"
-    else
-        linuxKernelByUser="altarch"
-    fi
-
     echo
-    green " 准备从 ${linuxKernelByUser} 网站下载 linux 内核 并安装 "
+    if [ "${linuxKernelToBBRType}" = "bbrplus" ]; then 
+        linuxKernelByUser="UJX6N"
+        if [ "${linuxKernelToInstallVersion}" = "4.14.129" ]; then 
+            linuxKernelByUser="cx9208"
+        fi
+        green " 准备从 ${linuxKernelByUser} github 网站下载 bbr plus 的linux内核并安装 "
+    else
+        if [ "${kernelVersionFirstletter}" = "5" ]; then 
+            linuxKernelByUser="elrepo"
+        else
+            linuxKernelByUser="altarch"
+        fi
+        green " 准备从 ${linuxKernelByUser} 网站下载linux内核并安装 "
+    fi
     echo
 
     if [ "${linuxKernelByUser}" = "elrepo" ]; then 
@@ -782,9 +847,10 @@ function installCentosKernelManual(){
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-libs-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
         fi
 
-        removeCentosKernelOthers
-        rpm -ivh --force --nodep ${elrepo_kernel_name}-core-${elrepo_kernel_version}*
-        rpm -ivh --force --nodep ${elrepo_kernel_name}-* 
+        removeCentosKernelMulti
+        rpm -ivh --force --nodeps ${elrepo_kernel_name}-core-${elrepo_kernel_version}-*.rpm
+        rpm -ivh --force --nodeps ${elrepo_kernel_name}-${elrepo_kernel_version}-*.rpm
+        rpm -ivh --force --nodeps ${elrepo_kernel_name}-*.rpm
 
 
     elif [ "${linuxKernelByUser}" = "altarch" ]; then 
@@ -845,15 +911,112 @@ function installCentosKernelManual(){
             fi
 
         else 
-            red "从 altarch 源没有找到 Centos8 的 ${linuxKernelToInstallVersion} Kernel "
+            red "从 altarch 源没有找到 Centos 8 的 ${linuxKernelToInstallVersion} Kernel "
             exit 255
         fi
 
-        removeCentosKernelOthers
-        rpm -ivh --force --nodep ${altarch_kernel_name}-core-${altarch_kernel_version}*
-        rpm -ivh --force --nodep ${altarch_kernel_name}-*
+        removeCentosKernelMulti
+        rpm -ivh --force --nodeps ${altarch_kernel_name}-core-${altarch_kernel_version}*
+        rpm -ivh --force --nodeps ${altarch_kernel_name}-*
         # yum install -y kernel-*
+
+
+    elif [ "${linuxKernelByUser}" = "cx9208" ]; then 
+
+        linuxKernelToInstallVersionFull="4.14.129-bbrplus"
+
+        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+            mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
+            cd ${userHomePath}/${linuxKernelToInstallVersionFull}
+
+            # https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/bbrplus/centos/7/kernel-4.14.129-bbrplus.rpm
+            # https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/bbrplus/centos/7/kernel-headers-4.14.129-bbrplus.rpm
+
+            bbrplusDownloadUrl="https://raw.githubusercontent.com/cx9208/Linux-NetSpeed/master/bbrplus/centos/7"
+
+            downloadFile ${bbrplusDownloadUrl}/kernel-${linuxKernelToInstallVersionFull}.rpm
+            downloadFile ${bbrplusDownloadUrl}/kernel-headers-${linuxKernelToInstallVersionFull}.rpm
+
+            removeCentosKernelMulti
+            rpm -ivh --force --nodeps kernel-${linuxKernelToInstallVersionFull}.rpm
+            rpm -ivh --force --nodeps kernel-headers-${linuxKernelToInstallVersionFull}.rpm
+        else 
+            red "从 cx9208 的 github 网站没有找到 Centos 8 的 ${linuxKernelToInstallVersion} Kernel "
+            exit 255
+        fi
+
+    elif [ "${linuxKernelByUser}" = "UJX6N" ]; then 
+        
+        linuxKernelToInstallSubVersion=$(echo ${bbrplusKernelVersion} | cut -d- -f1)
+        linuxKernelToInstallVersionFull="${linuxKernelToInstallSubVersion}-bbrplus"
+
+        mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
+        cd ${userHomePath}/${linuxKernelToInstallVersionFull}
+
+        if [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
+            bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/5.9.16-bbrplus-final-update-for-5.9"
+
+        elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
+            bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus/releases/download/${linuxKernelToInstallVersionFull}"
+
+        else
+            bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/${linuxKernelToInstallVersionFull}"
+        fi
+        
+
+
+        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Required_kernel-bbrplus-5.10.27-1.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-devel-5.10.27-1.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-headers-5.10.27-1.bbrplus.el7.x86_64.rpm
+            
+
+            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus-final-update-for-5.9/CentOS-7_Required_kernel-bbrplus-5.9.16-5.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.4/releases/download/5.4.109-bbrplus/CentOS-7_Required_kernel-bbrplus-5.4.109-1.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-4.19/releases/download/4.19.184-bbrplus/CentOS-7_Required_kernel-bbrplus-4.19.184-1.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus/releases/download/4.14.228-bbrplus/CentOS-7_Required_kernel-bbrplus-4.14.228-1.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-4.9/releases/download/4.9.264-bbrplus/CentOS-7_Required_kernel-bbrplus-4.9.264-1.bbrplus.el7.x86_64.rpm
+
+            downloadFile ${bbrplusDownloadUrl}/CentOS-7_Required_kernel-bbrplus-${bbrplusKernelVersion}.bbrplus.el7.x86_64.rpm
+            downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-bbrplus-devel-${bbrplusKernelVersion}.bbrplus.el7.x86_64.rpm
+            downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-bbrplus-headers-${bbrplusKernelVersion}.bbrplus.el7.x86_64.rpm
+
+            removeCentosKernelMulti
+            rpm -ivh --force --nodeps CentOS-7_Required_kernel-bbrplus-${bbrplusKernelVersion}.bbrplus.el7.x86_64.rpm
+            rpm -ivh --force --nodeps *.rpm
+        else 
+            
+            if [ "${kernelVersionFirstletter}" = "5" ]; then 
+                echo
+            else
+                red "从 UJX6N 的 github 网站没有找到 Centos 8 的 ${linuxKernelToInstallVersion} Kernel "
+                exit 255
+            fi
+
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-8_Required_kernel-bbrplus-core-5.10.27-1.bbrplus.el8.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-8_Optional_kernel-bbrplus-5.10.27-1.bbrplus.el8.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-8_Optional_kernel-bbrplus-devel-5.10.27-1.bbrplus.el8.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-8_Optional_kernel-bbrplus-headers-5.10.27-1.bbrplus.el8.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-8_Optional_kernel-bbrplus-modules-5.10.27-1.bbrplus.el8.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-8_Optional_kernel-bbrplus-modules-extra-5.10.27-1.bbrplus.el8.x86_64.rpm
+
+            
+            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Required_kernel-bbrplus-core-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
+            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
+            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-devel-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
+            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-headers-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
+            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-modules-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
+            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-modules-extra-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
+
+            removeCentosKernelMulti
+            rpm -ivh --force --nodeps CentOS-8_Required_kernel-bbrplus-core-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
+            rpm -ivh --force --nodeps *.rpm
+
+        fi
+
     fi;
+
 
 
     updateGrubConfig
@@ -866,28 +1029,49 @@ function installCentosKernelManual(){
 
     showLinuxKernelInfo
     listInstalledLinuxKernel
-    removeCentosKernel
+    removeCentosKernelMulti "kernel"
     listInstalledLinuxKernel
     rebootSystem
 }
 
 
 
-function removeCentosKernelOthers(){
-    removeCentosKernel "kernel-devel"
-    removeCentosKernel "kernel-header"
-    removeCentosKernel "kernel-tools"
-    removeCentosKernel "kernel-tools-libs" 
+function removeCentosKernelMulti(){
+    echo
 
-    removeCentosKernel "kernel-ml-devel"
-    removeCentosKernel "kernel-ml-header"
-    removeCentosKernel "kernel-ml-tools"
-    removeCentosKernel "kernel-ml-tools-libs"     
+    if [ -z $1 ]; then
+        red " 开始准备删除 kernel-header kernel-devel kernel-tools kernel-tools-libs 内核, 建议删除 "
+    else
+        red " 开始准备删除 kernel 内核, 建议删除 "
+    fi
 
-    removeCentosKernel "kernel-lt-devel"
-    removeCentosKernel "kernel-lt-header"
-    removeCentosKernel "kernel-lt-tools"
-    removeCentosKernel "kernel-lt-tools-libs"   
+    red " 注意: 删除内核有风险, 可能会导致VPS无法启动, 请先做好备份! "
+    read -p "是否删除内核? 直接回车默认删除内核, 请输入[Y/n]:" isContinueDelKernelInput
+	isContinueDelKernelInput=${isContinueDelKernelInput:-Y}
+
+	if [[ $isContinueDelKernelInput == [Yy] ]]; then
+
+        if [ -z $1 ]; then
+            removeCentosKernel "kernel-devel"
+            removeCentosKernel "kernel-header"
+            removeCentosKernel "kernel-tools"
+
+            removeCentosKernel "kernel-ml-devel"
+            removeCentosKernel "kernel-ml-header"
+            removeCentosKernel "kernel-ml-tools"
+
+            removeCentosKernel "kernel-lt-devel"
+            removeCentosKernel "kernel-lt-header"
+            removeCentosKernel "kernel-lt-tools"
+
+            removeCentosKernel "kernel-bbrplus-devel"  
+            removeCentosKernel "kernel-bbrplus-headers" 
+            removeCentosKernel "kernel-bbrplus-modules" 
+        else
+            removeCentosKernel "kernel"  
+        fi 
+	fi
+
 }
 
 function removeCentosKernel(){
@@ -905,21 +1089,23 @@ function removeCentosKernel(){
     # ${sudoCmd} rpm -e --nodeps kernel-ml-headers-${elrepo_kernel_version}-1.el7.elrepo.x86_64
 
     removeKernelNameText="kernel"
-    if [ -z $1 ]; then
-        removeKernelNameText="kernel"
-    else
-        removeKernelNameText=$1
-    fi 
+    removeKernelNameText=$1
+    grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
-    echo "rpm -qa | grep ${removeKernelNameText} | grep -v ${linuxKernelToInstallVersionFull} | grep -v noarch | wc -l"
-    rpmOldKernelNumber=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${linuxKernelToInstallVersionFull}" | grep -v "noarch" | wc -l)
-    rpmOLdKernelNameList=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${linuxKernelToInstallVersionFull}" | grep -v "noarch")
+    echo
+    echo
+    grenn "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
+
+    echo "rpm -qa | grep ${removeKernelNameText} | grep -v ${grepExcludelinuxKernelVersion} | grep -v noarch | wc -l"
+    rpmOldKernelNumber=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${grepExcludelinuxKernelVersion}" | grep -v "noarch" | wc -l)
+    rpmOLdKernelNameList=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${grepExcludelinuxKernelVersion}" | grep -v "noarch")
+    # echo "${rpmOLdKernelNameList}"
 
     # https://stackoverflow.com/questions/29269259/extract-value-of-column-from-a-line-variable
 
+
     if [ "${rpmOldKernelNumber}" -gt "0" ]; then
-        # echo "${rpmOLdKernelNameList}"
-        echo
+        
         red " 当前系统的旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 有 ${rpmOldKernelNumber} 个需要删除"
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
@@ -929,7 +1115,7 @@ function removeCentosKernel(){
             green " 已卸载第 ${integer} 个内核 ${rpmOLdKernelName}"
             echo
         done
-        green " ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
+        green "===== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
     else
         red " 当前需要卸载的系统旧内核 ${removeKernelNameText} 数量为0 !" 
     fi
@@ -1037,7 +1223,6 @@ function getLatestUbuntuKernelVersion(){
     green "Ubuntu mainline 最新的Linux 内核 kernel 版本号为 ${ubuntuKernelLatestVersion}" 
     
 
-
     for ver in ${ubuntuKernelLatestVersionArray[@]}; do
         
         if [[ ${ver} == *"${linuxKernelToInstallVersion}"* ]]; then
@@ -1050,9 +1235,9 @@ function getLatestUbuntuKernelVersion(){
     ubuntuDownloadUrl="https://kernel.ubuntu.com/~kernel-ppa/mainline/v${ubuntuKernelVersion}/amd64"
     echo
     echo "wget -qO- ${ubuntuDownloadUrl} | awk -F'>' '/-[4-9]\./{print \$7}' | cut -d'<' -f1 | grep -v lowlatency"
-    ubuntuKernelLatestVersionArray=($(wget -qO- ${ubuntuDownloadUrl} | awk -F'>' '/-[4-9]\./{print $7}' | cut -d'<' -f1 | grep -v lowlatency ))
+    ubuntuKernelDownloadUrlArray=($(wget -qO- ${ubuntuDownloadUrl} | awk -F'>' '/-[4-9]\./{print $7}' | cut -d'<' -f1 | grep -v lowlatency ))
 
-    # echo "${ubuntuKernelLatestVersionArray[*]}" 
+    # echo "${ubuntuKernelDownloadUrlArray[*]}" 
     echo
 
 }
@@ -1064,8 +1249,10 @@ function installDebianUbuntuKernel(){
 
     # https://unix.stackexchange.com/questions/545601/how-to-upgrade-the-debian-10-kernel-from-backports-without-recompiling-it-from-s
 
-    # https://linux.die.net/man/8/apt-get
+    # https://askubuntu.com/questions/119080/how-to-update-kernel-to-the-latest-mainline-version-without-any-distro-upgrade
 
+    # https://sypalo.com/how-to-upgrade-ubuntu
+    
     if [ "${isInstallFromRepo}" = "yes" ]; then 
 
         debianKernelVersion="5.10.0"
@@ -1105,37 +1292,106 @@ function installDebianUbuntuKernel(){
 
     else
 
-
-        getLatestUbuntuKernelVersion
-        
         green " =================================================="
-        green "    开始手动安装 linux 内核, 从 Ubuntu kernel-ppa mainline 下载安装"
+        green "    开始手动安装 linux 内核 "
         green " =================================================="
         echo
 
         mkdir -p ${userHomePath}
         cd ${userHomePath}
 
-        kernelVersionFirstletter=${linuxKernelToInstallVersion:0:1}
+        linuxKernelByUser=""
 
-        # https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11.12/amd64/
-        # https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11.12/amd64/linux-image-unsigned-5.11.12-051112-generic_5.11.12-051112.202104071432_amd64.deb
-        # https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11.12/amd64/linux-modules-5.11.12-051112-generic_5.11.12-051112.202104071432_amd64.deb
+        if [ "${linuxKernelToBBRType}" = "bbrplus" ]; then 
+            linuxKernelByUser="UJX6N"
+            if [ "${linuxKernelToInstallVersion}" = "4.14.129" ]; then 
+                linuxKernelByUser="cx9208"
+            fi
+            green " 准备从 ${linuxKernelByUser} github 网站下载 bbr plus 的linux内核并安装 "
+        else
+            green " 准备从 Ubuntu kernel-ppa mainline 网站下载linux内核并安装 "
+        fi
+        echo
+
+        
+        if [ "${linuxKernelByUser}" = "" ]; then 
+
+            # https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11.12/amd64/
+            # https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11.12/amd64/linux-image-unsigned-5.11.12-051112-generic_5.11.12-051112.202104071432_amd64.deb
+            # https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11.12/amd64/linux-modules-5.11.12-051112-generic_5.11.12-051112.202104071432_amd64.deb
+
+            getLatestUbuntuKernelVersion
+
+            linuxKernelToInstallVersionFull=${ubuntuKernelVersion}
+
+            mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
+            cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
 
-        linuxKernelToInstallVersionFull=${ubuntuKernelVersion}
+            for file in ${ubuntuKernelDownloadUrlArray[@]}; do
+                downloadFile ${ubuntuDownloadUrl}/${file}
+            done
 
-        mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
-        cd ${userHomePath}/${linuxKernelToInstallVersionFull}
+        elif [ "${linuxKernelByUser}" = "cx9208" ]; then 
+
+            linuxKernelToInstallVersionFull="4.14.129-bbrplus"
+
+            mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
+            cd ${userHomePath}/${linuxKernelToInstallVersionFull}
+
+            # https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/bbrplus/debian-ubuntu/x64/linux-headers-4.14.129-bbrplus.deb
+            # https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/bbrplus/debian-ubuntu/x64/linux-image-4.14.129-bbrplus.deb
+
+            # https://github.com/cx9208/Linux-NetSpeed/raw/master/bbrplus/debian-ubuntu/x64/linux-headers-4.14.129-bbrplus.deb
+            # https://github.com/cx9208/Linux-NetSpeed/raw/master/bbrplus/debian-ubuntu/x64/linux-image-4.14.129-bbrplus.deb
+
+            # https://raw.githubusercontent.com/cx9208/Linux-NetSpeed/master/bbrplus/debian-ubuntu/x64/linux-headers-4.14.129-bbrplus.deb
+            # https://raw.githubusercontent.com/cx9208/Linux-NetSpeed/master/bbrplus/debian-ubuntu/x64/linux-image-4.14.129-bbrplus.deb
+
+            bbrplusDownloadUrl="https://raw.githubusercontent.com/cx9208/Linux-NetSpeed/master/bbrplus/debian-ubuntu/x64"
+
+            downloadFile ${bbrplusDownloadUrl}/linux-image-${linuxKernelToInstallVersionFull}.deb
+            downloadFile ${bbrplusDownloadUrl}/linux-headers-${linuxKernelToInstallVersionFull}.deb
+
+        elif [ "${linuxKernelByUser}" = "UJX6N" ]; then 
+        
+            linuxKernelToInstallSubVersion=$(echo ${bbrplusKernelVersion} | cut -d- -f1)
+            linuxKernelToInstallVersionFull="${linuxKernelToInstallSubVersion}-bbrplus"
+
+            mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
+            cd ${userHomePath}/${linuxKernelToInstallVersionFull}
+
+            if [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
+                bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/5.9.16-bbrplus-final-update-for-5.9"
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${linuxKernelToInstallSubVersion}-bbrplus_5_amd64.deb
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${linuxKernelToInstallSubVersion}-bbrplus_5_amd64.deb    
+
+            elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
+                bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus/releases/download/${linuxKernelToInstallVersionFull}"
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
+            else
+                bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/${linuxKernelToInstallVersionFull}"
+
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
+
+            fi
+    
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/Debian-Ubuntu_Required_linux-image-5.10.27-bbrplus_5.10.27-bbrplus-1_amd64.deb
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/Debian-Ubuntu_Required_linux-headers-5.10.27-bbrplus_5.10.27-bbrplus-1_amd64.deb
+
+            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus-final-update-for-5.9/Debian-Ubuntu_Required_linux-image-5.9.16-bbrplus_5_amd64.deb
+            # https://github.com/UJX6N/bbrplus-5.4/releases/download/5.4.109-bbrplus/Debian-Ubuntu_Required_linux-image-5.4.109-bbrplus_5.4.109-bbrplus-1_amd64.deb
+            # https://github.com/UJX6N/bbrplus-4.19/releases/download/4.19.184-bbrplus/Debian-Ubuntu_Required_linux-image-4.19.184-bbrplus_4.19.184-bbrplus-1_amd64.deb
+
+        fi
 
 
-        for file in ${ubuntuKernelLatestVersionArray[@]}; do
-            downloadFile ${ubuntuDownloadUrl}/${file}
-        done
+         
+        green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+        echo
 
-
-        echo 
-        green " 开始安装 linux 内核版本: ${ubuntuKernelVersion}"
         ${sudoCmd} dpkg -i *.deb 
 
         updateGrubConfig
@@ -1161,33 +1417,44 @@ function installDebianUbuntuKernel(){
 
 
 function removeDebianKernelOthers(){
-    removeDebianKernel "linux-headers"
-    removeDebianKernel "linux-modules"
-    # removeDebianKernel "linux-kbuild"
-    # removeDebianKernel "linux-compiler"
-    # removeDebianKernel "linux-libc"
-    removeDebianKernel
+    echo
+    red " 开始准备删除 linux-image linux-headers linux-modules 内核, 建议删除 "
+    red " 注意: 删除内核有风险, 可能会导致VPS无法启动, 请先做好备份! "
+    read -p "是否删除内核? 直接回车默认删除内核, 请输入[Y/n]:" isContinueDelKernelInput
+	isContinueDelKernelInput=${isContinueDelKernelInput:-Y}
+
+	if [[ $isContinueDelKernelInput == [Yy] ]]; then
+
+        removeDebianKernel "linux-headers"
+        removeDebianKernel "linux-modules"
+        # removeDebianKernel "linux-kbuild"
+        # removeDebianKernel "linux-compiler"
+        # removeDebianKernel "linux-libc"
+        removeDebianKernel "linux-image"
+
+    fi
 }
+
 function removeDebianKernel(){
-
+    echo
+    echo
     removeKernelNameText="linux-image"
-    if [ -z $1 ]; then
-        removeKernelNameText="linux-image"
-    else
-        removeKernelNameText=$1
-    fi 
+    removeKernelNameText=$1
+    grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
-    echo "dpkg --get-selections | grep ${removeKernelNameText} | grep -Ev '${linuxKernelToInstallVersionFull}|${removeKernelNameText}-amd64' | awk '{print \$1}' "
-    rpmOldKernelNumber=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${linuxKernelToInstallVersionFull}|${removeKernelNameText}-amd64" | wc -l)
-    rpmOLdKernelNameList=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${linuxKernelToInstallVersionFull}|${removeKernelNameText}-amd64" | awk '{print $1}' )
-    echo "$rpmOLdKernelNameList"
+    grenn "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
+
+    echo "dpkg --get-selections | grep ${removeKernelNameText} | grep -Ev '${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64' | awk '{print \$1}' "
+    rpmOldKernelNumber=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64" | wc -l)
+    rpmOLdKernelNameList=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64" | awk '{print $1}' )
+    # echo "$rpmOLdKernelNameList"
 
     # https://stackoverflow.com/questions/16212656/grep-exclude-multiple-strings
     # https://stackoverflow.com/questions/29269259/extract-value-of-column-from-a-line-variable
 
+    
     if [ "${rpmOldKernelNumber}" -gt "0" ]; then
-
-        echo
+    
         red " 当前系统的旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 有 ${rpmOldKernelNumber} 个需要删除"
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
@@ -1197,7 +1464,7 @@ function removeDebianKernel(){
             green " 已卸载第 ${integer} 个内核 ${rpmOLdKernelName}"
             echo
         done
-        green " ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
+        green "===== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
     else
         red " 当前需要卸载的系统旧内核 ${removeKernelNameText} 数量为0 !" 
     fi
@@ -1206,35 +1473,6 @@ function removeDebianKernel(){
 
     ${sudoCmd} apt -y --purge autoremove
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1591,24 +1829,25 @@ function start_menu(){
     green " 21. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
     echo
     green " 22. 安装 最新版本内核 5.11, 通过 Ubuntu kernel mainline 安装"
-    green " 23. 安装 内核 4.19 LTS"
-    green " 24. 安装 内核 5.4 LTS"
-    green " 25. 安装 内核 5.10 LTS"
+    green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
+    green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
+    green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
 
     elif [[ "${osRelease}" == "ubuntu" ]]; then
     green " 22. 安装 最新版本内核 5.11, 通过 Ubuntu kernel mainline 安装"
-    green " 23. 安装 内核 4.19 LTS"
-    green " 24. 安装 内核 5.4 LTS"
-    green " 25. 安装 内核 5.10 LTS"
+    green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
+    green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
+    green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
     fi
 
-
     echo
-    # green " 31. 安装 BBR Plus 内核 4.14.129, cx9208 编译的 dog250 原版"
-    # green " 32. 安装 BBR Plus 内核 4.9 LTS, UJX6N 编译"
-    # green " 33. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
-    # green " 34. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
-    # green " 35. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"    
+    green " 31. 安装 BBR Plus 内核 4.14.129 LTS, cx9208 编译的 dog250 原版, 推荐使用"
+    green " 32. 安装 BBR Plus 内核 4.9 LTS, UJX6N 编译"
+    green " 33. 安装 BBR Plus 内核 4.14 LTS, UJX6N 编译"
+    green " 34. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
+    green " 35. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
+    green " 36. 安装 BBR Plus 内核 5.9, UJX6N 编译"
+    green " 37. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"    
     echo
     green " =================================================="
     green " 0. 退出脚本"
@@ -1679,9 +1918,41 @@ function start_menu(){
             installKernel
         ;;                
         31 )
-            showLinuxKernelInfo
+            linuxKernelToInstallVersion="4.14.129"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
         ;;
         32 )
+            linuxKernelToInstallVersion="4.9"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        33 )
+            linuxKernelToInstallVersion="4.14"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        34 )
+            linuxKernelToInstallVersion="4.19"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        35 )
+            linuxKernelToInstallVersion="5.4"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        36 )
+            linuxKernelToInstallVersion="5.9"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        37 )
+            linuxKernelToInstallVersion="5.10"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        88 )
             getLatestUbuntuKernelVersion
         ;;
 
