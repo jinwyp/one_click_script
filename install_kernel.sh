@@ -1571,7 +1571,7 @@ function installWireguard(){
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
             ${sudoCmd} apt-get update
-            ${sudoCmd} apt install -y wireguard  
+            ${sudoCmd} apt install -y wireguard wireguard-tools 
     
     elif [[ "${osRelease}" == "centos" ]]; then
     
