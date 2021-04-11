@@ -1742,6 +1742,9 @@ function removeWireguard(){
 
     [ -d "/etc/wireguard" ] && ("rm -rf /etc/wireguard")
 
+    sed -i '/nameserver 8.8.8.8/d' /etc/resolv.conf
+
+
     modprobe -r wireguard
 
     green " ================================================== "
