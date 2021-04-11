@@ -1089,6 +1089,8 @@ function removeCentosKernelMulti(){
     red " 注意: 删除内核有风险, 可能会导致VPS无法启动, 请先做好备份! "
     read -p "是否删除内核? 直接回车默认删除内核, 请输入[Y/n]:" isContinueDelKernelInput
 	isContinueDelKernelInput=${isContinueDelKernelInput:-Y}
+    
+    echo
 
 	if [[ $isContinueDelKernelInput == [Yy] ]]; then
 
@@ -1112,7 +1114,7 @@ function removeCentosKernelMulti(){
             removeCentosKernel "kernel"  
         fi 
 	fi
-
+    echo
 }
 
 function removeCentosKernel(){
@@ -1133,7 +1135,6 @@ function removeCentosKernel(){
     removeKernelNameText=$1
     grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
-    echo
     
     # echo "rpm -qa | grep ${removeKernelNameText} | grep -v ${grepExcludelinuxKernelVersion} | grep -v noarch | wc -l"
     rpmOldKernelNumber=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${grepExcludelinuxKernelVersion}" | grep -v "noarch" | wc -l)
@@ -1463,8 +1464,8 @@ function installDebianUbuntuKernel(){
 
 
 function removeDebianKernelMulti(){
-
     echo
+
     if [ -z $1 ]; then
         red " 开始准备删除 linux-headers linux-modules 内核, 建议删除 "
     else
@@ -1474,7 +1475,8 @@ function removeDebianKernelMulti(){
     red " 注意: 删除内核有风险, 可能会导致VPS无法启动, 请先做好备份! "
     read -p "是否删除内核? 直接回车默认删除内核, 请输入[Y/n]:" isContinueDelKernelInput
 	isContinueDelKernelInput=${isContinueDelKernelInput:-Y}
-
+    echo
+    
 	if [[ $isContinueDelKernelInput == [Yy] ]]; then
 
         if [ -z $1 ]; then
@@ -1488,6 +1490,7 @@ function removeDebianKernelMulti(){
         fi
 
     fi
+    echo
 }
 
 function removeDebianKernel(){
@@ -1496,7 +1499,7 @@ function removeDebianKernel(){
     removeKernelNameText=$1
     grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
-    echo
+    
     # echo "dpkg --get-selections | grep ${removeKernelNameText} | grep -Ev '${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64' | awk '{print \$1}' "
     rpmOldKernelNumber=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64" | wc -l)
     rpmOLdKernelNameList=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64" | awk '{print $1}' )

@@ -36,12 +36,19 @@
 
 ## Installation 安装方法  
 
+####  通过 curl 命令安装  via curl to install script
+
+```bash
+curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
+```
+
 #### 通过 wget 命令安装 via wget to install script
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
 
 ```
+
 
 
 ![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
