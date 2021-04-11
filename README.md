@@ -74,8 +74,8 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ### 安装命令行方式 启动 trojan 或 v2ray
 
 1. 该步骤可省略. 如果是使用google cloud 谷歌云服务器，默认无法使用root账号登陆， 可以选择32 开启root用户登录. 建议使用root用户运行该脚本. 安装bbr plus 需要root权限, 默认认为使用root执行, 非root用户请手动添加sudo执行 ```sudo ./tcp.sh ```和 ```sudo ./trojan_v2ray_install.sh ``` 脚本. （注意 证书申请也需要用root用户而不建议用sudo  [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo)  ).
-2. 安装 BBR plus. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后选择31 安装 BBRplus 4.14,129 版内核 或 选择37 安装 BBRplus 5.10 版内核, 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
-3. 使用BBRplus版加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择3 使用BBRplus版加速. 
+2. 安装 BBR plus (或 BBR) 网络加速. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后 选择37 安装 BBRplus 5.10 版内核 或 选择31 安装原版 BBRplus 4.14,129 版内核 , 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
+3. 使用BBRplus版 网络加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择3 使用BBRplus版加速. 
 4. 该步骤可省略. 选择31, 安装 oh-my-zsh. 这样以后登录有命令提示, 方便新手操作. 安装完成后请退出VPS, 命令为```exit```.  重新登录VPS后继续下面操作. 
 5. 安装 trojan 或 v2ray. 根据提示 重新运行脚本 ```./trojan_v2ray_install.sh ```  选2 安装trojan, 或选6 安装trojan-go, 或选12 安装v2ray, 或选15 同时安装trojan和v2ray， 或选18 或19 同时安装trojan-go和v2ray.  强烈建议：如果VPS线路速度可以保证，不需要CDN，强烈建议选2 只安装trojan或只安装6 trojan-go (trojan-go速度已经很快了). 需要CDN可以选12只安装V2ray.  协议安装的越多安全性越低,而且也不会提高速度,适合自己的软件装一种最好. 完全没有必要使用多合一的脚本同时安装多个协议
 

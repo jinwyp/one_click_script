@@ -435,8 +435,8 @@ EOF
 
         ${osSystemPackage} install -y curl wget git unzip zip tar
         ${osSystemPackage} install -y xz jq redhat-lsb-core 
-        ${osSystemPackage} install -y iputils-ping
-        ${osSystemPackage} -y install iperf3
+        ${osSystemPackage} install -y iputils
+        ${osSystemPackage} install -y iperf3
         
     elif [ "$osRelease" == "ubuntu" ]; then
         
@@ -456,7 +456,7 @@ EOF
         ${osSystemPackage} install -y curl wget git unzip zip tar
         ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
         ${osSystemPackage} install -y iputils-ping
-        ${osSystemPackage} -y install iperf3
+        ${osSystemPackage} install -y iperf3
 
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
@@ -474,7 +474,7 @@ EOF
         ${osSystemPackage} install -y curl wget git unzip zip tar
         ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
         ${osSystemPackage} install -y iputils-ping
-        ${osSystemPackage} -y install iperf3
+        ${osSystemPackage} install -y iperf3
     fi
 }
 
@@ -1889,12 +1889,18 @@ function installV2ray(){
     v2rayPassword9=$(cat /proc/sys/kernel/random/uuid)
     v2rayPassword10=$(cat /proc/sys/kernel/random/uuid)
 
+    echo
     if [ -f "${configV2rayPath}/v2ray" ] || [ -f "/usr/local/bin/v2ray" ] || [ -f "/usr/bin/v2ray" ]; then
         green " =================================================="
         green "     已安装过 V2ray 或 Xray, 退出安装 !"
         green " =================================================="
         exit
     fi
+
+    green " =================================================="
+    green "    开始安装 V2ray or Xray "
+    green " =================================================="    
+    echo
 
 
     if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessonly" ) || ( $configV2rayVlessMode == "vlesstrojan" ) ]] ; then
@@ -1927,8 +1933,6 @@ function installV2ray(){
     fi
 
 
-
-
     read -p "是否使用IPV6 解锁Google 验证码 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]:" isV2rayUnlockGoogleInput
     isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-n}
 
@@ -1951,19 +1955,14 @@ function installV2ray(){
     fi
 
 
-
     if [ "$isXray" = "no" ] ; then
         getTrojanAndV2rayVersion "v2ray"
-        green " =================================================="
-        green "    开始安装 V2ray Version: ${versionV2ray} !"
-        green " =================================================="
+        green "    准备下载并安装 V2ray Version: ${versionV2ray} !"
         promptInfoXrayInstall="V2ray"
         promptInfoXrayVersion=${versionV2ray}
     else
         getTrojanAndV2rayVersion "xray"
-        green " =================================================="
-        green "    开始安装 Xray Version: ${versionXray} !"
-        green " =================================================="
+        green "    准备下载并安装 Xray Version: ${versionXray} !"
         promptInfoXrayInstall="Xray"
         promptInfoXrayVersion=${versionXray}
     fi
@@ -2893,8 +2892,8 @@ EOF
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
+    传输协议: websocket,
+    websocket路径:/${configV2rayWebSocketPath},
     底层传输协议:${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
@@ -2914,7 +2913,7 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
-    WS路径:无,
+    websocket路径:无,
     底层传输:tls,
     别名:自己起个任意名称
 }
@@ -2927,8 +2926,8 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     加密方式: none,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
+    传输协议: websocket,
+    websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,
     别名:自己起个任意名称
 }
@@ -2963,7 +2962,7 @@ if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
     流控flow:  // 选择了16 为空
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
-    WS路径:无,
+    websocket路径:无,
     底层传输协议:tls,   
     别名:自己起个任意名称
 }
@@ -2977,8 +2976,8 @@ if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow:  // 选择了16 为空
     加密方式: none,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
+    传输协议: websocket,
+    websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
     别名:自己起个任意名称
 }
@@ -2998,7 +2997,7 @@ if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" ==
     流控flow: xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
-    WS路径:无,
+    websocket路径:无,
     底层传输协议:xtls, 
     别名:自己起个任意名称
 }
@@ -3012,8 +3011,8 @@ if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" ==
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
+    传输协议: websocket,
+    websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
     别名:自己起个任意名称
 }
@@ -3032,7 +3031,7 @@ if [[ "$configV2rayVlessMode" == "vlesstrojan" ]]; then
     流控flow: xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
-    WS路径:无,
+    websocket路径:无,
     底层传输协议:xtls, 
     别名:自己起个任意名称
 }
@@ -3046,8 +3045,8 @@ if [[ "$configV2rayVlessMode" == "vlesstrojan" ]]; then
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
     加密方式: none,  // 如果是Vless协议则为none
-    传输协议: ws,
-    WS路径:/${configV2rayWebSocketPath},
+    传输协议: websocket,
+    websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
     别名:自己起个任意名称
 }
