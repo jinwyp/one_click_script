@@ -1566,12 +1566,13 @@ function installWireguard(){
         green " 建议请先用本脚本安装 linux kernel 5.6 以上的内核 !"
 		exit
 	fi
-
+    echo
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
             ${sudoCmd} apt-get update
-            ${sudoCmd} apt install -y wireguard wireguard-tools 
-    
+            ${sudoCmd} apt install -y wireguard
+            ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
+
     elif [[ "${osRelease}" == "centos" ]]; then
     
         if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
@@ -1616,9 +1617,10 @@ function installWireguard(){
     fi
 
 
-    echo ""
+    echo
     green " =================================================="
     green " 开始安装 Cloudflare Warp 命令行工具 Wgcf "
+    echo
 
     mkdir -p ${configWgcfConfigFilePath}
     mkdir -p ${configWgcfBinPath}
@@ -1633,7 +1635,7 @@ function installWireguard(){
         cp ${configWgcfConfigFilePath}/wgcf ${configWgcfBinPath}
 
         green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
-
+        echo
         # ${configWgcfConfigFilePath}/wgcf register --config "${configWgcfAccountFilePath}"
 
         ${configWgcfConfigFilePath}/wgcf register 
@@ -1649,10 +1651,10 @@ function installWireguard(){
 
 
     echo "nameserver 8.8.8.8" >>  /etc/resolv.conf
-    echo "nameserver 8.8.4.4" >>  /etc/resolv.conf
-    echo "nameserver 1.1.1.1" >>  /etc/resolv.conf
-    echo "nameserver 9.9.9.9" >>  /etc/resolv.conf
-    echo "nameserver 9.9.9.10" >>  /etc/resolv.conf
+    # echo "nameserver 8.8.4.4" >>  /etc/resolv.conf
+    # echo "nameserver 1.1.1.1" >>  /etc/resolv.conf
+    # echo "nameserver 9.9.9.9" >>  /etc/resolv.conf
+    # echo "nameserver 9.9.9.10" >>  /etc/resolv.conf
 
 
     cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
@@ -1726,6 +1728,7 @@ function removeWireguard(){
     $osSystemPackage -y remove kmod-wireguard
     $osSystemPackage -y remove wireguard-dkms
     $osSystemPackage -y remove wireguard-tools
+    $osSystemPackage -y remove wireguard
 
     rm -f ${configWgcfBinPath}/wgcf
     rm -rf ${configWgcfConfigFilePath}
