@@ -261,6 +261,16 @@ function installSoftDownload(){
 		fi
 	fi
 
+    # 处理ca证书
+	if [[ "${osRelease}" == "centos" ]]; then
+		yum install -y ca-certificates dmidecode
+		update-ca-trust force-enable
+
+	elif [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+		apt-get install ca-certificates dmidecode
+		update-ca-certificates
+	fi	    
+
 }
 
 
@@ -654,13 +664,13 @@ function installKernel(){
         installDebianUbuntuKernel
 
 	elif [[ "${osRelease}" == "centos" ]]; then
-        if [ "${linuxKernelToBBRType}" != "bbrplus" ]; then 
-            getLatestCentosKernelVersion
-        fi
+        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
         
         if [ "${isInstallFromRepo}" = "yes" ]; then 
+            getLatestCentosKernelVersion
             installCentosKernelFromRepo
         else
+            getLatestCentosKernelVersion "manual"
             installCentosKernelManual
         fi
 	fi
@@ -671,8 +681,7 @@ function getLatestCentosKernelVersion(){
 
     # https://stackoverflow.com/questions/4988155/is-there-a-bash-command-that-can-tell-the-size-of-a-shell-variable
 
-    elrepo_kernel_version_lt_array=($(wget -qO- https://elrepo.org/linux/kernel/el8/x86_64/RPMS/ | awk -F'\"kernel-lt-' '/kernel-lt-[4-9]./{print $2}' | cut -d- -f1 | sort -V))
-    elrepo_kernel_version_ml_array=($(wget -qO- https://elrepo.org/linux/kernel/el8/x86_64/RPMS/ | awk -F'\"kernel-ml-' '/kernel-ml-[4-9]./{print $2}' | cut -d- -f1 | sort -V))
+    elrepo_kernel_version_lt_array=($(wget -qO- https://elrepo.org/linux/kernel/el8/x86_64/RPMS | awk -F'\"kernel-lt-' '/>kernel-lt-[4-9]./{print $2}' | cut -d- -f1 | sort -V))
 
     # echo ${elrepo_kernel_version_lt_array[@]}
 
@@ -685,11 +694,34 @@ function getLatestCentosKernelVersion(){
         green "Centos elrepo 源的最新的Linux 内核 kernel-lt 版本号为 ${elrepo_kernel_version_lt}" 
     fi
 
-    if [ ${#elrepo_kernel_version_ml_array[@]} -eq 0 ]; then
-        red " 无法获取到 Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号 "
+    if [ -z $1 ]; then
+        elrepo_kernel_version_ml_array=($(wget -qO- https://elrepo.org/linux/kernel/el8/x86_64/RPMS | awk -F'>kernel-ml-' '/>kernel-ml-[4-9]./{print $2}' | cut -d- -f1 | sort -V))
+        
+        if [ ${#elrepo_kernel_version_ml_array[@]} -eq 0 ]; then
+            red " 无法获取到 Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号 "
+        else
+            elrepo_kernel_version_ml=${elrepo_kernel_version_ml_array[-1]}
+            green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml}" 
+        fi
     else
-        elrepo_kernel_version_ml=${elrepo_kernel_version_ml_array[-1]}
-        green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml}" 
+        elrepo_kernel_version_ml2_array=($(wget -qO- https://fr1.teddyvps.com/kernel/el8 | awk -F'>kernel-ml-' '/>kernel-ml-[4-9]./{print $2}' | cut -d- -f1 | sort -V))
+       
+        if [ ${#elrepo_kernel_version_ml2_array[@]} -eq 0 ]; then
+            red " 无法获取到由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号 "
+        else
+            for ver in ${elrepo_kernel_version_ml2_array[@]}; do
+                
+                if [[ ${ver} == *"5.10"* ]]; then
+                    # echo "符合所选版本的Linux 内核版本: ${ver}"
+                    elrepo_kernel_version_ml_Teddysun510=${ver}
+                fi
+            done
+
+            elrepo_kernel_version_ml_Teddysun511=${elrepo_kernel_version_ml2_array[-1]}
+            green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun511}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun510}" 
+            
+        fi
     fi
     echo
 }
@@ -718,6 +750,7 @@ function installCentosKernelFromRepo(){
         fi
         
         linuxKernelToInstallVersionFull=${elrepo_kernel_version}
+        
 
         if [ "${osReleaseVersionNo}" -eq 7 ]; then
             # https://computingforgeeks.com/install-linux-kernel-5-on-centos-7/
@@ -725,7 +758,7 @@ function installCentosKernelFromRepo(){
             # https://elrepo.org/linux/kernel/
             # https://elrepo.org/linux/kernel/el7/x86_64/RPMS/
             
-            rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
 
@@ -737,7 +770,7 @@ function installCentosKernelFromRepo(){
             
         elif [ "${osReleaseVersionNo}" -eq 8 ]; then
             # https://elrepo.org/linux/kernel/el8/x86_64/RPMS/
-            rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+            
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm
 
@@ -814,16 +847,24 @@ function installCentosKernelManual(){
             # https://elrepo.org/linux/kernel/el7/x86_64/RPMS/kernel-lt-5.4.105-1.el7.elrepo.x86_64.rpm
             # https://elrepo.org/linux/kernel/el7/x86_64/RPMS/kernel-lt-tools-5.4.109-1.el7.elrepo.x86_64.rpm
             # https://elrepo.org/linux/kernel/el7/x86_64/RPMS/kernel-lt-tools-libs-5.4.109-1.el7.elrepo.x86_64.rpm
-        else
+
+        elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
             elrepo_kernel_name="kernel-ml"
-            elrepo_kernel_version="5.10.28"
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun}
             elrepo_kernel_filename=""
             ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNo}"
 
-             # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.23-1.el7.x86_64.rpm
-             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
-             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
+            # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.23-1.el7.x86_64.rpm
+            # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
+            # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
 
+        elif [ "${linuxKernelToInstallVersion}" = "5.11" ]; then 
+            elrepo_kernel_name="kernel-ml"
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun511}
+            elrepo_kernel_filename="elrepo."
+            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
+
+            # https://fr1.teddyvps.com/kernel/el8/kernel-ml-devel-5.11.13-1.el8.elrepo.x86_64.rpm 
         fi
 
         linuxKernelToInstallVersionFull=${elrepo_kernel_version}
@@ -1093,9 +1134,8 @@ function removeCentosKernel(){
     grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
     echo
-    green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
-
-    echo "rpm -qa | grep ${removeKernelNameText} | grep -v ${grepExcludelinuxKernelVersion} | grep -v noarch | wc -l"
+    
+    # echo "rpm -qa | grep ${removeKernelNameText} | grep -v ${grepExcludelinuxKernelVersion} | grep -v noarch | wc -l"
     rpmOldKernelNumber=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${grepExcludelinuxKernelVersion}" | grep -v "noarch" | wc -l)
     rpmOLdKernelNameList=$(rpm -qa | grep "${removeKernelNameText}" | grep -v "${grepExcludelinuxKernelVersion}" | grep -v "noarch")
     # echo "${rpmOLdKernelNameList}"
@@ -1104,7 +1144,8 @@ function removeCentosKernel(){
 
 
     if [ "${rpmOldKernelNumber}" -gt "0" ]; then
-        
+
+        green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
         red " 当前系统的旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 有 ${rpmOldKernelNumber} 个需要删除"
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
@@ -1116,7 +1157,7 @@ function removeCentosKernel(){
         done
         green "===== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
     else
-        red " 当前需要卸载的系统旧内核 ${removeKernelNameText} 数量为0 !" 
+        red " 当前需要卸载的系统旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 数量为0 !" 
     fi
 
     echo
@@ -1221,7 +1262,6 @@ function getLatestUbuntuKernelVersion(){
     echo
     green "Ubuntu mainline 最新的Linux 内核 kernel 版本号为 ${ubuntuKernelLatestVersion}" 
     
-
     for ver in ${ubuntuKernelLatestVersionArray[@]}; do
         
         if [[ ${ver} == *"${linuxKernelToInstallVersion}"* ]]; then
@@ -1457,9 +1497,7 @@ function removeDebianKernel(){
     grepExcludelinuxKernelVersion=$(echo ${linuxKernelToInstallVersionFull} | cut -d- -f1)
 
     echo
-    green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
-
-    echo "dpkg --get-selections | grep ${removeKernelNameText} | grep -Ev '${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64' | awk '{print \$1}' "
+    # echo "dpkg --get-selections | grep ${removeKernelNameText} | grep -Ev '${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64' | awk '{print \$1}' "
     rpmOldKernelNumber=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64" | wc -l)
     rpmOLdKernelNameList=$(dpkg --get-selections | grep "${removeKernelNameText}" | grep -Ev "${grepExcludelinuxKernelVersion}|${removeKernelNameText}-amd64" | awk '{print $1}' )
     # echo "$rpmOLdKernelNameList"
@@ -1469,7 +1507,7 @@ function removeDebianKernel(){
 
     
     if [ "${rpmOldKernelNumber}" -gt "0" ]; then
-    
+        green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
         red " 当前系统的旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 有 ${rpmOldKernelNumber} 个需要删除"
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
@@ -1481,7 +1519,7 @@ function removeDebianKernel(){
         done
         green "===== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
     else
-        red " 当前需要卸载的系统旧内核 ${removeKernelNameText} 数量为0 !" 
+        red " 当前需要卸载的系统旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 数量为0 !" 
     fi
 
     echo
@@ -1726,8 +1764,12 @@ function installWireguard(){
 
     green " ================================================== "
     green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
+    green "  Cloudflare Warp 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
+    green "  Cloudflare Warp 生成的 Wireguard 配置文件路径: ${configWireGuardConfigFilePath} "
+    echo
     green "  Wireguard 停止命令: systemctl stop wg-quick@wgcf  启动命令: systemctl start wg-quick@wgcf  重启命令: systemctl restart wg-quick@wgcf"
-    green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf 查看运行状态: systemctl status wg-quick@wgcf"
+    green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf"
+    green "  Wireguard 查看运行状态: systemctl status wg-quick@wgcf"
     echo
     green "  用本脚本安装v2ray或xray 可以选择是否解除 google 验证码 和 Netflix 的限制 !"
     echo
@@ -1857,10 +1899,11 @@ function start_menu(){
     green " 11. 安装 最新版本内核 5.11, 通过elrepo源安装"
     green " 12. 安装 最新版本LTS内核 5.4 LTS, 通过elrepo源安装"
     echo
-    green " 13. 安装 内核 4.14 LTS"
-    green " 14. 安装 内核 4.19 LTS"
-    green " 15. 安装 内核 5.4 LTS"
+    green " 13. 安装 内核 4.14 LTS, 下载安装"
+    green " 14. 安装 内核 4.19 LTS, 下载安装"
+    green " 15. 安装 内核 5.4 LTS, 下载安装"
     green " 16. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
+    green " 17. 安装 内核 5.11, 下载安装"
 
     elif [[ "${osRelease}" == "debian" ]]; then
     green " 21. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
@@ -1931,6 +1974,10 @@ function start_menu(){
         ;;
         16 )
             linuxKernelToInstallVersion="5.10"
+            installKernel
+        ;;
+        17 )
+            linuxKernelToInstallVersion="5.11"
             installKernel
         ;;
         21 )
