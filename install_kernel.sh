@@ -1391,6 +1391,7 @@ function installDebianUbuntuKernel(){
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo
 
+        removeDebianKernelMulti
         ${sudoCmd} dpkg -i *.deb 
 
         updateGrubConfig
@@ -1406,7 +1407,7 @@ function installDebianUbuntuKernel(){
 
     showLinuxKernelInfo
     listInstalledLinuxKernel
-    removeDebianKernelOthers
+    removeDebianKernelMulti "linux-image"
     listInstalledLinuxKernel
     rebootSystem
 
@@ -1415,21 +1416,30 @@ function installDebianUbuntuKernel(){
 
 
 
-function removeDebianKernelOthers(){
+function removeDebianKernelMulti(){
+
     echo
-    red " 开始准备删除 linux-image linux-headers linux-modules 内核, 建议删除 "
+    if [ -z $1 ]; then
+        red " 开始准备删除 linux-headers linux-modules 内核, 建议删除 "
+    else
+        red " 开始准备删除 linux-image 内核, 建议删除 "
+    fi
+
     red " 注意: 删除内核有风险, 可能会导致VPS无法启动, 请先做好备份! "
     read -p "是否删除内核? 直接回车默认删除内核, 请输入[Y/n]:" isContinueDelKernelInput
 	isContinueDelKernelInput=${isContinueDelKernelInput:-Y}
 
 	if [[ $isContinueDelKernelInput == [Yy] ]]; then
 
-        removeDebianKernel "linux-headers"
-        removeDebianKernel "linux-modules"
-        # removeDebianKernel "linux-kbuild"
-        # removeDebianKernel "linux-compiler"
-        # removeDebianKernel "linux-libc"
-        removeDebianKernel "linux-image"
+        if [ -z $1 ]; then
+            removeDebianKernel "linux-headers"
+            removeDebianKernel "linux-modules"
+            # removeDebianKernel "linux-kbuild"
+            # removeDebianKernel "linux-compiler"
+            # removeDebianKernel "linux-libc"
+        else
+            removeDebianKernel "linux-image"
+        fi
 
     fi
 }
