@@ -1726,24 +1726,20 @@ function installWireguard(){
     cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
 
     echo 
-    green "  开始启动 Wireguard, 运行命令: wg-quick up wgcf"
+    green " 开始临时启动 Wireguard, 用于测试是否启动正常, 运行命令: wg-quick up wgcf"
     ${sudoCmd} wg-quick up wgcf
 
     echo 
-    green "  开始验证 Wireguard 是否启动正常 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
+    green " 开始验证 Wireguard 是否启动正常, 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
     echo
     echo "curl -6 ip.p3terx.com"
     curl -6 ip.p3terx.com 
     echo
-    
     isWireguardIpv6Working=$(curl -6 ip.p3terx.com | grep CLOUDFLARENET )
-    sleep 3
-    ${sudoCmd} wg-quick down wgcf
+    echo
 
-    
 	if [[ -n "$isWireguardIpv6Working" ]]; then	
 		green " Wireguard 启动正常! "
-        echo
 	else 
 		green " ================================================== "
 		red " Wireguard 通过 curl -6 ip.p3terx.com, 检测使用CLOUDFLARENET的IPV6 访问失败"
@@ -1755,6 +1751,10 @@ function installWireguard(){
 		green " ================================================== "
 	fi
 
+    echo
+    green " 关闭临时启动用于测试的 Wireguard, 运行命令: wg-quick down wgcf "
+    ${sudoCmd} wg-quick down wgcf
+    echo
 
     ${sudoCmd} systemctl daemon-reload
     
