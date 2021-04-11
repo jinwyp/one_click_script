@@ -1312,7 +1312,13 @@ function installDebianUbuntuKernel(){
         fi
         echo
 
-        
+        if [[ "${osRelease}" == "ubuntu" && ${osReleaseVersionNo} == "16.04" ]]; then 
+            wget -P ${userHomePath} http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+            ${sudoCmd} dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb 
+        fi
+
+
+
         if [ "${linuxKernelByUser}" = "" ]; then 
 
             # https://kernel.ubuntu.com/~kernel-ppa/mainline/v5.11.12/amd64/
@@ -1749,7 +1755,7 @@ function removeWireguard(){
 
     rm -f ${configWgcfBinPath}/wgcf
     rm -rf ${configWgcfConfigFilePath}
-    rm -rf ${${configWireGuardConfigFileFolder}}
+    rm -rf ${configWireGuardConfigFileFolder}
 
     rm -f ${osSystemMdPath}wg-quick@wgcf.service
 
