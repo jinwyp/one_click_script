@@ -1571,7 +1571,11 @@ function installWireguard(){
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
             ${sudoCmd} apt-get update
             ${sudoCmd} apt install -y wireguard
+
             ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
+
+            ${sudoCmd} systemctl enable systemd-resolved.service
+            ${sudoCmd} systemctl start systemd-resolved.service
 
     elif [[ "${osRelease}" == "centos" ]]; then
     
