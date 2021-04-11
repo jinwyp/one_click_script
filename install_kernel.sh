@@ -1588,6 +1588,7 @@ function installWireguard(){
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
             ${sudoCmd} apt-get update
             ${sudoCmd} apt install -y wireguard
+            ${sudoCmd} apt install -y wireguard-tools 
 
             ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
 
@@ -1666,6 +1667,7 @@ function installWireguard(){
 
         sed -i '/AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
         sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g'  ${configWgcfProfileFilePath}
+        sed -i 's/1\.1\.1\.1/8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/g'  ${configWgcfProfileFilePath}
 
     else
         red "  Wgcf ${versionWgcf} 下载失败!"
@@ -1674,10 +1676,10 @@ function installWireguard(){
 
 
     echo "nameserver 8.8.8.8" >>  /etc/resolv.conf
-    # echo "nameserver 8.8.4.4" >>  /etc/resolv.conf
-    # echo "nameserver 1.1.1.1" >>  /etc/resolv.conf
-    # echo "nameserver 9.9.9.9" >>  /etc/resolv.conf
-    # echo "nameserver 9.9.9.10" >>  /etc/resolv.conf
+    echo "nameserver 8.8.4.4" >>  /etc/resolv.conf
+    echo "nameserver 1.1.1.1" >>  /etc/resolv.conf
+    echo "nameserver 9.9.9.9" >>  /etc/resolv.conf
+    echo "nameserver 9.9.9.10" >>  /etc/resolv.conf
 
 
     cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
@@ -1726,9 +1728,11 @@ function installWireguard(){
     green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
     green "  Wireguard 停止命令: systemctl stop wg-quick@wgcf  启动命令: systemctl start wg-quick@wgcf  重启命令: systemctl restart wg-quick@wgcf"
     green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf 查看运行状态: systemctl status wg-quick@wgcf"
-    
+    echo
     green "  用本脚本安装v2ray或xray 可以选择是否解除 google 验证码 和 Netflix 的限制 !"
+    echo
     green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
+    green "  可参考 如何使用 IPv6 访问 Netflix 的教程 https://ybfl.xyz/111.html 或 https://toutyrater.github.io/app/netflix.html!"
     green " ================================================== "
     
 }
@@ -1766,7 +1770,11 @@ function removeWireguard(){
 
     [ -d "/etc/wireguard" ] && ("rm -rf /etc/wireguard")
 
-    sed -i '/nameserver 8.8.8.8/d' /etc/resolv.conf
+    sed -i '/nameserver 8\.8\.8\.8/d' /etc/resolv.conf
+    sed -i '/nameserver 8\.8\.4\.4/d' /etc/resolv.conf
+    sed -i '/nameserver 1\.1\.1\.1/d' /etc/resolv.conf
+    sed -i '/nameserver 9\.9\.9\.9/d' /etc/resolv.conf
+    sed -i '/nameserver 9\.9\.9\.10/d' /etc/resolv.conf
 
 
     modprobe -r wireguard
