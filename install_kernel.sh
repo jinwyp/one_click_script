@@ -1538,6 +1538,7 @@ configWgcfBinPath="/usr/local/bin"
 configWgcfConfigFilePath="${HOME}/wireguard"
 configWgcfAccountFilePath="${configWgcfConfigFilePath}/wgcf-account.toml"
 configWgcfProfileFilePath="${configWgcfConfigFilePath}/wgcf-profile.conf"
+configWireGuardConfigFileFolder="/etc/wireguard"
 configWireGuardConfigFilePath="/etc/wireguard/wgcf.conf"
 
 function installWireguard(){
@@ -1638,6 +1639,8 @@ function installWireguard(){
 
     mkdir -p ${configWgcfConfigFilePath}
     mkdir -p ${configWgcfBinPath}
+    mkdir -p ${configWireGuardConfigFileFolder}
+
     cd ${configWgcfConfigFilePath}
 
     # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
@@ -1746,6 +1749,7 @@ function removeWireguard(){
 
     rm -f ${configWgcfBinPath}/wgcf
     rm -rf ${configWgcfConfigFilePath}
+    rm -rf ${${configWireGuardConfigFileFolder}}
 
     rm -f ${osSystemMdPath}wg-quick@wgcf.service
 
