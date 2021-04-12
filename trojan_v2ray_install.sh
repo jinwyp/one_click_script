@@ -414,7 +414,6 @@ baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/\$basearch/
 gpgcheck=0
 enabled=1
 
-
 EOF
 
         ${osSystemPackage} update -y
@@ -427,9 +426,11 @@ EOF
         ${osSystemPackage} install -y iperf3
 
         # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
-        ${sudoCmd} yum module reset nginx
-        ${sudoCmd} yum module enable nginx:1.18
-        ${sudoCmd} yum module list nginx
+        if  [[ ${osReleaseVersionNo} == "8" ]]; then
+            ${sudoCmd} yum module -y reset nginx
+            ${sudoCmd} yum module -y enable nginx:1.18
+            ${sudoCmd} yum module list nginx
+        fi
 
     elif [ "$osRelease" == "ubuntu" ]; then
         
@@ -1004,7 +1005,7 @@ http {
             proxy_set_header Connection "upgrade";
             proxy_set_header Host \$http_host;
         }
-        
+
         location /$configTrojanWebNginxPath {
             proxy_pass http://127.0.0.1:$configTrojanWebPort/;
             proxy_set_header Upgrade \$http_upgrade;
