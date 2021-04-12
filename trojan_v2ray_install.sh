@@ -997,6 +997,14 @@ http {
         root $configWebsitePath;
         index index.php index.html index.htm;
 
+        location /$configV2rayWebSocketPath {
+            proxy_pass http://127.0.0.1:$configV2rayPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+        }
+        
         location /$configTrojanWebNginxPath {
             proxy_pass http://127.0.0.1:$configTrojanWebPort/;
             proxy_set_header Upgrade \$http_upgrade;
