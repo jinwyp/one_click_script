@@ -22,6 +22,7 @@
 
 
 # centos8 安装完成默认内核  kernel-core-4.18.0-240.15.1.el8_3.x86_64, kernel-modules-4.18.0-240.15.1.el8_3.x86_64
+# ubuntu18 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
 # ubuntu20 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
 # debian10 安装完成默认内核  4.19.0-16-amd64
 
@@ -1628,6 +1629,7 @@ function installWireguard(){
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
             ${sudoCmd} apt-get update
+            ${sudoCmd} apt install -y openresolv resolvconf
             ${sudoCmd} apt install -y wireguard
             ${sudoCmd} apt install -y wireguard-tools 
 

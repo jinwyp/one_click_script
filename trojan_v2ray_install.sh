@@ -222,44 +222,31 @@ function testLinuxPortUsage(){
     fi
 
     if [ "$osRelease" == "centos" ]; then
-        if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ; then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
+        if  [[ ${osReleaseVersionNo} == "6" || ${osReleaseVersionNo} == "5" ]]; then
+            green " =================================================="
+            red " 本脚本不支持 Centos 6 或 Centos 6 更早的版本"
+            green " =================================================="
             exit
         fi
 
-        if  [ -n "$(grep ' 5\.' /etc/redhat-release)" ] ; then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
-            exit
-        fi
-
+        red " 关闭防火墙 firewalld"
         ${sudoCmd} systemctl stop firewalld
         ${sudoCmd} systemctl disable firewalld
 
     elif [ "$osRelease" == "ubuntu" ]; then
-        if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
-            exit
-        fi
-        if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
+        if  [[ ${osReleaseVersionNo} == "14" || ${osReleaseVersionNo} == "12" ]];
+            green " =================================================="
+            red " 本脚本不支持 Ubuntu 14 或 Ubuntu 14 更早的版本"
+            green " =================================================="
             exit
         fi
 
+        red " 关闭防火墙 ufw"
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
         
-    
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
-
     fi
 
 }
@@ -427,17 +414,23 @@ baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/\$basearch/
 gpgcheck=0
 enabled=1
 
+
 EOF
 
         ${osSystemPackage} update -y
 
-        ${sudoCmd}  ${osSystemPackage} install -y epel-release
+        ${sudoCmd} ${osSystemPackage} install -y epel-release
 
         ${osSystemPackage} install -y curl wget git unzip zip tar
         ${osSystemPackage} install -y xz jq redhat-lsb-core 
         ${osSystemPackage} install -y iputils
         ${osSystemPackage} install -y iperf3
-        
+
+        # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
+        ${sudoCmd} yum module reset nginx
+        ${sudoCmd} yum module enable nginx:1.18
+        ${sudoCmd} yum module list nginx
+
     elif [ "$osRelease" == "ubuntu" ]; then
         
         # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
@@ -924,7 +917,7 @@ function installWebServerNginx(){
     fi
 
     stopServiceV2ray
-
+    
     ${osSystemPackage} install nginx -y
     ${sudoCmd} systemctl enable nginx.service
     ${sudoCmd} systemctl stop nginx.service
@@ -946,11 +939,12 @@ http {
                       '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
     access_log  $nginxAccessLogFilePath  main;
     error_log $nginxErrorLogFilePath;
+
     sendfile        on;
     #tcp_nopush     on;
     keepalive_timeout  120;
     client_max_body_size 20m;
-    #gzip  on;
+    gzip  on;
 
     server {
         listen       80;
@@ -990,25 +984,18 @@ http {
                       '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
     access_log  $nginxAccessLogFilePath  main;
     error_log $nginxErrorLogFilePath;
+
     sendfile        on;
     #tcp_nopush     on;
     keepalive_timeout  120;
     client_max_body_size 20m;
-    #gzip  on;
+    gzip on;
 
     server {
         listen       80;
         server_name  $configSSLDomain;
         root $configWebsitePath;
         index index.php index.html index.htm;
-
-        location /$configV2rayWebSocketPath {
-            proxy_pass http://127.0.0.1:$configV2rayPort;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$http_host;
-        }
 
         location /$configTrojanWebNginxPath {
             proxy_pass http://127.0.0.1:$configTrojanWebPort/;
@@ -1048,11 +1035,12 @@ http {
                       '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
     access_log  $nginxAccessLogFilePath  main;
     error_log $nginxErrorLogFilePath;
+
     sendfile        on;
     #tcp_nopush     on;
     keepalive_timeout  120;
     client_max_body_size 20m;
-    #gzip  on;
+    gzip  on;
 
     server {
         listen 443 ssl http2;
@@ -1063,7 +1051,6 @@ http {
         ssl_certificate_key   ${configSSLCertPath}/private.key;
         ssl_protocols         TLSv1.2 TLSv1.3;
         ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
-
 
         # Config for 0-RTT in TLSv1.3
         ssl_early_data on;
@@ -1440,7 +1427,7 @@ function installTrojanServer(){
 }
 EOF
 
-        rm /etc/systemd/system/trojan.service   
+        # rm /etc/systemd/system/trojan.service   
         # 增加启动脚本
         cat > ${osSystemMdPath}trojan.service <<-EOF
 [Unit]
