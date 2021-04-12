@@ -234,7 +234,7 @@ function testLinuxPortUsage(){
         ${sudoCmd} systemctl disable firewalld
 
     elif [ "$osRelease" == "ubuntu" ]; then
-        if  [[ ${osReleaseVersionNo} == "14" || ${osReleaseVersionNo} == "12" ]];
+        if  [[ ${osReleaseVersionNo} == "14" || ${osReleaseVersionNo} == "12" ]]; then
             green " =================================================="
             red " 本脚本不支持 Ubuntu 14 或 Ubuntu 14 更早的版本"
             green " =================================================="
