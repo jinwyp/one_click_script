@@ -384,6 +384,14 @@ function setLinuxDateZone(){
 # 软件安装
 
 
+function upgradeScript(){
+    wget -Nq --no-check-certificate -O ./trojan_v2ray_install.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh"
+    green " 本脚本升级成功! "
+    chmod +x ./trojan_v2ray_install.sh
+    sleep 2s
+    ./trojan_v2ray_install.sh
+}
+
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
@@ -397,9 +405,7 @@ function installSoftDownload(){
 		if ! rpm -qa | grep -qw wget; then
 			${osSystemPackage} -y install wget curl git
 		fi
-	fi
-
-    wget -Nq --no-check-certificate -O ./trojan_v2ray_install.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh"
+	fi 
 }
 
 function installPackage(){
@@ -483,7 +489,7 @@ function installSoftEditor(){
         cp ${HOME}/bin/micro /usr/local/bin
 
         green " =================================================="
-        yellow " micro 编辑器 安装成功!"
+        green " micro 编辑器 安装成功!"
         green " =================================================="
     fi
 
@@ -533,7 +539,7 @@ function installSoftOhMyZsh(){
     fi
 
     green " =================================================="
-    yellow " ZSH 安装成功"
+    green " ZSH 安装成功"
     green " =================================================="
 
     # 安装 oh-my-zsh
@@ -645,6 +651,24 @@ function installWireguard(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 configNetworkRealIp=""
 configNetworkLocalIp=""
 configSSLDomain=""
@@ -715,7 +739,7 @@ configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
 configV2rayVlessMode=""
-configReadme=${HOME}/trojan_v2ray_readme.txt
+configReadme=${HOME}/readme_trojan_v2ray.txt
 
 
 function downloadAndUnzip(){
@@ -882,7 +906,7 @@ function getHTTPSCertificate(){
     green "=========================================="
 
 	if [[ $1 == "standalone" ]] ; then
-	    green "  开始重新申请证书 acme.sh standalone mode !"
+	    green "  开始申请证书 acme.sh standalone mode !"
 	    ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --standalone
 
         ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
@@ -890,7 +914,7 @@ function getHTTPSCertificate(){
         --fullchain-file ${configSSLCertPath}/fullchain.cer
 
 	else
-	    green "  开始第一次申请证书 acme.sh nginx mode !"
+	    green "  开始申请证书 acme.sh nginx mode !"
         ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
 
         ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
@@ -1125,28 +1149,38 @@ EOF
 	fi
 
     green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
-	green "    nginx 配置路径 ${nginxConfigPath} "
+	red "    nginx 配置路径 ${nginxConfigPath} "
 	green "    nginx 访问日志 ${nginxAccessLogFilePath} "
 	green "    nginx 错误日志 ${nginxErrorLogFilePath} "
-	green "    nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service"
+    green "    nginx 查看日志命令: journalctl -n 50 -u nginx.service"
+	green "    nginx 启动命令: systemctl start nginx.service  停止命令: systemctl stop nginx.service  重启命令: systemctl restart nginx.service"
+	green "    nginx 查看运行状态命令: systemctl status nginx.service "
+
     green " ================================================== "
 
     cat >> ${configReadme} <<-EOF
 
 Web服务器 nginx 安装成功! 伪装站点为 ${configSSLDomain}   
 伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容.
-nginx 配置路径 ${nginxConfigPath}, nginx 访问日志 ${nginxAccessLogFilePath}, nginx 错误日志 ${nginxErrorLogFilePath}
-nginx 停止命令: systemctl stop nginx.service  启动命令: systemctl start nginx.service  重启命令: systemctl restart nginx.service
+nginx 配置路径 ${nginxConfigPath}
+nginx 访问日志 ${nginxAccessLogFilePath}
+nginx 错误日志 ${nginxErrorLogFilePath}
+
+nginx 查看日志命令: journalctl -n 50 -u nginx.service
+
+nginx 启动命令: systemctl start nginx.service  
+nginx 停止命令: systemctl stop nginx.service  
+nginx 重启命令: systemctl restart nginx.service
+nginx 查看运行状态命令: systemctl status nginx.service
+
 
 EOF
-
 
 	if [[ $1 == "trojan-web" ]] ; then
         cat >> ${configReadme} <<-EOF
 
 安装的Trojan-web ${versionTrojanWeb} 可视化管理面板,访问地址  ${configSSLDomain}/${configTrojanWebNginxPath}
 Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service
-
 
 EOF
 	fi
@@ -1186,7 +1220,7 @@ function removeNginx(){
 }
 
 
-function installTrojanWholeProcess(){
+function installTrojanV2rayWithNginx(){
 
     stopServiceNginx
     testLinuxPortUsage
@@ -1202,18 +1236,7 @@ function installTrojanWholeProcess(){
     read configSSLDomain
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
 
-        if [[ -z $1 ]] ; then
-            if [ "$isNginxWithSSL" = "no" ] ; then
-                getHTTPSCertificate "standalone"
-                installWebServerNginx
-            else
-                getHTTPSCertificate "standalone"
-                installWebServerNginx "v2ray"
-            fi
-
-        else
-            getHTTPSCertificate "standalone"
-        fi
+        getHTTPSCertificate "standalone"
 
         if test -s ${configSSLCertPath}/fullchain.cer; then
             green " ================================================== "
@@ -1221,7 +1244,16 @@ function installTrojanWholeProcess(){
             green " ================================================== "
 
             if [ "$isNginxWithSSL" = "no" ] ; then
+                installWebServerNginx
+            else
+                installWebServerNginx "v2ray"
+            fi
+
+            if [ -z $1 ]; then
                 installTrojanServer
+            elif [ $1 = "both" ]; then
+                installTrojanServer
+                installV2ray
             else
                 installV2ray
             fi
@@ -1230,7 +1262,7 @@ function installTrojanWholeProcess(){
             red " https证书没有申请成功，安装失败!"
             red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
             red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
-            red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
+            red " 重启VPS, 重新执行脚本, 可重新选择该项再次申请证书 ! "
             red " 可参考 https://www.v2rayssr.com/trojan-2.html "
             red "==================================="
             exit
@@ -1239,6 +1271,26 @@ function installTrojanWholeProcess(){
         exit
     fi
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1288,8 +1340,6 @@ function installTrojanServer(){
 
 
     if [ "$configV2rayVlessMode" != "trojan" ] ; then
-        configV2rayTrojanPort=443
-    elif [ "$configV2rayVlessMode" != "vlesstrojan" ] ; then
         configV2rayTrojanPort=443
     fi
 
@@ -1585,17 +1635,18 @@ EOF
         "cert": "${configSSLCertPath}/fullchain.cer",
         "key": "${configSSLCertPath}/private.key",
         "key_password": "",
+        "curves": "",
+        "cipher": "",        
 	    "prefer_server_cipher": false,
+        "sni": "${configSSLDomain}",
         "alpn": [
             "http/1.1"
         ],
         "reuse_session": true,
-        "session_ticket": false,
-        "session_timeout": 600,
+        "session_ticket": true,
         "plain_http_response": "",
-        "curves": "",
-        "dhparam": "",
-        "sni": "${configSSLDomain}",
+        "fallback_addr": "127.0.0.1",
+        "fallback_port": 80,    
         "fingerprint": "firefox"
     },
     "tcp": {
@@ -1644,7 +1695,9 @@ EOF
     ${sudoCmd} systemctl enable trojan${promptInfoTrojanName}.service
 
 
-
+    if [ "$configV2rayVlessMode" != "trojan" ] ; then
+        
+    
     # 下载并制作 trojan windows 客户端的命令行启动文件
     rm -rf ${configTrojanBasePath}/trojan-win-cli
     rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
@@ -1702,6 +1755,7 @@ EOF
 
     zip -r ${configWebsiteDownloadPath}/trojan-win-cli.zip ${configTrojanBasePath}/trojan-win-cli/
 
+    fi
 
 
 
@@ -1720,10 +1774,13 @@ EOF
 	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
     fi
 
-	red "    Trojan 服务器端配置路径 ${configTrojanBasePath}/server.json "
-	red "    Trojan 访问日志 ${configTrojanLogFile} 或运行 journalctl -n 50 -u trojan${promptInfoTrojanName}.service 查看 !"
-	green "    Trojan 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
-	green "    Trojan 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+	red "    Trojan${promptInfoTrojanName} 服务器端配置路径 ${configTrojanBasePath}/server.json "
+	red "    Trojan${promptInfoTrojanName} 运行日志文件路径: ${configTrojanLogFile} "
+	green "    Trojan${promptInfoTrojanName} 查看日志命令: journalctl -n 50 -u trojan${promptInfoTrojanName}.service "
+
+	green "    Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
+	green "    Trojan${promptInfoTrojanName} 查看运行状态命令:  systemctl status trojan${promptInfoTrojanName}.service "
+	green "    Trojan${promptInfoTrojanName} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
 	blue  "----------------------------------------"
 	yellow "Trojan${promptInfoTrojanName} 配置信息如下, 请自行复制保存, 密码任选其一 !"
@@ -1792,7 +1849,14 @@ EOF
 
 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !
 Trojan${promptInfoTrojanName} 服务器端配置路径 ${configTrojanBasePath}/server.json
-Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service
+
+Trojan${promptInfoTrojanName} 运行日志文件路径: ${configTrojanLogFile} 
+Trojan${promptInfoTrojanName} 查看日志命令: journalctl -n 50 -u trojan${promptInfoTrojanName}.service
+
+Trojan${promptInfoTrojanName} 启动命令: systemctl start trojan${promptInfoTrojanName}.service
+Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  
+Trojan${promptInfoTrojanName} 重启命令: systemctl restart trojan${promptInfoTrojanName}.service
+Trojan${promptInfoTrojanName} 查看运行状态命令: systemctl status trojan${promptInfoTrojanName}.service
 
 Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
 
@@ -1810,7 +1874,6 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 例如: 密码:${configTrojanPasswordPrefixInput}202011 或 密码:${configTrojanPasswordPrefixInput}202088 都可以使用
 
 如果是trojan-go开启了Websocket，那么Websocket path 路径为: /${configTrojanGoWebSocketPath}
-
 
 EOF
 }
@@ -1872,6 +1935,30 @@ function upgradeTrojan(){
     green " ================================================== "
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2808,8 +2895,6 @@ EOF
 
 
 
-
-
     # 增加 V2ray启动脚本
     if [ "$isXray" = "no" ] ; then
     
@@ -3073,8 +3158,6 @@ fi
 
 
 
-
-
     # 设置 cron 定时任务
     # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
 
@@ -3089,11 +3172,12 @@ fi
     fi
 	
 	red "    ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json !"
-	red "    ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} !"
-	red "    ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath} ! 或运行 journalctl -n 50 -u ${promptInfoXrayName}.service 查看 !"
+	green "    ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} !"
+	green "    ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath} ! "
+	green "    ${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}.service "
 	green "    ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service"
-	# green "    caddy 停止命令: systemctl stop caddy.service  启动命令: systemctl start caddy.service  重启命令: systemctl restart caddy.service"
-	green "    ${promptInfoXrayInstall} 服务器 每天会自动重启,防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+	green "    ${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}.service "
+	green "    ${promptInfoXrayInstall} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
 	echo ""
 	yellow "${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
@@ -3127,10 +3211,19 @@ fi
 
 ${promptInfoXrayInstall} Version: ${promptInfoXrayVersion} 安装成功 ! 
 ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json 
-${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} , V2ray 错误日志 ${configV2rayErrorLogFilePath}
-${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service
+
+${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath}
+${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath}
+
+${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}.service
+
+${promptInfoXrayInstall} 启动命令: systemctl start ${promptInfoXrayName}.service  
+${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  
+${promptInfoXrayInstall} 重启命令: systemctl restart ${promptInfoXrayName}.service
+${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}.service 
 
 ${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !
+
 服务器地址: ${configSSLDomain}  
 端口: ${configV2rayPortShowInfo}"
 用户ID或密码1: ${v2rayPassword1}"
@@ -3226,6 +3319,34 @@ function upgradeV2ray(){
         green " =================================================="
     fi
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3423,6 +3544,19 @@ function upgradeV2rayUI(){
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 function getHTTPSNoNgix(){
     #stopServiceNginx
     #testLinuxPortUsage
@@ -3457,7 +3591,7 @@ function getHTTPSNoNgix(){
                 red " https证书没有申请成功，安装失败!"
                 red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
                 red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
-                red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
+                red " 重启VPS, 重新执行脚本, 可重新选择该项再次申请证书 ! "
                 red "==================================="
                 exit
             fi
@@ -3474,19 +3608,27 @@ function getHTTPSNoNgix(){
     fi
 
 
-
     if [[ $1 == "trojan" ]] ; then
         installTrojanServer
-    fi
 
-    if [[ $1 == "v2ray" ]] ; then
+    elif [[ $1 == "both" ]] ; then
         installV2ray
-
-        if [[ $configV2rayVlessMode == "trojan" ]]; then
-            installTrojanServer
-        fi
+        installTrojanServer
+    else
+        installV2ray
     fi
+
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3529,33 +3671,31 @@ function startMenuOther(){
     green " 7. 升级 v2ray UI 到最新版本"
     red " 8. 卸载 v2ray UI"
     echo
-    red " 安装上述2款可视化管理面板 之前不能用本脚本安装过trojan或v2ray 安装过请先用本脚本卸载!"
-    red " 安装上述2款可视化管理面板 之前不能用其他脚本安装过trojan或v2ray 安装过请先用其他脚本卸载!"
-    red " 上述2款可视化管理面板 无法同时安装!"
+    red " 安装上面2个可视化管理面板 之前不能用本脚本或其他脚本安装过trojan或v2ray! 2个管理面板也无法同时安装"
 
     green " =================================================="
-
     green " 11. 单独申请域名SSL证书"
     green " 12. 只安装trojan 运行在443端口, 不安装nginx, 请确保443端口没有被nginx占用"
     green " 13. 只安装trojan-go 运行在443端口, 不支持CDN, 不开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"
     green " 14. 只安装trojan-go 运行在443端口, 支持CDN, 开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
-    green " 15. 只安装V2Ray或Xray (VLess或VMess协议) 开启websocket, 支持CDN, (VLess/VMess+WS) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
-    green " 16. 只安装V2Ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx"
-    green " 17. 只安装V2Ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS) 支持CDN, 不安装nginx"
+    echo
+    green " 15. 只安装V2ray或Xray (VLess或VMess协议) 开启websocket, 支持CDN, (VLess/VMess+WS) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
+    green " 16. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx"
+    green " 17. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS) 支持CDN, 不安装nginx"
+    echo
     green " 20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS), 不安装nginx" 
-    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan 支持VLess的CDN, 不安装nginx"    
-    green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN, 不安装nginx"   
-    green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
-    green " 24. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan 支持VLess的CDN, 不安装nginx"    
+    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan, 支持VLess的CDN, 不安装nginx"    
+    green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN, 不安装nginx"   
+    green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
+    green " 24. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持VLess的CDN, 不安装nginx"    
 
     red " 27. 卸载 trojan"    
     red " 28. 卸载 trojan-go"   
     red " 29. 卸载 v2ray或Xray"   
-
     green " =================================================="
+
     echo
-    green " 以下是 VPS 测网速工具"
-    red " 脚本测速会大量消耗 VPS 流量，请悉知！"
+    red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
     green " 31. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
     echo
     green " 32. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
@@ -3633,18 +3773,18 @@ function startMenuOther(){
         ;; 
         21 )
             configV2rayVlessMode="trojan"
-            getHTTPSNoNgix "v2ray"
+            getHTTPSNoNgix "both"
         ;;
         22 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
-            getHTTPSNoNgix "v2ray"
+            getHTTPSNoNgix "both"
         ;;    
         23 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
-            getHTTPSNoNgix "v2ray"
+            getHTTPSNoNgix "both"
         ;;
         24 )
             configV2rayVlessMode="vlesstrojan"
@@ -3716,6 +3856,14 @@ function startMenuOther(){
 
 
 
+
+
+
+
+
+
+
+
 function start_menu(){
     clear
 
@@ -3730,39 +3878,39 @@ function start_menu(){
     green " ===================================================================================================="
     green " 1. 安装 linux 内核 BBR-PLUS, 安装 WireGuard, 用于解锁 google 验证码 和 Netflix 限制"
     echo
-    green " 2. 安装 trojan 和 nginx 不支持CDN"
-    green " 3. 修复证书 并继续安装 trojan"
-    green " 4. 升级 trojan 到最新版本"
-    red " 5. 卸载 trojan 与 nginx"
+    green " 2. 安装 trojan 和 nginx 不支持CDN, trojan 运行在443端口"
+    green " 3. 升级 trojan 到最新版本"
+    red " 4. 卸载 trojan 与 nginx"
     echo
-    green " 6. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket (兼容trojan客户端)"
-    green " 7. 修复证书 并继续安装 trojan-go 不支持CDN, 不开启websocket"
-    green " 8. 安装 trojan-go 和 nginx 支持CDN 开启websocket (兼容trojan客户端但不兼容websocket)"
-    green " 9. 修复证书 并继续安装 trojan-go 支持CDN, 开启websocket"
-    green " 10. 升级 trojan-go 到最新版本"
-    red " 11. 卸载 trojan-go 与 nginx"
+    green " 5. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket (兼容trojan客户端), trojan-go 运行在443端口"
+    green " 6. 安装 trojan-go 和 nginx 支持CDN 开启websocket (兼容trojan客户端但不兼容websocket), trojan-go 运行在443端口"
+    green " 7. 升级 trojan-go 到最新版本"
+    red " 8. 卸载 trojan-go 与 nginx"
     echo
-    green " 12. 安装 v2ray或xray 和 nginx, 支持 websocket tls1.3, 支持CDN"
+    green " 11. 安装 v2ray或xray 和 nginx, 支持 websocket tls1.3, 支持CDN, nginx 运行在443端口"
+    green " 12. 安装 xray 和 nginx, (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持CDN, xray 运行在443端口"  
     green " 13. 升级 v2ray或xray 到最新版本"
     red " 14. 卸载v2ray或xray 和 nginx"
     echo
-    green " 15. 同时安装 trojan + v2ray或xray 和 nginx, 不支持CDN"
-    green " 16. 升级 v2ray或xray 和 trojan 到最新版本"
-    red " 17. 卸载 trojan, v2ray或xray 和 nginx"
-    green " 18. 同时安装 trojan-go + v2ray或xray 和 nginx, 不支持CDN"
-    green " 19. 同时安装 trojan-go + v2ray或xray 和 nginx, trojan-go 和 v2ray 都支持CDN"
-    green " 20. 升级 v2ray或xray 和 trojan-go 到最新版本"
-    red " 21. 卸载 trojan-go, v2ray或xray 和 nginx"
+    green " 21. 同时安装 trojan + v2ray或xray 和 nginx, 不支持CDN, trojan 运行在443端口"
+    green " 22. 升级 v2ray或xray 和 trojan 到最新版本"
+    red " 23. 卸载 trojan, v2ray或xray 和 nginx"
+    echo
+    green " 24. 同时安装 trojan-go + v2ray或xray 和 nginx, trojan-go不支持CDN, v2ray或xray 支持CDN, trojan-go 运行在443端口"
+    green " 25. 同时安装 trojan-go + v2ray或xray 和 nginx, trojan-go 和 v2ray 都支持CDN, trojan-go 运行在443端口"
+    green " 26. 升级 v2ray或xray 和 trojan-go 到最新版本"
+    red " 27. 卸载 trojan-go, v2ray或xray 和 nginx"
     echo
     green " 28. 查看已安装的配置和用户密码等信息"
     green " 29. 子菜单 安装 trojan 和 v2ray 可视化管理面板, 测网速工具, Netflix 测试工具"
-    green " 30. 不安装nginx,只安装trojan或v2ray或xray,可选安装SSL证书, 方便与现有网站或宝塔面板集成"
+    green " 30. 不安装nginx, 只安装trojan或v2ray或xray, 可选安装SSL证书, 方便与现有网站或宝塔面板集成"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 32. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
     green " 35. 用 VI 编辑 authorized_keys 文件, 方便填入公钥, 免密码登录, 增加安全性"
+    green " 88. 升级脚本"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -3771,49 +3919,41 @@ function start_menu(){
             installWireguard
         ;;
         2 )
-            installTrojanWholeProcess
+            installTrojanV2rayWithNginx
         ;;
         3 )
-            installTrojanWholeProcess "repair"
-        ;;
-        4 )
             upgradeTrojan
         ;;
-        5 )
+        4 )
             removeNginx
             removeTrojan
+        ;;
+        5 )
+            isTrojanGo="yes"
+            installTrojanV2rayWithNginx
         ;;
         6 )
             isTrojanGo="yes"
-            installTrojanWholeProcess
+            isTrojanGoSupportWebsocket="true"
+            installTrojanV2rayWithNginx
         ;;
         7 )
             isTrojanGo="yes"
-            installTrojanWholeProcess "repair"
-        ;;
-        8 )
-            isTrojanGo="yes"
-            isTrojanGoSupportWebsocket="true"
-            installTrojanWholeProcess
-        ;;
-        9 )
-            isTrojanGo="yes"
-            isTrojanGoSupportWebsocket="true"
-            installTrojanWholeProcess "repair"
-        ;;
-        10 )
-            isTrojanGo="yes"
             upgradeTrojan
         ;;
-        11 )
+        8 )
             isTrojanGo="yes"
             removeNginx
             removeTrojan
         ;;
-        12 )
+        11 )
             isNginxWithSSL="yes"
-            installTrojanWholeProcess
+            installTrojanV2rayWithNginx "v2ray"
         ;;
+        12 )
+            configV2rayVlessMode="vlesstrojan"
+            installTrojanV2rayWithNginx "v2ray"
+        ;;        
         13 )
             upgradeV2ray
         ;;
@@ -3821,36 +3961,33 @@ function start_menu(){
             removeNginx
             removeV2ray
         ;;
-        15 )
-            installTrojanWholeProcess
-            installV2ray
+        21 )
+            installTrojanV2rayWithNginx "both"
         ;;
-        16 )
+        22 )
             upgradeTrojan
             upgradeV2ray
         ;;
-        17 )
+        23 )
             removeNginx
             removeTrojan
             removeV2ray
         ;;
-        18 )
+        24 )
             isTrojanGo="yes"
-            installTrojanWholeProcess
-            installV2ray
+            installTrojanV2rayWithNginx "both"
         ;;
-        19 )
+        25 )
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
-            installTrojanWholeProcess
-            installV2ray
+            installTrojanV2rayWithNginx "both"
         ;;
-        20 )
+        26 )
             isTrojanGo="yes"
             upgradeTrojan
             upgradeV2ray
         ;;
-        21 )
+        27 )
             isTrojanGo="yes"
             removeNginx
             removeTrojan
@@ -3890,14 +4027,17 @@ function start_menu(){
         30 )
             startMenuOther
         ;;        
-        86 )
+        81 )
             installBBR
         ;;
-        87 )
+        82 )
             installBBR2
         ;;        
-        88 )
+        83 )
             installPackage
+        ;;
+        88 )
+            upgradeScript
         ;;
         99 )
             getTrojanAndV2rayVersion "trojan"
@@ -3918,8 +4058,6 @@ function start_menu(){
         ;;
     esac
 }
-
-
 
 start_menu "first"
 
