@@ -3998,7 +3998,6 @@ function start_menu(){
         ;;        
         31 )
             setLinuxDateZone
-            testLinuxPortUsage
             installPackage
             installSoftEditor
             installSoftOhMyZsh

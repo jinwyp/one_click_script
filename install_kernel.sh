@@ -752,39 +752,35 @@ function installCentosKernelFromRepo(){
         
         linuxKernelToInstallVersionFull=${elrepo_kernel_version}
         
-
         if [ "${osReleaseVersionNo}" -eq 7 ]; then
             # https://computingforgeeks.com/install-linux-kernel-5-on-centos-7/
 
             # https://elrepo.org/linux/kernel/
             # https://elrepo.org/linux/kernel/el7/x86_64/RPMS/
             
-
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
-
-            removeCentosKernelMulti
-            listAvailableLinuxKernel
-
-            ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}
-            ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}-{devel,headers,tools,tools-libs}
-            
+   
         elif [ "${osReleaseVersionNo}" -eq 8 ]; then
             # https://elrepo.org/linux/kernel/el8/x86_64/RPMS/
             
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm
 
-            removeCentosKernelMulti
-            listAvailableLinuxKernel
-
-            ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}
-            ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}-{devel,headers,tools,tools-libs}
         else
             green " =================================================="
             red "    不支持 Centos 7和8 以外的其他版本 安装 linux 内核"
             green " =================================================="
+            exit 255
         fi
+
+        removeCentosKernelMulti
+        listAvailableLinuxKernel
+        echo
+        green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+        echo
+        ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}
+        ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}-{devel,headers,tools,tools-libs}
 
         green " =================================================="
         green "    安装 linux 内核 ${linuxKernelToInstallVersionFull} 成功! "
@@ -798,7 +794,6 @@ function installCentosKernelFromRepo(){
         listInstalledLinuxKernel
         rebootSystem
     fi
-
 }
 
 
@@ -890,6 +885,9 @@ function installCentosKernelManual(){
         fi
 
         removeCentosKernelMulti
+        echo
+        green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+        echo        
         rpm -ivh --force --nodeps ${elrepo_kernel_name}-core-${elrepo_kernel_version}-*.rpm
         rpm -ivh --force --nodeps ${elrepo_kernel_name}-${elrepo_kernel_version}-*.rpm
         rpm -ivh --force --nodeps ${elrepo_kernel_name}-*.rpm
@@ -958,6 +956,9 @@ function installCentosKernelManual(){
         fi
 
         removeCentosKernelMulti
+        echo
+        green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+        echo        
         rpm -ivh --force --nodeps ${altarch_kernel_name}-core-${altarch_kernel_version}*
         rpm -ivh --force --nodeps ${altarch_kernel_name}-*
         # yum install -y kernel-*
@@ -980,6 +981,9 @@ function installCentosKernelManual(){
             downloadFile ${bbrplusDownloadUrl}/kernel-headers-${linuxKernelToInstallVersionFull}.rpm
 
             removeCentosKernelMulti
+            echo
+            green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+            echo            
             rpm -ivh --force --nodeps kernel-${linuxKernelToInstallVersionFull}.rpm
             rpm -ivh --force --nodeps kernel-headers-${linuxKernelToInstallVersionFull}.rpm
         else 
@@ -1025,6 +1029,9 @@ function installCentosKernelManual(){
             downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-bbrplus-headers-${bbrplusKernelVersion}.bbrplus.el7.x86_64.rpm
 
             removeCentosKernelMulti
+            echo
+            green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+            echo                
             rpm -ivh --force --nodeps CentOS-7_Required_kernel-bbrplus-${bbrplusKernelVersion}.bbrplus.el7.x86_64.rpm
             rpm -ivh --force --nodeps *.rpm
         else 
@@ -1052,6 +1059,9 @@ function installCentosKernelManual(){
             downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-modules-extra-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
 
             removeCentosKernelMulti
+            echo
+            green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+            echo                
             rpm -ivh --force --nodeps CentOS-8_Required_kernel-bbrplus-core-${bbrplusKernelVersion}.bbrplus.el8.x86_64.rpm
             rpm -ivh --force --nodeps *.rpm
 
@@ -1435,11 +1445,10 @@ function installDebianUbuntuKernel(){
         fi
 
 
-         
+        removeDebianKernelMulti
+        echo
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo
-
-        removeDebianKernelMulti
         ${sudoCmd} dpkg -i *.deb 
 
         updateGrubConfig
