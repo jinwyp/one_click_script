@@ -23,7 +23,7 @@
 
 # centos8 安装完成默认内核  kernel-core-4.18.0-240.15.1.el8_3.x86_64, kernel-modules-4.18.0-240.15.1.el8_3.x86_64
 # ubuntu18 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
-# ubuntu20 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
+# ubuntu20 安装完成默认内核  linux-image-5.4.0-70-generic , linux-headers-5.4.0-70 
 # debian10 安装完成默认内核  4.19.0-16-amd64
 
 # UJX6N 编译的bbr plus 内核  5.10.27-bbrplus    5.9.16    5.4.86  
@@ -365,6 +365,7 @@ function listAvailableLinuxKernel(){
 }
 
 function listInstalledLinuxKernel(){
+    echo
     green " =================================================="
     green " 状态显示--当前已安装的 Linux 内核: "
     echo
@@ -499,6 +500,10 @@ enableBBRSysctlConfig() {
     # bbr plus的话美西或者一些延迟高的，用起来更好，锐速针对丢包高的有奇效
     # 带宽大，并且延迟低不丢包的话5.5+cake在我这比较好，延迟高用plus更好，丢包多锐速最好. 一般130ms以下用cake不错，以上的话用plus更好些
 
+    # https://github.com/xanmod/linux/issues/26
+    # 说白了 bbrplus 就是改了点东西，然后那部分修改在 5.1 内核里合并进去了, 5.1 及以上的内核里自带的 bbr 已经包含了所谓的 bbrplus 的修改。
+    # PS：bbr 是一直在修改的，比如说 5.0 内核的 bbr，4.15 内核的 bbr 和 4.9 内核的 bbr 其实都是不一样的
+
     removeBbrSysctlConfig
     currentBBRText="bbr"
     currentQueueText="fq"
@@ -509,24 +514,27 @@ enableBBRSysctlConfig() {
         currentBBRText="bbr2"
     else
         currentBBRText="bbr"
-        
-        echo
-        echo " 请选择队列算法 (1) FQ,  (2) FQ-PIE,  (3) CAKE "
-        red " 选择 2 FQ-PIE 队列算法 需要内核在 5.6 以上"
-        red " 选择 3 CAKE 队列算法 需要内核在 5.5 以上"
-        read -p "请选择队列算法? 直接回车默认选1 FQ, 请输入[1/2/3]:" BBRQueueInput
-        BBRQueueInput=${BBRQueueInput:-i}
+    fi
 
-        if [[ $BBRQueueInput == [2] ]]; then
-            currentQueueText="fq_pie"
+    echo
+    echo " 请选择队列算法 (1) FQ,  (2) FQ-Codel,  (3) FQ-PIE,  (4) CAKE "
+    red " 选择 2 FQ-Codel 队列算法 需要内核在 4.13 以上"
+    red " 选择 3 FQ-PIE 队列算法 需要内核在 5.6 以上"
+    red " 选择 4 CAKE 队列算法 需要内核在 5.5 以上"
+    read -p "请选择队列算法? 直接回车默认选1 FQ, 请输入[1/2/3]:" BBRQueueInput
+    BBRQueueInput=${BBRQueueInput:-i}
 
-        elif [[ $BBRQueueInput == [3] ]]; then
-            currentQueueText="cake"
+    if [[ $BBRQueueInput == [2] ]]; then
+        currentQueueText="fq_codel"
 
-        else
-            currentQueueText="fq"
-        fi
+    elif [[ $BBRQueueInput == [3] ]]; then
+        currentQueueText="fq_pie"
 
+    elif [[ $BBRQueueInput == [4] ]]; then
+        currentQueueText="cake"
+
+    else
+        currentQueueText="fq"
     fi
 
     echo "net.core.default_qdisc=${currentQueueText}" >> /etc/sysctl.conf
@@ -640,22 +648,22 @@ function downloadFile(){
 function installKernel(){
 
     if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
-        bbrplusKernelVersion="5.10.27-1"
+        bbrplusKernelVersion="5.10.28-1"
         
     elif [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
         bbrplusKernelVersion="5.9.16-5"
         
     elif [ "${linuxKernelToInstallVersion}" = "5.4" ]; then 
-        bbrplusKernelVersion="5.4.109-1"
+        bbrplusKernelVersion="5.4.110-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then 
-        bbrplusKernelVersion="4.19.184-1"
+        bbrplusKernelVersion="4.19.185-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
-        bbrplusKernelVersion="4.14.228-1"
+        bbrplusKernelVersion="4.14.229-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.9" ]; then 
-        bbrplusKernelVersion="4.9.264-1"
+        bbrplusKernelVersion="4.9.265-1"
     fi    
 
 
@@ -1069,8 +1077,6 @@ function installCentosKernelManual(){
 
     fi;
 
-
-
     updateGrubConfig
 
     green " =================================================="
@@ -1080,7 +1086,6 @@ function installCentosKernelManual(){
     echo
 
     showLinuxKernelInfo
-    listInstalledLinuxKernel
     removeCentosKernelMulti "kernel"
     listInstalledLinuxKernel
     rebootSystem
@@ -1089,7 +1094,7 @@ function installCentosKernelManual(){
 
 
 function removeCentosKernelMulti(){
-    echo
+    listInstalledLinuxKernel
 
     if [ -z $1 ]; then
         red " 开始准备删除 kernel-header kernel-devel kernel-tools kernel-tools-libs 内核, 建议删除 "
@@ -1157,7 +1162,7 @@ function removeCentosKernel(){
 
     if [ "${rpmOldKernelNumber}" -gt "0" ]; then
 
-        green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
+        yellow "========== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
         red " 当前系统的旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 有 ${rpmOldKernelNumber} 个需要删除"
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
@@ -1167,7 +1172,7 @@ function removeCentosKernel(){
             green " 已卸载第 ${integer} 个内核 ${rpmOLdKernelName}"
             echo
         done
-        green "===== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
+        yellow "========== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
     else
         red " 当前需要卸载的系统旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 数量为0 !" 
     fi
@@ -1432,7 +1437,6 @@ function installDebianUbuntuKernel(){
 
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
-
             fi
     
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/Debian-Ubuntu_Required_linux-image-5.10.27-bbrplus_5.10.27-bbrplus-1_amd64.deb
@@ -1463,7 +1467,6 @@ function installDebianUbuntuKernel(){
     echo
 
     showLinuxKernelInfo
-    listInstalledLinuxKernel
     removeDebianKernelMulti "linux-image"
     listInstalledLinuxKernel
     rebootSystem
@@ -1474,7 +1477,7 @@ function installDebianUbuntuKernel(){
 
 
 function removeDebianKernelMulti(){
-    echo
+    listInstalledLinuxKernel
 
     if [ -z $1 ]; then
         red " 开始准备删除 linux-headers linux-modules 内核, 建议删除 "
@@ -1491,12 +1494,14 @@ function removeDebianKernelMulti(){
 
         if [ -z $1 ]; then
             removeDebianKernel "linux-headers"
-            removeDebianKernel "linux-modules"
             # removeDebianKernel "linux-kbuild"
             # removeDebianKernel "linux-compiler"
             # removeDebianKernel "linux-libc"
         else
             removeDebianKernel "linux-image"
+            removeDebianKernel "linux-modules"
+            removeDebianKernel "linux-headers"
+            # ${sudoCmd} apt -y --purge autoremove
         fi
 
     fi
@@ -1520,7 +1525,7 @@ function removeDebianKernel(){
 
     
     if [ "${rpmOldKernelNumber}" -gt "0" ]; then
-        green "===== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
+        yellow "========== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
         red " 当前系统的旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 有 ${rpmOldKernelNumber} 个需要删除"
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
@@ -1530,14 +1535,12 @@ function removeDebianKernel(){
             green " 已卸载第 ${integer} 个内核 ${rpmOLdKernelName}"
             echo
         done
-        green "===== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
+        yellow "========== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
     else
         red " 当前需要卸载的系统旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 数量为0 !" 
     fi
-
+    
     echo
-
-    ${sudoCmd} apt -y --purge autoremove
 }
 
 
@@ -1638,12 +1641,22 @@ function installWireguard(){
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
             ${sudoCmd} apt-get update
-            ${sudoCmd} apt install -y openresolv resolvconf
-            ${sudoCmd} apt install -y wireguard
-            ${sudoCmd} apt install -y wireguard-tools 
+            ${sudoCmd} apt install -y openresolv
+            # ${sudoCmd} apt install -y resolvconf
+            
+            if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
+                green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
+                ${sudoCmd} apt install -y wireguard-tools 
+            else
+                # 安装 wireguard-dkms 后 ubuntu 20 系统 会同时安装 5.4.0-71   内核
+                green " 当前系统内核版本低于5.6,  直接安装 wireguard wireguard"
+                ${sudoCmd} apt install -y wireguard
+            fi
 
-            ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
-
+            # if [[ ! -L "/usr/local/bin/resolvconf" ]]; then
+            #     ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
+            # fi
+            
             ${sudoCmd} systemctl enable systemd-resolved.service
             ${sudoCmd} systemctl start systemd-resolved.service
 
@@ -1651,14 +1664,14 @@ function installWireguard(){
     
         if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
 
-            green " 当前系统内核版本高于5.6, 直接安装 kmod-wireguard "
+            green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
 
             if [ "${osReleaseVersionNo}" -eq 7 ]; then
                 ${sudoCmd} yum install -y yum-plugin-elrepo
             fi
 
             ${sudoCmd} yum install -y epel-release elrepo-release 
-            ${sudoCmd} yum install -y kmod-wireguard wireguard-tools
+            ${sudoCmd} yum install -y wireguard-tools
         else 
             
             if [ "${osReleaseVersionNo}" -eq 7 ]; then
@@ -1668,7 +1681,7 @@ function installWireguard(){
                     ${sudoCmd} yum install -y epel-release elrepo-release 
                     ${sudoCmd} yum install -y kmod-wireguard wireguard-tools
                 else
-                    green " 当前系统内核版本低于5.6 , 安装 wireguard-dkms "
+                    green " 当前系统内核版本低于5.6, 安装 wireguard-dkms "
                     ${sudoCmd} yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
                     ${sudoCmd} curl -o /etc/yum.repos.d/jdoss-wireguard-epel-7.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo
                     ${sudoCmd} yum install -y wireguard-dkms wireguard-tools
@@ -1679,7 +1692,7 @@ function installWireguard(){
                     ${sudoCmd} yum install -y epel-release elrepo-release 
                     ${sudoCmd} yum install -y kmod-wireguard wireguard-tools
                 else
-                    green " 当前系统内核版本低于5.6 , 安装 wireguard-dkms "
+                    green " 当前系统内核版本低于5.6, 安装 wireguard-dkms "
                     ${sudoCmd} yum install -y epel-release
                     ${sudoCmd} yum config-manager --set-enabled PowerTools
                     ${sudoCmd} yum copr enable jdoss/wireguard
