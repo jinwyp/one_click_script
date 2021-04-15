@@ -326,8 +326,14 @@ function changeLinuxSSHPort(){
         sed -i "s/#\?Port [0-9]*/Port $osSSHLoginPortInput/g" /etc/ssh/sshd_config
 
         if [ "$osRelease" == "centos" ] ; then
-            yum -y install policycoreutils-python
 
+            if  [[ ${osReleaseVersionNo} == "7" ]]; then
+                yum -y install policycoreutils-python
+            elif  [[ ${osReleaseVersionNo} == "8" ]]; then
+                yum -y install policycoreutils-python-utils
+            fi
+
+            # semanage port -l
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
             firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
             firewall-cmd --reload
