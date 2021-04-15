@@ -595,7 +595,7 @@ function enableBBRSysctlConfig(){
     red " 选择 2 FQ-Codel 队列算法 需要内核在 4.13 以上"
     red " 选择 3 FQ-PIE 队列算法 需要内核在 5.6 以上"
     red " 选择 4 CAKE 队列算法 需要内核在 5.5 以上"
-    read -p "请选择队列算法? 直接回车默认选1 FQ, 请输入[1/2/3]:" BBRQueueInput
+    read -p "请选择队列算法? 直接回车默认选1 FQ, 请输入[1/2/3/4]:" BBRQueueInput
     BBRQueueInput=${BBRQueueInput:-1}
 
     if [[ $BBRQueueInput == [2] ]]; then
