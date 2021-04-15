@@ -694,6 +694,7 @@ function addOptimizingSystemConfig(){
     if grep -q "1000000" "/etc/profile"; then
         echo
         green " 系统网络配置 已经优化过, 不需要再次优化 "
+        sysctl -p
         echo
         exit
     fi
@@ -1100,7 +1101,11 @@ function installCentosKernelManual(){
         echo
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo        
-        rpm -ivh --force --nodeps ${elrepo_kernel_name}-core-${elrepo_kernel_version}-*.rpm
+
+        if [ "${osReleaseVersionNo}" -eq 8 ]; then
+            rpm -ivh --force --nodeps ${elrepo_kernel_name}-core-${elrepo_kernel_version}-*.rpm
+        fi
+        
         rpm -ivh --force --nodeps ${elrepo_kernel_name}-${elrepo_kernel_version}-*.rpm
         rpm -ivh --force --nodeps ${elrepo_kernel_name}-*.rpm
 
@@ -2113,7 +2118,7 @@ function preferIPV4(){
 
         echo
         green " VPS服务器已成功设置为 IPv4 优先访问网络"
-        echo
+
     else
 
         green " ================================================== "
@@ -2127,7 +2132,7 @@ function preferIPV4(){
         red " 注意: 解锁Netflix限制和避免弹出Google人机验证 一般不需要选择2设置IPv6优先访问, 可以在V2ray的配置中单独设置对Netfile和Google使用IPv6访问 "
         red " 注意: 由于 trojan 或 trojan-go 不支持配置 使用IPv6优先访问Netfile和Google, 可以选择2 开启服务器优先IPv6访问, 解决 trojan-go 解锁Netfile和Google人机验证问题"
         echo
-        read -p "请选择 IPv4 还是 IPv6 优先访问? 直接回车默认选1, 请输入[1/2]:" isPreferIPv4Input
+        read -p "请选择 IPv4 还是 IPv6 优先访问? 直接回车默认选1, 请输入[1/2/3]:" isPreferIPv4Input
         isPreferIPv4Input=${isPreferIPv4Input:-1}
 
         if [[ ${isPreferIPv4Input} == [2] ]]; then
