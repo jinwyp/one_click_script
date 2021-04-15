@@ -35,6 +35,8 @@
 # https://www.shopee6.com/web/web-tutorial/bbr-vs-plus-vs-bbr2.html
 # https://hostloc.com/thread-644985-1-1.html
 
+# https://dropbox.tech/infrastructure/evaluating-bbrv2-on-the-dropbox-edge-network
+
 
 
 export LC_ALL=C
@@ -362,8 +364,12 @@ function listAvailableLinuxKernel(){
     green " 状态显示--当前可以被安装的 Linux 内核: "
     if [[ "${osRelease}" == "centos" ]]; then
 		${sudoCmd} yum --disablerepo="*" --enablerepo="elrepo-kernel" list available | grep kernel
-	else
-        ${sudoCmd} apt-cache search linux-image
+	else   
+        if [ -z $1 ]; then
+            ${sudoCmd} apt-cache search linux-image
+        else
+            ${sudoCmd} apt-cache search linux-image | grep $1
+        fi
 	fi
     
     green " =================================================="
@@ -404,10 +410,13 @@ function showLinuxKernelInfoNoDisplay(){
 
     if [[ ${osKernelVersionFull} == *bbrplus* ]]; then
         osKernelBBRStatus="BBR Plus"
+    elif [[ ${osKernelVersionFull} == *xanmod* ]]; then
+        osKernelBBRStatus="BBR 和 BBR2"
     fi
 
 	net_congestion_control=`cat /proc/sys/net/ipv4/tcp_congestion_control | awk '{print $1}'`
 	net_qdisc=`cat /proc/sys/net/core/default_qdisc | awk '{print $1}'`
+	net_ecn=`cat /proc/sys/net/ipv4/tcp_ecn | awk '{print $1}'`
 
     if [[ ${osKernelVersionBackup} == *4.14.129* ]]; then
         # isBBREnabled=$(grep "net.ipv4.tcp_congestion_control" /etc/sysctl.conf | awk -F "=" '{print $2}')
@@ -415,12 +424,22 @@ function showLinuxKernelInfoNoDisplay(){
 
         isBBRTcpEnabled=$(lsmod | grep "bbr" | awk '{print $1}')
         isBBRPlusTcpEnabled=$(lsmod | grep "bbrplus" | awk '{print $1}')
+        isBBR2TcpEnabled=$(lsmod | grep "bbr2" | awk '{print $1}')
     else
         isBBRTcpEnabled=$(sysctl net.ipv4.tcp_congestion_control | grep "bbr" | awk -F "=" '{print $2}' | awk '{$1=$1;print}')
         isBBRPlusTcpEnabled=$(sysctl net.ipv4.tcp_congestion_control | grep "bbrplus" | awk -F "=" '{print $2}' | awk '{$1=$1;print}')
+        isBBR2TcpEnabled=$(sysctl net.ipv4.tcp_congestion_control | grep "bbr2" | awk -F "=" '{print $2}' | awk '{$1=$1;print}')
     fi
 
-
+    if [[ ${net_ecn} == "1" ]]; then
+        systemECNStatusText="已开启"      
+    elif [[ ${net_ecn} == "0" ]]; then
+        systemECNStatusText="已关闭"   
+    elif [[ ${net_ecn} == "2" ]]; then
+        systemECNStatusText="只对入站请求开启(默认值)"       
+    else
+        systemECNStatusText="" 
+    fi
 
     if [[ ${net_congestion_control} == "bbr" ]]; then
         
@@ -439,6 +458,16 @@ function showLinuxKernelInfoNoDisplay(){
         else 
             systemBBRRunningStatusText="BBR Plus 启动失败"
         fi
+
+    elif [[ ${net_congestion_control} == "bbr2" ]]; then
+
+        if [[ ${isBBR2TcpEnabled} == *"bbr2"* ]]; then
+            systemBBRRunningStatus="bbr2"
+            systemBBRRunningStatusText="BBR2 已启动成功"            
+        else 
+            systemBBRRunningStatusText="BBR2 启动失败"
+        fi
+                
     else 
         systemBBRRunningStatusText="未启动加速模块"
     fi
@@ -456,20 +485,22 @@ function showLinuxKernelInfo(){
     green " 状态显示--当前Linux 内核版本: ${osKernelVersionShort} , $(uname -r) "
 
     if versionCompareWithOp "${isKernelSupportBBRVersion}" "${osKernelVersionShort}" ">"; then
-        green " 状态显示--当前系统内核低于4.9, 不支持开启 BBR "   
+        green "           当前系统内核低于4.9, 不支持开启 BBR "   
     else
-        green " 状态显示--当前系统内核高于4.9, 支持开启 BBR, ${systemBBRRunningStatusText}"
-        osKernelBBRStatus="BBR"
+        green "           当前系统内核高于4.9, 支持开启 BBR, ${systemBBRRunningStatusText}"
+    fi
+
+    if [[ ${osKernelVersionFull} == *xanmod* ]]; then
+        green "           当前系统内核已支持开启 BBR2, ${systemBBRRunningStatusText}"
+    else
+        green "           当前系统内核不支持开启 BBR2"
     fi
 
     if [[ ${osKernelVersionFull} == *bbrplus* ]]; then
-        green " 状态显示--当前系统内核已支持开启 BBR Plus, ${systemBBRRunningStatusText}"
-        osKernelBBRStatus="BBR Plus"
+        green "           当前系统内核已支持开启 BBR Plus, ${systemBBRRunningStatusText}"
     else
-        green " 状态显示--当前系统内核不支持开启 BBR Plus"
+        green "           当前系统内核不支持开启 BBR Plus"
     fi
-
-
     # sysctl net.ipv4.tcp_available_congestion_control 返回值 net.ipv4.tcp_available_congestion_control = bbr cubic reno 或 reno cubic bbr
     # sysctl net.ipv4.tcp_congestion_control 返回值 net.ipv4.tcp_congestion_control = bbr
     # sysctl net.core.default_qdisc 返回值 net.core.default_qdisc = fq
@@ -510,16 +541,53 @@ function enableBBRSysctlConfig(){
     # 说白了 bbrplus 就是改了点东西，然后那部分修改在 5.1 内核里合并进去了, 5.1 及以上的内核里自带的 bbr 已经包含了所谓的 bbrplus 的修改。
     # PS：bbr 是一直在修改的，比如说 5.0 内核的 bbr，4.15 内核的 bbr 和 4.9 内核的 bbr 其实都是不一样的
 
+    # https://sysctl-explorer.net/net/ipv4/tcp_ecn/
+
+
     removeBbrSysctlConfig
     currentBBRText="bbr"
     currentQueueText="fq"
+    currentECNValue="2"
+    currentECNText=""
 
     if [ $1 = "bbrplus" ]; then
         currentBBRText="bbrplus"
-    elif [ $1 = "bbr2" ]; then
-        currentBBRText="bbr2"
+
     else
-        currentBBRText="bbr"
+        echo
+        echo " 请选择开启 (1) BBR 还是 (2) BBR2 网络加速 "
+        red " 选择 1 BBR 需要内核在 4.9 以上"
+        red " 选择 2 BBR2 需要内核为 XanMod "
+        read -p "请选择? 直接回车默认选1 BBR, 请输入[1/2]:" BBRTcpInput
+        BBRTcpInput=${BBRTcpInput:-1}
+        if [[ $BBRTcpInput == [2] ]]; then
+            if [[ ${osKernelVersionFull} == *xanmod* ]]; then
+                currentBBRText="bbr2"
+
+                echo
+                echo " 请选择是否开启 ECN, (1) 关闭 (2) 开启 (3) 仅对入站请求开启 "
+                red " 注意: 开启 ECN 可能会造成网络设备无法访问"
+                read -p "请选择? 直接回车默认选1 关闭ECN, 请输入[1/2]:" ECNTcpInput
+                ECNTcpInput=${ECNTcpInput:-1}
+                if [[ $ECNTcpInput == [2] ]]; then
+                    currentECNValue="1"
+                    currentECNText="+ ECN"
+                elif [[ $ECNTcpInput == [3] ]]; then
+                    currentECNValue="2"
+                else
+                    currentECNValue="0"
+                fi
+                
+            else
+                echo
+                red " 当前系统内核没有安装 XanMod 内核, 无法开启BBR2, 改为开启BBR"
+                echo
+                currentBBRText="bbr"
+            fi
+            
+        else
+            currentBBRText="bbr"
+        fi
     fi
 
     echo
@@ -528,7 +596,7 @@ function enableBBRSysctlConfig(){
     red " 选择 3 FQ-PIE 队列算法 需要内核在 5.6 以上"
     red " 选择 4 CAKE 队列算法 需要内核在 5.5 以上"
     read -p "请选择队列算法? 直接回车默认选1 FQ, 请输入[1/2/3]:" BBRQueueInput
-    BBRQueueInput=${BBRQueueInput:-i}
+    BBRQueueInput=${BBRQueueInput:-1}
 
     if [[ $BBRQueueInput == [2] ]]; then
         currentQueueText="fq_codel"
@@ -545,14 +613,15 @@ function enableBBRSysctlConfig(){
 
     echo "net.core.default_qdisc=${currentQueueText}" >> /etc/sysctl.conf
 	echo "net.ipv4.tcp_congestion_control=${currentBBRText}" >> /etc/sysctl.conf
+    echo "net.ipv4.tcp_ecn=${currentECNValue}" >> /etc/sysctl.conf
 
     isSysctlText=$(sysctl -p 2>&1 | grep "No such file") 
 
     echo
     if [[ -z "$isSysctlText" ]]; then
-		green " 已成功开启 ${currentBBRText} + ${currentQueueText}"
+		green " 已成功开启 ${currentBBRText} + ${currentQueueText} ${currentECNText} "
 	else
-        green " 已成功开启 ${currentBBRText}"
+        green " 已成功开启 ${currentBBRText} ${currentECNText}"
         red " 但当前内核版本过低, 开启队列算法 ${currentQueueText} 失败! " 
         red "请重新运行脚本, 选择'2 开启 BBR 加速'后, 务必再选择 (1)FQ 队列算法 !"
     fi
@@ -1439,40 +1508,68 @@ function installDebianUbuntuKernel(){
     
     if [ "${isInstallFromRepo}" = "yes" ]; then 
 
-        debianKernelVersion="5.10.0"
+        if [ "${linuxKernelToBBRType}" = "xanmod" ]; then 
 
-        green " =================================================="
-        green "    开始通过 Debian 官方源安装 linux 内核 ${debianKernelVersion}"
-        green " =================================================="
+            green " =================================================="
+            green "    开始通过 XanMod 官方源安装 linux 内核 ${linuxKernelToInstallVersion}"
+            green " =================================================="
 
-        if [ "${osKernelVersionBackup}" = "${debianKernelVersion}" ]; then 
-            red "当前系统内核版本已经是 ${osKernelVersionBackup} 无需安装! "
-            promptContinueOpeartion
+            # https://xanmod.org/
+
+            echo 'deb http://deb.xanmod.org releases main' > /etc/apt/sources.list.d/xanmod-kernel.list
+            wget -qO - https://dl.xanmod.org/gpg.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/xanmod-kernel.gpg add -
+            ${sudoCmd} apt update
+
+            listAvailableLinuxKernel "xanmod"
+
+            echo
+            green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+            echo
+
+            if [ "${linuxKernelToInstallVersion}" = "5.11" ]; then 
+                ${sudoCmd} apt install -y linux-xanmod
+            elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
+                ${sudoCmd} apt install -y linux-xanmod-lts
+            fi
+
+            rebootSystem
+        else
+
+            debianKernelVersion="5.10.0"
+
+            green " =================================================="
+            green "    开始通过 Debian 官方源安装 linux 内核 ${debianKernelVersion}"
+            green " =================================================="
+
+            if [ "${osKernelVersionBackup}" = "${debianKernelVersion}" ]; then 
+                red "当前系统内核版本已经是 ${osKernelVersionBackup} 无需安装! "
+                promptContinueOpeartion
+            fi
+
+            linuxKernelToInstallVersionFull=${debianKernelVersion}
+
+            echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
+            echo "deb-src http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
+            ${sudoCmd} apt update
+
+
+            listAvailableLinuxKernel
+            
+            ${sudoCmd} apt install -y -t buster-backports linux-image-amd64
+            ${sudoCmd} apt install -y -t buster-backports firmware-linux firmware-linux-nonfree
+
+            echo
+            echo "dpkg --get-selections | grep linux-image-${debianKernelVersion} | awk '/linux-image-[4-9]./{print \$1}' | awk -F'linux-image-' '{print \$2}' "
+            debianKernelVersionPackageName=$(dpkg --get-selections | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk -F'linux-image-' '{print $2}')
+            
+            echo
+            green " Debian 官方源安装 linux 内核版本: ${debianKernelVersionPackageName}"
+            green " 开始安装 linux-headers  命令为:  apt install -y linux-headers-${debianKernelVersionPackageName}"
+            echo
+            ${sudoCmd} apt install -y linux-headers-${debianKernelVersionPackageName}
+            # ${sudoCmd} apt-get -y dist-upgrade
+
         fi
-
-        linuxKernelToInstallVersionFull=${debianKernelVersion}
-
-        echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
-        echo "deb-src http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
-        ${sudoCmd} apt update
-
-
-        listAvailableLinuxKernel
-        
-        ${sudoCmd} apt install -y -t buster-backports linux-image-amd64
-        ${sudoCmd} apt install -y -t buster-backports firmware-linux firmware-linux-nonfree
-
-        echo
-        echo "dpkg --get-selections | grep linux-image-${debianKernelVersion} | awk '/linux-image-[4-9]./{print \$1}' | awk -F'linux-image-' '{print \$2}' "
-        debianKernelVersionPackageName=$(dpkg --get-selections | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk -F'linux-image-' '{print $2}')
-        
-        echo
-        green " Debian 官方源安装 linux 内核版本: ${debianKernelVersionPackageName}"
-        green " 开始安装 linux-headers  命令为:  apt install -y linux-headers-${debianKernelVersionPackageName}"
-        echo
-        ${sudoCmd} apt install -y linux-headers-${debianKernelVersionPackageName}
-        # ${sudoCmd} apt-get -y dist-upgrade
-        
 
     else
 
@@ -1720,9 +1817,9 @@ function getGithubLatestReleaseVersion(){
 versionWgcf="2.2.3"
 downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
 configWgcfBinPath="/usr/local/bin"
-configWgcfConfigFilePath="${HOME}/wireguard"
-configWgcfAccountFilePath="${configWgcfConfigFilePath}/wgcf-account.toml"
-configWgcfProfileFilePath="${configWgcfConfigFilePath}/wgcf-profile.conf"
+configWgcfConfigFolderPath="${HOME}/wireguard"
+configWgcfAccountFilePath="${configWgcfConfigFolderPath}/wgcf-account.toml"
+configWgcfProfileFilePath="${configWgcfConfigFolderPath}/wgcf-profile.conf"
 configWireGuardConfigFileFolder="/etc/wireguard"
 configWireGuardConfigFilePath="/etc/wireguard/wgcf.conf"
 
@@ -1835,17 +1932,17 @@ function installWireguard(){
     green " 开始安装 Cloudflare Warp 命令行工具 Wgcf "
     echo
 
-    mkdir -p ${configWgcfConfigFilePath}
+    mkdir -p ${configWgcfConfigFolderPath}
     mkdir -p ${configWgcfBinPath}
     mkdir -p ${configWireGuardConfigFileFolder}
 
-    cd ${configWgcfConfigFilePath}
+    cd ${configWgcfConfigFolderPath}
 
     # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
-    wget -O ${configWgcfConfigFilePath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
+    wget -O ${configWgcfConfigFolderPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
     
 
-    if [[ -f ${configWgcfConfigFilePath}/wgcf ]]; then
+    if [[ -f ${configWgcfConfigFolderPath}/wgcf ]]; then
         green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
         echo
     else
@@ -1853,13 +1950,13 @@ function installWireguard(){
         exit 255
     fi
 
-    ${sudoCmd} chmod +x ${configWgcfConfigFilePath}/wgcf
-    cp ${configWgcfConfigFilePath}/wgcf ${configWgcfBinPath}
+    ${sudoCmd} chmod +x ${configWgcfConfigFolderPath}/wgcf
+    cp ${configWgcfConfigFolderPath}/wgcf ${configWgcfBinPath}
     
-    # ${configWgcfConfigFilePath}/wgcf register --config "${configWgcfAccountFilePath}"
+    # ${configWgcfConfigFolderPath}/wgcf register --config "${configWgcfAccountFilePath}"
 
-    ${configWgcfConfigFilePath}/wgcf register 
-    ${configWgcfConfigFilePath}/wgcf generate 
+    ${configWgcfConfigFolderPath}/wgcf register 
+    ${configWgcfConfigFolderPath}/wgcf generate 
 
     cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
 
@@ -2066,7 +2163,7 @@ function removeWireguard(){
     red " 准备卸载已安装 Wireguard 和 Cloudflare Warp 命令行工具 Wgcf "
     green " ================================================== "
 
-    if [[ -f "${configWgcfBinPath}/wgcf" || -f "${configWgcfConfigFilePath}/wgcf" || -f "/wgcf" ]]; then
+    if [[ -f "${configWgcfBinPath}/wgcf" || -f "${configWgcfConfigFolderPath}/wgcf" || -f "/wgcf" ]]; then
         ${sudoCmd} systemctl stop wg-quick@wgcf.service
         ${sudoCmd} systemctl disable wg-quick@wgcf.service
     else 
@@ -2081,7 +2178,7 @@ function removeWireguard(){
     $osSystemPackage -y remove wireguard
 
     rm -f ${configWgcfBinPath}/wgcf
-    rm -rf ${configWgcfConfigFilePath}
+    rm -rf ${configWgcfConfigFolderPath}
     rm -rf ${configWireGuardConfigFileFolder}
 
     rm -f ${osSystemMdPath}wg-quick@wgcf.service
@@ -2165,11 +2262,11 @@ function start_menu(){
         fi
         
     fi  
-    echo -e " 当前拥塞控制算法: ${Green_font_prefix}${net_congestion_control}${Font_color_suffix}   当前队列算法: ${Green_font_prefix}${net_qdisc}${Font_color_suffix} "
+    echo -e " 当前拥塞控制算法: ${Green_font_prefix}${net_congestion_control}${Font_color_suffix}    ECN: ${Green_font_prefix}${systemECNStatusText}${Font_color_suffix}   当前队列算法: ${Green_font_prefix}${net_qdisc}${Font_color_suffix} "
 
     echo
-    green " 1. 查看当前系统内核版本, 检查是否支持BBR"
-    green " 2. 开启 BBR 加速"
+    green " 1. 查看当前系统内核版本, 检查是否支持BBR / BBR2 / BBR Plus"
+    green " 2. 开启 BBR 或 BBR2 加速, 开启 BBR2 需要安装 XanMod 内核"
     green " 3. 开启 BBR Plus 加速"
     green " 4. 优化 系统网络配置"
     red " 5. 删除 系统网络优化配置"
@@ -2213,6 +2310,9 @@ function start_menu(){
     green " 35. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
     green " 36. 安装 BBR Plus 内核 5.9, UJX6N 编译"
     green " 37. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"    
+    echo
+    green "41. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
+    green "42. 安装 XanMod Kernel 内核 5.11, 官方源安装 "    
     echo
     green " =================================================="
     green " 0. 退出脚本"
@@ -2332,6 +2432,18 @@ function start_menu(){
         37 )
             linuxKernelToInstallVersion="5.10"
             linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        41 )
+            linuxKernelToInstallVersion="5.10"
+            linuxKernelToBBRType="xanmod"
+            isInstallFromRepo="yes"
+            installKernel
+        ;;
+        42 )
+            linuxKernelToInstallVersion="5.11"
+            linuxKernelToBBRType="xanmod"
+            isInstallFromRepo="yes"
             installKernel
         ;;
         88 )

@@ -5,7 +5,7 @@
 
 * [Trojan 和 V2ray xray 一键安装脚本](#installation-安装方法)
 * [安装 最新版和LTS Linux 内核, BBR 和 BBR Plus 内核](#installation-linux-kernel-wireguard)
-* [一键安装 wireguard, 解决google 验证码和 Netflix 限制问题](#installation-linux-kernel-wireguard)
+* [一键安装 wireguard, 解决避免弹出Google人机验证和 Netflix 限制问题](#installation-linux-kernel-wireguard)
 * [V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本](#installation-soga)
 * [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
@@ -21,7 +21,7 @@
 5. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
 6. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
 7. trojan 和 v2ray 可视化管理面板安装. 
-8. 一键安装wireguard, 解决google 验证码和 Netflix 限制问题
+8. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix 限制问题
 9. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
 12. 本脚本没有偷跑服务器流量的网页或其他屏蔽bt流量的等限制. 默认网页仅为bootstarp最简单的模板
 13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 而其他脚本写死固定端口容易被检测
@@ -32,7 +32,8 @@
 2. Using Trojan or Nginx or v2ray-core / Xray-core as frontend listening port 443
 3. Install trojan or trojan-go and V2Ray or Xray on the same server to support all protocol.
 4. Support Debian9+, Ubuntu 16+ and CentOS 7+ operation systems
-5. install wireguard and wgcf to solve google CAPTCHA and netflix ip unlock
+5. install wireguard and wgcf to avoid Google reCAPTCHA and unlock Netflix ip geo-restriction
+6. Easily switch Linux kernel version, 5.11, 5.10 LTS, 5.4 LTS, 4.19 LTS, 4.14 LTS  
 
 ## Installation 安装方法  
 
