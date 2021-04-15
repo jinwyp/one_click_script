@@ -252,6 +252,11 @@ function installSoftDownload(){
             ${osSystemPackage} -y install cpu-checker
 		fi
 
+        if ! dpkg -l | grep -qw ca-certificates; then
+			${osSystemPackage} -y install ca-certificates dmidecode
+            update-ca-certificates
+		fi        
+
 	elif [[ "${osRelease}" == "centos" ]]; then
 		if ! rpm -qa | grep -qw wget; then
 			${osSystemPackage} -y install wget curl git bc
@@ -260,26 +265,27 @@ function installSoftDownload(){
         if ! rpm -qa | grep -qw bc; then
 			${osSystemPackage} -y install bc
 		fi
+
+        # 处理ca证书
+        if ! rpm -qa | grep -qw ca-certificates; then
+			${osSystemPackage} -y install ca-certificates dmidecode
+            update-ca-trust force-enable
+		fi
 	fi
-
-    # 处理ca证书
-	if [[ "${osRelease}" == "centos" ]]; then
-		yum install -y ca-certificates dmidecode
-		update-ca-trust force-enable
-
-	elif [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
-		apt-get install ca-certificates dmidecode
-		update-ca-certificates
-	fi	    
-
+    
 }
 
 
 function rebootSystem(){
-   
-    red "请检查上面的信息 是否有新内核版本, 老内核版本 ${osKernelVersionBackup} 是否已经卸载!"
-    echo
-    red "请注意检查 是否把新内核也误删卸载了, 无新内核 ${linuxKernelToInstallVersionFull} 不要重启, 可重新安装内核后再重启! "
+
+    if [ -z $1 ]; then
+
+        red "请检查上面的信息 是否有新内核版本, 老内核版本 ${osKernelVersionBackup} 是否已经卸载!"
+        echo
+        red "请注意检查 是否把新内核也误删卸载了, 无新内核 ${linuxKernelToInstallVersionFull} 不要重启, 可重新安装内核后再重启! "
+
+    fi
+
     echo
 	read -p "是否立即重启? 请输入[Y/n]?" isRebootInput
 	isRebootInput=${isRebootInput:-Y}
@@ -494,7 +500,7 @@ function showLinuxKernelInfo(){
 }
 
 
-enableBBRSysctlConfig() {
+function enableBBRSysctlConfig(){
     # https://hostloc.com/thread-644985-1-1.html
     # 优质线路用5.5+cake和原版bbr带宽跑的更足，不过cake的话就算高峰也不会像原版bbr那样跑不动，相比plus能慢些，但是区别不大，
     # bbr plus的话美西或者一些延迟高的，用起来更好，锐速针对丢包高的有奇效
@@ -551,32 +557,151 @@ enableBBRSysctlConfig() {
         red "请重新运行脚本, 选择'2 开启 BBR 加速'后, 务必再选择 (1)FQ 队列算法 !"
     fi
     echo
+    
 
-    # rebootSystem
+    read -p "是否优化系统网络配置? 直接回车默认优化, 请输入[Y/n]:" isOptimizingSystemInput
+    isOptimizingSystemInput=${isOptimizingSystemInput:-Y}
+
+    if [[ $isOptimizingSystemInput == [Yy] ]]; then
+        addOptimizingSystemConfig
+    else
+    	sysctl -p
+    fi
+
 }
 
 # 卸载 bbr+锐速 配置
-removeBbrSysctlConfig(){
+function removeBbrSysctlConfig(){
     sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
     sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
 
 	sed -i '/net.ipv4.tcp_ecn/d' /etc/sysctl.conf
-
-    echo
-	sysctl -p
 		
 	if [[ -e /appex/bin/lotServer.sh ]]; then
 		bash <(wget --no-check-certificate -qO- https://git.io/lotServerInstall.sh) uninstall
 	fi
+}
 
-	# echo -e "${Info}:清除bbr/lotserver加速完成。"
+
+function removeOptimizingSystemConfig(){
+    removeBbrSysctlConfig
+
+    sed -i '/fs.file-max/d' /etc/sysctl.conf
+	sed -i '/fs.inotify.max_user_instances/d' /etc/sysctl.conf
+
+	sed -i '/net.ipv4.tcp_syncookies/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.tcp_fin_timeout/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.tcp_tw_reuse/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.ip_local_port_range/d' /etc/sysctl.conf
+    sed -i '/net.ipv4.tcp_max_syn_backlog/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.tcp_max_tw_buckets/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.route.gc_timeout/d' /etc/sysctl.conf
+
+	sed -i '/net.ipv4.tcp_syn_retries/d' /etc/sysctl.conf
+    sed -i '/net.ipv4.tcp_synack_retries/d' /etc/sysctl.conf
+	sed -i '/net.core.somaxconn/d' /etc/sysctl.conf
+	sed -i '/net.core.netdev_max_backlog/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.tcp_timestamps/d' /etc/sysctl.conf
+	sed -i '/net.ipv4.tcp_max_orphans/d' /etc/sysctl.conf
+
+	sed -i '/net.ipv4.ip_forward/d' /etc/sysctl.conf
+
+
+    sed -i '/1000000/d' /etc/security/limits.conf
+    sed -i '/1000000/d' /etc/profile
+
+    echo
+    green " 已删除当前系统的网络优化配置 "
+    echo
+}
+
+function addOptimizingSystemConfig(){
+
+    # https://ustack.io/2019-11-21-Linux%E5%87%A0%E4%B8%AA%E9%87%8D%E8%A6%81%E7%9A%84%E5%86%85%E6%A0%B8%E9%85%8D%E7%BD%AE.html
+    # https://www.cnblogs.com/xkus/p/7463135.html
+
+    # 优化系统配置
+
+    if grep -q "1000000" "/etc/profile"; then
+        echo
+        green " 系统网络配置 已经优化过, 不需要再次优化 "
+        echo
+        exit
+    fi
+
+    removeOptimizingSystemConfig
+
+    echo
+    green " 开始准备 优化系统网络配置 "
+
+    cat >> /etc/sysctl.conf <<-EOF
+
+fs.file-max = 1000000
+fs.inotify.max_user_instances = 8192
+
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.ip_local_port_range = 1024 65000
+net.ipv4.tcp_max_syn_backlog = 16384
+net.ipv4.tcp_max_tw_buckets = 6000
+net.ipv4.route.gc_timeout = 100
+
+net.ipv4.tcp_syn_retries = 1
+net.ipv4.tcp_synack_retries = 1
+net.core.somaxconn = 32768
+net.core.netdev_max_backlog = 32768
+net.ipv4.tcp_timestamps = 0
+net.ipv4.tcp_max_orphans = 32768
+
+# forward ipv4
+net.ipv4.ip_forward = 1
+
+
+EOF
+
+
+
+    cat >> /etc/security/limits.conf <<-EOF
+*               soft    nofile          1000000
+*               hard    nofile          1000000
+EOF
+
+
+	echo "ulimit -SHn 1000000" >> /etc/profile
+    source /etc/profile
+
+
+    echo
+	sysctl -p
+
+    echo
+    green " 已完成 系统网络配置的优化 "
+    echo
+    rebootSystem "noinfo"
+
 }
 
 
 
+function startIpv4(){
+
+    cat >> /etc/sysctl.conf <<-EOF
+net.ipv4.tcp_retries2 = 8
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# forward ipv4
+
+net.ipv6.conf.all.disable_ipv6 = 0
+net.ipv6.conf.default.disable_ipv6 = 0
+
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1
+
+EOF
 
 
-
+}
 
 
 
@@ -651,7 +776,7 @@ function installKernel(){
         bbrplusKernelVersion="5.10.28-1"
         
     elif [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
-        bbrplusKernelVersion="5.9.16-5"
+        bbrplusKernelVersion="5.9.16-1"
         
     elif [ "${linuxKernelToInstallVersion}" = "5.4" ]; then 
         bbrplusKernelVersion="5.4.110-1"
@@ -679,7 +804,12 @@ function installKernel(){
             getLatestCentosKernelVersion
             installCentosKernelFromRepo
         else
-            getLatestCentosKernelVersion "manual"
+            if [ "${linuxKernelToBBRType}" = "bbrplus" ]; then 
+                echo
+            else
+                getLatestCentosKernelVersion "manual"
+            fi
+            
             installCentosKernelManual
         fi
 	fi
@@ -1007,10 +1137,7 @@ function installCentosKernelManual(){
         mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
         cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
-        if [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
-            bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/5.9.16-bbrplus-final-update-for-5.9"
-
-        elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
+        if [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
             bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus/releases/download/${linuxKernelToInstallVersionFull}"
 
         else
@@ -1025,8 +1152,9 @@ function installCentosKernelManual(){
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-devel-5.10.27-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-headers-5.10.27-1.bbrplus.el7.x86_64.rpm
             
-
-            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus-final-update-for-5.9/CentOS-7_Required_kernel-bbrplus-5.9.16-5.bbrplus.el7.x86_64.rpm
+            
+            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus/CentOS-7_Required_kernel-bbrplus-5.9.16-1.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus/CentOS-7_Optional_kernel-bbrplus-devel-5.9.16-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.4/releases/download/5.4.109-bbrplus/CentOS-7_Required_kernel-bbrplus-5.4.109-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-4.19/releases/download/4.19.184-bbrplus/CentOS-7_Required_kernel-bbrplus-4.19.184-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus/releases/download/4.14.228-bbrplus/CentOS-7_Required_kernel-bbrplus-4.14.228-1.bbrplus.el7.x86_64.rpm
@@ -1423,12 +1551,7 @@ function installDebianUbuntuKernel(){
             mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
             cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
-            if [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
-                bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/5.9.16-bbrplus-final-update-for-5.9"
-                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${linuxKernelToInstallSubVersion}-bbrplus_5_amd64.deb
-                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${linuxKernelToInstallSubVersion}-bbrplus_5_amd64.deb    
-
-            elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
+            if [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
                 bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus/releases/download/${linuxKernelToInstallVersionFull}"
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${linuxKernelToInstallSubVersion}-bbrplus_${linuxKernelToInstallSubVersion}-bbrplus-1_amd64.deb
@@ -1442,7 +1565,7 @@ function installDebianUbuntuKernel(){
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/Debian-Ubuntu_Required_linux-image-5.10.27-bbrplus_5.10.27-bbrplus-1_amd64.deb
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/Debian-Ubuntu_Required_linux-headers-5.10.27-bbrplus_5.10.27-bbrplus-1_amd64.deb
 
-            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus-final-update-for-5.9/Debian-Ubuntu_Required_linux-image-5.9.16-bbrplus_5_amd64.deb
+            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus/Debian-Ubuntu_Required_linux-image-5.9.16-bbrplus_5.9.16-bbrplus-1_amd64.deb
             # https://github.com/UJX6N/bbrplus-5.4/releases/download/5.4.109-bbrplus/Debian-Ubuntu_Required_linux-image-5.4.109-bbrplus_5.4.109-bbrplus-1_amd64.deb
             # https://github.com/UJX6N/bbrplus-4.19/releases/download/4.19.184-bbrplus/Debian-Ubuntu_Required_linux-image-4.19.184-bbrplus_4.19.184-bbrplus-1_amd64.deb
 
@@ -1493,12 +1616,14 @@ function removeDebianKernelMulti(){
 	if [[ $isContinueDelKernelInput == [Yy] ]]; then
 
         if [ -z $1 ]; then
+            removeDebianKernel "linux-modules-extra"
             removeDebianKernel "linux-headers"
             # removeDebianKernel "linux-kbuild"
             # removeDebianKernel "linux-compiler"
             # removeDebianKernel "linux-libc"
         else
             removeDebianKernel "linux-image"
+            removeDebianKernel "linux-modules-extra"
             removeDebianKernel "linux-modules"
             removeDebianKernel "linux-headers"
             # ${sudoCmd} apt -y --purge autoremove
@@ -1643,7 +1768,8 @@ function installWireguard(){
             ${sudoCmd} apt-get update
             ${sudoCmd} apt install -y openresolv
             # ${sudoCmd} apt install -y resolvconf
-            
+            ${sudoCmd} apt install net-tools iproute2 dnsutils
+
             if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
                 green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
                 ${sudoCmd} apt install -y wireguard-tools 
@@ -1720,34 +1846,24 @@ function installWireguard(){
     
 
     if [[ -f ${configWgcfConfigFilePath}/wgcf ]]; then
-        ${sudoCmd} chmod +x ${configWgcfConfigFilePath}/wgcf
-        cp ${configWgcfConfigFilePath}/wgcf ${configWgcfBinPath}
-
         green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
         echo
-        # ${configWgcfConfigFilePath}/wgcf register --config "${configWgcfAccountFilePath}"
-
-        ${configWgcfConfigFilePath}/wgcf register 
-        ${configWgcfConfigFilePath}/wgcf generate 
-
-        sed -i '/AllowedIPs = 0\.0\.0\.0/d' ${configWgcfProfileFilePath}
-        sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g'  ${configWgcfProfileFilePath}
-        sed -i 's/1\.1\.1\.1/8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/g'  ${configWgcfProfileFilePath}
-
     else
         red "  Wgcf ${versionWgcf} 下载失败!"
         exit 255
     fi
 
+    ${sudoCmd} chmod +x ${configWgcfConfigFilePath}/wgcf
+    cp ${configWgcfConfigFilePath}/wgcf ${configWgcfBinPath}
+    
+    # ${configWgcfConfigFilePath}/wgcf register --config "${configWgcfAccountFilePath}"
 
-    echo "nameserver 8.8.8.8" >>  /etc/resolv.conf
-    echo "nameserver 8.8.4.4" >>  /etc/resolv.conf
-    echo "nameserver 1.1.1.1" >>  /etc/resolv.conf
-    echo "nameserver 9.9.9.9" >>  /etc/resolv.conf
-    echo "nameserver 9.9.9.10" >>  /etc/resolv.conf
-
+    ${configWgcfConfigFilePath}/wgcf register 
+    ${configWgcfConfigFilePath}/wgcf generate 
 
     cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
+
+    enableWireguardIPV6OrIPV4
 
     echo 
     green " 开始临时启动 Wireguard, 用于测试是否启动正常, 运行命令: wg-quick up wgcf"
@@ -1798,7 +1914,7 @@ function installWireguard(){
     green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf"
     green "  Wireguard 查看运行状态: systemctl status wg-quick@wgcf"
     echo
-    green "  用本脚本安装v2ray或xray 可以选择是否解除 google 验证码 和 Netflix 的限制 !"
+    green "  用本脚本安装v2ray或xray 可以选择是否 解锁 Netflix 限制 和 避免弹出 Google reCAPTCHA 人机验证 !"
     echo
     green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
     green "  可参考 如何使用 IPv6 访问 Netflix 的教程 https://ybfl.xyz/111.html 或 https://toutyrater.github.io/app/netflix.html!"
@@ -1806,6 +1922,144 @@ function installWireguard(){
     
 }
 
+function enableWireguardIPV6OrIPV4(){
+    # https://p3terx.com/archives/use-cloudflare-warp-to-add-extra-ipv4-or-ipv6-network-support-to-vps-servers-for-free.html
+    
+    ${sudoCmd} systemctl stop wg-quick@wgcf
+
+    sed -i '/nameserver 2a00\:1098\:2b\:\:1/d' /etc/resolv.conf
+
+    sed -i '/nameserver 8\.8/d' /etc/resolv.conf
+    sed -i '/nameserver 9\.9/d' /etc/resolv.conf
+    sed -i '/nameserver 1\.1\.1\.1/d' /etc/resolv.conf
+
+    echo
+    green " ================================================== "
+    yellow " 请选择为服务器添加 IPv6 网络 还是 IPv4 网络支持: "
+    echo
+    green " 1 添加 IPv6 网络 (用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证)"
+    green " 2 添加 IPv4 网络 (用于给只有 IPv6 的 VPS主机添加 IPv4 网络支持)"
+    echo
+    read -p "请选择添加 IPv6 还是 IPv4 网络支持? 直接回车默认选1 , 请输入[1/2]:" isAddNetworkIPv6Input
+	isAddNetworkIPv6Input=${isAddNetworkIPv6Input:-1}
+
+	if [[ ${isAddNetworkIPv6Input} == [2] ]]; then
+
+        # 为 IPv6 Only 服务器添加 IPv4 网络支持
+
+        sed -i 's/^AllowedIPs = \:\:\/0/# AllowedIPs = \:\:\/0/g' ${configWireGuardConfigFilePath}
+        sed -i 's/# AllowedIPs = 0\.0\.0\.0/AllowedIPs = 0\.0\.0\.0/g' ${configWireGuardConfigFilePath}
+
+        sed -i 's/engage\.cloudflareclient\.com/\[2606\:4700\:d0\:\:a29f\:c001\]/g' ${configWireGuardConfigFilePath}
+        sed -i 's/162\.159\.192\.1/\[2606\:4700\:d0\:\:a29f\:c001\]/g' ${configWireGuardConfigFilePath}
+
+        sed -i 's/^DNS = 1\.1\.1\.1/DNS = 2620:fe\:\:10,2001\:4860\:4860\:\:8888,2606\:4700\:4700\:\:1111/g'  ${configWireGuardConfigFilePath}
+        sed -i 's/^DNS = 8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/DNS = 2620:fe\:\:10,2001\:4860\:4860\:\:8888,2606\:4700\:4700\:\:1111/g'  ${configWireGuardConfigFilePath}
+        
+        echo "nameserver 2a00:1098:2b::1" >> /etc/resolv.conf
+        
+        echo
+        green " Wireguard 已成功切换到 对VPS服务器的 IPv4 网络支持"
+
+    else
+
+        # 为 IPv4 Only 服务器添加 IPv6 网络支持
+        sed -i 's/^AllowedIPs = 0\.0\.0\.0/# AllowedIPs = 0\.0\.0\.0/g' ${configWireGuardConfigFilePath}
+        sed -i 's/# AllowedIPs = \:\:\/0/AllowedIPs = \:\:\/0/g' ${configWireGuardConfigFilePath}
+
+        sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g' ${configWireGuardConfigFilePath}
+        sed -i 's/\[2606\:4700\:d0\:\:a29f\:c001\]/162\.159\.192\.1/g' ${configWireGuardConfigFilePath}
+        
+        sed -i 's/^DNS = 1\.1\.1\.1/DNS = 8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/g' ${configWireGuardConfigFilePath}
+        sed -i 's/^DNS = 2620:fe\:\:10,2001\:4860\:4860\:\:8888,2606\:4700\:4700\:\:1111/DNS = 8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/g' ${configWireGuardConfigFilePath}
+
+        echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+        echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+        echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+        echo "nameserver 9.9.9.9" >> /etc/resolv.conf
+        echo "nameserver 9.9.9.10" >> /etc/resolv.conf
+
+        echo
+        green " Wireguard 已成功切换到 对VPS服务器的 IPv6 网络支持"
+    fi
+    
+    green " ================================================== "
+    echo
+    green " Wireguard 配置信息如下 配置文件路径: ${configWireGuardConfigFilePath} "
+    cat ${configWireGuardConfigFilePath}
+    green " ================================================== "
+    echo
+
+    if [[ -n $1 ]]; then
+        ${sudoCmd} systemctl start wg-quick@wgcf
+    else
+        preferIPV4
+    fi
+}
+
+
+function preferIPV4(){
+
+    if [[ -f "/etc/gai.conf" ]]; then
+        sed -i '/^precedence \:\:ffff\:0\:0/d' /etc/gai.conf
+        sed -i '/^label 2002\:\:\/16/d' /etc/gai.conf
+    fi
+
+    if [[ -z $1 ]]; then
+        
+        echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
+
+        echo
+        green " VPS服务器已成功设置为 IPv4 优先访问网络"
+        echo
+    else
+
+        green " ================================================== "
+        yellow " 请为服务器设置 IPv4 还是 IPv6 优先访问: "
+        echo
+        green " 1 优先 IPv4 访问网络 (用于 给只有 IPv6 的 VPS主机添加 IPv4 网络支持)"
+        green " 2 优先 IPv6 访问网络 (用于 解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证)"
+        green " 3 删除 IPv4 或 IPv6 优先访问的设置, 还原为系统默认配置"
+        echo
+        red " 注意: 选2后 优先使用 IPv6 访问网络可能造成无法访问 某些不支持IPv6的网站! "
+        red " 注意: 解锁Netflix限制和避免弹出Google人机验证 一般不需要选择2设置IPv6优先访问, 可以在V2ray的配置中单独设置对Netfile和Google使用IPv6访问 "
+        red " 注意: 由于 trojan 或 trojan-go 不支持配置 使用IPv6优先访问Netfile和Google, 可以选择2 开启服务器优先IPv6访问, 解决 trojan-go 解锁Netfile和Google人机验证问题"
+        echo
+        read -p "请选择 IPv4 还是 IPv6 优先访问? 直接回车默认选1, 请输入[1/2]:" isPreferIPv4Input
+        isPreferIPv4Input=${isPreferIPv4Input:-1}
+
+        if [[ ${isPreferIPv4Input} == [2] ]]; then
+
+            # 设置 IPv6 优先
+            echo "label 2002::/16   2" >> /etc/gai.conf
+
+            echo
+            green " VPS服务器已成功设置为 IPv6 优先访问网络 "
+        elif [[ ${isPreferIPv4Input} == [3] ]]; then
+
+            echo
+            green " VPS服务器 已删除 IPv4 或 IPv6 优先访问的设置, 还原为系统默认配置 "  
+        else
+            # 设置 IPv4 优先
+            echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
+            
+            echo
+            green " VPS服务器已成功设置为 IPv4 优先访问网络 "    
+        fi
+
+        green " ================================================== "
+        echo
+        yellow " 验证 IPv4 或 IPv6 访问网络优先级测试, 命令: curl ip.p3terx.com " 
+        echo  
+        curl ip.p3terx.com
+        echo
+        green " 上面信息显示 如果是IPv4地址 则VPS服务器已设置为 IPv4优先访问. 如果是IPv6地址则已设置为 IPv6优先访问 "   
+        green " ================================================== "
+
+    fi
+    echo
+
+}
 
 function removeWireguard(){
     green " ================================================== "
@@ -1917,9 +2171,13 @@ function start_menu(){
     green " 1. 查看当前系统内核版本, 检查是否支持BBR"
     green " 2. 开启 BBR 加速"
     green " 3. 开启 BBR Plus 加速"
+    green " 4. 优化 系统网络配置"
+    red " 5. 删除 系统网络优化配置"
     echo
-    green " 6. 安装 WireGuard 和 Cloudflare Warp, 用于解锁 google 验证码 和 Netflix 限制"
+    green " 6. 安装 WireGuard 和 Cloudflare Warp, 用于解锁 Netflix 限制和避免弹出Google人机验证"
     red " 7. 卸载 WireGuard" 
+    green " 8. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
+    green " 9. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -1971,11 +2229,24 @@ function start_menu(){
         3 )
            enableBBRSysctlConfig "bbrplus"
         ;;        
+        4 )
+           addOptimizingSystemConfig
+        ;;        
+        5 )
+           removeOptimizingSystemConfig
+           sysctl -p
+        ;;        
         6 )
            installWireguard
         ;;
         7 )
            removeWireguard
+        ;;    
+        8 )
+           enableWireguardIPV6OrIPV4 "redo"
+        ;;    
+        9 )
+           preferIPV4 "redo"
         ;;    
         11 )
             linuxKernelToInstallVersion="5.11"

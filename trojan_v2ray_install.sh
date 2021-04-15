@@ -2040,7 +2040,7 @@ function installV2ray(){
     fi
 
 
-    read -p "是否使用IPV6 解锁Google 验证码 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]:" isV2rayUnlockGoogleInput
+    read -p "是否使用IPV6 避免弹出 Google reCAPTCHA 人机验证, 默认不解锁, 解锁需要配合Wireguard )? 请输入[y/N]:" isV2rayUnlockGoogleInput
     isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-n}
 
     V2rayUnlockText=""
@@ -2050,7 +2050,7 @@ function installV2ray(){
     fi
 
 
-    read -p "是否使用IPV6 解锁Netflix 默认不解锁, 解锁需要配合wireguard )? 请输入[y/N]:" isV2rayUnlockNetflixInput
+    read -p "是否使用IPV6 解锁Netflix 默认不解锁, 解锁需要配合Wireguard )? 请输入[y/N]:" isV2rayUnlockNetflixInput
     isV2rayUnlockNetflixInput=${isV2rayUnlockNetflixInput:-n}
     
     if [[ $isV2rayUnlockNetflixInput == [Yy] ]]; then
@@ -3166,9 +3166,9 @@ EOF
     ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
     ${sudoCmd} chmod +x ${osSystemMdPath}${promptInfoXrayName}.service
     ${sudoCmd} systemctl daemon-reload
-    ${sudoCmd} systemctl restart ${promptInfoXrayName}.service
+    
     ${sudoCmd} systemctl enable ${promptInfoXrayName}.service
-
+    ${sudoCmd} systemctl restart ${promptInfoXrayName}.service
 
 
 
@@ -4097,7 +4097,7 @@ function start_menu(){
     green " Trojan Trojan-go V2ray 一键安装脚本 | 2021-04-15 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
-    green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 google 验证码 和 Netflix 限制"
+    green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
     green " 2. 安装 trojan 和 nginx 不支持CDN, trojan 运行在443端口"
     green " 3. 升级 trojan 到最新版本"
