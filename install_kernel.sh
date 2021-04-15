@@ -869,6 +869,11 @@ function installKernel(){
 	elif [[ "${osRelease}" == "centos" ]]; then
         rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
         
+        if [ "${linuxKernelToBBRType}" = "xanmod" ]; then 
+            red " xanmod 内核不支持 Centos 系统安装"
+            exit 255
+        fi
+
         if [ "${isInstallFromRepo}" = "yes" ]; then 
             getLatestCentosKernelVersion
             installCentosKernelFromRepo
@@ -2311,8 +2316,8 @@ function start_menu(){
     green " 36. 安装 BBR Plus 内核 5.9, UJX6N 编译"
     green " 37. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"    
     echo
-    green "41. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
-    green "42. 安装 XanMod Kernel 内核 5.11, 官方源安装 "    
+    green " 41. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
+    green " 42. 安装 XanMod Kernel 内核 5.11, 官方源安装 "    
     echo
     green " =================================================="
     green " 0. 退出脚本"

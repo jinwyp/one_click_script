@@ -337,8 +337,9 @@ function changeLinuxSSHPort(){
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
             firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
             firewall-cmd --reload
-            ${sudoCmd} service sshd restart
-            ${sudoCmd} systemctl restart sshd
+    
+            ${sudoCmd} systemctl restart sshd.service
+
         fi
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
