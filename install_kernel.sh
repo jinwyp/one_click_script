@@ -387,6 +387,9 @@ function listInstalledLinuxKernel(){
 		# dpkg -l | grep linux-
         # dpkg-query -l | grep linux-
         # apt list --installed | grep linux-
+        echo
+        red " 如安装内核遇到kernel linux-image linux-headers 版本不一致问题, 请手动卸载已安装的kernel" 
+        red " 卸载内核命令 apt remove -y --purge linux-xxx名称"         
 
 	elif [[ "${osRelease}" == "centos" ]]; then
         ${sudoCmd} rpm -qa | grep kernel
@@ -1904,6 +1907,8 @@ function installWireguard(){
             fi
 
             ${sudoCmd} yum install -y epel-release elrepo-release 
+            ${sudoCmd} yum install -y net-tools
+            ${sudoCmd} yum install -y iproute
             ${sudoCmd} yum install -y wireguard-tools
         else 
             
@@ -2011,7 +2016,9 @@ function installWireguard(){
     # 启用守护进程
     ${sudoCmd} systemctl start wg-quick@wgcf
 
+    checkWireguardBootStatus
 
+    echo
     green " ================================================== "
     green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
     green "  Cloudflare Warp 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
@@ -2217,6 +2224,94 @@ function removeWireguard(){
 }
 
 
+function checkWireguardBootStatus(){
+    echo
+    isWireguardBootSuccess=$(systemctl status wg-quick@wgcf | grep -E "Active: active")
+    if [[ -z "${isWireguardBootSuccess}" ]]; then
+        green " 状态显示-- Wireguard 已启动失败! 请查看 Wireguard 运行日志, 寻找错误后重启 Wireguard "
+    else
+        green " 状态显示-- Wireguard 已启动成功! "
+    fi
+}
+
+function checkWireguard(){
+    echo
+    green " =================================================="
+    echo
+    green " 1. 查看当前系统内核版本, 检查是否装了多个版本内核导致 Wireguard 启动失败"
+    green " 2. 查看 Wireguard 运行状态"
+    green " 3. 查看 Wireguard 运行日志, 如果 Wireguard 启动失败 请用此项查找问题"
+    green " 4. 启动 Wireguard "
+    green " 5. 停止 Wireguard "
+    green " 6. 重启 Wireguard "
+    green " 7. 查看 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
+    green " 8. 用VI 编辑 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
+    echo
+    green " =================================================="
+    green " 0. 退出脚本"
+    echo
+    read -p "请输入数字:" menuNumberInput
+    case "$menuNumberInput" in
+        1 )
+            showLinuxKernelInfo
+            listInstalledLinuxKernel
+        ;;   
+        2 )
+            echo
+            echo "systemctl status wg-quick@wgcf"
+            systemctl status wg-quick@wgcf
+            red " 请查看上面 Active: 一行信息, 如果文字是绿色 active 则为启动正常, 否则启动失败"
+            checkWireguardBootStatus
+        ;;
+        3 )
+            echo
+            echo "journalctl -n 50 -u wg-quick@wgcf"
+            journalctl -n 50 -u wg-quick@wgcf
+            red " 请查看上面包含 Error 的信息行, 查找启动失败的原因 "
+        ;;        
+        4 )
+            echo
+            echo "systemctl start wg-quick@wgcf"
+            systemctl start wg-quick@wgcf
+            green " Wireguard 已启动 !"
+            checkWireguardBootStatus
+        ;;        
+        5 )
+            echo
+            echo "systemctl stop wg-quick@wgcf"
+            systemctl stop wg-quick@wgcf
+            green " Wireguard 已停止 !"
+        ;;       
+        6 )
+            echo
+            echo "systemctl restart wg-quick@wgcf"
+            systemctl restart wg-quick@wgcf
+            green " Wireguard 已重启 !"
+            checkWireguardBootStatus
+        ;;       
+        7 )
+            echo
+            echo "cat ${configWireGuardConfigFilePath}"
+            cat ${configWireGuardConfigFilePath}
+        ;;       
+        8 )
+            echo
+            echo "vi ${configWireGuardConfigFilePath}"
+            vi ${configWireGuardConfigFilePath}
+        ;; 
+        0 )
+            exit 1
+        ;;
+        * )
+            clear
+            red "请输入正确数字 !"
+            sleep 2s
+            checkWireguard
+        ;;
+    esac
+
+
+}
 
 
 
@@ -2258,7 +2353,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-04-15 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2021-04-17 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -2282,9 +2377,10 @@ function start_menu(){
     red " 5. 删除 系统网络优化配置"
     echo
     green " 6. 安装 WireGuard 和 Cloudflare Warp, 用于解锁 Netflix 限制和避免弹出Google人机验证"
-    red " 7. 卸载 WireGuard" 
-    green " 8. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
-    green " 9. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
+    green " 7. 重启 WireGuard, 查看 WireGuard 运行状态和错误日志, 如果WireGuard启动失败 请选该项排查错误"
+    red " 8. 卸载 WireGuard" 
+    green " 9. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
+    green " 10. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -2350,12 +2446,15 @@ function start_menu(){
            installWireguard
         ;;
         7 )
-           removeWireguard
+           checkWireguard
         ;;    
         8 )
-           enableWireguardIPV6OrIPV4 "redo"
+           removeWireguard
         ;;    
         9 )
+           enableWireguardIPV6OrIPV4 "redo"
+        ;;    
+        10 )
            preferIPV4 "redo"
         ;;    
         11 )
