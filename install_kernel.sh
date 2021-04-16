@@ -244,6 +244,12 @@ virt_check(){
 
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+        if [[ "${osRelease}" == "debian" ]]; then
+            echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
+            echo "deb-src http://deb.debian.org/debian buster-backports main contrib non-free" >> /etc/apt/sources.list.d/buster-backports.list
+            ${sudoCmd} apt update
+        fi
+
 		if ! dpkg -l | grep -qw wget; then
 			${osSystemPackage} -y install wget curl git
 		fi
@@ -1562,9 +1568,8 @@ function installDebianUbuntuKernel(){
             linuxKernelToInstallVersionFull=${debianKernelVersion}
 
             echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
-            echo "deb-src http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
+            echo "deb-src http://deb.debian.org/debian buster-backports main contrib non-free" >> /etc/apt/sources.list.d/buster-backports.list
             ${sudoCmd} apt update
-
 
             listAvailableLinuxKernel
             
@@ -1895,9 +1900,9 @@ function installWireguard(){
                 # 安装 wireguard-dkms 后 ubuntu 20 系统 会同时安装 5.4.0-71   内核
                 green " 当前系统内核版本低于5.6,  直接安装 wireguard wireguard"
                 ${sudoCmd} apt install -y wireguard
-                ${sudoCmd} apt install -y wireguard-tools 
+                # ${sudoCmd} apt install -y wireguard-tools 
             fi
-
+        
             # if [[ ! -L "/usr/local/bin/resolvconf" ]]; then
             #     ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
             # fi
@@ -1906,7 +1911,10 @@ function installWireguard(){
             ${sudoCmd} systemctl start systemd-resolved.service
 
     elif [[ "${osRelease}" == "centos" ]]; then
-    
+        ${sudoCmd} yum install -y epel-release elrepo-release 
+        ${sudoCmd} yum install -y net-tools
+        ${sudoCmd} yum install -y iproute
+
         if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
 
             green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
@@ -1915,9 +1923,6 @@ function installWireguard(){
                 ${sudoCmd} yum install -y yum-plugin-elrepo
             fi
 
-            ${sudoCmd} yum install -y epel-release elrepo-release 
-            ${sudoCmd} yum install -y net-tools
-            ${sudoCmd} yum install -y iproute
             ${sudoCmd} yum install -y wireguard-tools
         else 
             
@@ -1925,7 +1930,6 @@ function installWireguard(){
                 if [[ ${osKernelVersionBackup} == *"3.10."* ]]; then
                     green " 当前系统内核版本为原版Centos 7 ${osKernelVersionBackup} , 直接安装 kmod-wireguard "
                     ${sudoCmd} yum install -y yum-plugin-elrepo
-                    ${sudoCmd} yum install -y epel-release elrepo-release 
                     ${sudoCmd} yum install -y kmod-wireguard wireguard-tools
                 else
                     green " 当前系统内核版本低于5.6, 安装 wireguard-dkms "
@@ -1936,11 +1940,9 @@ function installWireguard(){
             else
                 if [[ ${osKernelVersionBackup} == *"4.18."* ]]; then
                     green " 当前系统内核版本为原版Centos 8 ${osKernelVersionBackup} , 直接安装 kmod-wireguard "
-                    ${sudoCmd} yum install -y epel-release elrepo-release 
                     ${sudoCmd} yum install -y kmod-wireguard wireguard-tools
                 else
                     green " 当前系统内核版本低于5.6, 安装 wireguard-dkms "
-                    ${sudoCmd} yum install -y epel-release
                     ${sudoCmd} yum config-manager --set-enabled PowerTools
                     ${sudoCmd} yum copr enable jdoss/wireguard
                     ${sudoCmd} yum install -y wireguard-dkms wireguard-tools
