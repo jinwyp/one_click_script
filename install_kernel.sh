@@ -703,6 +703,7 @@ function addOptimizingSystemConfig(){
     if grep -q "1000000" "/etc/profile"; then
         echo
         green " 系统网络配置 已经优化过, 不需要再次优化 "
+        echo
         sysctl -p
         echo
         exit
@@ -2405,6 +2406,7 @@ function start_menu(){
     green " 17. 安装 内核 5.11, 下载安装"
 
     elif [[ "${osRelease}" == "debian" ]]; then
+    # echo
     green " 21. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
     echo
     green " 22. 安装 最新版本内核 5.11, 通过 Ubuntu kernel mainline 安装"

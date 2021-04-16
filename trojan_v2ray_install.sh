@@ -736,9 +736,10 @@ isXray="no"
 
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
+configV2rayVmesWSPort="$(($RANDOM + 10000))"
 configV2rayVmessTCPPort="$(($RANDOM + 10000))"
 configV2rayPortShowInfo=$configV2rayPort
-configV2rayIsTlsShowInfo="none"
+configV2rayIsTlsShowInfo="tls"
 configV2rayTrojanPort="$(($RANDOM + 10000))"
 
 configV2rayPath="${HOME}/v2ray"
@@ -1795,7 +1796,7 @@ EOF
 	green "    Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !"
 
     if [[ ${isInstallNginx} == "true" ]]; then
-        green "    伪装站点为 http://${configSSLDomain}"
+        green "    伪装站点为 https://${configSSLDomain}"
 	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
     fi
 
@@ -1985,7 +1986,31 @@ function upgradeTrojan(){
 
 
 
+function checkPortInUse(){ 
+    read -p "是否自定义${promptInfoXrayName}的端口号? 直接回车默认为${configV2rayPortShowInfo}, 请输入自定义端口号:" isV2rayUserPortInput
+    isV2rayUserPortInput=${isV2rayUserPortInput:-${configV2rayPortShowInfo}}
 
+
+    if [[ -z $isV2rayUserPortInput ]]; then
+        red "输入的端口号错误! 不能为空. 请重新输入" 
+        checkPortInUse
+    elif [[ ${isV2rayUserPortInput} -gt 1 && ${isV2rayUserPortInput} -le 65535 ]]; then
+            
+        netstat -tulpn | grep [0-9]:${isV2rayUserPortInput} -q ; 
+        if [ $? -eq 1 ]; then 
+            green "输入的端口号 ${isV2rayUserPortInput} 没有被占用, 继续安装..."  
+            
+        else 
+            red "输入的端口号 ${isV2rayUserPortInput} 已被占用! 请退出安装, 检查端口是否已被占用 或 重新输入!" 
+            checkPortInUse
+        fi
+    else
+        red "输入的端口号错误! 必须是[1-65535]. 请重新输入" 
+        checkPortInUse
+    fi
+
+
+}
 
 
 
@@ -2017,11 +2042,11 @@ function installV2ray(){
     echo
 
 
-    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessonly" ) || ( $configV2rayVlessMode == "vlesstrojan" ) ]] ; then
+    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessxtlsonly" ) || ( $configV2rayVlessMode == "vlessxtlstrojan" ) ]] ; then
         promptInfoXrayName="xray"
         isXray="yes"
     else
-        read -p "是否使用Xray内核(默认为V2ray内核 )? 请输入[y/N]:" isV2rayOrXrayInput
+        read -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayInput
         isV2rayOrXrayInput=${isV2rayOrXrayInput:-n}
 
         if [[ $isV2rayOrXrayInput == [Yy] ]]; then
@@ -2035,7 +2060,7 @@ function installV2ray(){
          configV2rayProtocol="vless"
     else 
 
-        read -p "是否使用VLESS协议(默认为VMess协议 )? 请输入[y/N]:" isV2rayUseVLessInput
+        read -p "是否使用VLESS协议? 直接回车默认为VMess协议, 请输入[y/N]:" isV2rayUseVLessInput
         isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
 
         if [[ $isV2rayUseVLessInput == [Yy] ]]; then
@@ -2047,7 +2072,7 @@ function installV2ray(){
     fi
 
 
-    read -p "是否使用IPV6 避免弹出 Google reCAPTCHA 人机验证, 默认不解锁, 解锁需要配合Wireguard )? 请输入[y/N]:" isV2rayUnlockGoogleInput
+    read -p "是否要避免弹出 Google reCAPTCHA 人机验证, 默认不避免弹出, 避免弹出请输入y, 需要配合Wireguard )? 请输入[y/N]:" isV2rayUnlockGoogleInput
     isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-n}
 
     V2rayUnlockText=""
@@ -2055,7 +2080,6 @@ function installV2ray(){
     if [[ $isV2rayUnlockGoogleInput == [Yy] ]]; then
         V2rayUnlockText="\"geosite:google\""
     fi
-
 
     read -p "是否使用IPV6 解锁Netflix 默认不解锁, 解锁需要配合Wireguard )? 请输入[y/N]:" isV2rayUnlockNetflixInput
     isV2rayUnlockNetflixInput=${isV2rayUnlockNetflixInput:-n}
@@ -2069,6 +2093,55 @@ function installV2ray(){
     fi
 
 
+
+    read -p "是否自定义${promptInfoXrayName}的密码? 直接回车默认创建随机密码, 请输入自定义UUID密码:" isV2rayUserPassordInput
+    isV2rayUserPassordInput=${isV2rayUserPassordInput:-''}
+
+    if [[ -z $isV2rayUserPassordInput ]]; then
+        echo
+    else
+        v2rayPassword1=${isV2rayUserPassordInput}
+    fi
+
+
+
+    # 增加自定义端口号
+    if [[ ${isInstallNginx} == "true" ]]; then
+        configV2rayPortShowInfo=443
+        
+        if [[ $configV2rayVlessMode == "vlessxtlsonly" ]]; then
+            configV2rayPort=443
+        fi
+    else
+        configV2rayPort="$(($RANDOM + 10000))"
+        configV2rayPortShowInfo=$configV2rayPort
+
+        if [[ -n "$configV2rayVlessMode" ]]; then
+            configV2rayPortShowInfo=443
+        fi
+
+        checkPortInUse     
+
+        configV2rayPort=${isV2rayUserPortInput}   
+        configV2rayPortShowInfo=${isV2rayUserPortInput}   
+
+        configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+
+        read -p "是否自定义${promptInfoXrayName}的WS的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
+        isV2rayUserWSPathInput=${isV2rayUserWSPathInput:-${configV2rayWebSocketPath}}
+
+        if [[ -z $isV2rayUserWSPathInput ]]; then
+            echo
+        else
+            configV2rayWebSocketPath=${isV2rayUserWSPathInput}
+        fi
+
+    fi
+
+
+
+
+    
     if [ "$isXray" = "no" ] ; then
         getTrojanAndV2rayVersion "v2ray"
         green "    准备下载并安装 V2ray Version: ${versionV2ray} !"
@@ -2080,7 +2153,7 @@ function installV2ray(){
         promptInfoXrayInstall="Xray"
         promptInfoXrayVersion=${versionXray}
     fi
-
+    echo
 
 
     mkdir -p ${configV2rayPath}
@@ -2095,6 +2168,12 @@ function installV2ray(){
     else
         downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${configV2rayPath}" "${downloadFilenameXray}"
     fi
+
+
+
+
+
+
 
 
     # 增加 v2ray 服务器端配置
@@ -2735,7 +2814,7 @@ EOF
     ${v2rayConfigLogInput}
     "inbounds": [
         {
-            "port": 443,
+            "port": ${configV2rayPort},
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -2748,7 +2827,7 @@ EOF
                     },
                     {
                         "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayPort},
+                        "dest": ${configV2rayVmesWSPort},
                         "xver": 1
                     }
                 ]
@@ -2770,7 +2849,7 @@ EOF
             }
         },
         {
-            "port": ${configV2rayPort},
+            "port": ${configV2rayVmesWSPort},
             "listen": "127.0.0.1",
             "protocol": "vless",
             "settings": {
@@ -2801,7 +2880,7 @@ EOF
     ${v2rayConfigLogInput}
     "inbounds": [
         {
-            "port": 443,
+            "port": ${configV2rayPort},
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -2814,7 +2893,7 @@ EOF
                     },
                     {
                         "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayPort},
+                        "dest": ${configV2rayVmesWSPort},
                         "xver": 1
                     },
                     {
@@ -2841,7 +2920,7 @@ EOF
             }
         },
         {
-            "port": ${configV2rayPort},
+            "port": ${configV2rayVmesWSPort},
             "listen": "127.0.0.1",
             "protocol": "vmess",
             "settings": {
@@ -2890,13 +2969,13 @@ EOF
 
 
 
-    if [[  $configV2rayVlessMode == "vlesstrojan" ]]; then
+    if [[  $configV2rayVlessMode == "vlessxtlstrojan" ]]; then
             cat > ${configV2rayPath}/config.json <<-EOF
 {
     ${v2rayConfigLogInput}
     "inbounds": [
         {
-            "port": 443,
+            "port": ${configV2rayPort},
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -2910,7 +2989,7 @@ EOF
                     },
                     {
                         "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayPort},
+                        "dest": ${configV2rayVmesWSPort},
                         "xver": 1
                     }
                 ]
@@ -2954,7 +3033,7 @@ EOF
             }
         },
         {
-            "port": ${configV2rayPort},
+            "port": ${configV2rayVmesWSPort},
             "listen": "127.0.0.1",
             "protocol": "vless",
             "settings": {
@@ -2979,13 +3058,13 @@ EOF
     fi
 
 
-    if [[  $configV2rayVlessMode == "vlessonly" ]]; then
+    if [[  $configV2rayVlessMode == "vlessxtlsonly" ]]; then
             cat > ${configV2rayPath}/config.json <<-EOF
 {
     ${v2rayConfigLogInput}
     "inbounds": [
         {
-            "port": 443,
+            "port": ${configV2rayPort},
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -2998,7 +3077,7 @@ EOF
                     },
                     {
                         "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayPort},
+                        "dest": ${configV2rayVmesWSPort},
                         "xver": 1
                     }
                 ]
@@ -3020,7 +3099,7 @@ EOF
             }
         },
         {
-            "port": ${configV2rayPort},
+            "port": ${configV2rayVmesWSPort},
             "listen": "127.0.0.1",
             "protocol": "vless",
             "settings": {
@@ -3052,7 +3131,7 @@ EOF
     ${v2rayConfigLogInput}
     "inbounds": [
         {
-            "port": 443,
+            "port": ${configV2rayPort},
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
@@ -3071,7 +3150,7 @@ EOF
                     },
                     {
                         "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayPort},
+                        "dest": ${configV2rayVmesWSPort},
                         "xver": 1
                     }
                 ]
@@ -3093,7 +3172,7 @@ EOF
             }
         },
         {
-            "port": ${configV2rayPort},
+            "port": ${configV2rayVmesWSPort},
             "listen": "127.0.0.1",
             "protocol": "vless",
             "settings": {
@@ -3180,17 +3259,14 @@ EOF
 
 
     # 增加客户端配置说明
-    if [[ ${isInstallNginx} == "true" ]]; then
-        configV2rayPortShowInfo=443
-        configV2rayIsTlsShowInfo="tls"
-    else
-        configV2rayIsTlsShowInfo="none"
+    if [[ ${isInstallNginx} != "true" ]]; then
+        if [[ -z "$configV2rayVlessMode" ]]; then
+                        
+            configV2rayIsTlsShowInfo="none"
+        fi
     fi
 
-    if [[ -n "$configV2rayVlessMode" ]]; then
-        configV2rayPortShowInfo=443
-        configV2rayIsTlsShowInfo="tls"
-    fi
+
 
 
 
@@ -3213,14 +3289,15 @@ EOF
 
 
 
-if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
+    if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
+
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 当选择了17. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     加密方式: none,  // 如果是Vless协议则为none
@@ -3234,7 +3311,7 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
 {
     协议: VMess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     加密方式: none,  // 如果是Vless协议则为none
@@ -3248,7 +3325,7 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
 {
     协议: VMess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     加密方式: none,  // 如果是Vless协议则为none
@@ -3258,17 +3335,18 @@ if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
     别名:自己起个任意名称
 }
 EOF
-fi
+    fi
 
 
-if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
+    if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
+
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 当选择了16. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow:  // 选择了16 为空
@@ -3283,7 +3361,7 @@ if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow:  // 选择了16 为空
@@ -3294,16 +3372,16 @@ if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
     别名:自己起个任意名称
 }
 EOF
-fi
+    fi
 
 
-if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+    if [[ "$configV2rayVlessMode" == "vlessxtlsonly" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: xtls-rprx-direct
@@ -3318,7 +3396,7 @@ if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" ==
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
@@ -3329,19 +3407,19 @@ if [[ "$configV2rayVlessMode" == "vlessonly" ]] || [[ "$configV2rayVlessMode" ==
     别名:自己起个任意名称
 }
 EOF
-fi
+    fi
 
-if [[ "$configV2rayVlessMode" == "vlesstrojan" ]]; then
+    if [[ "$configV2rayVlessMode" == "vlessxtlstrojan" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: xtls-rprx-direct
-    加密方式: none,  // 如果是Vless协议则为none
+    加密方式: none,  
     传输协议: tcp ,
     websocket路径:无,
     底层传输协议:xtls, 
@@ -3352,11 +3430,11 @@ if [[ "$configV2rayVlessMode" == "vlesstrojan" ]]; then
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPortShowInfo},
+    端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
-    加密方式: none,  // 如果是Vless协议则为none
+    加密方式: none,  
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
@@ -3379,7 +3457,7 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 您指定前缀的密码若干: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202070 都可以使用
 
 EOF
-fi
+    fi
 
 
 
@@ -3394,6 +3472,7 @@ fi
 
     if [[ ${isInstallNginx} == "true" ]]; then
         green "    伪装站点为 https://${configSSLDomain}!"
+	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
     fi
 	
 	red "    ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json !"
@@ -3464,6 +3543,7 @@ ${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选
 用户ID或密码8: ${v2rayPassword8}
 用户ID或密码9: ${v2rayPassword9}
 用户ID或密码10: ${v2rayPassword10}
+
 
 
 EOF
@@ -3931,10 +4011,6 @@ function startMenuOther(){
 	green " 34. testrace 回程路由测试 （四网路由测试）"
 	green " 35. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     green " 36. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
-
-    echo
-    green " 41. 安装 BBR-PLUS 加速4合一脚本 by chiakge" 
-    green " 42. 安装新版本 BBR-PLUS 加速6合一脚本 by ylx2016" 
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -3996,7 +4072,7 @@ function startMenuOther(){
             getHTTPSNoNgix "v2ray"
         ;;    
         20 )
-            configV2rayVlessMode="vlessonly"
+            configV2rayVlessMode="vlessxtlsonly"
             getHTTPSNoNgix "v2ray"
         ;; 
         21 )
@@ -4015,7 +4091,7 @@ function startMenuOther(){
             getHTTPSNoNgix "both"
         ;;
         24 )
-            configV2rayVlessMode="vlesstrojan"
+            configV2rayVlessMode="vlessxtlstrojan"
             getHTTPSNoNgix "v2ray"
         ;;          
         27 )
@@ -4179,7 +4255,7 @@ function start_menu(){
             installTrojanV2rayWithNginx "v2ray"
         ;;
         12 )
-            configV2rayVlessMode="vlesstrojan"
+            configV2rayVlessMode="vlessxtlstrojan"
             installTrojanV2rayWithNginx "v2ray"
         ;;        
         13 )
