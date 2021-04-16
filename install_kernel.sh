@@ -1841,6 +1841,14 @@ function installWireguard(){
     versionWgcf=$(getGithubLatestReleaseVersion "ViRb3/wgcf")
     downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
 
+    if [[ -f "${configWireGuardConfigFilePath}" ]]; then
+        green " =================================================="
+        green "  已安装过 Wireguard, 如需重装 可以选择卸载 Wireguard 后重新安装! "
+        green " =================================================="
+        exit
+    fi
+
+
     green " =================================================="
     green "    开始安装 WireGuard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} !"
     echo
