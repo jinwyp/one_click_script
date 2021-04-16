@@ -428,15 +428,17 @@ gpgcheck=0
 enabled=1
 
 EOF
+        if ! rpm -qa | grep -qw iperf3; then
+			${sudoCmd} ${osSystemPackage} install -y epel-release
+
+            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y xz jq redhat-lsb-core 
+            ${osSystemPackage} install -y iputils
+            ${osSystemPackage} install -y iperf3
+		fi
 
         ${osSystemPackage} update -y
 
-        ${sudoCmd} ${osSystemPackage} install -y epel-release
-
-        ${osSystemPackage} install -y curl wget git unzip zip tar
-        ${osSystemPackage} install -y xz jq redhat-lsb-core 
-        ${osSystemPackage} install -y iputils
-        ${osSystemPackage} install -y iperf3
 
         # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
         if  [[ ${osReleaseVersionNo} == "8" ]]; then
@@ -459,11 +461,14 @@ deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
 
         ${osSystemPackage} update -y
-        ${sudoCmd} ${osSystemPackage} install -y software-properties-common
-        ${osSystemPackage} install -y curl wget git unzip zip tar
-        ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
-        ${osSystemPackage} install -y iputils-ping
-        ${osSystemPackage} install -y iperf3
+
+        if ! dpkg -l | grep -qw iperf3; then
+            ${sudoCmd} ${osSystemPackage} install -y software-properties-common
+            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
+            ${osSystemPackage} install -y iputils-ping
+            ${osSystemPackage} install -y iperf3
+		fi    
 
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
@@ -478,10 +483,13 @@ deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 EOF
         
         ${osSystemPackage} update -y
-        ${osSystemPackage} install -y curl wget git unzip zip tar
-        ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
-        ${osSystemPackage} install -y iputils-ping
-        ${osSystemPackage} install -y iperf3
+
+        if ! dpkg -l | grep -qw iperf3; then
+            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
+            ${osSystemPackage} install -y iputils-ping
+            ${osSystemPackage} install -y iperf3
+        fi        
     fi
 }
 
@@ -1983,33 +1991,41 @@ function upgradeTrojan(){
 
 
 
+function inputV2rayServerPort(){ 
+	echo 
+    echo
+	if [[ $1 == "textMainPort" ]]; then
+        read -p "是否自定义${promptInfoXrayName}的端口号? 直接回车默认为${configV2rayPortShowInfo}, 请输入自定义端口号[1-65535]:" isV2rayUserPortInput
+        isV2rayUserPortInput=${isV2rayUserPortInput:-${configV2rayPortShowInfo}}
+		checkPortInUse "${isV2rayUserPortInput}" $1 
+	fi
 
-
+	if [[ $1 == "textAdditionalPort" ]]; then
+        green " 是否添加一个额外监听端口, 与主端口${configV2rayPort}一起同时工作"
+        green " 一般用于 中转机无法使用443端口中转给目标主机时使用"
+        read -p "是否给${promptInfoXrayName}添加额外的监听端口? 直接回车默认否, 请输入额外端口号[1-65535]:" isV2rayAdditionalPortInput
+        isV2rayAdditionalPortInput=${isV2rayAdditionalPortInput:-999999}
+        checkPortInUse "${isV2rayAdditionalPortInput}" $1 
+	fi
+}
 
 function checkPortInUse(){ 
-    read -p "是否自定义${promptInfoXrayName}的端口号? 直接回车默认为${configV2rayPortShowInfo}, 请输入自定义端口号:" isV2rayUserPortInput
-    isV2rayUserPortInput=${isV2rayUserPortInput:-${configV2rayPortShowInfo}}
-
-
-    if [[ -z $isV2rayUserPortInput ]]; then
-        red "输入的端口号错误! 不能为空. 请重新输入" 
-        checkPortInUse
-    elif [[ ${isV2rayUserPortInput} -gt 1 && ${isV2rayUserPortInput} -le 65535 ]]; then
+    if [ $1 = "999999" ]; then
+        echo
+    elif [[ $1 -gt 1 && $1 -le 65535 ]]; then
             
-        netstat -tulpn | grep [0-9]:${isV2rayUserPortInput} -q ; 
+        netstat -tulpn | grep [0-9]:$1 -q ; 
         if [ $? -eq 1 ]; then 
-            green "输入的端口号 ${isV2rayUserPortInput} 没有被占用, 继续安装..."  
+            green "输入的端口号 $1 没有被占用, 继续安装..."  
             
         else 
-            red "输入的端口号 ${isV2rayUserPortInput} 已被占用! 请退出安装, 检查端口是否已被占用 或 重新输入!" 
-            checkPortInUse
+            red "输入的端口号 $1 已被占用! 请退出安装, 检查端口是否已被占用 或 重新输入!" 
+            inputV2rayServerPort $2 
         fi
     else
         red "输入的端口号错误! 必须是[1-65535]. 请重新输入" 
-        checkPortInUse
+        inputV2rayServerPort $2 
     fi
-
-
 }
 
 
@@ -2029,7 +2045,7 @@ function installV2ray(){
     v2rayPassword10=$(cat /proc/sys/kernel/random/uuid)
 
     echo
-    if [ -f "${configV2rayPath}/v2ray" ] || [ -f "/usr/local/bin/v2ray" ] || [ -f "/usr/bin/v2ray" ]; then
+    if [ -f "${configV2rayPath}/xray" ] || [ -f "${configV2rayPath}/v2ray" ] || [ -f "/usr/local/bin/v2ray" ] || [ -f "/usr/bin/v2ray" ]; then
         green " =================================================="
         green "     已安装过 V2ray 或 Xray, 退出安装 !"
         green " =================================================="
@@ -2115,12 +2131,12 @@ function installV2ray(){
     else
         configV2rayPort="$(($RANDOM + 10000))"
         configV2rayPortShowInfo=$configV2rayPort
-
+        
         if [[ -n "$configV2rayVlessMode" ]]; then
             configV2rayPortShowInfo=443
         fi
 
-        checkPortInUse     
+        inputV2rayServerPort "textMainPort"
 
         configV2rayPort=${isV2rayUserPortInput}   
         configV2rayPortShowInfo=${isV2rayUserPortInput}   
@@ -2135,6 +2151,37 @@ function installV2ray(){
         else
             configV2rayWebSocketPath=${isV2rayUserWSPathInput}
         fi
+
+
+        
+        inputV2rayServerPort "textAdditionalPort"
+
+        if [[ $isV2rayAdditionalPortInput == "999999" ]]; then
+            v2rayConfigAdditionalPortInput=""
+        else
+            
+            read -r -d '' v2rayConfigAdditionalPortInput << EOM
+        ,
+        {
+            "listen": "0.0.0.0",
+            "port": ${isV2rayAdditionalPortInput}, 
+            "protocol": "dokodemo-door",
+            "settings": {
+                "address": "127.0.0.1",
+                "port": ${configV2rayPort},
+                "network": "tcp, udp",
+                "followRedirect": false 
+            },
+            "sniffing": {
+            "enabled": true,
+            "destOverride": ["http", "tls"]
+            }
+        }     
+     
+EOM
+
+        fi
+
 
     fi
 
@@ -2801,6 +2848,7 @@ EOM
                 }
             }
         }
+        ${v2rayConfigAdditionalPortInput}
     ],
     ${v2rayConfigOutboundInput}
 }
@@ -2867,6 +2915,7 @@ EOF
                 }
             }
         }
+        ${v2rayConfigAdditionalPortInput}
     ],
     ${v2rayConfigOutboundInput}
 }
@@ -2961,6 +3010,7 @@ EOF
                 }
             }
         }
+        ${v2rayConfigAdditionalPortInput}
     ],
     ${v2rayConfigOutboundInput}
 }
@@ -3051,6 +3101,7 @@ EOF
                 }
             }
         }
+        ${v2rayConfigAdditionalPortInput}
     ],
     ${v2rayConfigOutboundInput}
 }
@@ -3117,6 +3168,7 @@ EOF
                 }
             }
         }
+        ${v2rayConfigAdditionalPortInput}
     ],
     ${v2rayConfigOutboundInput}
 }
@@ -3190,6 +3242,7 @@ EOF
                 }
             }
         }
+        ${v2rayConfigAdditionalPortInput}
     ],
     ${v2rayConfigOutboundInput}
 }
