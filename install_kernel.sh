@@ -1895,6 +1895,7 @@ function installWireguard(){
                 # 安装 wireguard-dkms 后 ubuntu 20 系统 会同时安装 5.4.0-71   内核
                 green " 当前系统内核版本低于5.6,  直接安装 wireguard wireguard"
                 ${sudoCmd} apt install -y wireguard
+                ${sudoCmd} apt install -y wireguard-tools 
             fi
 
             # if [[ ! -L "/usr/local/bin/resolvconf" ]]; then
