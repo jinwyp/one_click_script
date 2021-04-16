@@ -17,12 +17,13 @@
 1. 支持 trojan，trojan-go 和 v2ray, xray 的安装 升级 卸载. 卸载后不留任何痕迹, 方便重复安装.
 2. 支持 trojan 或 trojan-go 与 v2ray 共存, nginx全面支持TLS1.3 保证安全性, 支持SNI分流
 3. 可以仅安装 trojan 或 v2ray, 可以不安装nginx. 方便与宝塔面板或现有网站共存.
-4. 支持 v2ray 和 xray 新的vless协议, 支持v2ray作为前端 监听443端口 同时转发trojan 和 websocket 
-5. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
-6. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
-7. trojan 和 v2ray 可视化管理面板安装. 
-8. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix 限制问题, 同时v2ray支持相应的配置
-9. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
+4. 支持 v2ray 和 xray 自定义端口, 密码和WS的Path, 支持监听额外端口 方便中转机中转. 
+5. 支持 v2ray 和 xray 新的vless协议, 支持v2ray作为前端 监听443端口 同时转发trojan 和 websocket. 
+6. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
+7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
+8. trojan 和 v2ray 可视化管理面板安装. 
+9. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix 限制问题, 同时v2ray支持相应的配置
+10. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
 12. 本脚本没有偷跑服务器流量的网页或其他屏蔽bt流量的等限制. 默认网页仅为bootstarp最简单的模板
 13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 而其他脚本写死固定端口容易被检测
 14. 本脚本不推荐安装多种v2ray的多种协议共存, 协议越多安全性越低, 而且也不会提高速度, 强烈不建议使用其他脚本同时安装多个协议
@@ -94,11 +95,12 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ### 高级用法 Advanced Usage 与现有网站共存
 
-1. 如果机器上已经有nginx或已有网站服务, 或是与宝塔面板共同使用, 可以运行脚本后选择30, 然后单独安装不带有nginx的版本。 选择30后再选15, 则V2ray运行在其他端口没有加密, 然后在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径转发到V2ray 端口, 起到加密作用。
+1. 如果机器上已经有nginx或已有网站服务, 或是与宝塔面板共同使用, 可以运行脚本后选择30, 然后单独安装不带有nginx的版本。 选择30后再选15, 则V2ray运行在非80和443端口(端口可自定义), 同时没有加密, 然后在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径转发到V2ray 端口, 起到加密作用。
 2. 选择30后 再选择12-14 安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由trojan或trojan-go提供。
 3. 选择30后, 再选择13或14后仅安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
-4. 选择30后 再选择16-24 安装V2ray或Xray, 这样让V2ray或Xray 的 Vless协议服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由V2ray或Xray 的 Vless协议提供。 推荐选择20的 Xray的Xtls-direct 模式速度最快
-5. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
+4. 选择30后 再选择16-24 安装V2ray或Xray, 这样让V2ray或Xray 的 Vless协议服务于443 https端口(端口可自定义), 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由V2ray或Xray 的 Vless协议提供。 推荐选择20的 Xray的Xtls-direct 模式速度最快
+5. 选择30后 再选择15-24 安装V2ray或Xray,都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便不支持443端口的中转机中转给目标主机.
+6. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
 
 
 ## 注意事项与常见问题 FAQ 
