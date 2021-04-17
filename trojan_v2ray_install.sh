@@ -3803,8 +3803,9 @@ function removeTrojanWeb(){
     rm -rf /usr/local/etc/trojan
     rm -f ${osSystemMdPath}trojan.service
     rm -f /etc/systemd/system/trojan.service
-  
-   
+    rm -f /usr/local/etc/trojan/config.json
+
+
     # 移除trojan web 管理程序 
     # rm -f /usr/local/bin/trojan
     rm -rf ${configTrojanWebPath}
