@@ -1886,6 +1886,7 @@ function installWireguard(){
         green " 建议请先用本脚本安装 linux kernel 5.6 以上的内核 !"
 		exit
 	fi
+
     echo
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
@@ -1893,7 +1894,7 @@ function installWireguard(){
             ${sudoCmd} apt install -y openresolv
             # ${sudoCmd} apt install -y resolvconf
             ${sudoCmd} apt install net-tools iproute2 dnsutils
-
+            echo
             if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
                 green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
                 ${sudoCmd} apt install -y wireguard-tools 
@@ -1903,7 +1904,7 @@ function installWireguard(){
                 ${sudoCmd} apt install -y wireguard
                 # ${sudoCmd} apt install -y wireguard-tools 
             fi
-        
+
             # if [[ ! -L "/usr/local/bin/resolvconf" ]]; then
             #     ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
             # fi
@@ -1916,6 +1917,7 @@ function installWireguard(){
         ${sudoCmd} yum install -y net-tools
         ${sudoCmd} yum install -y iproute
 
+        echo
         if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
 
             green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
@@ -2003,7 +2005,7 @@ function installWireguard(){
     echo
 
 	if [[ -n "$isWireguardIpv6Working" ]]; then	
-		green " Wireguard 启动正常! "
+		green " Wireguard 启动正常, 已成功通过 CLOUDFLARE Warp 提供的 IPv6 访问网络! "
 	else 
 		green " ================================================== "
 		red " Wireguard 通过 curl -6 ip.p3terx.com, 检测使用CLOUDFLARENET的IPV6 访问失败"

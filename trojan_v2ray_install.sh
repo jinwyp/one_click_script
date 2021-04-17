@@ -1030,7 +1030,7 @@ http {
     #tcp_nopush     on;
     keepalive_timeout  120;
     client_max_body_size 20m;
-    gzip on;
+    #gzip on;
 
     server {
         listen       80;
@@ -1038,21 +1038,13 @@ http {
         root $configWebsitePath;
         index index.php index.html index.htm;
 
-        location /$configV2rayWebSocketPath {
-            proxy_pass http://127.0.0.1:$configV2rayPort;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$http_host;
-        }
-
         location /$configTrojanWebNginxPath {
             proxy_pass http://127.0.0.1:$configTrojanWebPort/;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Host \$http_host;
         }
 
-        location ~* ^/(js|css|vendor|common|auth|trojan)/ {
+        location ~* ^/(static|common|auth|trojan)/ {
             proxy_pass  http://127.0.0.1:$configTrojanWebPort;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
@@ -3718,7 +3710,6 @@ function upgradeV2ray(){
 function installTrojanWeb(){
     # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh
 
-
     if [ -f "${configTrojanWebPath}/trojan-web" ] ; then
         green " =================================================="
         green "  已安装过 Trojan-web 可视化管理面板, 退出安装 !"
@@ -3742,9 +3733,11 @@ function installTrojanWeb(){
         green "    开始安装 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
         green " =================================================="
 
+
         mkdir -p ${configTrojanWebPath}
         wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
         chmod +x ${configTrojanWebPath}/trojan-web
+
 
         # 增加启动脚本
         cat > ${osSystemMdPath}trojan-web.service <<-EOF
@@ -3766,8 +3759,8 @@ WantedBy=multi-user.target
 EOF
 
         ${sudoCmd} systemctl daemon-reload
-        ${sudoCmd} systemctl restart trojan-web.service
         ${sudoCmd} systemctl enable trojan-web.service
+        ${sudoCmd} systemctl start trojan-web.service
 
         green " =================================================="
         green " Trojan-web 可视化管理面板: ${versionTrojanWeb} 安装成功!"
