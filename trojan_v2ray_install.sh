@@ -2079,28 +2079,52 @@ function installV2ray(){
 
     fi
 
-
-    read -p "是否要避免弹出 Google reCAPTCHA 人机验证, 默认不避免弹出, 避免弹出请输入y, 需要配合Wireguard )? 请输入[y/N]:" isV2rayUnlockGoogleInput
-    isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-n}
+    echo
+    green " =================================================="
+    echo
+    yellow " 是否使用 IPv6 解锁流媒体和避免弹出 Google reCAPTCHA 人机验证, 请选择:"
+    red " 解锁需要先安装好 Wireguard 与 Cloudflare Warp, 可用本脚本第一项安装"
+    echo
+    green " 1. 不解锁"
+    green " 2. 避免弹出 Google reCAPTCHA 人机验证"
+    green " 3. 解锁 Netflex 限制"
+    green " 4. 解锁 Youtube 和 Youtube Premium"
+    green " 5. 解锁 全部流媒体 包括 Netflex, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico 等"
+    green " 11. 同时解锁 2 和 3 项,  即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflex 限制"
+    green " 12. 同时解锁 2 和 3 和 4 项, 即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflex 和 Youtube 限制"
+    green " 13. 同时解锁 全部流媒体 和 避免弹出 Google reCAPTCHA 人机验证"
+    echo
+    read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
+    isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
 
     V2rayUnlockText=""
 
-    if [[ $isV2rayUnlockGoogleInput == [Yy] ]]; then
+    if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
         V2rayUnlockText="\"geosite:google\""
-    fi
 
-    read -p "是否使用IPV6 解锁Netflix 默认不解锁, 解锁需要配合Wireguard )? 请输入[y/N]:" isV2rayUnlockNetflixInput
-    isV2rayUnlockNetflixInput=${isV2rayUnlockNetflixInput:-n}
-    
-    if [[ $isV2rayUnlockNetflixInput == [Yy] ]]; then
+    elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
         V2rayUnlockText="\"geosite:netflix\""
+        
+    elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
+        V2rayUnlockText="\"geosite:youtube\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "5" ]]; then
+        V2rayUnlockText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "11" ]]; then
+        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "12" ]]; then
+        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\", \"geosite:youtube\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "13" ]]; then
+        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+    else
+        V2rayUnlockText=""
     fi
 
-    if [[ $isV2rayUnlockGoogleInput == [Yy] && $isV2rayUnlockNetflixInput == [Yy] ]]; then
-        V2rayUnlockText="\"geosite:netflix\", \"geosite:google\""
-    fi
 
-
+					
 
     read -p "是否自定义${promptInfoXrayName}的密码? 直接回车默认创建随机密码, 请输入自定义UUID密码:" isV2rayUserPassordInput
     isV2rayUserPassordInput=${isV2rayUserPassordInput:-''}
@@ -2133,6 +2157,8 @@ function installV2ray(){
         configV2rayPort=${isV2rayUserPortInput}   
         configV2rayPortShowInfo=${isV2rayUserPortInput}   
 
+
+
         configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 
         read -p "是否自定义${promptInfoXrayName}的WS的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
@@ -2145,6 +2171,7 @@ function installV2ray(){
         fi
 
 
+        
         
         inputV2rayServerPort "textAdditionalPort"
 
@@ -2173,7 +2200,6 @@ function installV2ray(){
 EOM
 
         fi
-
 
     fi
 
@@ -2754,7 +2780,24 @@ EOM
 EOM
 
 
-    if [[ $isV2rayUnlockGoogleInput == [Yy] || $isV2rayUnlockNetflixInput == [Yy] ]]; then
+    if [[ $isV2rayUnlockGoogleInput == "1" ]]; then
+
+        read -r -d '' v2rayConfigOutboundInput << EOM
+    "outbounds": [
+        {
+            "tag": "direct",
+            "protocol": "freedom",
+            "settings": {}
+        },
+        {
+            "tag": "blocked",
+            "protocol": "blackhole",
+            "settings": {}
+        }
+    ]
+EOM
+
+    else
 
         read -r -d '' v2rayConfigOutboundInput << EOM
     "outbounds": [
@@ -2785,22 +2828,6 @@ EOM
             }
         ]
     }
-EOM
-
-    else
-        read -r -d '' v2rayConfigOutboundInput << EOM
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom",
-            "settings": {}
-        },
-        {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
-        }
-    ]
 EOM
         
     fi

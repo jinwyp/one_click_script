@@ -22,7 +22,7 @@
 6. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
 7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
 8. trojan 和 v2ray 可视化管理面板安装. 
-9. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix 限制问题, 同时v2ray支持相应的配置
+9. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix Youtube 等流媒体网站限制问题, 同时v2ray支持相应的配置
 10. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
 12. 本脚本没有偷跑服务器流量的网页或其他屏蔽bt流量的等限制. 默认网页仅为bootstarp最简单的模板
 13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 而其他脚本写死固定端口容易被检测
