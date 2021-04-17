@@ -3785,6 +3785,7 @@ EOF
     fi
 }
 
+
 function removeTrojanWeb(){
     # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh --remove
 
@@ -3795,17 +3796,23 @@ function removeTrojanWeb(){
     ${sudoCmd} systemctl stop trojan.service
     ${sudoCmd} systemctl stop trojan-web.service
     ${sudoCmd} systemctl disable trojan-web.service
-
-    # 移除trojan web 管理程序  和数据库 leveldb文件
-    # rm -f /usr/local/bin/trojan
-    rm -rf ${configTrojanWebPath}
-    rm -f ${osSystemMdPath}trojan-web.service
-    rm -rf /var/lib/trojan-manager
+    
 
     # 移除trojan
     rm -rf /usr/bin/trojan
     rm -rf /usr/local/etc/trojan
     rm -f ${osSystemMdPath}trojan.service
+    rm -f /etc/systemd/system/trojan.service
+  
+   
+    # 移除trojan web 管理程序 
+    # rm -f /usr/local/bin/trojan
+    rm -rf ${configTrojanWebPath}
+    rm -f ${osSystemMdPath}trojan-web.service
+    rm -rf /var/lib/trojan-manager
+
+    ${sudoCmd} systemctl daemon-reload
+
 
     # 移除trojan的专用数据库
     docker rm -f trojan-mysql
@@ -3816,6 +3823,7 @@ function removeTrojanWeb(){
 
     # 移除环境变量
     sed -i '/trojan/d' ${HOME}/.${osSystemShell}rc
+    source ${HOME}/.${osSystemShell}rc
 
     crontab -r
 
