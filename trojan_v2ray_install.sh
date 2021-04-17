@@ -3824,7 +3824,7 @@ function removeTrojanWeb(){
 
     # 移除环境变量
     sed -i '/trojan/d' ${HOME}/.${osSystemShell}rc
-    source ${HOME}/.${osSystemShell}rc
+    # source ${HOME}/.${osSystemShell}rc
 
     crontab -r
 
