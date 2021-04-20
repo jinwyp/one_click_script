@@ -1830,7 +1830,40 @@ EOF
         yellow "Websocket 双重TLS为: true 开启"
     fi
 
-	blue  "----------------------------------------"
+    echo
+    green "======================================================================"
+    yellow " Trojan${promptInfoTrojanName} 小火箭 Shadowrocket 链接地址"
+
+    if [ "$isTrojanGo" = "yes" ] ; then
+        if [[ ${isTrojanGoSupportWebsocket} == "true" ]]; then
+            green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}&plugin=obfs-local;obfs=websocket;obfs-host=${configSSLDomain};obfs-uri=/${configTrojanGoWebSocketPath}#${configSSLDomain}_trojan_go_ws"
+            echo
+            yellow " 二维码 Trojan${promptInfoTrojanName} "
+		    green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fallowInsecure%3d0%26peer%3d${configSSLDomain}%26plugin%3dobfs-local%3bobfs%3dwebsocket%3bobfs-host%3d${configSSLDomain}%3bobfs-uri%3d/${configTrojanGoWebSocketPath}%23${configSSLDomain}_trojan_go_ws"
+
+            echo
+            yellow " Trojan${promptInfoTrojanName} QV2ray 链接地址"
+            green " trojan-go://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?sni=${configSSLDomain}&type=ws&host=${configSSLDomain}&path=%2F${configTrojanGoWebSocketPath}#${configSSLDomain}_trojan_go_ws"
+        
+        else
+            green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan_go"
+
+            echo
+            yellow " Trojan${promptInfoTrojanName} QV2ray 链接地址"
+            green " trojan-go://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?sni=${configSSLDomain}&type=original&host=${configSSLDomain}#${configSSLDomain}_trojan_go"
+        fi
+ 
+    else
+        green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan"
+        echo
+        yellow " 二维码 Trojan "
+		green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan"
+
+    fi
+
+
+    echo
+	echo
 	green "======================================================================"
 	green "请下载相应的trojan客户端:"
 	yellow "1 Windows 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
