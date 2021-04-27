@@ -396,7 +396,7 @@ function upgradeScript(){
     green " 本脚本升级成功! "
     chmod +x ./trojan_v2ray_install.sh
     sleep 2s
-    ./trojan_v2ray_install.sh
+    exec "./trojan_v2ray_install.sh"
 }
 
 function installSoftDownload(){
