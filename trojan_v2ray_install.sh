@@ -1242,9 +1242,31 @@ function installTrojanV2rayWithNginx(){
     green " ================================================== "
 
     read configSSLDomain
-    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
 
-        getHTTPSCertificate "standalone"
+    echo
+    echo
+
+    green "是否申请证书? 默认为自动申请证书, 如果二次安装或已有证书可以选否"
+    green "如果已经有SSL证书文件请放到下面路径"
+    red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+    red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+    echo
+    read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]:" isDomainSSLRequestInput
+    isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
+
+
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+        if [[ $isDomainSSLRequestInput == [Yy] ]]; then
+
+            getHTTPSCertificate "standalone"
+        else
+            green " =================================================="
+            green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+            green " =================================================="
+        fi
+
 
         if test -s ${configSSLCertPath}/fullchain.cer; then
             green " ================================================== "
