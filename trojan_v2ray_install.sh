@@ -2174,16 +2174,16 @@ function installV2ray(){
     if [[ ${isInstallNginx} == "true" ]]; then
         configV2rayPortShowInfo=443
         
-        if [[ $configV2rayVlessMode == "vlessxtlsonly" ]]; then
+        if [[ $configV2rayVlessMode == "vlessxtlstrojan" ]]; then
             configV2rayPort=443
         fi
     else
         configV2rayPort="$(($RANDOM + 10000))"
-        configV2rayPortShowInfo=$configV2rayPort
         
         if [[ -n "$configV2rayVlessMode" ]]; then
-            configV2rayPortShowInfo=443
+            configV2rayPort=443
         fi
+        configV2rayPortShowInfo=$configV2rayPort
 
         inputV2rayServerPort "textMainPort"
 
