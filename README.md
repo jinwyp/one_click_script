@@ -77,7 +77,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 1. 该步骤可省略. 如果是使用google cloud 谷歌云服务器，默认无法使用root账号登陆， 可以选择32 开启root用户登录. 建议使用root用户运行该脚本. 安装bbr plus 需要root权限, 默认认为使用root执行, 非root用户请手动添加sudo执行 ```sudo ./tcp.sh ```和 ```sudo ./trojan_v2ray_install.sh ``` 脚本. （注意 证书申请也需要用root用户而不建议用sudo  [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo)  ).
 2. 安装 BBR plus (或 BBR) 网络加速. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后 再选择31 安装原版 BBRplus 4.14,129 版内核 , 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
-3. 使用BBRplus版 网络加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择3 使用BBRplus版加速. 
+3. 使用BBRplus版 网络加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择3 使用BBRplus 加速. 
 4. 该步骤可省略. 选择31, 安装 oh-my-zsh. 这样以后登录有命令提示, 方便新手操作. 安装完成后请退出VPS, 命令为```exit```.  重新登录VPS后继续下面操作. 
 5. 安装 trojan 或 v2ray. 根据提示 重新运行脚本 ```./trojan_v2ray_install.sh ```  选2 安装trojan, 或选5 安装trojan-go, 或选11 安装v2ray, 或选21 同时安装trojan和v2ray， 或选24 同时安装trojan-go和v2ray.  强烈建议：如果VPS线路速度可以保证，不需要CDN，强烈建议选12 只安装xray 或只安装5 trojan-go (trojan-go速度已经很快了). 需要CDN可以选11只安装V2ray.  协议安装的越多安全性越低,而且也不会提高速度,适合自己的软件装一种最好. 完全没有必要使用多合一的脚本同时安装多个协议
 
@@ -102,6 +102,13 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 5. 选择30后 再选择15-24 安装V2ray或Xray,都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便不支持443端口的中转机中转给目标主机.
 6. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
 
+
+### Netflix Unlock 解锁Netflix 区域限制 和 避免弹出Google人机验证
+
+1. 运行脚本后选择1 进入linux 内核安装菜单, 根据提示安装 linux 内核 5.10或5.11 都可以.
+2. 更换内核重启后, 选择1 进入linux 内核安装菜单, 选择2 使用BBR加速
+3. 重启后, 选择1, 再选择6 安装 Wireguard 和 cloudflare Warp. 
+4. 确认Wireguard启动成功后, 运行脚本后选择11或12 或其他选项 安装v2ray或xray, 安装过程中根据提示 选择netflix 和 google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
 
 ## 注意事项与常见问题 FAQ 
 
