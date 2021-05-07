@@ -2371,7 +2371,7 @@ function start_menu(){
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
-    if [ -z ${osKernelBBRStatus} ]; then
+    if [[ -z ${osKernelBBRStatus} ]]; then
         echo -e " 当前系统内核: ${osKernelVersionBackup} (${virtual})   ${Red_font_prefix}未安装 BBR 或 BBR Plus ${Font_color_suffix} 加速内核, 请先安装4.9以上内核 "
     else
         if [ ${systemBBRRunningStatus} = "no" ]; then
