@@ -927,13 +927,15 @@ function getHTTPSCertificate(){
 
 	if [[ $1 == "standalone" ]] ; then
 	    green "  开始申请证书 acme.sh standalone mode !"
-	    ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --standalone
         echo
 
-        ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
-        --key-file   ${configSSLCertPath}/private.key \
+	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  
+        echo
+
+        ${configSSLAcmeScriptPath}/acme.sh --installcert  -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/private.key \
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
-        --reloadcmd  "systemctl restart nginx.service"
+        --reloadcmd "systemctl restart nginx.service"
 
 	else
         # https://github.com/m3ng9i/ran/issues/10
@@ -941,25 +943,27 @@ function getHTTPSCertificate(){
         mkdir -p ${configRanPath}
         
         if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
-            ${configRanPath}/ran_linux_amd64 -l=false -g=false -p=80 -r=${configWebsitePath} &
+            nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
         else
 
             downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
             chmod +x ${configRanPath}/ran_linux_amd64
-            ${configRanPath}/ran_linux_amd64 -l=false -g=false -p=80 -r=${configWebsitePath} &
+            nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
         fi    
 
 
 	    green "  开始申请证书 acme.sh webroot mode !"
-        ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
+        echo
+        
+        ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath}
         echo
 
-        ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
-        --key-file   ${configSSLCertPath}/private.key \
+        ${configSSLAcmeScriptPath}/acme.sh --installcert -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/private.key \
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
-        --reloadcmd  "systemctl restart nginx.service"
+        --reloadcmd "systemctl restart nginx.service"
 
-        sleep 5
+        sleep 4
         ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
 
@@ -1286,7 +1290,7 @@ function installTrojanV2rayWithNginx(){
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
 
-            getHTTPSCertificate "standalone"
+            getHTTPSCertificate 
         else
             green " =================================================="
             green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
