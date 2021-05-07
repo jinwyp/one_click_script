@@ -689,12 +689,15 @@ configNetworkLocalIp=""
 configSSLDomain=""
 
 configSSLAcmeScriptPath="${HOME}/.acme.sh"
+configWebsiteFatherPath="${HOME}/website"
+configSSLCertBakPath="${HOME}/sslbackup"
 configSSLCertPath="${HOME}/website/cert"
 configWebsitePath="${HOME}/website/html"
 configTrojanWindowsCliPrefixPath=$(cat /dev/urandom | head -1 | md5sum | head -c 20)
 configWebsiteDownloadPath="${configWebsitePath}/download/${configTrojanWindowsCliPrefixPath}"
 configDownloadTempPath="${HOME}/temp"
 
+configRanPath="${HOME}/ran"
 
 
 versionTrojan="1.16.0"
@@ -870,8 +873,9 @@ function isTrojanGoInstall(){
 
 
 function compareRealIpWithLocalIp(){
-
-    yellow " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
+    echo
+    echo
+    green " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
     read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
     isDomainValidInput=${isDomainValidInput:-Y}
 
@@ -924,19 +928,39 @@ function getHTTPSCertificate(){
 	if [[ $1 == "standalone" ]] ; then
 	    green "  开始申请证书 acme.sh standalone mode !"
 	    ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --standalone
-
-        ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
-        --key-file   ${configSSLCertPath}/private.key \
-        --fullchain-file ${configSSLCertPath}/fullchain.cer
-
-	else
-	    green "  开始申请证书 acme.sh nginx mode !"
-        ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
+        echo
 
         ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
         --key-file   ${configSSLCertPath}/private.key \
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
-        --reloadcmd  "systemctl force-reload  nginx.service"
+        --reloadcmd  "systemctl restart nginx.service"
+
+	else
+        # https://github.com/m3ng9i/ran/issues/10
+
+        mkdir -p ${configRanPath}
+        
+        if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
+            ${configRanPath}/ran_linux_amd64 -l=false -g=false -p=80 -r=${configWebsitePath} &
+        else
+
+            downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
+            chmod +x ${configRanPath}/ran_linux_amd64
+            ${configRanPath}/ran_linux_amd64 -l=false -g=false -p=80 -r=${configWebsitePath} &
+        fi    
+
+
+	    green "  开始申请证书 acme.sh webroot mode !"
+        ${configSSLAcmeScriptPath}/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
+        echo
+
+        ${configSSLAcmeScriptPath}/acme.sh  --installcert  -d ${configSSLDomain}   \
+        --key-file   ${configSSLCertPath}/private.key \
+        --fullchain-file ${configSSLCertPath}/fullchain.cer \
+        --reloadcmd  "systemctl restart nginx.service"
+
+        sleep 5
+        ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
 
     green "=========================================="
@@ -1210,8 +1234,12 @@ function removeNginx(){
         apt-get remove --purge nginx nginx-full nginx-common nginx-core
     fi
 
-    rm -rf ${configSSLCertPath}
-    rm -rf ${configWebsitePath}
+
+
+    mkdir -p ${configSSLCertBakPath}
+    cp -f ${configSSLCertPath}/* ${configSSLCertBakPath}
+
+    rm -rf ${configWebsiteFatherPath}
     rm -f ${nginxAccessLogFilePath}
     rm -f ${nginxErrorLogFilePath}
 
@@ -1246,7 +1274,7 @@ function installTrojanV2rayWithNginx(){
     echo
     echo
 
-    green "是否申请证书? 默认为自动申请证书, 如果二次安装或已有证书可以选否"
+    green "是否申请证书? 默认为自动申请证书, 如果二次安装或已有证书 可以选否"
     green "如果已经有SSL证书文件请放到下面路径"
     red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
     red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
