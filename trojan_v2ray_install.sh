@@ -923,10 +923,10 @@ function getHTTPSCertificate(){
 	mkdir -p ${configWebsitePath}
 	curl https://get.acme.sh | sh
 
-    green "=========================================="
+    green " ================================================== "
 
 	if [[ $1 == "standalone" ]] ; then
-	    green "  开始申请证书 acme.sh standalone mode !"
+	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
         echo
 
 	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  
@@ -943,16 +943,19 @@ function getHTTPSCertificate(){
         mkdir -p ${configRanPath}
         
         if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
-            nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
+            echo
         else
 
             downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
             chmod +x ${configRanPath}/ran_linux_amd64
-            nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
+            
         fi    
 
-
-	    green "  开始申请证书 acme.sh webroot mode !"
+        echo
+        echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
+        nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
+        echo
+	    green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
         echo
         
         ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath}
@@ -963,11 +966,11 @@ function getHTTPSCertificate(){
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
         --reloadcmd "systemctl restart nginx.service"
 
-        sleep 4
+        sleep 8
         ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
 
-    green "=========================================="
+    green " ================================================== "
 }
 
 
@@ -1260,6 +1263,7 @@ function removeNginx(){
 }
 
 
+
 function installTrojanV2rayWithNginx(){
 
     stopServiceNginx
@@ -1286,54 +1290,50 @@ function installTrojanV2rayWithNginx(){
     read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]:" isDomainSSLRequestInput
     isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
-
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-
             getHTTPSCertificate 
         else
             green " =================================================="
-            green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
+            green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
             green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
             green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
             green " =================================================="
         fi
-
-
-        if test -s ${configSSLCertPath}/fullchain.cer; then
-            green " ================================================== "
-            green "     SSL证书已检测到获取成功!"
-            green " ================================================== "
-
-            if [ "$isNginxWithSSL" = "no" ] ; then
-                installWebServerNginx
-            else
-                installWebServerNginx "v2ray"
-            fi
-
-            if [ -z $1 ]; then
-                installTrojanServer
-            elif [ $1 = "both" ]; then
-                installTrojanServer
-                installV2ray
-            else
-                installV2ray
-            fi
-        else
-            red "==================================="
-            red " https证书没有申请成功，安装失败!"
-            red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
-            red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
-            red " 重启VPS, 重新执行脚本, 可重新选择该项再次申请证书 ! "
-            red " 可参考 https://www.v2rayssr.com/trojan-2.html "
-            red "==================================="
-            exit
-        fi
     else
         exit
     fi
-}
 
+
+    if test -s ${configSSLCertPath}/fullchain.cer; then
+        green " ================================================== "
+        green "     SSL证书 已检测到获取成功!"
+        green " ================================================== "
+
+        if [ "$isNginxWithSSL" = "no" ] ; then
+            installWebServerNginx
+        else
+            installWebServerNginx "v2ray"
+        fi
+
+        if [ -z $1 ]; then
+            installTrojanServer
+        elif [ $1 = "both" ]; then
+            installTrojanServer
+            installV2ray
+        else
+            installV2ray
+        fi
+    else
+        red " ================================================== "
+        red " https证书没有申请成功，安装失败!"
+        red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
+        red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
+        red " 重启VPS, 重新执行脚本, 可重新选择该项再次申请证书 ! "
+        red " ================================================== "
+        exit
+    fi    
+}
 
 
 
@@ -1988,6 +1988,12 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 例如: 密码:${configTrojanPasswordPrefixInput}202011 或 密码:${configTrojanPasswordPrefixInput}202088 都可以使用
 
 如果是trojan-go开启了Websocket，那么Websocket path 路径为: /${configTrojanGoWebSocketPath}
+
+小火箭链接:
+trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan"
+
+二维码 Trojan${promptInfoTrojanName}
+https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan
 
 EOF
 }
@@ -3427,8 +3433,31 @@ EOF
     fi
 
 
+    # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
 
+    rawurlencode() {
+        local string="${1}"
+        local strlen=${#string}
+        local encoded=""
+        local pos c o
 
+        for (( pos=0 ; pos<strlen ; pos++ )); do
+            c=${string:$pos:1}
+            case "$c" in
+                [-_.~a-zA-Z0-9] ) o="${c}" ;;
+                * )               printf -v o '%%%02x' "'$c"
+            esac
+            encoded+="${o}"
+        done
+        echo
+        green "URL Encoded: ${encoded}"    # You can either set a return variable (FASTER) 
+        v2rayPassUrl="${encoded}"   #+or echo the result (EASIER)... or both... :p
+    }
+
+    rawurlencode "${v2rayPassword1}"
+
+    base64VmessLink=$(echo -n '{"port":"'${configV2rayPortShowInfo}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/'${configV2rayWebSocketPath}'","net":"ws","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
+    base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
 
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
@@ -3445,11 +3474,26 @@ EOF
     底层传输协议:${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
+
+导入链接 Vless:
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=ws&host=${configSSLDomain}&headerType=none#${configSSLDomain}
+
+导入链接 Vmess:
+vmess://${base64VmessLink2}
+
+
 EOF
 
 
 
     if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
+
+    base64VmessLink=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/'${configV2rayWebSocketPath}'","net":"ws","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
+    base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
+
+    base64VmessLinkTCP=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/tcp'${configV2rayWebSocketPath}'","net":"tcp","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
+    base64VmessLinkTCP2=$(echo ${base64VmessLinkTCP} | sed 's/ //g')
+
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 当选择了17. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx
@@ -3467,6 +3511,10 @@ EOF
     别名:自己起个任意名称
 }
 
+导入链接:
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=tcp&host=${configSSLDomain}&headerType=none#${configSSLDomain}
+
+
 =========== ${promptInfoXrayInstall}客户端 VMess-WS-TLS 配置参数 支持CDN =============
 {
     协议: VMess,
@@ -3474,12 +3522,20 @@ EOF
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    加密方式: none,  // 如果是Vless协议则为none
+    加密方式: auto,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,
     别名:自己起个任意名称
 }
+
+导入链接 Vmess:
+vmess://${base64VmessLink2}
+
+导入链接新版:
+vmess://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+
+
 
 =========== ${promptInfoXrayInstall}客户端 VMess-TCP-TLS 配置参数 支持CDN =============
 {
@@ -3488,12 +3544,20 @@ EOF
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    加密方式: none,  // 如果是Vless协议则为none
+    加密方式: auto,  // 如果是Vless协议则为none
     传输协议: tcp,
     路径:/tcp${configV2rayWebSocketPath},
     底层传输:tls,
     别名:自己起个任意名称
 }
+
+导入链接 Vmess:
+vmess://${base64VmessLinkTCP2}
+
+导入链接新版:
+vmess://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=tcp&host=${configSSLDomain}&path=%2ftcp${configV2rayWebSocketPath}#${configSSLDomain}
+
+
 EOF
     fi
 
@@ -3517,6 +3581,10 @@ EOF
     别名:自己起个任意名称
 }
 
+导入链接:
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=tcp&host=${configSSLDomain}&headerType=none#${configSSLDomain}
+
+
 =========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
     协议: VLess,
@@ -3524,13 +3592,17 @@ EOF
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  // 选择了16 为空
+    流控flow:  空
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
     别名:自己起个任意名称
 }
+
+导入链接:
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+
 EOF
     fi
 
@@ -3552,6 +3624,10 @@ EOF
     别名:自己起个任意名称
 }
 
+导入链接:
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=xtls&type=tcp&host=${configSSLDomain}&headerType=none&flow=xtls-rprx-direct#${configSSLDomain}
+
+
 =========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
     协议: VLess,
@@ -3559,13 +3635,17 @@ EOF
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
+    流控flow: 空
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
     别名:自己起个任意名称
 }
+
+导入链接:
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+
 EOF
     fi
 
@@ -3586,6 +3666,10 @@ EOF
     别名:自己起个任意名称
 }
 
+导入链接:
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=xtls&type=tcp&host=${configSSLDomain}&headerType=none&flow=xtls-rprx-direct#${configSSLDomain}
+
+
 =========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
     协议: VLess,
@@ -3593,13 +3677,17 @@ EOF
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow: xtls-rprx-direct // 选择了16 为空, 选择了20-23 为 xtls-rprx-direct
+    流控flow: 空, 
     加密方式: none,  
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
     别名:自己起个任意名称
 }
+
+导入链接:
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+
 
 
 Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
@@ -3615,6 +3703,14 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
 您指定前缀的密码若干: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202070 都可以使用
+
+
+小火箭链接:
+trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan
+
+二维码 Trojan${promptInfoTrojanName}
+https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan
+
 
 EOF
     fi
@@ -4054,25 +4150,7 @@ function getHTTPSNoNgix(){
 
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-
             getHTTPSCertificate "standalone"
-
-            if test -s ${configSSLCertPath}/fullchain.cer; then
-                green " =================================================="
-                green "   域名SSL证书申请成功 !"
-                green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-                green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
-                green " =================================================="
-
-            else
-                red "==================================="
-                red " https证书没有申请成功，安装失败!"
-                red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
-                red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
-                red " 重启VPS, 重新执行脚本, 可重新选择该项再次申请证书 ! "
-                red "==================================="
-                exit
-            fi
 
         else
             green " =================================================="
@@ -4086,15 +4164,34 @@ function getHTTPSNoNgix(){
     fi
 
 
-    if [[ $1 == "trojan" ]] ; then
-        installTrojanServer
+    if test -s ${configSSLCertPath}/fullchain.cer; then
+        green " =================================================="
+        green "   域名SSL证书申请成功 !"
+        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
+        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+        green " =================================================="
 
-    elif [[ $1 == "both" ]] ; then
-        installV2ray
-        installTrojanServer
+        if [[ $1 == "trojan" ]] ; then
+            installTrojanServer
+
+        elif [[ $1 == "both" ]] ; then
+            installV2ray
+            installTrojanServer
+        else
+            installV2ray
+        fi        
+
     else
-        installV2ray
+        red " ================================================== "
+        red " https证书没有申请成功，安装失败!"
+        red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
+        red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
+        red " 重启VPS, 重新执行脚本, 可重新选择该项再次申请证书 ! "
+        red " ================================================== "
+        exit
     fi
+
+
 
 }
 
