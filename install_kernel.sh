@@ -2398,14 +2398,14 @@ function start_menu(){
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
-    green " 11. 安装 最新版本内核 5.11, 通过elrepo源安装"
+    green " 11. 安装 最新版本内核 5.12, 通过elrepo源安装"
     green " 12. 安装 最新版本LTS内核 5.4 LTS, 通过elrepo源安装"
     echo
     green " 13. 安装 内核 4.14 LTS, 下载安装"
     green " 14. 安装 内核 4.19 LTS, 下载安装"
     green " 15. 安装 内核 5.4 LTS, 下载安装"
     green " 16. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
-    green " 17. 安装 内核 5.11, 下载安装"
+    green " 17. 安装 内核 5.12, 下载安装"
 
     elif [[ "${osRelease}" == "debian" ]]; then
     # echo
