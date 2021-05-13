@@ -662,8 +662,32 @@ function installWireguard(){
 }
 
 
+function installBTPanel(){
+    if [ "$osRelease" == "centos" ]; then
+        yum install -y wget && wget -O install.sh http://download.bt.cn/install/install_6.0.sh && sh install.sh
+    else
+        curl -sSO http://download.bt.cn/install/install_panel.sh && bash install_panel.sh
 
+    fi
+}
 
+function installBTPanelCrack(){
+    if [ "$osRelease" == "centos" ]; then
+        yum install -y wget && wget -O install.sh https://download.fenhao.me/install/install_6.0.sh && sh install.sh
+    else
+        curl -sSO https://download.fenhao.me/install/install_panel.sh && bash install_panel.sh
+
+    fi
+}
+
+function installBTPanelCrack2(){
+    if [ "$osRelease" == "centos" ]; then
+        yum install -y wget && wget -O install.sh http://download.hostcli.com/install/install_6.0.sh && sh install.sh
+    else
+        exit
+
+    fi
+}
 
 
 
@@ -966,7 +990,7 @@ function getHTTPSCertificate(){
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
         --reloadcmd "systemctl restart nginx.service"
 
-        sleep 8
+        sleep 4
         ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
 
@@ -4270,14 +4294,18 @@ function startMenuOther(){
     green " =================================================="
 
     echo
-    red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
     green " 31. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
     echo
+    red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
     green " 32. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
     green " 33. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
 	green " 34. testrace 回程路由测试 （四网路由测试）"
 	green " 35. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     green " 36. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+    echo
+    green " 51. 安装 官方宝塔面板"
+    green " 52. 安装 宝塔面板破解版 by fenhao.me"
+    green " 53. 安装 宝塔面板 7.4.5 纯净版 by hostcli.com"
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -4390,10 +4418,19 @@ function startMenuOther(){
         36 )
             vps_zbench
         ;;        
-        41 )
+        51 )
+            installBTPanel
+        ;;
+        52 )
+            installBTPanelCrack
+        ;;                              
+        52 )
+            installBTPanelCrack2
+        ;;                              
+        81 )
             installBBR
         ;;
-        42 )
+        82 )
             installBBR2
         ;;                              
         9)

@@ -724,8 +724,8 @@ function start_menu(){
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
-    green " 1. 安装 老版本 BBR-PLUS 加速4合一脚本"
-    green " 2. 安装 新版本 BBR-PLUS 加速6合一脚本"
+    green " 1. 安装 老版本 BBR-PLUS 加速4合一脚本 by chiakge"
+    green " 2. 安装 新版本 BBR-PLUS 加速6合一脚本 by ylx2016"
     echo
     green " 3. 编辑 SSH 登录的用户公钥 用于SSH密码登录免登录"
     green " 4. 修改 SSH 登陆端口号"
