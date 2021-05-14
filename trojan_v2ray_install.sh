@@ -676,7 +676,6 @@ function installBTPanelCrack(){
         yum install -y wget && wget -O install.sh https://download.fenhao.me/install/install_6.0.sh && sh install.sh
     else
         curl -sSO https://download.fenhao.me/install/install_panel.sh && bash install_panel.sh
-
     fi
 }
 
@@ -685,9 +684,29 @@ function installBTPanelCrack2(){
         yum install -y wget && wget -O install.sh http://download.hostcli.com/install/install_6.0.sh && sh install.sh
     else
         exit
-
     fi
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -981,10 +1000,28 @@ function getHTTPSCertificate(){
         echo
 	    green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
         echo
-        
-        ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath}
         echo
+        green "默认通过Letsencrypt.org来申请证书, 如果证书申请失败, 例如一天内通过Letsencrypt.org申请次数过多, 可以选否通过BuyPass.com来申请."
+        read -p "是否通过Letsencrypt.org来申请证书? 默认直接回车为是, 选否则通过BuyPass.com来申请, 请输入[Y/n]:" isDomainSSLFromLetInput
+        isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-Y}
 
+        echo
+        if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath}
+            
+        else
+            read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
+            isDomainSSLFromBuyPassEmailInput=${isDomainSSLFromBuyPassEmailInput:-test@gmail.com}
+
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}
+         
+        fi
+        
+        echo
         ${configSSLAcmeScriptPath}/acme.sh --installcert -d ${configSSLDomain} \
         --key-file ${configSSLCertPath}/private.key \
         --fullchain-file ${configSSLCertPath}/fullchain.cer \
@@ -1285,6 +1322,16 @@ function removeNginx(){
     green "  Nginx 卸载完毕 !"
     green " ================================================== "
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2079,6 +2126,13 @@ function upgradeTrojan(){
     green " ================================================== "
 
 }
+
+
+
+
+
+
+
 
 
 
@@ -3942,6 +3996,16 @@ function upgradeV2ray(){
 
 
 
+
+
+
+
+
+
+
+
+
+
 function installTrojanWeb(){
     # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh
 
@@ -4102,6 +4166,12 @@ function runTrojanWebSSL(){
 function runTrojanWebLog(){
     ${configTrojanWebPath}/trojan-web
 }
+
+
+
+
+
+
 
 
 function installV2rayUI(){

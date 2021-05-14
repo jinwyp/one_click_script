@@ -110,6 +110,8 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 3. 重启后, 选择1, 再选择6 安装 Wireguard 和 cloudflare Warp. 
 4. 确认Wireguard启动成功后, 运行脚本后选择11或12 或其他选项 安装v2ray或xray, 安装过程中根据提示 选择netflix 和 google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
 
+
+
 ## 注意事项与常见问题 FAQ 
 
 1. 免费域名可以使用 [freenom](https://www.freenom.com/zh/index.html?lang=zh). 注册freenom时需要使用美国IP,否则无法通过注册邮件验证. 请自行搜索教程.
