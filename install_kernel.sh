@@ -939,10 +939,15 @@ function getLatestCentosKernelVersion(){
                     # echo "符合所选版本的Linux 内核版本: ${ver}"
                     elrepo_kernel_version_ml_Teddysun510=${ver}
                 fi
+
+                if [[ ${ver} == *"5.11"* ]]; then
+                    # echo "符合所选版本的Linux 内核版本: ${ver}"
+                    elrepo_kernel_version_ml_Teddysun511=${ver}
+                fi
             done
 
-            elrepo_kernel_version_ml_Teddysun511=${elrepo_kernel_version_ml2_array[-1]}
-            green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun511}" 
+            elrepo_kernel_version_ml_TeddysunLatest=${elrepo_kernel_version_ml2_array[-1]}
+            green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_TeddysunLatest}" 
             green "由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun510}" 
             
         fi
@@ -1069,11 +1074,12 @@ function installCentosKernelManual(){
 
         elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
             elrepo_kernel_name="kernel-ml"
-            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun}
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun510}
             elrepo_kernel_filename=""
             ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNo}"
 
             # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.23-1.el7.x86_64.rpm
+            # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.37-1.el7.x86_64.rpm
             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
 
@@ -1084,6 +1090,14 @@ function installCentosKernelManual(){
             ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
 
             # https://fr1.teddyvps.com/kernel/el8/kernel-ml-devel-5.11.13-1.el8.elrepo.x86_64.rpm 
+
+        elif [ "${linuxKernelToInstallVersion}" = "5.12" ]; then 
+            elrepo_kernel_name="kernel-ml"
+            elrepo_kernel_version=${elrepo_kernel_version_ml_TeddysunLatest}
+            elrepo_kernel_filename="elrepo."
+            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
+
+            # https://fr1.teddyvps.com/kernel/el7/kernel-ml-5.12.4-1.el7.elrepo.x86_64.rpm
         fi
 
         linuxKernelToInstallVersionFull=${elrepo_kernel_version}
@@ -2405,7 +2419,8 @@ function start_menu(){
     green " 14. 安装 内核 4.19 LTS, 下载安装"
     green " 15. 安装 内核 5.4 LTS, 下载安装"
     green " 16. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
-    green " 17. 安装 内核 5.12, 下载安装"
+    green " 17. 安装 内核 5.11, Teddysun 编译"
+    green " 18. 安装 内核 5.12, 下载安装"
 
     elif [[ "${osRelease}" == "debian" ]]; then
     # echo
@@ -2502,6 +2517,10 @@ function start_menu(){
             linuxKernelToInstallVersion="5.11"
             installKernel
         ;;
+        18 )
+            linuxKernelToInstallVersion="5.12"
+            installKernel
+        ;;        
         21 )
             linuxKernelToInstallVersion="5.10"
             isInstallFromRepo="yes"

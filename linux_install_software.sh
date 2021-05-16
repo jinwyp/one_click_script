@@ -32,59 +32,124 @@ if [[ $(/usr/bin/id -u) -ne 0 ]]; then
 fi
 
 
-osReleaseVersion=""
+
+osCPU="intel"
+osArchitecture="arm"
+osInfo=""
 osRelease=""
+osReleaseVersion=""
+osReleaseVersionNo=""
+osReleaseVersionCodeName="CodeName"
 osSystemPackage=""
 osSystemMdPath=""
 osSystemShell="bash"
 
-# 系统检测版本
-function getLinuxOSVersion(){
-    # copy from 秋水逸冰 ss scripts
+
+function checkCPU(){
+	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
+	if [[ $osCPUText =~ "GenuineIntel" ]]; then
+		osCPU="intel"
+    else
+        osCPU="amd"
+    fi
+
+	# green " Status 状态显示--当前CPU是: $osCPU"
+}
+
+
+
+# 检测系统发行版代号
+function getLinuxOSRelease(){
     if [[ -f /etc/redhat-release ]]; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-    elif cat /etc/issue | grep -Eqi "debian"; then
+        osReleaseVersionCodeName=""
+    elif cat /etc/issue | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
     elif cat /etc/issue | grep -Eqi "ubuntu"; then
         osRelease="ubuntu"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
     elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
-    elif cat /proc/version | grep -Eqi "debian"; then
+        osReleaseVersionCodeName=""
+    elif cat /proc/version | grep -Eqi "debian|raspbian"; then
         osRelease="debian"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
     elif cat /proc/version | grep -Eqi "ubuntu"; then
         osRelease="ubuntu"
         osSystemPackage="apt-get"
         osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
     elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
         osRelease="centos"
         osSystemPackage="yum"
         osSystemMdPath="/usr/lib/systemd/system/"
+        osReleaseVersionCodeName=""
     fi
 
-
-	if [[ -s /etc/redhat-release ]]; then
-		grep -oE  "[0-9.]+" /etc/redhat-release
-        osReleaseVersion=$(cat /etc/redhat-release | tr -dc '0-9.'|cut -d \. -f1)
-	else
-		grep -oE  "[0-9.]+" /etc/issue
-        osReleaseVersion=$(cat /etc/issue | tr -dc '0-9.'|cut -d \. -f1)
-	fi
-
+    getLinuxOSVersion
+	checkCPU
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
-    echo "OS info: ${osRelease}, ${osReleaseVersion}, ${osSystemPackage}, ${osSystemMdPath}， ${osSystemShell}"
+    green " 系统信息: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
+
+# 检测系统版本号
+getLinuxOSVersion(){
+    if [[ -s /etc/redhat-release ]]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/issue)
+    fi
+
+    # https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
+
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        source /etc/os-release
+        osInfo=$NAME
+        osReleaseVersionNo=$VERSION_ID
+
+        if [ -n $VERSION_CODENAME ]; then
+            osReleaseVersionCodeName=$VERSION_CODENAME
+        fi
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        osInfo=$(lsb_release -si)
+        osReleaseVersionNo=$(lsb_release -sr)
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        . /etc/lsb-release
+        osInfo=$DISTRIB_ID
+        
+        osReleaseVersionNo=$DISTRIB_RELEASE
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        osInfo=Debian
+        osReleaseVersion=$(cat /etc/debian_version)
+        osReleaseVersionNo=$(sed 's/\..*//' /etc/debian_version)
+    elif [ -f /etc/redhat-release ]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        osInfo=$(uname -s)
+        osReleaseVersionNo=$(uname -r)
+    fi
+}
+
+
+
 
 
 osPort80=""
@@ -148,53 +213,40 @@ function testLinuxPortUsage(){
     fi
 
     if [ "$osRelease" == "centos" ]; then
-        if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ; then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
+        if  [[ ${osReleaseVersionNo} == "6" || ${osReleaseVersionNo} == "5" ]]; then
+            green " =================================================="
+            red " 本脚本不支持 Centos 6 或 Centos 6 更早的版本"
+            green " =================================================="
             exit
         fi
 
-        if  [ -n "$(grep ' 5\.' /etc/redhat-release)" ] ; then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
-            exit
-        fi
-
-        ${sudoCommand} systemctl stop firewalld
-        ${sudoCommand} systemctl disable firewalld
-
-        if [ "$osReleaseVersion" == "7" ]; then
-            rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
-        fi
-        
-
+        red " 关闭防火墙 firewalld"
+        ${sudoCmd} systemctl stop firewalld
+        ${sudoCmd} systemctl disable firewalld
 
     elif [ "$osRelease" == "ubuntu" ]; then
-        if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
-            exit
-        fi
-        if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
-            red "==============="
-            red "当前系统不受支持"
-            red "==============="
+        if  [[ ${osReleaseVersionNo} == "14" || ${osReleaseVersionNo} == "12" ]]; then
+            green " =================================================="
+            red " 本脚本不支持 Ubuntu 14 或 Ubuntu 14 更早的版本"
+            green " =================================================="
             exit
         fi
 
-        ${sudoCommand} systemctl stop ufw
-        ${sudoCommand} systemctl disable ufw
-
-
+        red " 关闭防火墙 ufw"
+        ${sudoCmd} systemctl stop ufw
+        ${sudoCmd} systemctl disable ufw
+        
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
-        $osSystemPackage install curl wget git unzip zip tar -y
     fi
 
 }
+
+
+
+
+
+
 
 
 
@@ -207,9 +259,10 @@ function editLinuxLoginWithPublicKey(){
     vi ${HOME}/.ssh/authorized_keys
 }
 
+
 # 修改SSH 端口号
 function changeLinuxSSHPort(){
-    green "修改的SSH登陆的端口号, 不要使用常用的端口号. 例如 20|21|23|25|53|69|80|110|443|123!"
+    green " 修改的SSH登陆的端口号, 不要使用常用的端口号. 例如 20|21|23|25|53|69|80|110|443|123!"
     read -p "请输入要修改的端口号(必须是纯数字并且在1024~65535之间或22):" osSSHLoginPortInput
     osSSHLoginPortInput=${osSSHLoginPortInput:-0}
 
@@ -217,18 +270,28 @@ function changeLinuxSSHPort(){
         sed -i "s/#\?Port [0-9]*/Port $osSSHLoginPortInput/g" /etc/ssh/sshd_config
 
         if [ "$osRelease" == "centos" ] ; then
-            $osSystemPackage -y install policycoreutils-python
 
+            if  [[ ${osReleaseVersionNo} == "7" ]]; then
+                yum -y install policycoreutils-python
+            elif  [[ ${osReleaseVersionNo} == "8" ]]; then
+                yum -y install policycoreutils-python-utils
+            fi
+
+            # semanage port -l
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            firewall-cmd --add-port=$osSSHLoginPortInput/tcp --permanent
+            firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
             firewall-cmd --reload
-            ${sudoCommand} service sshd restart
-            ${sudoCommand} systemctl restart sshd
+    
+            ${sudoCmd} systemctl restart sshd.service
+
         fi
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
-            ${sudoCommand} service ssh restart
-            ${sudoCommand} systemctl restart ssh
+            semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
+            sudo ufw allow $osSSHLoginPortInput/tcp
+
+            ${sudoCmd} service ssh restart
+            ${sudoCmd} systemctl restart ssh
         fi
 
         green "设置成功, 请记住设置的端口号 ${osSSHLoginPortInput}!"
@@ -238,11 +301,14 @@ function changeLinuxSSHPort(){
     fi
 }
 
+
+
 # 设置北京时区
 function setLinuxDateZone(){
 
     tempCurrentDateZone=$(date +'%z')
 
+    echo
     if [[ ${tempCurrentDateZone} == "+0800" ]]; then
         yellow "当前时区已经为北京时间  $tempCurrentDateZone | $(date -R) "
     else 
@@ -266,7 +332,7 @@ function setLinuxDateZone(){
         fi
 
     fi
-
+    echo
 
     if [ "$osRelease" == "centos" ]; then   
         $osSystemPackage -y install ntpdate
@@ -280,6 +346,162 @@ function setLinuxDateZone(){
     fi
     
 }
+
+
+
+
+
+
+
+
+
+function installSoftDownload(){
+	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+		if ! dpkg -l | grep -qw wget; then
+			${osSystemPackage} -y install wget curl git
+			
+			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
+			${osSystemPackage} -y install cpu-checker
+		fi
+
+	elif [[ "${osRelease}" == "centos" ]]; then
+		if ! rpm -qa | grep -qw wget; then
+			${osSystemPackage} -y install wget curl git
+		fi
+	fi 
+}
+
+
+
+function installPackage(){
+    if [ "$osRelease" == "centos" ]; then
+       
+        # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+
+        cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
+[nginx]
+name=nginx repo
+baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/\$basearch/
+gpgcheck=0
+enabled=1
+
+EOF
+        if ! rpm -qa | grep -qw iperf3; then
+			${sudoCmd} ${osSystemPackage} install -y epel-release
+
+            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y xz jq redhat-lsb-core 
+            ${osSystemPackage} install -y iputils
+            ${osSystemPackage} install -y iperf3
+		fi
+
+        ${osSystemPackage} update -y
+
+
+        # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
+        if  [[ ${osReleaseVersionNo} == "8" ]]; then
+            ${sudoCmd} yum module -y reset nginx
+            ${sudoCmd} yum module -y enable nginx:1.18
+            ${sudoCmd} yum module list nginx
+        fi
+
+    elif [ "$osRelease" == "ubuntu" ]; then
+        
+        # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
+        # https://www.nginx.com/resources/wiki/start/topics/tutorials/install/
+        
+        $osSystemPackage install -y gnupg2
+        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+EOF
+
+        ${osSystemPackage} update -y
+
+        if ! dpkg -l | grep -qw iperf3; then
+            ${sudoCmd} ${osSystemPackage} install -y software-properties-common
+            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
+            ${osSystemPackage} install -y iputils-ping
+            ${osSystemPackage} install -y iperf3
+		fi    
+
+    elif [ "$osRelease" == "debian" ]; then
+        # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+
+        ${osSystemPackage} install -y gnupg2
+        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF 
+deb http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+EOF
+        
+        ${osSystemPackage} update -y
+
+        if ! dpkg -l | grep -qw iperf3; then
+            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
+            ${osSystemPackage} install -y iputils-ping
+            ${osSystemPackage} install -y iperf3
+        fi        
+    fi
+}
+
+
+
+
+
+function installSoftEditor(){
+    # 安装 micro 编辑器
+    if [[ ! -f "${HOME}/bin/micro" ]] ;  then
+        mkdir -p ${HOME}/bin
+        cd ${HOME}/bin
+        curl https://getmic.ro | bash
+
+        cp ${HOME}/bin/micro /usr/local/bin
+
+        green " =================================================="
+        green " micro 编辑器 安装成功!"
+        green " =================================================="
+    fi
+
+    if [ "$osRelease" == "centos" ]; then   
+        $osSystemPackage install -y xz  vim-minimal vim-enhanced vim-common
+    else
+        $osSystemPackage install -y vim-gui-common vim-runtime vim 
+    fi
+
+    # 设置vim 中文乱码
+    if [[ ! -d "${HOME}/.vimrc" ]] ;  then
+        cat > "${HOME}/.vimrc" <<-EOF
+set fileencodings=utf-8,gb2312,gb18030,gbk,ucs-bom,cp936,latin1
+set enc=utf8
+set fencs=utf8,gbk,gb2312,gb18030
+
+syntax on
+colorscheme elflord
+
+if has('mouse')
+  se mouse+=a
+  set number
+endif
+
+EOF
+    fi
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -298,60 +520,45 @@ function installBBR2(){
 }
 
 
-function installSoftEditor(){
-
-    if [ "$osRelease" == "ubuntu" ]; then
-        
-        ${sudoCmd} $osSystemPackage install software-properties-common -y
-        ${sudoCmd} add-apt-repository ppa:nginx/stable -y
-    fi
-
-    $osSystemPackage update -y
-    $osSystemPackage install -y curl wget git unzip zip tar nano
-    $osSystemPackage install -y iputils-ping 
-
-
-    if [ "$osRelease" == "centos" ]; then   
-        
-        $osSystemPackage install -y xz 
-    else
-        $osSystemPackage install -y vim-gui-common vim-runtime vim 
-        $osSystemPackage install -y xz-utils
-        
-    fi
-
-
-
-    # 安装 micro 编辑器
-    if [[ ! -f "${HOME}/bin/micro" ]] ;  then
-        mkdir -p ${HOME}/bin
-        cd ${HOME}/bin
-        curl https://getmic.ro | bash
-
-        cp ${HOME}/bin/micro /usr/local/bin
-
-        green " =================================================="
-        yellow " micro 编辑器 安装成功!"
-        green " =================================================="
-    fi
-
-
-
-    # 设置vim 中文乱码
-    if [[ ! -d "${HOME}/.vimrc" ]] ;  then
-        cat > "${HOME}/.vimrc" <<-EOF
-set fileencodings=utf-8,gb2312,gb18030,gbk,ucs-bom,cp936,latin1
-set enc=utf8
-set fencs=utf8,gbk,gb2312,gb18030
-
-syntax on
-set number
-colorscheme elflord
-se mouse+=a
-
-EOF
-    fi
+function installWireguard(){
+    bash <(wget -qO- https://github.com/jinwyp/one_click_script/raw/master/install_kernel.sh)
+    # wget -N --no-check-certificate https://github.com/jinwyp/one_click_script/raw/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function getGithubLatestReleaseVersion(){
+    # https://github.com/p4gefau1t/trojan-go/issues/63
+    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -401,23 +608,29 @@ function installNodejs(){
 
 
 
+
+
 configDockerPath="${HOME}/download"
 configV2rayPoseidonPath="${HOME}"
 
 
 function installDocker(){
 
+    echo
     green " =================================================="
     yellow " 准备安装 Docker 与 Docker Compose"
     green " =================================================="
+    echo
 
     mkdir -p ${configDockerPath}
     cd ${configDockerPath}
 
     curl -fsSL https://get.docker.com -o get-docker.sh  
     sh get-docker.sh
+    
+    versionDockerCompose=$(getGithubLatestReleaseVersion "docker/compose")
 
-    ${sudoCommand} curl -L "https://github.com/docker/compose/releases/download/1.25.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    ${sudoCommand} curl -L "https://github.com/docker/compose/releases/download/${versionDockerCompose}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     ${sudoCommand} chmod a+x /usr/local/bin/docker-compose
 
     rm -f `which dc`
@@ -427,14 +640,55 @@ function installDocker(){
     systemctl start docker
     systemctl enable docker.service
 
-
+    echo
     green " ================================================== "
     green "   Docker 与 Docker Compose 安装成功 !"
     green " ================================================== "
+    echo
     docker-compose --version
-
+    echo
     # systemctl status docker.service
 }
+
+
+function installPortainer(){
+    if [ -x "$(command -v docker)" ]; then
+        green " Docker already installed"
+
+    else
+        red " Docker not install ! "
+        exit
+    fi
+
+    echo
+    docker volume create portainer_data
+
+    echo
+    docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+
+    echo
+    green " ================================================== "
+    green "   Portainer 安装成功 !"
+    green " ================================================== "
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -570,6 +824,17 @@ function replaceSogaConfig(){
      
     fi
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 configNetworkRealIp=""
@@ -711,12 +976,38 @@ function getHTTPS(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function start_menu(){
     clear
 
     if [[ $1 == "first" ]] ; then
-        getLinuxOSVersion
-        ${osSystemPackage} -y install wget curl git 
+        getLinuxOSRelease
+        installSoftDownload
     fi
 
     green " =================================================="
@@ -724,15 +1015,19 @@ function start_menu(){
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
-    green " 1. 安装 老版本 BBR-PLUS 加速4合一脚本 by chiakge"
-    green " 2. 安装 新版本 BBR-PLUS 加速6合一脚本 by ylx2016"
+    green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
+    green " 2. 安装 老版本 BBR-PLUS 加速4合一脚本 by chiakge"
+    green " 3. 安装 新版本 BBR-PLUS 加速6合一脚本 by ylx2016"
     echo
-    green " 3. 编辑 SSH 登录的用户公钥 用于SSH密码登录免登录"
-    green " 4. 修改 SSH 登陆端口号"
-    green " 5. 设置时区为北京时间"
-    green " 6. 安装 Vim Nano Micro 编辑器"
-    green " 7. 安装 Nodejs 与 PM2"
-    green " 8. 安装 Docker 与 Docker Compose"
+    green " 5. 编辑 SSH 登录的用户公钥 用于SSH密码登录免登录"
+    green " 6. 修改 SSH 登陆端口号"
+    green " 7. 设置时区为北京时间"
+
+    echo
+    green " 11. 安装 Vim Nano Micro 编辑器"
+    green " 12. 安装 Nodejs 与 PM2"
+    green " 13. 安装 Docker 与 Docker Compose"
+    green " 14. 安装 Portainer "
     echo
     green " 21. 安装 V2Ray-Poseidon 服务器端"
     green " 22. 编辑 V2Ray-Poseidon WS-TLS 模式配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
@@ -753,36 +1048,45 @@ function start_menu(){
     read -p "请输入数字:" menuNumberInput
     case "$menuNumberInput" in
         1 )
+            installWireguard
+        ;;    
+        2 )
             installBBR
         ;;
-        2 )
+        3 )
             installBBR2
         ;;
-        3 )
+        5 )
             editLinuxLoginWithPublicKey
         ;;
-        4 )
+        6 )
             changeLinuxSSHPort
         ;;
-        5 )
+        7 )
             setLinuxDateZone
         ;;
-        6 )
+        11 )
             installSoftEditor
         ;;
-        7 )
+        12 )
+            installPackage
+            installSoftEditor
             installNodejs
         ;;
-        8 )
+        13 )
             testLinuxPortUsage
             setLinuxDateZone
+            installPackage
             installSoftEditor
             installDocker
         ;;
-        9 )
+        14 )
+            installPortainer 
+        ;;        
+        16 )
             installPython3
         ;;
-        10 )
+        17 )
             installPython3
             installPython3Rembg
         ;;

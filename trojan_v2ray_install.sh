@@ -252,6 +252,14 @@ function testLinuxPortUsage(){
 }
 
 
+
+
+
+
+
+
+
+
 # 编辑 SSH 公钥 文件用于 免密码登录
 function editLinuxLoginWithPublicKey(){
     if [ ! -d "${HOME}/ssh" ]; then
@@ -315,6 +323,7 @@ function setLinuxRootLogin(){
     # /etc/init.d/ssh restart
 
 }
+
 
 # 修改SSH 端口号
 function changeLinuxSSHPort(){
@@ -388,9 +397,8 @@ function setLinuxDateZone(){
 
 
 
-# 软件安装
 
-
+# 更新本脚本
 function upgradeScript(){
     wget -Nq --no-check-certificate -O ./trojan_v2ray_install.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh"
     green " 本脚本升级成功! "
@@ -398,6 +406,10 @@ function upgradeScript(){
     sleep 2s
     exec "./trojan_v2ray_install.sh"
 }
+
+
+
+# 软件安装
 
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
