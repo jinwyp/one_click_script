@@ -370,6 +370,7 @@ function setLinuxDateZone(){
 
     tempCurrentDateZone=$(date +'%z')
 
+    echo
     if [[ ${tempCurrentDateZone} == "+0800" ]]; then
         yellow "当前时区已经为北京时间  $tempCurrentDateZone | $(date -R) "
     else 
@@ -393,6 +394,7 @@ function setLinuxDateZone(){
         fi
 
     fi
+    echo
 }
 
 
@@ -547,9 +549,11 @@ EOF
 
 function installSoftOhMyZsh(){
 
+    echo
     green " =================================================="
-    yellow " 准备安装 ZSH"
+    yellow "   准备安装 ZSH"
     green " =================================================="
+    echo
 
     if [ "$osRelease" == "centos" ]; then
 

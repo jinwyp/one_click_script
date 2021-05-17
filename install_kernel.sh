@@ -2067,6 +2067,7 @@ function installWireguard(){
 function enableWireguardIPV6OrIPV4(){
     # https://p3terx.com/archives/use-cloudflare-warp-to-add-extra-ipv4-or-ipv6-network-support-to-vps-servers-for-free.html
     
+    
     ${sudoCmd} systemctl stop wg-quick@wgcf
 
     sed -i '/nameserver 2a00\:1098\:2b\:\:1/d' /etc/resolv.conf
@@ -2132,6 +2133,7 @@ function enableWireguardIPV6OrIPV4(){
     green " ================================================== "
     echo
 
+    # -n 不为空
     if [[ -n $1 ]]; then
         ${sudoCmd} systemctl start wg-quick@wgcf
     else
@@ -2147,6 +2149,7 @@ function preferIPV4(){
         sed -i '/^label 2002\:\:\/16/d' /etc/gai.conf
     fi
 
+    # -z 为空
     if [[ -z $1 ]]; then
         
         echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
@@ -2163,7 +2166,7 @@ function preferIPV4(){
         green " 2 优先 IPv6 访问网络 (用于 解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证)"
         green " 3 删除 IPv4 或 IPv6 优先访问的设置, 还原为系统默认配置"
         echo
-        red " 注意: 选2后 优先使用 IPv6 访问网络可能造成无法访问 某些不支持IPv6的网站! "
+        red " 注意: 选2后 优先使用 IPv6 访问网络 可能造成无法访问某些不支持IPv6的网站! "
         red " 注意: 解锁Netflix限制和避免弹出Google人机验证 一般不需要选择2设置IPv6优先访问, 可以在V2ray的配置中单独设置对Netfile和Google使用IPv6访问 "
         red " 注意: 由于 trojan 或 trojan-go 不支持配置 使用IPv6优先访问Netfile和Google, 可以选择2 开启服务器优先IPv6访问, 解决 trojan-go 解锁Netfile和Google人机验证问题"
         echo
@@ -2211,6 +2214,9 @@ function removeWireguard(){
     if [[ -f "${configWgcfBinPath}/wgcf" || -f "${configWgcfConfigFolderPath}/wgcf" || -f "/wgcf" ]]; then
         ${sudoCmd} systemctl stop wg-quick@wgcf.service
         ${sudoCmd} systemctl disable wg-quick@wgcf.service
+
+        ${sudoCmd} wg-quick down wgcf
+        ${sudoCmd} wg-quick disable wgcf
     else 
         red " 系统没有安装 Wireguard 和 Wgcf, 退出卸载"
         echo

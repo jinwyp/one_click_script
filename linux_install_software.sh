@@ -348,6 +348,15 @@ function setLinuxDateZone(){
 }
 
 
+function DSMEditHosts(){
+	green " ================================================== "
+	green " 准备打开VI 编辑/etc/hosts"
+	green " 请用root 用户登录系统的SSH 运行本命令"
+	green " ================================================== "
+
+	vi /etc/hosts
+}
+
 
 
 
@@ -625,20 +634,52 @@ function installDocker(){
     mkdir -p ${configDockerPath}
     cd ${configDockerPath}
 
-    curl -fsSL https://get.docker.com -o get-docker.sh  
-    sh get-docker.sh
-    
-    versionDockerCompose=$(getGithubLatestReleaseVersion "docker/compose")
 
-    ${sudoCommand} curl -L "https://github.com/docker/compose/releases/download/${versionDockerCompose}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    ${sudoCommand} chmod a+x /usr/local/bin/docker-compose
-
-    rm -f `which dc`
-    ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/dc
-    ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+    if [[ -s "/usr/bin/docker" ]]; then
+        green " =================================================="
+        green "  已安装过 Docker !"
+        green " =================================================="
     
-    systemctl start docker
-    systemctl enable docker.service
+    else
+        # curl -fsSL https://get.docker.com -o get-docker.sh  
+        curl -sSL https://get.daocloud.io/docker -o get-docker.sh  
+        chmod +x ./get-docker.sh
+        sh get-docker.sh
+        
+        systemctl start docker
+        systemctl enable docker.service
+    fi
+
+
+
+    if [[ -s "/usr/local/bin/docker-compose" ]]; then
+        green " =================================================="
+        green "  已安装过 Docker Compose !"
+        green " =================================================="
+        
+    else
+
+        versionDockerCompose=$(getGithubLatestReleaseVersion "docker/compose")
+
+        # dockerComposeUrl="https://github.com/docker/compose/releases/download/${versionDockerCompose}/docker-compose-$(uname -s)-$(uname -m)"
+        dockerComposeUrl="https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64"
+        dockerComposeUrl="https://get.daocloud.io/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64"
+        
+        echo
+        green " Downloading  ${dockerComposeUrl}"
+        echo
+
+        ${sudoCommand} wget -O /usr/local/bin/docker-compose ${dockerComposeUrl}
+        ${sudoCommand} chmod a+x /usr/local/bin/docker-compose
+
+        rm -f `which dc` 
+        rm -f "/usr/bin/docker-compose"
+        ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/dc
+        ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        
+    fi
+
+
 
     echo
     green " ================================================== "
@@ -650,8 +691,58 @@ function installDocker(){
     # systemctl status docker.service
 }
 
+function removeDocker(){
+
+    if [ "$osRelease" == "centos" ] ; then
+
+        sudo yum remove docker docker-common container-selinux docker-selinux docker-engine
+
+    else 
+        sudo apt-get remove docker docker-engine
+
+    fi
+
+    rm -fr /var/lib/docker/
+
+
+    rm -f `which dc` 
+    rm -f "/usr/bin/docker-compose"
+    rm -f /usr/local/bin/docker-compose
+
+    echo
+    green " ================================================== "
+    green "   Docker 已经卸载完毕 !"
+    green " ================================================== "
+    echo
+
+}
+
+
+function addDockerRegistry(){
+
+
+        cat > "/etc/docker/daemon.json" <<-EOF
+
+{
+  "registry-mirrors": [
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com"
+  ]
+}
+
+
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl restart docker
+}
+
+
+
 
 function installPortainer(){
+
+    echo
     if [ -x "$(command -v docker)" ]; then
         green " Docker already installed"
 
@@ -663,6 +754,9 @@ function installPortainer(){
     echo
     docker volume create portainer_data
 
+    echo
+    docker pull portainer/portainer-ce
+    
     echo
     docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
 
@@ -1022,12 +1116,16 @@ function start_menu(){
     green " 5. 编辑 SSH 登录的用户公钥 用于SSH密码登录免登录"
     green " 6. 修改 SSH 登陆端口号"
     green " 7. 设置时区为北京时间"
+    green " 8. 用VI 编辑 /etc/host"
 
     echo
     green " 11. 安装 Vim Nano Micro 编辑器"
     green " 12. 安装 Nodejs 与 PM2"
     green " 13. 安装 Docker 与 Docker Compose"
-    green " 14. 安装 Portainer "
+    red " 14. 卸载 Docker 与 Docker Compose"
+    green " 15. 设置 Docker Hub 镜像 "
+    green " 16. 安装 Portainer "
+
     echo
     green " 21. 安装 V2Ray-Poseidon 服务器端"
     green " 22. 编辑 V2Ray-Poseidon WS-TLS 模式配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
@@ -1065,6 +1163,9 @@ function start_menu(){
         7 )
             setLinuxDateZone
         ;;
+        8 )
+            DSMEditHosts
+        ;;
         11 )
             installSoftEditor
         ;;
@@ -1081,11 +1182,15 @@ function start_menu(){
             installDocker
         ;;
         14 )
-            installPortainer 
+            removeDocker 
+        ;;        
+        15 )
+            addDockerRegistry
         ;;        
         16 )
-            installPython3
-        ;;
+            installPortainer 
+        ;;        
+
         17 )
             installPython3
             installPython3Rembg
