@@ -751,6 +751,8 @@ configSSLAcmeScriptPath="${HOME}/.acme.sh"
 configWebsiteFatherPath="${HOME}/website"
 configSSLCertBakPath="${HOME}/sslbackup"
 configSSLCertPath="${HOME}/website/cert"
+configSSLCertKeyFilename="private.key"
+configSSLCertFullchainFilename="fullchain.cer"
 configWebsitePath="${HOME}/website/html"
 configTrojanWindowsCliPrefixPath=$(cat /dev/urandom | head -1 | md5sum | head -c 20)
 configWebsiteDownloadPath="${configWebsitePath}/download/${configTrojanWindowsCliPrefixPath}"
@@ -805,10 +807,13 @@ promptInfoXrayName="v2ray"
 isXray="no"
 
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+configV2rayGRPCServiceName=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configV2rayPort="$(($RANDOM + 10000))"
+configV2rayGRPCPort="$(($RANDOM + 10000))"
 configV2rayVmesWSPort="$(($RANDOM + 10000))"
 configV2rayVmessTCPPort="$(($RANDOM + 10000))"
 configV2rayPortShowInfo=$configV2rayPort
+configV2rayPortGRPCShowInfo=$configV2rayGRPCPort
 configV2rayIsTlsShowInfo="tls"
 configV2rayTrojanPort="$(($RANDOM + 10000))"
 
@@ -817,6 +822,9 @@ configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
 configV2rayVlessMode=""
+configV2rayWSorGrpc="ws"
+
+
 configReadme=${HOME}/readme_trojan_v2ray.txt
 
 
@@ -988,12 +996,12 @@ function getHTTPSCertificate(){
 	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
         echo
 
-	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  
+	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256
         echo
 
-        ${configSSLAcmeScriptPath}/acme.sh --installcert  -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/private.key \
-        --fullchain-file ${configSSLCertPath}/fullchain.cer \
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/$configSSLCertKeyFilename \
+        --fullchain-file ${configSSLCertPath}/$configSSLCertFullchainFilename \
         --reloadcmd "systemctl restart nginx.service"
 
 	else
@@ -1023,7 +1031,7 @@ function getHTTPSCertificate(){
 
         echo
         if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath}
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256
             
         else
             read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
@@ -1033,14 +1041,14 @@ function getHTTPSCertificate(){
             ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
             
             echo
-            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}
+            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
          
         fi
         
         echo
-        ${configSSLAcmeScriptPath}/acme.sh --installcert -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/private.key \
-        --fullchain-file ${configSSLCertPath}/fullchain.cer \
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/$configSSLCertKeyFilename \
+        --fullchain-file ${configSSLCertPath}/$configSSLCertFullchainFilename \
         --reloadcmd "systemctl restart nginx.service"
 
         sleep 4
@@ -1196,8 +1204,8 @@ http {
         listen [::]:443 http2;
         server_name  $configSSLDomain;
 
-        ssl_certificate       ${configSSLCertPath}/fullchain.cer;
-        ssl_certificate_key   ${configSSLCertPath}/private.key;
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
         ssl_protocols         TLSv1.2 TLSv1.3;
         ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
 
@@ -1218,6 +1226,15 @@ http {
             proxy_set_header Host \$http_host;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }
+
+        location /$configV2rayGRPCServiceName {
+            grpc_pass grpc://127.0.0.1:$configV2rayGRPCPort;
+            grpc_connect_timeout 60s;
+            grpc_read_timeout 720m;
+            grpc_send_timeout 720m;
+            grpc_set_header X-Real-IP \$remote_addr;
+            grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
     }
 
@@ -1307,9 +1324,11 @@ function removeNginx(){
 
     ${sudoCmd} systemctl stop nginx.service
 
+    echo
     green " ================================================== "
     red " 准备卸载已安装的nginx"
     green " ================================================== "
+    echo
 
     if [ "$osRelease" == "centos" ]; then
         yum remove -y nginx
@@ -1319,7 +1338,7 @@ function removeNginx(){
     fi
 
 
-
+    rm -rf ${configSSLCertBakPath}
     mkdir -p ${configSSLCertBakPath}
     cp -f ${configSSLCertPath}/* ${configSSLCertBakPath}
 
@@ -1330,13 +1349,24 @@ function removeNginx(){
     rm -f ${configReadme}
 
     rm -rf "/etc/nginx"
-    ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+    
     uninstall ${configSSLAcmeScriptPath}
     rm -rf ${configDownloadTempPath}
 
+    read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
+    isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
+
+    echo
     green " ================================================== "
-    green "  Nginx 卸载完毕 !"
+    if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
+        ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+        green "  Nginx 卸载完毕, SSL 证书文件已删除!"
+        
+    else
+        green "  Nginx 卸载完毕, 已保留 SSL 证书文件!"
+    fi
     green " ================================================== "
+    echo
 }
 
 
@@ -1371,8 +1401,8 @@ function installTrojanV2rayWithNginx(){
 
     green "是否申请证书? 默认为自动申请证书, 如果二次安装或已有证书 可以选否"
     green "如果已经有SSL证书文件请放到下面路径"
-    red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-    red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+    red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
+    red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
     echo
     read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]:" isDomainSSLRequestInput
     isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
@@ -1383,8 +1413,8 @@ function installTrojanV2rayWithNginx(){
         else
             green " =================================================="
             green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
             green " =================================================="
         fi
     else
@@ -1392,7 +1422,7 @@ function installTrojanV2rayWithNginx(){
     fi
 
 
-    if test -s ${configSSLCertPath}/fullchain.cer; then
+    if test -s ${configSSLCertPath}/$configSSLCertFullchainFilename; then
         green " ================================================== "
         green "     SSL证书 已检测到获取成功!"
         green " ================================================== "
@@ -1617,8 +1647,8 @@ function installTrojanServer(){
     ],
     "log_level": 1,
     "ssl": {
-        "cert": "${configSSLCertPath}/fullchain.cer",
-        "key": "${configSSLCertPath}/private.key",
+        "cert": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+        "key": "${configSSLCertPath}/$configSSLCertKeyFilename",
         "key_password": "",
         "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
 	    "prefer_server_cipher": true,
@@ -1799,8 +1829,8 @@ EOF
     "ssl": {
         "verify": true,
         "verify_hostname": true,
-        "cert": "${configSSLCertPath}/fullchain.cer",
-        "key": "${configSSLCertPath}/private.key",
+        "cert": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+        "key": "${configSSLCertPath}/$configSSLCertKeyFilename",
         "key_password": "",
         "curves": "",
         "cipher": "",        
@@ -1884,7 +1914,7 @@ EOF
     fi
 
     rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
-    cp ${configSSLCertPath}/fullchain.cer ${configTrojanBasePath}/trojan-win-cli/fullchain.cer
+    cp ${configSSLCertPath}/$configSSLCertFullchainFilename ${configTrojanBasePath}/trojan-win-cli/$configSSLCertFullchainFilename
 
     cat > ${configTrojanBasePath}/trojan-win-cli/config.json <<-EOF
 {
@@ -1900,7 +1930,7 @@ EOF
     "ssl": {
         "verify": true,
         "verify_hostname": true,
-        "cert": "fullchain.cer",
+        "cert": "$configSSLCertFullchainFilename",
         "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
 	    "sni": "",
         "alpn": [
@@ -2093,9 +2123,11 @@ function removeTrojan(){
     ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
 
+    echo
     green " ================================================== "
     red " 准备卸载已安装的trojan${promptInfoTrojanName}"
     green " ================================================== "
+    echo
 
     rm -rf ${configTrojanBasePath}
     rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
@@ -2106,10 +2138,12 @@ function removeTrojan(){
 
     crontab -r
 
+    echo
     green " ================================================== "
     green "  trojan${promptInfoTrojanName} 和 nginx 卸载完毕 !"
     green "  crontab 定时任务 删除完毕 !"
     green " ================================================== "
+    echo
 }
 
 
@@ -2171,14 +2205,47 @@ function upgradeTrojan(){
 
 
 
-function inputV2rayServerPort(){ 
-	echo 
+function inputV2rayWSPath(){ 
+    configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+
+    read -p "是否自定义${promptInfoXrayName}的WS的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
+    isV2rayUserWSPathInput=${isV2rayUserWSPathInput:-${configV2rayWebSocketPath}}
+
+    if [[ -z $isV2rayUserWSPathInput ]]; then
+        echo
+    else
+        configV2rayWebSocketPath=${isV2rayUserWSPathInput}
+    fi
+}
+
+function inputV2rayGRPCPath(){ 
+    configV2rayGRPCServiceName=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+
+    read -p "是否自定义${promptInfoXrayName}的 gRPC 的serviceName ? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserGRPCPathInput
+    isV2rayUserGRPCPathInput=${isV2rayUserGRPCPathInput:-${configV2rayGRPCServiceName}}
+
+    if [[ -z $isV2rayUserGRPCPathInput ]]; then
+        echo
+    else
+        configV2rayGRPCServiceName=${isV2rayUserGRPCPathInput}
+    fi
+}
+
+
+function inputV2rayServerPort(){  
     echo
 	if [[ $1 == "textMainPort" ]]; then
         read -p "是否自定义${promptInfoXrayName}的端口号? 直接回车默认为${configV2rayPortShowInfo}, 请输入自定义端口号[1-65535]:" isV2rayUserPortInput
         isV2rayUserPortInput=${isV2rayUserPortInput:-${configV2rayPortShowInfo}}
 		checkPortInUse "${isV2rayUserPortInput}" $1 
 	fi
+
+	if [[ $1 == "textMainGRPCPort" ]]; then
+        green " 如果使用gRPC 协议并要支持cloudflare的CDN, 需要人工输入 443 端口才可以"
+        read -p "是否自定义${promptInfoXrayName} gRPC的端口号? 直接回车默认为${configV2rayPortGRPCShowInfo}, 请输入自定义端口号[1-65535]:" isV2rayUserPortGRPCInput
+        isV2rayUserPortGRPCInput=${isV2rayUserPortGRPCInput:-${configV2rayPortGRPCShowInfo}}
+		checkPortInUse "${isV2rayUserPortGRPCInput}" $1 
+	fi    
 
 	if [[ $1 == "textAdditionalPort" ]]; then
         green " 是否添加一个额外监听端口, 与主端口${configV2rayPort}一起同时工作"
@@ -2238,7 +2305,7 @@ function installV2ray(){
     echo
 
 
-    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessxtlsonly" ) || ( $configV2rayVlessMode == "vlessxtlstrojan" ) ]] ; then
+    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessxtlsws" ) || ( $configV2rayVlessMode == "vlessxtlstrojan" ) ]] ; then
         promptInfoXrayName="xray"
         isXray="yes"
     else
@@ -2256,6 +2323,7 @@ function installV2ray(){
          configV2rayProtocol="vless"
     else 
 
+        echo
         read -p "是否使用VLESS协议? 直接回车默认为VMess协议, 请输入[y/N]:" isV2rayUseVLessInput
         isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
 
@@ -2269,9 +2337,8 @@ function installV2ray(){
 
     echo
     green " =================================================="
-    echo
     yellow " 是否使用 IPv6 解锁流媒体和避免弹出 Google reCAPTCHA 人机验证, 请选择:"
-    red " 解锁需要先安装好 Wireguard 与 Cloudflare Warp, 可用本脚本第一项安装"
+    red " 解锁需要先安装好 Wireguard 与 Cloudflare Warp, 可用本脚本第1项安装"
     echo
     green " 1. 不解锁"
     green " 2. 避免弹出 Google reCAPTCHA 人机验证"
@@ -2313,12 +2380,12 @@ function installV2ray(){
 
 
 					
-
+    echo
     read -p "是否自定义${promptInfoXrayName}的密码? 直接回车默认创建随机密码, 请输入自定义UUID密码:" isV2rayUserPassordInput
     isV2rayUserPassordInput=${isV2rayUserPassordInput:-''}
 
     if [[ -z $isV2rayUserPassordInput ]]; then
-        echo
+        isV2rayUserPassordInput=""
     else
         v2rayPassword1=${isV2rayUserPassordInput}
     fi
@@ -2328,6 +2395,7 @@ function installV2ray(){
     # 增加自定义端口号
     if [[ ${isInstallNginx} == "true" ]]; then
         configV2rayPortShowInfo=443
+        configV2rayPortGRPCShowInfo=443
         
         if [[ $configV2rayVlessMode == "vlessxtlstrojan" ]]; then
             configV2rayPort=443
@@ -2346,17 +2414,22 @@ function installV2ray(){
         configV2rayPortShowInfo=${isV2rayUserPortInput}   
 
 
+        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayVlessMode == "wsgrpc" ) ]]; then
+            inputV2rayServerPort "textMainGRPCPort"
 
-        configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-
-        read -p "是否自定义${promptInfoXrayName}的WS的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
-        isV2rayUserWSPathInput=${isV2rayUserWSPathInput:-${configV2rayWebSocketPath}}
-
-        if [[ -z $isV2rayUserWSPathInput ]]; then
-            echo
-        else
-            configV2rayWebSocketPath=${isV2rayUserWSPathInput}
+            configV2rayGRPCPort=${isV2rayUserPortGRPCInput}   
+            configV2rayPortGRPCShowInfo=${isV2rayUserPortGRPCInput}   
         fi
+
+
+        echo
+        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayVlessMode == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
+            inputV2rayGRPCPath
+        else
+            inputV2rayWSPath
+        fi
+
+
 
 
         
@@ -2366,7 +2439,6 @@ function installV2ray(){
         if [[ $isV2rayAdditionalPortInput == "999999" ]]; then
             v2rayConfigAdditionalPortInput=""
         else
-            
             read -r -d '' v2rayConfigAdditionalPortInput << EOM
         ,
         {
@@ -2384,7 +2456,7 @@ function installV2ray(){
             "destOverride": ["http", "tls"]
             }
         }     
-     
+
 EOM
 
         fi
@@ -3035,7 +3107,78 @@ EOM
 
 
     if [[ -z "$configV2rayVlessMode" ]]; then
-        cat > ${configV2rayPath}/config.json <<-EOF
+
+        if [[ "$configV2rayWSorGrpc" == "grpc" ]]; then
+            cat > ${configV2rayPath}/config.json <<-EOF
+{
+    ${v2rayConfigLogInput}
+    "inbounds": [
+        {
+            "port": ${configV2rayGRPCPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "grpcSettings": {
+                    "serviceName": "${configV2rayGRPCServiceName}" 
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+    ${v2rayConfigOutboundInput}
+}
+EOF
+        elif [[ "$configV2rayWSorGrpc" == "wsgrpc" ]]; then
+            cat > ${configV2rayPath}/config.json <<-EOF
+{
+    ${v2rayConfigLogInput}
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/${configV2rayWebSocketPath}"
+                }
+            }
+        },
+        {
+            "port": ${configV2rayGRPCPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "grpcSettings": {
+                    "serviceName": "${configV2rayGRPCServiceName}" 
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+    ${v2rayConfigOutboundInput}
+}
+EOF
+
+        else
+            cat > ${configV2rayPath}/config.json <<-EOF
 {
     ${v2rayConfigLogInput}
     "inbounds": [
@@ -3060,6 +3203,9 @@ EOM
     ${v2rayConfigOutboundInput}
 }
 EOF
+
+        fi
+
     fi
 
 
@@ -3096,8 +3242,8 @@ EOF
                     ],
                     "certificates": [
                         {
-                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key"
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
                         }
                     ]
                 }
@@ -3128,6 +3274,54 @@ EOF
 }
 EOF
     fi
+
+
+    if [[ "$configV2rayVlessMode" == "vlessgrpc" ]]; then
+        cat > ${configV2rayPath}/config.json <<-EOF
+{
+    ${v2rayConfigLogInput}
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "security": "tls",
+                "tlsSettings": {
+                    "alpn": [
+                        "h2", 
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
+                        }
+                    ]
+                },
+                "grpcSettings": {
+                    "serviceName": "${configV2rayGRPCServiceName}"
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+    ${v2rayConfigOutboundInput}
+}
+EOF
+    fi
+
 
 
     if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
@@ -3168,8 +3362,8 @@ EOF
                     ],
                     "certificates": [
                         {
-                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key"
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
                         }
                     ]
                 }
@@ -3260,8 +3454,8 @@ EOF
                     ],
                     "certificates": [
                         {
-                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key"
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
                         }
                     ]
                 }
@@ -3316,7 +3510,7 @@ EOF
     fi
 
 
-    if [[  $configV2rayVlessMode == "vlessxtlsonly" ]]; then
+    if [[  $configV2rayVlessMode == "vlessxtlsws" ]]; then
             cat > ${configV2rayPath}/config.json <<-EOF
 {
     ${v2rayConfigLogInput}
@@ -3349,8 +3543,8 @@ EOF
                     ],
                     "certificates": [
                         {
-                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key"
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
                         }
                     ]
                 }
@@ -3381,6 +3575,10 @@ EOF
 }
 EOF
     fi
+
+
+
+
 
 
     if [[ $configV2rayVlessMode == "trojan" ]]; then
@@ -3423,8 +3621,8 @@ EOF
                     ],
                     "certificates": [
                         {
-                            "certificateFile": "${configSSLCertPath}/fullchain.cer",
-                            "keyFile": "${configSSLCertPath}/private.key"
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
                         }
                     ]
                 }
@@ -3554,7 +3752,75 @@ EOF
     base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
 
 
-    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+
+
+
+
+    if [[ "$configV2rayWSorGrpc" == "grpc" ]]; then
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall}客户端配置参数 =============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortGRPCShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: gRPC,
+    gRPC serviceName: ${configV2rayGRPCServiceName},
+    底层传输协议:${configV2rayIsTlsShowInfo},
+    别名:自己起个任意名称
+}
+
+导入链接 Vless (grpc导入链接可能不正常, 导入后可能需要手动修改):
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortGRPCShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
+
+EOF
+
+    elif [[ "$configV2rayWSorGrpc" == "wsgrpc" ]]; then
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall} 客户端配置参数 =============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: websocket,
+    websocket路径:/${configV2rayWebSocketPath},
+    底层传输协议:${configV2rayIsTlsShowInfo},
+    别名:自己起个任意名称
+}
+
+导入链接 Vless:
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=ws&path=%2f${configV2rayWebSocketPath}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+
+导入链接 Vmess:
+vmess://${base64VmessLink2}
+
+
+=========== ${promptInfoXrayInstall} gRPC 客户端配置参数 =============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortGRPCShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: gRPC,
+    gRPC serviceName: ${configV2rayGRPCServiceName},
+    底层传输协议:${configV2rayIsTlsShowInfo},
+    别名:自己起个任意名称
+}
+
+导入链接 Vless (grpc导入链接可能不正常, 导入后可能需要手动修改):
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortGRPCShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
+
+EOF
+
+    else
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
     协议: ${configV2rayProtocol},
@@ -3570,27 +3836,32 @@ EOF
 }
 
 导入链接 Vless:
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=ws&host=${configSSLDomain}&headerType=none#${configSSLDomain}
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=ws&path=%2f${configV2rayWebSocketPath}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
 
 导入链接 Vmess:
 vmess://${base64VmessLink2}
 
-
 EOF
+
+    fi
+
+
 
 
 
     if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
 
-    base64VmessLink=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/'${configV2rayWebSocketPath}'","net":"ws","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
-    base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
+        base64VmessLink=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/'${configV2rayWebSocketPath}'","net":"ws","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
+        base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
 
-    base64VmessLinkTCP=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/tcp'${configV2rayWebSocketPath}'","net":"tcp","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
-    base64VmessLinkTCP2=$(echo ${base64VmessLinkTCP} | sed 's/ //g')
+        base64VmessLinkTCP=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/tcp'${configV2rayWebSocketPath}'","net":"tcp","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
+        base64VmessLinkTCP2=$(echo ${base64VmessLinkTCP} | sed 's/ //g')
 
 
-    cat > ${configV2rayPath}/clientConfig.json <<-EOF
-当选择了17. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
+
+只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN, 不安装nginx
+
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
@@ -3627,7 +3898,7 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 vmess://${base64VmessLink2}
 
 导入链接新版:
-vmess://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+vmess://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
 
 
 
@@ -3656,10 +3927,12 @@ EOF
     fi
 
 
+
     if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-当选择了16. 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
+只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
+
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
@@ -3667,8 +3940,8 @@ EOF
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  // 选择了16 为空
-    加密方式: none,  // 如果是Vless协议则为none
+    流控flow: 空
+    加密方式: none, 
     传输协议: tcp ,
     websocket路径:无,
     底层传输协议:tls,   
@@ -3686,8 +3959,8 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  空
-    加密方式: none,  // 如果是Vless协议则为none
+    流控flow: 空,
+    加密方式: none,  
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
     底层传输:tls,     
@@ -3695,14 +3968,46 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 }
 
 导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
 
 EOF
     fi
 
 
-    if [[ "$configV2rayVlessMode" == "vlessxtlsonly" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+
+    if [[ "$configV2rayVlessMode" == "vlessgrpc" ]]; then
+
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
+只安装v2ray VLess运行在443端口 (VLess-gRPC-TLS) 支持CDN, 不安装nginx
+
+=========== ${promptInfoXrayInstall}客户端 VLess-gRPC-TLS 配置参数 支持CDN =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPort},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow:  空,
+    加密方式: none,  
+    传输协议: gRPC,
+    gRPC serviceName: ${configV2rayGRPCServiceName},
+    底层传输:tls,     
+    别名:自己起个任意名称
+}
+
+
+导入链接 Vless (grpc导入链接可能不正常, 导入后可能需要手动修改):
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
+
+
+EOF
+    fi
+
+
+
+
+    if [[ "$configV2rayVlessMode" == "vlessxtlsws" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
@@ -3738,10 +4043,12 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 }
 
 导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
 
 EOF
     fi
+
+
 
     if [[ "$configV2rayVlessMode" == "vlessxtlstrojan" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
@@ -3780,7 +4087,7 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 }
 
 导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}
+vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
 
 
 
@@ -3908,9 +4215,11 @@ function removeV2ray(){
         isXray="yes"
     fi
 
+    echo
     green " ================================================== "
     red " 准备卸载已安装 ${promptInfoXrayName} "
     green " ================================================== "
+    echo
 
     ${sudoCmd} systemctl stop ${promptInfoXrayName}.service
     ${sudoCmd} systemctl disable ${promptInfoXrayName}.service
@@ -3921,9 +4230,11 @@ function removeV2ray(){
     rm -f ${configV2rayAccessLogFilePath}
     rm -f ${configV2rayErrorLogFilePath}
 
+    echo
     green " ================================================== "
     green "  ${promptInfoXrayName} 卸载完毕 !"
     green " ================================================== "
+    echo
 }
 
 
@@ -4265,8 +4576,8 @@ function getHTTPSNoNgix(){
         else
             green " =================================================="
             green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
             green " =================================================="
         fi
     else
@@ -4274,11 +4585,11 @@ function getHTTPSNoNgix(){
     fi
 
 
-    if test -s ${configSSLCertPath}/fullchain.cer; then
+    if test -s ${configSSLCertPath}/$configSSLCertFullchainFilename; then
         green " =================================================="
         green "   域名SSL证书申请成功 !"
-        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
+        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
         green " =================================================="
 
         if [[ $1 == "trojan" ]] ; then
@@ -4364,34 +4675,35 @@ function startMenuOther(){
     green " 13. 只安装trojan-go 运行在443端口, 不支持CDN, 不开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"
     green " 14. 只安装trojan-go 运行在443端口, 支持CDN, 开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
     echo
-    green " 15. 只安装V2ray或Xray (VLess或VMess协议) 开启websocket, 支持CDN, (VLess/VMess+WS) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
-    green " 16. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx"
-    green " 17. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS) 支持CDN, 不安装nginx"
+    green " 15. 只安装V2ray或Xray (VLess或VMess协议) 开启websocket, 支持CDN, (VLess/VMess + WS) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
+    green " 16. 只安装V2ray或Xray (VLess或VMess协议) 开启grpc, 支持cloudflare的CDN需要指定443端口, (VLess/VMess + grpc) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
     echo
-    green " 20. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS), 不安装nginx" 
-    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan, 支持VLess的CDN, 不安装nginx"    
-    green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN, 不安装nginx"   
-    green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
-    green " 24. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持VLess的CDN, 不安装nginx"    
+    green " 17. 只安装V2ray VLess运行在443端口 (VLess-gRPC-TLS) 支持CDN, 不安装nginx"
+    green " 18. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx"
+    green " 19. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS) 支持CDN, 不安装nginx"
+    echo
+    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) 支持CDN, 不安装nginx" 
+    green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan, 支持VLess的CDN, 不安装nginx"    
+    green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN, 不安装nginx"   
+    green " 24. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
+    green " 25. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持VLess的CDN, 不安装nginx"    
 
     red " 27. 卸载 trojan"    
     red " 28. 卸载 trojan-go"   
     red " 29. 卸载 v2ray或Xray"   
     green " =================================================="
-
-    echo
-    green " 31. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
-    echo
     red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
-    green " 32. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 33. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
-	green " 34. testrace 回程路由测试 （四网路由测试）"
-	green " 35. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
-    green " 36. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+    green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
+    green " 42. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
+	green " 43. testrace 回程路由测试 （四网路由测试）"
+	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+    green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
-    green " 51. 安装 官方宝塔面板"
-    green " 52. 安装 宝塔面板破解版 by fenhao.me"
-    green " 53. 安装 宝塔面板 7.4.5 纯净版 by hostcli.com"
+    green " 51. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
+    echo
+    green " 61. 安装 官方宝塔面板"
+    green " 62. 安装 宝塔面板破解版 by fenhao.me"
+    green " 63. 安装 宝塔面板 7.4.5 纯净版 by hostcli.com"
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -4442,36 +4754,47 @@ function startMenuOther(){
             getHTTPSNoNgix "trojan"
         ;;          
         15 )
+            configV2rayWSorGrpc="ws"
             getHTTPSNoNgix "v2ray"
-        ;;     
+        ;;
         16 )
+            configV2rayWSorGrpc="grpc"
+            getHTTPSNoNgix "v2ray"
+            
+        ;;                
+        17 )
+            configV2rayVlessMode="vlessgrpc"
+            getHTTPSNoNgix "v2ray"
+        ;; 
+        18 )
             configV2rayVlessMode="vlessws"
             getHTTPSNoNgix "v2ray"
         ;; 
-        17 )
+        19 )
             configV2rayVlessMode="vmessws"
             getHTTPSNoNgix "v2ray"
         ;;    
-        20 )
-            configV2rayVlessMode="vlessxtlsonly"
+
+        21 )
+            configV2rayVlessMode="vlessxtlsws"
             getHTTPSNoNgix "v2ray"
         ;; 
-        21 )
+        22 )
             configV2rayVlessMode="trojan"
             getHTTPSNoNgix "both"
         ;;
-        22 )
+        23 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             getHTTPSNoNgix "both"
         ;;    
-        23 )
+        24 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
             getHTTPSNoNgix "both"
         ;;
-        24 )
+        25 )
             configV2rayVlessMode="vlessxtlstrojan"
             getHTTPSNoNgix "v2ray"
         ;;          
@@ -4485,32 +4808,33 @@ function startMenuOther(){
         29 )
             removeV2ray
         ;;  
-        31 )
-            installPackage
-            vps_netflix
-        ;;                                                         
-        32 )
+                                                     
+        41 )
             vps_superspeed
         ;;
-        33 )
+        42 )
             vps_bench
         ;;        
-        34 )
+        43 )
             vps_testrace
         ;;
-        35 )
+        44 )
             vps_LemonBench
         ;;
-        36 )
+        45 )
             vps_zbench
-        ;;        
+        ;;
         51 )
+            installPackage
+            vps_netflix
+        ;;                    
+        61 )
             installBTPanel
         ;;
-        52 )
+        62 )
             installBTPanelCrack
         ;;                              
-        52 )
+        62 )
             installBTPanelCrack2
         ;;                              
         81 )
@@ -4570,7 +4894,7 @@ function start_menu(){
     green " Trojan Trojan-go V2ray 一键安装脚本 | 2021-04-15 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
-    green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
+    green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
     green " 2. 安装 trojan 和 nginx 不支持CDN, trojan 运行在443端口"
     green " 3. 升级 trojan 到最新版本"
@@ -4582,9 +4906,11 @@ function start_menu(){
     red " 8. 卸载 trojan-go 与 nginx"
     echo
     green " 11. 安装 v2ray或xray 和 nginx, 支持 websocket tls1.3, 支持CDN, nginx 运行在443端口"
-    green " 12. 安装 xray 和 nginx, (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持CDN, xray 运行在443端口"  
-    green " 13. 升级 v2ray或xray 到最新版本"
-    red " 14. 卸载v2ray或xray 和 nginx"
+    green " 12. 安装 v2ray或xray 和 nginx, 支持 gRPC http2, 支持CDN, nginx 运行在443端口"
+    green " 13. 安装 v2ray或xray 和 nginx, 支持 websocket + gRPC http2, 支持CDN, nginx 运行在443端口"
+    green " 14. 安装 xray 和 nginx, (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持CDN, xray 运行在443端口"  
+    green " 15. 升级 v2ray或xray 到最新版本"
+    red " 16. 卸载v2ray或xray 和 nginx"
     echo
     green " 21. 同时安装 trojan + v2ray或xray 和 nginx, 不支持CDN, trojan 运行在443端口"
     green " 22. 升级 v2ray或xray 和 trojan 到最新版本"
@@ -4596,7 +4922,7 @@ function start_menu(){
     red " 27. 卸载 trojan-go, v2ray或xray 和 nginx"
     echo
     green " 28. 查看已安装的配置和用户密码等信息"
-    green " 29. 子菜单 安装 trojan 和 v2ray 可视化管理面板, 测网速工具, Netflix 测试工具"
+    green " 29. 子菜单 安装 trojan 和 v2ray 可视化管理面板, 测网速工具, Netflix 测试工具, 安装宝塔面板等"
     green " 30. 不安装nginx, 只安装trojan或v2ray或xray, 可选安装SSL证书, 方便与现有网站或宝塔面板集成"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
@@ -4645,13 +4971,23 @@ function start_menu(){
             installTrojanV2rayWithNginx "v2ray"
         ;;
         12 )
+            isNginxWithSSL="yes"
+            configV2rayWSorGrpc="grpc"
+            installTrojanV2rayWithNginx "v2ray"
+        ;;
+        13 )
+            isNginxWithSSL="yes"
+            configV2rayWSorGrpc="wsgrpc"
+            installTrojanV2rayWithNginx "v2ray"
+        ;;
+        14 )
             configV2rayVlessMode="vlessxtlstrojan"
             installTrojanV2rayWithNginx "v2ray"
         ;;        
-        13 )
+        15 )
             upgradeV2ray
         ;;
-        14 )
+        16 )
             removeNginx
             removeV2ray
         ;;

@@ -537,6 +537,48 @@ function installWireguard(){
 
 
 
+function toolboxSkybox(){
+    wget -O skybox.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x skybox.sh  && ./skybox.sh
+}
+
+
+function toolboxJcnf(){
+    wget -O jcnfbox.sh https://raw.githubusercontent.com/Netflixxp/jcnf-box/main/jcnfbox.sh && chmod +x jcnfbox.sh && ./jcnfbox.sh
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1141,6 +1183,9 @@ function start_menu(){
     green " 32. 编辑 Soga 配置文件 /etc/soga/soga.conf"
     echo
     green " 41. 单独申请域名SSL证书"
+    echo
+    green " 61. 工具脚本合集 by BlueSkyXN "
+    green " 62. 工具脚本合集 by jcnf "
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -1232,12 +1277,18 @@ function start_menu(){
         ;;
         32 )
             editSogaConfig
-        ;;                       
+        ;;                                        
         41 )
             getHTTPS
             replaceV2rayPoseidonConfig
             replaceSogaConfig
-        ;;               
+        ;;     
+        61 )
+            toolboxSkybox
+        ;;                        
+        62 )
+            toolboxJcnf
+        ;;                        
         0 )
             exit 1
         ;;
