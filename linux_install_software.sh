@@ -953,7 +953,7 @@ function replaceSogaConfig(){
         sed -i "s/www.domain.com/${inputV2boardDomain}/g" /etc/soga/soga.conf
 
         read -p "请输入webapi key 即通信密钥:" inputV2boardWebApiKey
-        sed -i "s/webapi_mukey=/webapi_mukey=${inputV2boardWebApiKey}/g" /etc/soga/soga.conf
+        sed -i "s/webapi_key=/webapi_key=${inputV2boardWebApiKey}/g" /etc/soga/soga.conf
 
         read -p "请输入节点ID (纯数字):" inputV2boardNodeId
         sed -i "s/node_id=1/node_id=${inputV2boardNodeId}/g" /etc/soga/soga.conf
