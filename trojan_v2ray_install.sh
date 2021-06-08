@@ -773,8 +773,8 @@ downloadFilenameV2ray="v2ray-linux-64.zip"
 versionXray="1.1.1"
 downloadFilenameXray="Xray-linux-64.zip"
 
-versionTrojanWeb="2.8.7"
-downloadFilenameTrojanWeb="trojan"
+versionTrojanWeb="2.10.4"
+downloadFilenameTrojanWeb="trojan-linux-amd64"
 
 promptInfoTrojanName=""
 isTrojanGo="no"
@@ -899,7 +899,7 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "trojan-web" ]] ; then
         versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
-        downloadFilenameTrojanWeb="trojan"
+        downloadFilenameTrojanWeb="trojan-linux-amd64"
         echo "versionTrojanWeb: ${versionTrojanWeb}"
     fi
 
@@ -3948,7 +3948,7 @@ function installTrojanWeb(){
         green "    开始安装 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
         green " =================================================="
 
-
+        # https://github.com/Jrohy/trojan/releases/download/v2.10.4/trojan-linux-amd64
         mkdir -p ${configTrojanWebPath}
         wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
         chmod +x ${configTrojanWebPath}/trojan-web
