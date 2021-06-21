@@ -996,7 +996,7 @@ function getHTTPSCertificate(){
 	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
         echo
 
-	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256
+	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256 --server letsencrypt
         echo
 
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
@@ -1031,7 +1031,7 @@ function getHTTPSCertificate(){
 
         echo
         if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
             
         else
             read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
