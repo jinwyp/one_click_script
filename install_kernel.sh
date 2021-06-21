@@ -852,23 +852,26 @@ function downloadFile(){
 
 function installKernel(){
 
-    if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
-        bbrplusKernelVersion="5.10.28-1"
-        
+    if [ "${linuxKernelToInstallVersion}" = "5.11" ]; then 
+        bbrplusKernelVersion="5.11.22-1"
+
+    elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
+        bbrplusKernelVersion="5.10.45-1"
+
     elif [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
         bbrplusKernelVersion="5.9.16-1"
         
     elif [ "${linuxKernelToInstallVersion}" = "5.4" ]; then 
-        bbrplusKernelVersion="5.4.110-1"
+        bbrplusKernelVersion="5.4.127-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then 
-        bbrplusKernelVersion="4.19.185-1"
+        bbrplusKernelVersion="4.19.195-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
-        bbrplusKernelVersion="4.14.229-1"
+        bbrplusKernelVersion="4.14.237-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.9" ]; then 
-        bbrplusKernelVersion="4.9.265-1"
+        bbrplusKernelVersion="4.9.273-1"
     fi    
 
 
@@ -2451,7 +2454,8 @@ function start_menu(){
     green " 34. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
     green " 35. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
     green " 36. 安装 BBR Plus 内核 5.9, UJX6N 编译"
-    green " 37. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"    
+    green " 37. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译" 
+    green " 38. 安装 BBR Plus 内核 5.11 LTS, UJX6N 编译"   
     echo
     green " 41. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
     green " 42. 安装 XanMod Kernel 内核 5.11, 官方源安装 "    
@@ -2583,6 +2587,11 @@ function start_menu(){
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
+        38 )
+            linuxKernelToInstallVersion="5.11"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;        
         41 )
             linuxKernelToInstallVersion="5.10"
             linuxKernelToBBRType="xanmod"
