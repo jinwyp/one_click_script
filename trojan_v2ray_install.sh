@@ -2084,7 +2084,6 @@ function inputV2rayServerPort(){
 
 	if [[ $1 == "textMainGRPCPort" ]]; then
         green " 如果使用gRPC 协议并要支持cloudflare的CDN, 需要人工输入 443 端口才可以"
-        red " 如果安装xray 同时支持 Websocket 和 gRPC 协议, 请保证使用不同的端口, 只能有一个使用443端口"
         read -p "是否自定义${promptInfoXrayName} gRPC的端口号? 直接回车默认为${configV2rayPortGRPCShowInfo}, 请输入自定义端口号[1-65535]:" isV2rayUserPortGRPCInput
         isV2rayUserPortGRPCInput=${isV2rayUserPortGRPCInput:-${configV2rayPortGRPCShowInfo}}
 		checkPortInUse "${isV2rayUserPortGRPCInput}" $1 
@@ -3680,7 +3679,7 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 
 
 
-Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
+Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayPort
 
 密码1: ${trojanPassword1}
 密码2: ${trojanPassword2}
@@ -3697,10 +3696,10 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 
 
 小火箭链接:
-trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan
+trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan
 
 二维码 Trojan${promptInfoTrojanName}
-https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan
+https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan
 
 
 EOF
