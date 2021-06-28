@@ -764,16 +764,16 @@ configRanPath="${HOME}/ran"
 versionTrojan="1.16.0"
 downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 
-versionTrojanGo="0.8.2"
+versionTrojanGo="0.10.4"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.33.0"
+versionV2ray="4.40.1"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.1.1"
+versionXray="1.4.2"
 downloadFilenameXray="Xray-linux-64.zip"
 
-versionTrojanWeb="2.10.4"
+versionTrojanWeb="2.10.5"
 downloadFilenameTrojanWeb="trojan-linux-amd64"
 
 promptInfoTrojanName=""

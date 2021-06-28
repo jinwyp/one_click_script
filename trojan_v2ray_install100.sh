@@ -764,17 +764,17 @@ configRanPath="${HOME}/ran"
 versionTrojan="1.16.0"
 downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 
-versionTrojanGo="0.8.2"
+versionTrojanGo="0.10.4"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.33.0"
+versionV2ray="4.40.1"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.1.1"
+versionXray="1.4.2"
 downloadFilenameXray="Xray-linux-64.zip"
 
-versionTrojanWeb="2.8.7"
-downloadFilenameTrojanWeb="trojan"
+versionTrojanWeb="2.10.5"
+downloadFilenameTrojanWeb="trojan-linux-amd64"
 
 promptInfoTrojanName=""
 isTrojanGo="no"
@@ -899,7 +899,7 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "trojan-web" ]] ; then
         versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
-        downloadFilenameTrojanWeb="trojan"
+        downloadFilenameTrojanWeb="trojan-linux-amd64"
         echo "versionTrojanWeb: ${versionTrojanWeb}"
     fi
 
@@ -996,7 +996,7 @@ function getHTTPSCertificate(){
 	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
         echo
 
-	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256
+	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256 --server letsencrypt
         echo
 
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
@@ -1031,7 +1031,7 @@ function getHTTPSCertificate(){
 
         echo
         if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
             
         else
             read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
@@ -1992,8 +1992,8 @@ EOF
 	yellow "密码8: ${trojanPassword8}"
 	yellow "密码9: ${trojanPassword9}"
 	yellow "密码10: ${trojanPassword10}"
-	yellow "您指定前缀的密码共99个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202099 都可以使用"
-	yellow "例如: 密码:${configTrojanPasswordPrefixInput}202011 或 密码:${configTrojanPasswordPrefixInput}202088 都可以使用"
+	yellow "您指定前缀的密码共100个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202099 都可以使用"
+	yellow "例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用"
 
     if [[ ${isTrojanGoSupportWebsocket} == "true" ]]; then
         yellow "Websocket path 路径为: /${configTrojanGoWebSocketPath}"
@@ -2101,8 +2101,8 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 密码8: ${trojanPassword8}
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
-您指定前缀的密码共99个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202099 都可以使用
-例如: 密码:${configTrojanPasswordPrefixInput}202011 或 密码:${configTrojanPasswordPrefixInput}202088 都可以使用
+您指定前缀的密码共100个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202099 都可以使用
+例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用
 
 如果是trojan-go开启了Websocket，那么Websocket path 路径为: /${configTrojanGoWebSocketPath}
 
@@ -2919,7 +2919,8 @@ EOM
                         "password": "${configTrojanPasswordPrefixInput}202070",
                         "level": 0,
                         "email": "password270@gmail.com"
-                    }                                       
+                    }
+
 EOM
 
 
@@ -4103,7 +4104,8 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 密码8: ${trojanPassword8}
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
-您指定前缀的密码若干: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202070 都可以使用
+您指定前缀的密码共71个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202070 都可以使用
+例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用
 
 
 小火箭链接:
@@ -4359,7 +4361,7 @@ function installTrojanWeb(){
         green "    开始安装 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
         green " =================================================="
 
-
+        # https://github.com/Jrohy/trojan/releases/download/v2.10.4/trojan-linux-amd64
         mkdir -p ${configTrojanWebPath}
         wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
         chmod +x ${configTrojanWebPath}/trojan-web

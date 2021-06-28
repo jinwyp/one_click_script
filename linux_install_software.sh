@@ -992,7 +992,7 @@ function getHTTPSCertificate(){
 
 	if [[ $1 == "standalone" ]] ; then
 	    green "  开始申请证书 acme.sh standalone mode !"
-	    ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --standalone
+	    ~/.acme.sh/acme.sh  --issue --standalone -d ${configSSLDomain} --keylength ec-256 --server letsencrypt
 
         ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
         --key-file   ${configSSLCertPath}/private.key \
@@ -1000,7 +1000,7 @@ function getHTTPSCertificate(){
 
 	else
 	    green "  开始申请证书 acme.sh nginx mode !"
-        ~/.acme.sh/acme.sh  --issue  -d ${configSSLDomain}  --webroot ${configWebsitePath}/
+        ~/.acme.sh/acme.sh  --issue --server letsencrypt --keylength ec-256 -d ${configSSLDomain}  --webroot ${configWebsitePath}/
 
         ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
         --key-file   ${configSSLCertPath}/private.key \
