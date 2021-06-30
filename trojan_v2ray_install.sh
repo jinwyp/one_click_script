@@ -1520,20 +1520,13 @@ function installTrojanServer(){
 
     if [ "$configV2rayVlessMode" != "trojan" ] ; then
         configV2rayTrojanPort=443
+
+        inputV2rayServerPort "textMainTrojanPort"
+        configV2rayTrojanPort=${isTrojanUserPortInput}         
     fi
 
 
-    if [ "$isTrojanGo" = "no" ] ; then
-
-        # 增加trojan 服务器端配置
-	    cat > ${configTrojanBasePath}/server.json <<-EOF
-{
-    "run_type": "server",
-    "local_addr": "0.0.0.0",
-    "local_port": $configV2rayTrojanPort,
-    "remote_addr": "127.0.0.1",
-    "remote_port": 80,
-    "password": [
+    read -r -d '' trojanConfigUserpasswordInput << EOM
         "${trojanPassword1}",
         "${trojanPassword2}",
         "${trojanPassword3}",
@@ -1564,6 +1557,21 @@ function installTrojanServer(){
         "${configTrojanPasswordPrefixInput}202018",
         "${configTrojanPasswordPrefixInput}202019",
         "${configTrojanPasswordPrefixInput}202020"
+EOM
+
+
+    if [ "$isTrojanGo" = "no" ] ; then
+
+        # 增加trojan 服务器端配置
+	    cat > ${configTrojanBasePath}/server.json <<-EOF
+{
+    "run_type": "server",
+    "local_addr": "0.0.0.0",
+    "local_port": $configV2rayTrojanPort,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        ${trojanConfigUserpasswordInput}
     ],
     "log_level": 1,
     "ssl": {
@@ -1633,36 +1641,7 @@ EOF
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
-        "${trojanPassword1}",
-        "${trojanPassword2}",
-        "${trojanPassword3}",
-        "${trojanPassword4}",
-        "${trojanPassword5}",
-        "${trojanPassword6}",
-        "${trojanPassword7}",
-        "${trojanPassword8}",
-        "${trojanPassword9}",
-        "${trojanPassword10}",
-        "${configTrojanPasswordPrefixInput}202001",
-        "${configTrojanPasswordPrefixInput}202002",
-        "${configTrojanPasswordPrefixInput}202003",
-        "${configTrojanPasswordPrefixInput}202004",
-        "${configTrojanPasswordPrefixInput}202005",
-        "${configTrojanPasswordPrefixInput}202006",
-        "${configTrojanPasswordPrefixInput}202007",
-        "${configTrojanPasswordPrefixInput}202008",
-        "${configTrojanPasswordPrefixInput}202009",
-        "${configTrojanPasswordPrefixInput}202010",
-        "${configTrojanPasswordPrefixInput}202011",
-        "${configTrojanPasswordPrefixInput}202012",
-        "${configTrojanPasswordPrefixInput}202013",
-        "${configTrojanPasswordPrefixInput}202014",
-        "${configTrojanPasswordPrefixInput}202015",
-        "${configTrojanPasswordPrefixInput}202016",
-        "${configTrojanPasswordPrefixInput}202017",
-        "${configTrojanPasswordPrefixInput}202018",
-        "${configTrojanPasswordPrefixInput}202019",
-        "${configTrojanPasswordPrefixInput}202020"
+        ${trojanConfigUserpasswordInput}
     ],
     "log_level": 1,
     "log_file": "${configTrojanGoLogFile}",
@@ -2094,6 +2073,15 @@ function inputV2rayServerPort(){
         isV2rayAdditionalPortInput=${isV2rayAdditionalPortInput:-999999}
         checkPortInUse "${isV2rayAdditionalPortInput}" $1 
 	fi
+
+
+    if [[ $1 == "textMainTrojanPort" ]]; then
+        green "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
+        red "不建议用户自定义端口, 建议使用443端口, 除非你需要使用非443端口并明白使用非443端口的安全性!"
+        read -p "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
+        isTrojanUserPortInput=${isTrojanUserPortInput:-${configV2rayTrojanPort}}
+		checkPortInUse "${isTrojanUserPortInput}" $1 
+	fi    
 }
 
 function checkPortInUse(){ 

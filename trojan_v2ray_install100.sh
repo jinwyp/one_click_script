@@ -1473,7 +1473,6 @@ function installTrojanV2rayWithNginx(){
 
 
 
-
 function installTrojanServer(){
 
     trojanPassword1=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
@@ -1520,20 +1519,13 @@ function installTrojanServer(){
 
     if [ "$configV2rayVlessMode" != "trojan" ] ; then
         configV2rayTrojanPort=443
+
+        inputV2rayServerPort "textMainTrojanPort"
+        configV2rayTrojanPort=${isTrojanUserPortInput} 
     fi
 
 
-    if [ "$isTrojanGo" = "no" ] ; then
-
-        # 增加trojan 服务器端配置
-	    cat > ${configTrojanBasePath}/server.json <<-EOF
-{
-    "run_type": "server",
-    "local_addr": "0.0.0.0",
-    "local_port": $configV2rayTrojanPort,
-    "remote_addr": "127.0.0.1",
-    "remote_port": 80,
-    "password": [
+    read -r -d '' trojanConfigUserpasswordInput << EOM
         "${trojanPassword1}",
         "${trojanPassword2}",
         "${trojanPassword3}",
@@ -1644,6 +1636,20 @@ function installTrojanServer(){
         "${configTrojanPasswordPrefixInput}202097",
         "${configTrojanPasswordPrefixInput}202098",
         "${configTrojanPasswordPrefixInput}202099"
+EOM
+
+    if [ "$isTrojanGo" = "no" ] ; then
+
+        # 增加trojan 服务器端配置
+	    cat > ${configTrojanBasePath}/server.json <<-EOF
+{
+    "run_type": "server",
+    "local_addr": "0.0.0.0",
+    "local_port": $configV2rayTrojanPort,
+    "remote_addr": "127.0.0.1",
+    "remote_port": 80,
+    "password": [
+        ${trojanConfigUserpasswordInput}
     ],
     "log_level": 1,
     "ssl": {
@@ -1713,116 +1719,7 @@ EOF
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
-        "${trojanPassword1}",
-        "${trojanPassword2}",
-        "${trojanPassword3}",
-        "${trojanPassword4}",
-        "${trojanPassword5}",
-        "${trojanPassword6}",
-        "${trojanPassword7}",
-        "${trojanPassword8}",
-        "${trojanPassword9}",
-        "${trojanPassword10}",
-        "${configTrojanPasswordPrefixInput}202000",
-        "${configTrojanPasswordPrefixInput}202001",
-        "${configTrojanPasswordPrefixInput}202002",
-        "${configTrojanPasswordPrefixInput}202003",
-        "${configTrojanPasswordPrefixInput}202004",
-        "${configTrojanPasswordPrefixInput}202005",
-        "${configTrojanPasswordPrefixInput}202006",
-        "${configTrojanPasswordPrefixInput}202007",
-        "${configTrojanPasswordPrefixInput}202008",
-        "${configTrojanPasswordPrefixInput}202009",
-        "${configTrojanPasswordPrefixInput}202010",
-        "${configTrojanPasswordPrefixInput}202011",
-        "${configTrojanPasswordPrefixInput}202012",
-        "${configTrojanPasswordPrefixInput}202013",
-        "${configTrojanPasswordPrefixInput}202014",
-        "${configTrojanPasswordPrefixInput}202015",
-        "${configTrojanPasswordPrefixInput}202016",
-        "${configTrojanPasswordPrefixInput}202017",
-        "${configTrojanPasswordPrefixInput}202018",
-        "${configTrojanPasswordPrefixInput}202019",
-        "${configTrojanPasswordPrefixInput}202020",
-        "${configTrojanPasswordPrefixInput}202021",
-        "${configTrojanPasswordPrefixInput}202022",
-        "${configTrojanPasswordPrefixInput}202023",
-        "${configTrojanPasswordPrefixInput}202024",
-        "${configTrojanPasswordPrefixInput}202025",
-        "${configTrojanPasswordPrefixInput}202026",
-        "${configTrojanPasswordPrefixInput}202027",
-        "${configTrojanPasswordPrefixInput}202028",
-        "${configTrojanPasswordPrefixInput}202029",
-        "${configTrojanPasswordPrefixInput}202030",
-        "${configTrojanPasswordPrefixInput}202031",
-        "${configTrojanPasswordPrefixInput}202032",
-        "${configTrojanPasswordPrefixInput}202033",
-        "${configTrojanPasswordPrefixInput}202034",
-        "${configTrojanPasswordPrefixInput}202035",
-        "${configTrojanPasswordPrefixInput}202036",
-        "${configTrojanPasswordPrefixInput}202037",
-        "${configTrojanPasswordPrefixInput}202038",
-        "${configTrojanPasswordPrefixInput}202039",
-        "${configTrojanPasswordPrefixInput}202040",
-        "${configTrojanPasswordPrefixInput}202041",
-        "${configTrojanPasswordPrefixInput}202042",
-        "${configTrojanPasswordPrefixInput}202043",
-        "${configTrojanPasswordPrefixInput}202044",
-        "${configTrojanPasswordPrefixInput}202045",
-        "${configTrojanPasswordPrefixInput}202046",
-        "${configTrojanPasswordPrefixInput}202047",
-        "${configTrojanPasswordPrefixInput}202048",
-        "${configTrojanPasswordPrefixInput}202049",
-        "${configTrojanPasswordPrefixInput}202050",
-        "${configTrojanPasswordPrefixInput}202051",
-        "${configTrojanPasswordPrefixInput}202052",
-        "${configTrojanPasswordPrefixInput}202053",
-        "${configTrojanPasswordPrefixInput}202054",
-        "${configTrojanPasswordPrefixInput}202055",
-        "${configTrojanPasswordPrefixInput}202056",
-        "${configTrojanPasswordPrefixInput}202057",
-        "${configTrojanPasswordPrefixInput}202058",
-        "${configTrojanPasswordPrefixInput}202059",
-        "${configTrojanPasswordPrefixInput}202060",
-        "${configTrojanPasswordPrefixInput}202061",
-        "${configTrojanPasswordPrefixInput}202062",
-        "${configTrojanPasswordPrefixInput}202063",
-        "${configTrojanPasswordPrefixInput}202064",
-        "${configTrojanPasswordPrefixInput}202065",
-        "${configTrojanPasswordPrefixInput}202066",
-        "${configTrojanPasswordPrefixInput}202067",
-        "${configTrojanPasswordPrefixInput}202068",
-        "${configTrojanPasswordPrefixInput}202069",
-        "${configTrojanPasswordPrefixInput}202070",
-        "${configTrojanPasswordPrefixInput}202071",
-        "${configTrojanPasswordPrefixInput}202072",
-        "${configTrojanPasswordPrefixInput}202073",
-        "${configTrojanPasswordPrefixInput}202074",
-        "${configTrojanPasswordPrefixInput}202075",
-        "${configTrojanPasswordPrefixInput}202076",
-        "${configTrojanPasswordPrefixInput}202077",
-        "${configTrojanPasswordPrefixInput}202078",
-        "${configTrojanPasswordPrefixInput}202079",
-        "${configTrojanPasswordPrefixInput}202080",
-        "${configTrojanPasswordPrefixInput}202081",
-        "${configTrojanPasswordPrefixInput}202082",
-        "${configTrojanPasswordPrefixInput}202083",
-        "${configTrojanPasswordPrefixInput}202084",
-        "${configTrojanPasswordPrefixInput}202085",
-        "${configTrojanPasswordPrefixInput}202086",
-        "${configTrojanPasswordPrefixInput}202087",
-        "${configTrojanPasswordPrefixInput}202088",
-        "${configTrojanPasswordPrefixInput}202089",
-        "${configTrojanPasswordPrefixInput}202090",
-        "${configTrojanPasswordPrefixInput}202091",
-        "${configTrojanPasswordPrefixInput}202092",
-        "${configTrojanPasswordPrefixInput}202093",
-        "${configTrojanPasswordPrefixInput}202094",
-        "${configTrojanPasswordPrefixInput}202095",
-        "${configTrojanPasswordPrefixInput}202096",
-        "${configTrojanPasswordPrefixInput}202097",
-        "${configTrojanPasswordPrefixInput}202098",
-        "${configTrojanPasswordPrefixInput}202099"
+        ${trojanConfigUserpasswordInput}
     ],
     "log_level": 1,
     "log_file": "${configTrojanGoLogFile}",
@@ -2253,6 +2150,15 @@ function inputV2rayServerPort(){
         read -p "是否给${promptInfoXrayName}添加额外的监听端口? 直接回车默认否, 请输入额外端口号[1-65535]:" isV2rayAdditionalPortInput
         isV2rayAdditionalPortInput=${isV2rayAdditionalPortInput:-999999}
         checkPortInUse "${isV2rayAdditionalPortInput}" $1 
+	fi
+
+
+    if [[ $1 == "textMainTrojanPort" ]]; then
+        green "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
+        red "不建议用户自定义端口, 建议使用443端口, 除非你需要使用非443端口并明白使用非443端口的安全性!"
+        read -p "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
+        isTrojanUserPortInput=${isTrojanUserPortInput:-${configV2rayTrojanPort}}
+		checkPortInUse "${isTrojanUserPortInput}" $1 
 	fi
 }
 
