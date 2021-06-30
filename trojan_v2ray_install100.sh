@@ -2154,7 +2154,7 @@ function inputV2rayServerPort(){
 
 
     if [[ $1 == "textMainTrojanPort" ]]; then
-        green "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
+        green "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
         red "不建议用户自定义端口, 建议使用443端口, 除非你需要使用非443端口并明白使用非443端口的安全性!"
         read -p "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
         isTrojanUserPortInput=${isTrojanUserPortInput:-${configV2rayTrojanPort}}
