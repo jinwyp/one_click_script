@@ -1504,6 +1504,14 @@ function installTrojanServer(){
     read configTrojanPasswordPrefixInput
     configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-jin}
 
+    if [ "$configV2rayVlessMode" != "trojan" ] ; then
+        configV2rayTrojanPort=443
+
+        inputV2rayServerPort "textMainTrojanPort"
+        configV2rayTrojanPort=${isTrojanUserPortInput} 
+    fi
+
+    
     mkdir -p ${configTrojanBasePath}
     cd ${configTrojanBasePath}
     rm -rf ${configTrojanBasePath}/*
@@ -1517,12 +1525,7 @@ function installTrojanServer(){
     fi
 
 
-    if [ "$configV2rayVlessMode" != "trojan" ] ; then
-        configV2rayTrojanPort=443
 
-        inputV2rayServerPort "textMainTrojanPort"
-        configV2rayTrojanPort=${isTrojanUserPortInput} 
-    fi
 
 
     read -r -d '' trojanConfigUserpasswordInput << EOM
