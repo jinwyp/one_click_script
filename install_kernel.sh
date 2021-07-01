@@ -947,11 +947,17 @@ function getLatestCentosKernelVersion(){
                     # echo "符合所选版本的Linux 内核版本: ${ver}"
                     elrepo_kernel_version_ml_Teddysun511=${ver}
                 fi
+
+                if [[ ${ver} == *"5.12"* ]]; then
+                    # echo "符合所选版本的Linux 内核版本: ${ver}"
+                    elrepo_kernel_version_ml_Teddysun512=${ver}
+                fi
             done
 
             elrepo_kernel_version_ml_TeddysunLatest=${elrepo_kernel_version_ml2_array[-1]}
             green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_TeddysunLatest}" 
             green "由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun510}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 5.xx 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun512}" 
             
         fi
     fi
@@ -1052,12 +1058,24 @@ function installCentosKernelManual(){
         fi
         green " 准备从 ${linuxKernelByUser} github 网站下载 bbr plus 的linux内核并安装 "
     else
+        linuxKernelByUserTeddysun=""
+
         if [ "${kernelVersionFirstletter}" = "5" ]; then 
             linuxKernelByUser="elrepo"
+
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.11" || "${linuxKernelToInstallVersion}" == "5.12" ]]; then 
+                linuxKernelByUserTeddysun="Teddysun"
+            fi
         else
             linuxKernelByUser="altarch"
         fi
-        green " 准备从 ${linuxKernelByUser} 网站下载linux内核并安装 "
+
+        if [ "${linuxKernelByUserTeddysun}" = "Teddysun" ]; then 
+            green " 准备从 Teddysun 网站下载 linux ${linuxKernelByUser} 内核并安装 "
+        else
+            green " 准备从 ${linuxKernelByUser} 网站下载linux内核并安装 "
+        fi
+        
     fi
     echo
 
@@ -1089,24 +1107,34 @@ function installCentosKernelManual(){
         elif [ "${linuxKernelToInstallVersion}" = "5.11" ]; then 
             elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun511}
-            elrepo_kernel_filename="elrepo."
+            elrepo_kernel_filename=""
             ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
 
             # https://fr1.teddyvps.com/kernel/el8/kernel-ml-devel-5.11.13-1.el8.elrepo.x86_64.rpm 
 
         elif [ "${linuxKernelToInstallVersion}" = "5.12" ]; then 
             elrepo_kernel_name="kernel-ml"
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun512}
+            elrepo_kernel_filename=""
+            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
+
+            # https://fr1.teddyvps.com/kernel/el7/kernel-ml-5.12.14-1.el7.x86_64.rpm
+
+        else
+            elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml_TeddysunLatest}
             elrepo_kernel_filename="elrepo."
             ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
 
-            # https://fr1.teddyvps.com/kernel/el7/kernel-ml-5.12.4-1.el7.elrepo.x86_64.rpm
+            # https://fr1.teddyvps.com/kernel/el7/kernel-ml-5.13.0-1.el7.elrepo.x86_64.rpm
         fi
 
         linuxKernelToInstallVersionFull=${elrepo_kernel_version}
 
         mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
         cd ${userHomePath}/${linuxKernelToInstallVersionFull}
+
+        echo "+++++++++++elrepo_kernel_version ${elrepo_kernel_version}"
 
         if [ "${osReleaseVersionNo}" -eq 7 ]; then
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-${elrepo_kernel_version}-1.el7.${elrepo_kernel_filename}x86_64.rpm
@@ -2429,7 +2457,8 @@ function start_menu(){
     green " 15. 安装 内核 5.4 LTS, 下载安装"
     green " 16. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
     green " 17. 安装 内核 5.11, Teddysun 编译"
-    green " 18. 安装 内核 5.12, 下载安装"
+    green " 18. 安装 内核 5.12, Teddysun 编译"
+    green " 19. 安装 内核 5.13, 下载安装"
 
     elif [[ "${osRelease}" == "debian" ]]; then
     # echo
@@ -2529,6 +2558,10 @@ function start_menu(){
         ;;
         18 )
             linuxKernelToInstallVersion="5.12"
+            installKernel
+        ;;        
+        19 )
+            linuxKernelToInstallVersion="5.13"
             installKernel
         ;;        
         21 )
