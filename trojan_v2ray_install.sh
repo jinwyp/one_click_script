@@ -1363,8 +1363,12 @@ function removeNginx(){
         green "  Nginx 卸载完毕, SSL 证书文件已删除!"
         
     else
-        green "  Nginx 卸载完毕, 已保留 SSL 证书文件!"
+        mkdir -p ${configSSLCertPath}
+        cp -f ${configSSLCertBakPath}/* ${configSSLCertPath}
+        green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
     fi
+
+    rm -rf ${configSSLCertBakPath}
     green " ================================================== "
     echo
 }
