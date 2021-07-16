@@ -1706,6 +1706,7 @@ ExecReload=/bin/kill -HUP \$MAINPID
 Restart=on-failure
 RestartSec=10
 RestartPreventExitStatus=23
+LimitNOFILE=infinity
 
 [Install]
 WantedBy=multi-user.target
