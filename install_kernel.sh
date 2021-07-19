@@ -2581,7 +2581,7 @@ function start_menu(){
             installKernel
         ;;
         22 )
-            linuxKernelToInstallVersion="5.12"
+            linuxKernelToInstallVersion="5.12.17"
             installKernel
         ;;
         23 ) 
