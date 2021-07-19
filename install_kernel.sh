@@ -22,6 +22,7 @@
 
 
 # centos8 安装完成默认内核  kernel-core-4.18.0-240.15.1.el8_3.x86_64, kernel-modules-4.18.0-240.15.1.el8_3.x86_64
+# ubuntu16 安装完成默认内核  linux-generic 4.4.0.210, linux-headers-4.4.0-210
 # ubuntu18 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
 # ubuntu20 安装完成默认内核  linux-image-5.4.0-70-generic , linux-headers-5.4.0-70 
 # debian10 安装完成默认内核  4.19.0-16-amd64
@@ -2464,13 +2465,13 @@ function start_menu(){
     # echo
     green " 21. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
     echo
-    green " 22. 安装 最新版本内核 5.11, 通过 Ubuntu kernel mainline 安装"
+    green " 22. 安装 最新版本内核 5.13, 通过 Ubuntu kernel mainline 安装"
     green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
 
     elif [[ "${osRelease}" == "ubuntu" ]]; then
-    green " 22. 安装 最新版本内核 5.11, 通过 Ubuntu kernel mainline 安装"
+    green " 22. 安装 最新版本内核 5.13, 通过 Ubuntu kernel mainline 安装"
     green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -2570,7 +2571,7 @@ function start_menu(){
             installKernel
         ;;
         22 )
-            linuxKernelToInstallVersion="5.11"
+            linuxKernelToInstallVersion="5.13"
             installKernel
         ;;
         23 ) 
