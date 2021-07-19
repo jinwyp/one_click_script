@@ -2465,13 +2465,13 @@ function start_menu(){
     # echo
     green " 21. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
     echo
-    green " 22. 安装 最新版本内核 5.13, 通过 Ubuntu kernel mainline 安装"
+    green " 22. 安装 最新版本内核 5.12, 通过 Ubuntu kernel mainline 安装"
     green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
 
     elif [[ "${osRelease}" == "ubuntu" ]]; then
-    green " 22. 安装 最新版本内核 5.13, 通过 Ubuntu kernel mainline 安装"
+    green " 22. 安装 最新版本内核 5.12, 通过 Ubuntu kernel mainline 安装"
     green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -2571,7 +2571,7 @@ function start_menu(){
             installKernel
         ;;
         22 )
-            linuxKernelToInstallVersion="5.13"
+            linuxKernelToInstallVersion="5.12"
             installKernel
         ;;
         23 ) 
