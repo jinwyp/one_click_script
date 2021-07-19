@@ -416,9 +416,15 @@ function upgradeScript(){
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git
+			${osSystemPackage} -y install wget git
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
+			${osSystemPackage} -y install cpu-checker
+		fi
+
+		if ! dpkg -l | grep -qw curl; then
+			${osSystemPackage} -y install curl git
+			
 			${osSystemPackage} -y install cpu-checker
 		fi
 
