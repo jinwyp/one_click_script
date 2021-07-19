@@ -857,22 +857,22 @@ function installKernel(){
         bbrplusKernelVersion="5.11.22-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
-        bbrplusKernelVersion="5.10.45-1"
+        bbrplusKernelVersion="5.10.49-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "5.9" ]; then 
         bbrplusKernelVersion="5.9.16-1"
         
     elif [ "${linuxKernelToInstallVersion}" = "5.4" ]; then 
-        bbrplusKernelVersion="5.4.127-1"
+        bbrplusKernelVersion="5.4.131-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then 
-        bbrplusKernelVersion="4.19.195-1"
+        bbrplusKernelVersion="4.19.197-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
-        bbrplusKernelVersion="4.14.237-1"
+        bbrplusKernelVersion="4.14.239-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.9" ]; then 
-        bbrplusKernelVersion="4.9.273-1"
+        bbrplusKernelVersion="4.9.275-1"
     fi    
 
 
