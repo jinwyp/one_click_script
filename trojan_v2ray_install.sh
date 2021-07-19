@@ -607,7 +607,7 @@ function installSoftOhMyZsh(){
         zsh=$(which zsh)
 
         if ! chsh -s "$zsh"; then
-            error "chsh command unsuccessful. Change your default shell manually."
+            red "chsh command unsuccessful. Change your default shell manually."
         else
             export SHELL="$zsh"
             green "===== Shell successfully changed to '$zsh'."
