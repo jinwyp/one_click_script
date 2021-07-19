@@ -2583,7 +2583,7 @@ function start_menu(){
             installKernel
         ;;
         25 )
-            linuxKernelToInstallVersion="5.10"
+            linuxKernelToInstallVersion="5.10.50"
             installKernel
         ;;                
         31 )
