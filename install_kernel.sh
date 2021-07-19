@@ -1563,6 +1563,9 @@ function getLatestUbuntuKernelVersion(){
 
 function installDebianUbuntuKernel(){
 
+    ${sudoCmd} apt-get clean
+    ${sudoCmd} apt-get update
+    ${sudoCmd} apt-get install -y dpkg
 
     # https://kernel.ubuntu.com/~kernel-ppa/mainline/
 
@@ -1660,7 +1663,14 @@ function installDebianUbuntuKernel(){
         echo
 
         if [[ "${osRelease}" == "ubuntu" && ${osReleaseVersionNo} == "16.04" ]]; then 
-            wget -P ${userHomePath} http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+            
+            if [ -f "${userHomePath}/libssl1.1_1.1.0g-2ubuntu4_amd64.deb" ]; then
+                green "文件已存在, 不需要下载, 文件原下载地址: http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb "
+            else 
+                green "文件下载中... 下载地址: http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb "
+                wget -P ${userHomePath} http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+            fi     
+        
             ${sudoCmd} dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb 
         fi
 
