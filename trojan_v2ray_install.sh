@@ -557,7 +557,7 @@ function installSoftOhMyZsh(){
 
     echo
     green " =================================================="
-    yellow "   准备安装 ZSH"
+    yellow " 开始安装 ZSH"
     green " =================================================="
     echo
 
@@ -583,7 +583,7 @@ function installSoftOhMyZsh(){
     if [[ ! -d "${HOME}/.oh-my-zsh" ]] ;  then
 
         green " =================================================="
-        yellow " 准备安装 oh-my-zsh"
+        yellow " 开始安装 oh-my-zsh"
         green " =================================================="
         curl -Lo ${HOME}/ohmyzsh_install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         chmod +x ${HOME}/ohmyzsh_install.sh
@@ -1356,7 +1356,7 @@ function removeNginx(){
 
     rm -rf "/etc/nginx"
     
-    uninstall ${configSSLAcmeScriptPath}
+    
     rm -rf ${configDownloadTempPath}
 
     read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
@@ -1366,6 +1366,7 @@ function removeNginx(){
     green " ================================================== "
     if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
         ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+        # uninstall ${configSSLAcmeScriptPath}
         green "  Nginx 卸载完毕, SSL 证书文件已删除!"
         
     else
