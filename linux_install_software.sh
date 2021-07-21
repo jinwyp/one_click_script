@@ -596,6 +596,47 @@ function toolboxJcnf(){
 
 
 
+configDownloadTempPath="${HOME}/temp"
+
+function downloadAndUnzip(){
+    if [ -z $1 ]; then
+        green " ================================================== "
+        green "     下载文件地址为空!"
+        green " ================================================== "
+        exit
+    fi
+    if [ -z $2 ]; then
+        green " ================================================== "
+        green "     目标路径地址为空!"
+        green " ================================================== "
+        exit
+    fi
+    if [ -z $3 ]; then
+        green " ================================================== "
+        green "     下载文件的文件名为空!"
+        green " ================================================== "
+        exit
+    fi
+
+    mkdir -p ${configDownloadTempPath}
+
+    if [[ $3 == *"tar.xz"* ]]; then
+        green "===== 下载并解压tar文件: $3 "
+        wget -O ${configDownloadTempPath}/$3 $1
+        tar xf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
+        mv ${configDownloadTempPath}/* $2
+        rm -rf ${configDownloadTempPath}
+    else
+        green "===== 下载并解压zip文件:  $3 "
+        wget -O ${configDownloadTempPath}/$3 $1
+        unzip -d $2 ${configDownloadTempPath}/$3
+        rm -rf ${configDownloadTempPath}
+    fi
+
+}
+
+
+
 
 function getGithubLatestReleaseVersion(){
     # https://github.com/p4gefau1t/trojan-go/issues/63
@@ -662,8 +703,6 @@ function installNodejs(){
 
 
 configDockerPath="${HOME}/download"
-configV2rayPoseidonPath="${HOME}"
-
 
 function installDocker(){
 
@@ -827,92 +866,372 @@ function installPortainer(){
 
 
 
+configV2rayPoseidonPort="$(($RANDOM + 10000))"
+configV2rayPoseidonPath="${HOME}/v2ray-poseidon"
 
+configV2rayAccessLogFilePath="${HOME}/v2ray-poseidon-access.log"
+configV2rayErrorLogFilePath="${HOME}/v2ray-poseidon-error.log"
 
 function installV2rayPoseidon(){
 
-    green " =================================================="
-    yellow " 准备安装 V2rayPoseidon"
-    green " =================================================="
+    echo
+    if [ -f "${configV2rayPoseidonPath}/v2ray-poseidon" ] || [ -f "/usr/bin/v2ray" ]; then
+        green " =================================================="
+        green "     已安装过 v2ray-poseidon 或 v2ray, 退出安装 !"
+        green " =================================================="
+        exit
+    fi
 
-    green " ================================================== "
-    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
-    green " ================================================== "
+    echo
+    read -p "请选择直接运行模式还是Docker运行模式? 默认直接回车为直接运行模式, 选否则为Docker运行模式, 请输入[Y/n]:" isV2rayDockerNotInput
+    isV2rayDockerNotInput=${isV2rayDockerNotInput:-Y}
 
-    read configSSLDomain
+    if [[ $isV2rayDockerNotInput == [Yy] ]]; then
 
-    mkdir -p ${configV2rayPoseidonPath}
-    cd ${configV2rayPoseidonPath}
-    
-    git clone https://github.com/ColetteContreras/v2ray-poseidon.git
+        versionV2rayPoseidon=$(getGithubLatestReleaseVersion "ColetteContreras/v2ray-poseidon")
+        
+        green " =================================================="
+        green "  开始安装 V2ray-Poseidon ${versionV2rayPoseidon}"
+        green " =================================================="
+        echo
 
-    cd v2ray-poseidon
+        mkdir -p ${configV2rayPoseidonPath}
+        cd ${configV2rayPoseidonPath}
 
-    green " ================================================== "
-    green "   V2rayPoseidon 安装成功 请再次运行脚本编辑配置文件"
-    green " ================================================== "
- 	
-}
+        # https://github.com/ColetteContreras/v2ray-poseidon/releases/download/v2.2.0/v2ray-linux-64.zip
+        downloadFilenameV2rayPoseidon="v2ray-linux-64.zip"
 
-function startV2rayPoseidonWS(){
-    cd ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls
-    docker-compose up -d      
-}
+        downloadAndUnzip "https://github.com/ColetteContreras/v2ray-poseidon/releases/download/v${versionV2rayPoseidon}/${downloadFilenameV2rayPoseidon}" "${configV2rayPoseidonPath}" "${downloadFilenameV2rayPoseidon}"
+        mv ${configV2rayPoseidonPath}/v2ray ${configV2rayPoseidonPath}/v2ray-poseidon
+        cp ${configV2rayPoseidonPath}/config.json ${configV2rayPoseidonPath}/config_example.json
+        chmod +x ${configV2rayPoseidonPath}/v2ray-poseidon
 
-function stopV2rayPoseidonWS(){
-    cd ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls
-    docker-compose stop   
-}
+        sed -i "s/10086/${configV2rayPoseidonPort}/g" "${configV2rayPoseidonPath}/config.json"
 
-function restartV2rayPoseidonWS(){
-    cd ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls
-    docker-compose restart 
-}
 
-function checkLogV2rayPoseidon(){
-    cd ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls
-    docker-compose logs
-}
+        cat > ${osSystemMdPath}v2ray-poseidon.service <<-EOF
+[Unit]
+Description=V2Ray Poseidon Service
+Documentation=https://poseidon-gfw.cc
+After=network.target nss-lookup.target
 
-function deleteDockerLogs(){
-     truncate -s 0 /var/lib/docker/containers/*/*-json.log
-}
+[Service]
+Type=simple
+ExecStart=${configV2rayPoseidonPath}/v2ray-poseidon -config ${configV2rayPoseidonPath}/config.json
+Restart=on-failure
+# Don't restart in the case of configuration error
+RestartPreventExitStatus=23
+RestartSec=15
+LimitNOFILE=655360
 
-function editV2rayPoseidonWSconfig(){
-    vi ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
-}
+[Install]
+WantedBy=multi-user.target
 
-function editV2rayPoseidonDockerComposeConfig(){
-    vi ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+EOF
+
+
+        ${sudoCmd} chmod +x ${osSystemMdPath}v2ray-poseidon.service
+        ${sudoCmd} systemctl daemon-reload
+        ${sudoCmd} systemctl enable v2ray-poseidon.service
+        ${sudoCmd} systemctl start v2ray-poseidon.service
+        
+        green " ================================================== "
+        green "   V2rayPoseidon 安装成功 "
+        red "   V2rayPoseidon 服务器端配置路径 ${configV2rayPoseidonPath}/config.json "
+        red "   V2rayPoseidon 运行访问日志文件路径: ${configV2rayAccessLogFilePath} "
+        red "   V2rayPoseidon 运行错误日志文件路径: ${configV2rayErrorLogFilePath} "
+        green "   V2rayPoseidon 查看运行日志命令: journalctl -n 100 -u v2ray-poseidon"
+
+        green "   V2rayPoseidon 停止命令: systemctl stop v2ray-poseidon.service  启动命令: systemctl start v2ray-poseidon.service  重启命令: systemctl restart v2ray-poseidon.service"
+        green "   V2rayPoseidon 查看运行状态命令:  systemctl status v2ray-poseidon.service "    
+        green " ================================================== "
+
+
+    else
+
+        cd ${HOME}
+        git clone https://github.com/ColetteContreras/v2ray-poseidon.git
+        cd v2ray-poseidon
+
+        green " ================================================== "
+        green "   V2rayPoseidon 安装成功 "
+        green " ================================================== "
+
+    fi
+
+    replaceV2rayPoseidonConfig
+
 }
 
 
 
 function replaceV2rayPoseidonConfig(){
 
-    if test -s ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml; then
+    if test -s ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml; then
 
-        sed -i "s?#- ./v2ray.crt:/etc/v2ray/v2ray.crt?- ${configSSLCertPath}/fullchain.cer:/etc/v2ray/v2ray.crt?g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
-        sed -i "s?#- ./v2ray.key:/etc/v2ray/v2ray.key?- ${configSSLCertPath}/private.key:/etc/v2ray/v2ray.key?g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
-        
-        sed -i 's/#- CERT_FILE=/- CERT_FILE=/g' ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
-        sed -i 's/#- KEY_FILE=/- KEY_FILE=/g' ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+        echo
+        green "请选择SSL证书申请方式 为 http方式 还是 手动放置证书文件, 手动放置证书文件也会自动申请证书"
+        green "如需要使用 dns 申请SSL证书方式, 请手动修改 docker-compose.yml 配置文件"
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为手动放置证书文件同时也会自动申请证书, 选否则http申请模式, 请输入[Y/n]:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
 
-        sed -i "s/demo.oppapanel.xyz/${configSSLDomain}/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml
+        if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
+            echo
+            getHTTPS
 
+            sed -i "s?#- ./v2ray.crt:/etc/v2ray/v2ray.crt?- ${configSSLCertPath}/${configSSLCertFullchainFilename}:/etc/v2ray/v2ray.crt?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            sed -i "s?#- ./v2ray.key:/etc/v2ray/v2ray.key?- ${configSSLCertPath}/${configSSLCertKeyFilename}:/etc/v2ray/v2ray.key?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            
+            sed -i 's/#- CERT_FILE=/- CERT_FILE=/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            sed -i 's/#- KEY_FILE=/- KEY_FILE=/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+
+            sed -i "s/demo.oppapanel.xyz/${configSSLDomain}/g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+        else
+            echo
+            green " ================================================== "
+            yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+            green " ================================================== "
+
+            read configSSLDomain
+
+            sed -i 's/#- "80:80"/- "80:80"/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            sed -i 's/CERT_MODE=dns/CERT_MODE=http/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+        fi
 
         read -p "请输入节点ID (纯数字):" inputV2boardNodeId
-        sed -i "s/1,/${inputV2boardNodeId},/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
+        sed -i "s/1,/${inputV2boardNodeId},/g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
 
         read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀 结尾不要带/ :" inputV2boardDomain
-        sed -i "s?http or https://YOUR V2BOARD DOMAIN?https://${inputV2boardDomain}?g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
+        sed -i "s?http or https://YOUR V2BOARD DOMAIN?https://${inputV2boardDomain}?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
 
         read -p "请输入token 即通信密钥:" inputV2boardWebApiKey
-        sed -i "s/v2board token/${inputV2boardWebApiKey}/g" ${configV2rayPoseidonPath}/v2ray-poseidon/docker/v2board/ws-tls/config.json
+        sed -i "s/v2board token/${inputV2boardWebApiKey}/g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
 
+        cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+        docker-compose up -d
+    fi
+
+
+    if test -s ${configV2rayPoseidonPath}/config.json; then
+
+        echo
+        getHTTPS
+
+        echo
+        read -p "请选择支持面板是v2board或sspanel? 默认直接回车为v2board, 选否则sspanel, 请输入[Y/n]:" isPanelV2boardInput
+        isPanelV2boardInput=${isPanelV2boardInput:-Y}
+
+        if [[ $isPanelV2boardInput == [Yy] ]]; then
+            sed -i "s/sspanel-webapi/v2board/g" "${configV2rayPoseidonPath}/config.json"
+
+            read -p "请输入token 即通信密钥:" inputV2boardWebApiKey
+            sed -i 's/panelKey": ""/token": "v2board token"/g' ${configV2rayPoseidonPath}/config.json
+            sed -i "s/v2board token/${inputV2boardWebApiKey}/g" ${configV2rayPoseidonPath}/config.json
+    
+            read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀 结尾不要带/ :" inputV2boardDomain
+            sed -i 's/panelUrl": ""/webapi": "YOUR V2BOARD DOMAIN"/g' ${configV2rayPoseidonPath}/config.json
+            sed -i "s?YOUR V2BOARD DOMAIN?https://${inputV2boardDomain}?g" ${configV2rayPoseidonPath}/config.json
+
+            sed -i 's/"loglevel": "debug"/"loglevel": "debug", "access": "configV2rayAccessLogFilePath", "error": "configV2rayErrorLogFilePath" /g' ${configV2rayPoseidonPath}/config.json
+            sed -i "s/configV2rayAccessLogFilePath/${configV2rayAccessLogFilePath}/g" ${configV2rayPoseidonPath}/config.json
+            sed -i "s/configV2rayErrorLogFilePath/${configV2rayErrorLogFilePath}/g" ${configV2rayPoseidonPath}/config.json
+        fi
+
+
+        read -p "请输入节点ID (纯数字 默认1):" inputV2boardNodeId
+        inputV2boardNodeId=${inputV2boardNodeId:-1}
+        sed -i "s/1,/${inputV2boardNodeId},/g" ${configV2rayPoseidonPath}/config.json
+
+        ${sudoCmd} systemctl restart v2ray-poseidon.service
     fi
 
 }
+
+function removeV2rayPoseidon(){
+
+    if [ -f "${configV2rayPoseidonPath}/README.md"  ]; then
+        cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+        docker-compose stop
+        rm -rf ${configV2rayPoseidonPath}
+        echo
+        green " ================================================== "
+        green "  V2ray-Poseidon Docker 运行方式 卸载完毕 !"
+        green " ================================================== "
+
+    elif [ -f "${configV2rayPoseidonPath}/v2ray-poseidon"  ]; then
+        echo
+        green " ================================================== "
+        red "  准备卸载已安装 V2ray-Poseidon "
+        green " ================================================== "
+        echo
+
+        ${sudoCmd} systemctl stop v2ray-poseidon.service
+        ${sudoCmd} systemctl disable v2ray-poseidon.service
+
+        rm -rf ${configV2rayPoseidonPath}
+        rm -f ${osSystemMdPath}v2ray-poseidon.service
+        rm -f ${configV2rayAccessLogFilePath}
+        rm -f ${configV2rayErrorLogFilePath}
+
+        rm -rf /usr/bin/v2ray /etc/init.d/v2ray /lib/systemd/system/v2ray.service /etc/systemd/system/v2ray.service
+
+        ${sudoCmd} systemctl daemon-reload
+     
+        echo
+        green " ================================================== "
+        green "  V2ray-Poseidon 卸载完毕 !"
+        green " ================================================== "
+
+    else
+        green " ================================================== "
+        red "  V2ray-Poseidon 没有安装 退出卸载 "
+        green " ================================================== "
+    fi
+
+
+
+}
+
+
+function manageV2rayPoseidon(){
+
+    echo
+    green " =================================================="
+    echo
+    green " 1. 启动 V2Ray-Poseidon 服务器端, 直接命令行 运行方式"
+    green " 2. 重启 V2Ray-Poseidon 服务器端, 直接命令行 运行方式"
+    green " 3. 停止 V2Ray-Poseidon 服务器端, 直接命令行 运行方式"
+    green " 4. 查看 V2Ray-Poseidon 服务器端运行状态, 直接命令行 运行方式"
+    green " 5. 查看 V2Ray-Poseidon 服务器端日志, 直接命令行 运行方式"
+    echo
+    green " 11. 启动 V2Ray-Poseidon 服务器端, Docker 运行方式"
+    green " 12. 重启 V2Ray-Poseidon 服务器端, Docker 运行方式"
+    green " 13. 停止 V2Ray-Poseidon 服务器端, Docker 运行方式"
+    green " 14. 查看 V2Ray-Poseidon 服务器端日志, Docker 运行方式"
+    green " 15. 清空 V2Ray-Poseidon Docker日志, Docker 运行方式"
+
+    echo
+    green " =================================================="
+    green " 0. 退出脚本"
+    echo
+    read -p "请输入数字:" menuNumberInput
+    case "$menuNumberInput" in
+        1 )
+            systemctl start v2ray-poseidon.service
+        ;;   
+        2 )
+            systemctl restart v2ray-poseidon.service
+        ;;
+        3 )
+            systemctl stop v2ray-poseidon.service
+        ;;        
+        4 )
+            systemctl status v2ray-poseidon.service
+        ;;        
+        5 )
+            journalctl -n 100 -u v2ray-poseidon
+        ;;       
+        11 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose up -d   
+        ;;   
+        12 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose restart 
+        ;;
+        13 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose stop   
+        ;;        
+        14 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose logs
+        ;;        
+        15 )
+            truncate -s 0 /var/lib/docker/containers/*/*-json.log
+        ;;   
+
+        6 )
+            echo
+            echo "systemctl status wg-quick@wgcf"
+            systemctl status wg-quick@wgcf
+            red " 请查看上面 Active: 一行信息, 如果文字是绿色 active 则为启动正常, 否则启动失败"
+            checkWireguardBootStatus
+        ;;
+        7 )
+            echo
+            echo "journalctl -n 50 -u wg-quick@wgcf"
+            journalctl -n 50 -u wg-quick@wgcf
+            red " 请查看上面包含 Error 的信息行, 查找启动失败的原因 "
+        ;;        
+        8 )
+            echo
+            echo "systemctl start wg-quick@wgcf"
+            systemctl start wg-quick@wgcf
+            green " Wireguard 已启动 !"
+            checkWireguardBootStatus
+        ;;        
+        5 )
+            echo
+            echo "systemctl stop wg-quick@wgcf"
+            systemctl stop wg-quick@wgcf
+            green " Wireguard 已停止 !"
+        ;;       
+        6 )
+            echo
+            echo "systemctl restart wg-quick@wgcf"
+            systemctl restart wg-quick@wgcf
+            green " Wireguard 已重启 !"
+            checkWireguardBootStatus
+        ;;       
+        7 )
+            echo
+            echo "cat ${configWireGuardConfigFilePath}"
+            cat ${configWireGuardConfigFilePath}
+        ;;       
+        8 )
+            echo
+            echo "vi ${configWireGuardConfigFilePath}"
+            vi ${configWireGuardConfigFilePath}
+        ;; 
+        0 )
+            exit 1
+        ;;
+        * )
+            clear
+            red "请输入正确数字 !"
+            sleep 2s
+            checkWireguard
+        ;;
+    esac
+
+}
+
+
+
+function editV2rayPoseidonDockerWSConfig(){
+    vi ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
+}
+
+function editV2rayPoseidonDockerComposeConfig(){
+    vi ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+}
+
+function editV2rayPoseidonConfig(){
+    vi ${configV2rayPoseidonPath}/config.json
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function installSoga(){
@@ -921,45 +1240,124 @@ function installSoga(){
     green "    准备安装 soga !"
     green " =================================================="
 
-    green " ================================================== "
-    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
-    green " ================================================== "
-
-    read configSSLDomain
-
     mkdir -p ${configDockerPath}
     cd ${configDockerPath}
 
     wget -O soga_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/soga/master/install.sh" && chmod +x soga_install.sh && ./soga_install.sh
 
-}
-
-function editSogaConfig(){
-    vi /etc/soga/soga.conf
+    replaceSogaConfig
 }
 
 function replaceSogaConfig(){
 
     if test -s /etc/soga/soga.conf; then
 
-        sed -i 's/type=sspanel-uim/type=v2board/g' /etc/soga/soga.conf
-        #sed -i "s?cert_file=?cert_file=${configSSLCertPath}/fullchain.cer?g" /etc/soga/soga.conf
-        #sed -i "s?key_file=?key_file=${configSSLCertPath}/private.key?g" /etc/soga/soga.conf
+        echo
+        green "请选择SSL证书申请方式 为 http自动申请方式 还是 手动放置证书文件, 手动放置证书文件也会自动申请证书"
+        green "如需要使用 dns 申请SSL证书方式, 请手动修改 soga.conf 配置文件"
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为http自动申请模式, 选否则手动放置证书文件同时也会自动申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
 
-        sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
+        if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
+            echo
+            green " ================================================== "
+            yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+            green " ================================================== "
+
+            read configSSLDomain
+
+            sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
+        else
+            getHTTPS
+            sed -i "s?cert_file=?cert_file=${configSSLCertPath}/${configSSLCertFullchainFilename}?g" /etc/soga/soga.conf
+            sed -i "s?key_file=?key_file=${configSSLCertPath}/${configSSLCertKeyFilename}?g" /etc/soga/soga.conf
+
+        fi
+
+        sed -i 's/type=sspanel-uim/type=v2board/g' /etc/soga/soga.conf
+
         sed -i "s/cert_domain=/cert_domain=${configSSLDomain}/g" /etc/soga/soga.conf
 
         read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀 结尾不要带/ :" inputV2boardDomain
-        sed -i "s/www.domain.com/${inputV2boardDomain}/g" /etc/soga/soga.conf
+        sed -i "s?webapi_url=?webapi_url=https://${inputV2boardDomain}/?g" /etc/soga/soga.conf
 
         read -p "请输入webapi key 即通信密钥:" inputV2boardWebApiKey
         sed -i "s/webapi_key=/webapi_key=${inputV2boardWebApiKey}/g" /etc/soga/soga.conf
 
         read -p "请输入节点ID (纯数字):" inputV2boardNodeId
         sed -i "s/node_id=1/node_id=${inputV2boardNodeId}/g" /etc/soga/soga.conf
-     
+    
+        soga restart 
+
     fi
+
+    manageSoga
 }
+
+
+function editSogaConfig(){
+    vi /etc/soga/soga.conf
+}
+
+
+function manageSoga(){
+    echo -e ""
+    echo "soga 管理脚本使用方法: "
+    echo "------------------------------------------"
+    echo "soga                    - 显示管理菜单 (功能更多)"
+    echo "soga start              - 启动 soga"
+    echo "soga stop               - 停止 soga"
+    echo "soga restart            - 重启 soga"
+    echo "soga status             - 查看 soga 状态"
+    echo "soga enable             - 设置 soga 开机自启"
+    echo "soga disable            - 取消 soga 开机自启"
+    echo "soga log                - 查看 soga 日志"
+    echo "soga update             - 更新 soga"
+    echo "soga update x.x.x       - 更新 soga 指定版本"
+    echo "soga config             - 显示配置文件内容"
+    echo "soga config xx=xx yy=yy - 自动设置配置文件"
+    echo "soga install            - 安装 soga"
+    echo "soga uninstall          - 卸载 soga"
+    echo "soga version            - 查看 soga 版本"
+    echo "------------------------------------------"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -977,8 +1375,17 @@ configNetworkRealIp=""
 configNetworkLocalIp=""
 configSSLDomain=""
 
-configSSLCertPath="${HOME}/website/cert"
+
+configRanPath="${HOME}/ran"
+
+configSSLAcmeScriptPath="${HOME}/.acme.sh"
+configSSLCertPath="/root/.cert"
+configSSLCertKeyFilename="server.key"
+configSSLCertFullchainFilename="server.crt"
+
 configWebsitePath="${HOME}/website/html"
+
+
 
 
 function getHTTPSCertificate(){
@@ -991,21 +1398,63 @@ function getHTTPSCertificate(){
     green "=========================================="
 
 	if [[ $1 == "standalone" ]] ; then
-	    green "  开始申请证书 acme.sh standalone mode !"
-	    ~/.acme.sh/acme.sh  --issue --standalone -d ${configSSLDomain} --keylength ec-256 --server letsencrypt
 
-        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
-        --key-file   ${configSSLCertPath}/private.key \
-        --fullchain-file ${configSSLCertPath}/fullchain.cer
+	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
+        echo
 
+	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain} --keylength ec-256 --server letsencrypt
+        echo
+
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+        --reloadcmd "systemctl restart nginx.service"
 	else
-	    green "  开始申请证书 acme.sh nginx mode !"
-        ~/.acme.sh/acme.sh  --issue --server letsencrypt --keylength ec-256 -d ${configSSLDomain}  --webroot ${configWebsitePath}/
 
-        ~/.acme.sh/acme.sh  --installcert  -d ${configSSLDomain}   \
-        --key-file   ${configSSLCertPath}/private.key \
-        --fullchain-file ${configSSLCertPath}/fullchain.cer \
-        --reloadcmd  "systemctl force-reload  nginx.service"
+        mkdir -p ${configRanPath}
+        
+        if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
+            echo
+        else
+            downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
+            chmod +x ${configRanPath}/ran_linux_amd64
+        fi    
+
+        echo
+        echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
+        nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
+        echo
+
+        green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
+        echo
+        echo
+        green "默认通过Letsencrypt.org来申请证书, 如果证书申请失败, 例如一天内通过Letsencrypt.org申请次数过多, 可以选否通过BuyPass.com来申请."
+        read -p "是否通过Letsencrypt.org来申请证书? 默认直接回车为是, 选否则通过BuyPass.com来申请, 请输入[Y/n]:" isDomainSSLFromLetInput
+        isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-Y}
+
+        echo
+        if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
+            
+        else
+            read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
+            isDomainSSLFromBuyPassEmailInput=${isDomainSSLFromBuyPassEmailInput:-test@gmail.com}
+
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
+        fi
+        
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+        --reloadcmd "systemctl restart nginx.service"
+
+        sleep 4
+        ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
 
 }
@@ -1061,6 +1510,8 @@ function getHTTPS(){
 
     testLinuxPortUsage
 
+    echo
+
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
     green " ================================================== "
@@ -1075,11 +1526,11 @@ function getHTTPS(){
 
             getHTTPSCertificate "standalone"
 
-            if test -s ${configSSLCertPath}/fullchain.cer; then
+            if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
                 green " =================================================="
                 green "   域名SSL证书申请成功 !"
-                green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-                green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+                green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+                green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
                 green " =================================================="
 
             else
@@ -1094,9 +1545,9 @@ function getHTTPS(){
 
         else
             green " =================================================="
-            green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/fullchain.cer "
-            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/private.key "
+            green "  不申请域名的证书, 请把证书放到如下目录, 或自行修改配置!"
+            green "  ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+            green "  ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
             green " =================================================="
         fi
     else
@@ -1104,6 +1555,22 @@ function getHTTPS(){
     fi
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1170,17 +1637,18 @@ function start_menu(){
 
     echo
     green " 21. 安装 V2Ray-Poseidon 服务器端"
-    green " 22. 编辑 V2Ray-Poseidon WS-TLS 模式配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
-    green " 23. 编辑 V2Ray-Poseidon WS-TLS 模式Docker Compose文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
-    green " 24. 启动 V2Ray-Poseidon 服务器端"
-    green " 25. 重启 V2Ray-Poseidon 服务器端"
-    green " 26. 停止 V2Ray-Poseidon 服务器端"
-    green " 27. 查看 V2Ray-Poseidon 服务器端 日志"
-    green " 28. 清空 V2Ray-Poseidon Docker日志"
-    red " 29. 卸载 V2Ray-Poseidon"
+    red " 22. 卸载 V2Ray-Poseidon"
+    green " 23. 停止, 重启, 查看日志, 管理 V2Ray-Poseidon"
+    echo
+    green " 25. 编辑 V2Ray-Poseidon 直接命令行 方式运行 配置文件 v2ray-poseidon/config.json"
+    green " 26. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker方式运行 配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
+    green " 27. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker Compose 配置文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
+    
+
     echo
     green " 31. 安装 Soga 服务器端"
-    green " 32. 编辑 Soga 配置文件 /etc/soga/soga.conf"
+    green " 32. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
+    green " 33. 编辑 Soga 配置文件 /etc/soga/soga.conf"
     echo
     green " 41. 单独申请域名SSL证书"
     echo
@@ -1223,7 +1691,6 @@ function start_menu(){
             testLinuxPortUsage
             setLinuxDateZone
             installPackage
-            installSoftEditor
             installDocker
         ;;
         14 )
@@ -1240,47 +1707,41 @@ function start_menu(){
             installPython3
             installPython3Rembg
         ;;
+
+
         21 )
             setLinuxDateZone
+            installPackage
             installV2rayPoseidon
-            getHTTPS
-            replaceV2rayPoseidonConfig
         ;;
         22 )
-            editV2rayPoseidonWSconfig
+            removeV2rayPoseidon
         ;;
         23 )
-            editV2rayPoseidonDockerComposeConfig
-        ;;
-        24 )
-            startV2rayPoseidonWS
+            manageV2rayPoseidon
         ;;
         25 )
-            restartV2rayPoseidonWS
+            editV2rayPoseidonConfig
         ;;
         26 )
-            stopV2rayPoseidonWS
+            editV2rayPoseidonDockerWSConfig
         ;;
         27 )
-            checkLogV2rayPoseidon
+            editV2rayPoseidonDockerComposeConfig
         ;;
-        28 )
-            deleteDockerLogs
-        ;;           
-        29 )
-            checkLogV2rayPoseidon
-        ;; 
+       
         31 )
             setLinuxDateZone
-            installSoga
-            replaceSogaConfig
+            installSoga 
         ;;
         32 )
+            manageSoga
+        ;;                                        
+        33 )
             editSogaConfig
         ;;                                        
         41 )
             getHTTPS
-            replaceV2rayPoseidonConfig
             replaceSogaConfig
         ;;     
         61 )

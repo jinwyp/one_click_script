@@ -1006,8 +1006,8 @@ function getHTTPSCertificate(){
         echo
 
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/$configSSLCertKeyFilename \
-        --fullchain-file ${configSSLCertPath}/$configSSLCertFullchainFilename \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
         --reloadcmd "systemctl restart nginx.service"
 
 	else
@@ -1018,17 +1018,16 @@ function getHTTPSCertificate(){
         if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
             echo
         else
-
             downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
             chmod +x ${configRanPath}/ran_linux_amd64
-            
         fi    
 
         echo
         echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
         nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
         echo
-	    green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
+	    
+        green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
         echo
         echo
         green "默认通过Letsencrypt.org来申请证书, 如果证书申请失败, 例如一天内通过Letsencrypt.org申请次数过多, 可以选否通过BuyPass.com来申请."
@@ -1048,13 +1047,12 @@ function getHTTPSCertificate(){
             
             echo
             ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
-         
         fi
         
         echo
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/$configSSLCertKeyFilename \
-        --fullchain-file ${configSSLCertPath}/$configSSLCertFullchainFilename \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
         --reloadcmd "systemctl restart nginx.service"
 
         sleep 4
@@ -1412,8 +1410,8 @@ function installTrojanV2rayWithNginx(){
 
     green "是否申请证书? 默认为自动申请证书, 如果二次安装或已有证书 可以选否"
     green "如果已经有SSL证书文件请放到下面路径"
-    red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-    red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+    red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+    red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
     echo
     read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]:" isDomainSSLRequestInput
     isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
@@ -1424,8 +1422,8 @@ function installTrojanV2rayWithNginx(){
         else
             green " =================================================="
             green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
             green " =================================================="
         fi
     else
@@ -1433,7 +1431,7 @@ function installTrojanV2rayWithNginx(){
     fi
 
 
-    if test -s ${configSSLCertPath}/$configSSLCertFullchainFilename; then
+    if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
         green " ================================================== "
         green "     SSL证书 已检测到获取成功!"
         green " ================================================== "
@@ -1747,7 +1745,7 @@ EOF
     fi
 
     rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
-    cp ${configSSLCertPath}/$configSSLCertFullchainFilename ${configTrojanBasePath}/trojan-win-cli/$configSSLCertFullchainFilename
+    cp ${configSSLCertPath}/${configSSLCertFullchainFilename} ${configTrojanBasePath}/trojan-win-cli/${configSSLCertFullchainFilename}
 
     cat > ${configTrojanBasePath}/trojan-win-cli/config.json <<-EOF
 {
@@ -4164,8 +4162,8 @@ function getHTTPSNoNgix(){
         else
             green " =================================================="
             green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
             green " =================================================="
         fi
     else
@@ -4173,11 +4171,11 @@ function getHTTPSNoNgix(){
     fi
 
 
-    if test -s ${configSSLCertPath}/$configSSLCertFullchainFilename; then
+    if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
         green " =================================================="
         green "   域名SSL证书申请成功 !"
-        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
         green " =================================================="
 
         if [[ $1 == "trojan" ]] ; then
