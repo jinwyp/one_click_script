@@ -416,9 +416,15 @@ function upgradeScript(){
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git
+			${osSystemPackage} -y install wget git
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
+			${osSystemPackage} -y install cpu-checker
+		fi
+
+		if ! dpkg -l | grep -qw curl; then
+			${osSystemPackage} -y install curl git
+			
 			${osSystemPackage} -y install cpu-checker
 		fi
 
@@ -551,7 +557,7 @@ function installSoftOhMyZsh(){
 
     echo
     green " =================================================="
-    yellow "   准备安装 ZSH"
+    yellow " 开始安装 ZSH"
     green " =================================================="
     echo
 
@@ -577,7 +583,7 @@ function installSoftOhMyZsh(){
     if [[ ! -d "${HOME}/.oh-my-zsh" ]] ;  then
 
         green " =================================================="
-        yellow " 准备安装 oh-my-zsh"
+        yellow " 开始安装 oh-my-zsh"
         green " =================================================="
         curl -Lo ${HOME}/ohmyzsh_install.sh https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
         chmod +x ${HOME}/ohmyzsh_install.sh
@@ -601,7 +607,7 @@ function installSoftOhMyZsh(){
         zsh=$(which zsh)
 
         if ! chsh -s "$zsh"; then
-            error "chsh command unsuccessful. Change your default shell manually."
+            red "chsh command unsuccessful. Change your default shell manually."
         else
             export SHELL="$zsh"
             green "===== Shell successfully changed to '$zsh'."
@@ -1350,7 +1356,7 @@ function removeNginx(){
 
     rm -rf "/etc/nginx"
     
-    uninstall ${configSSLAcmeScriptPath}
+    
     rm -rf ${configDownloadTempPath}
 
     read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
@@ -1360,6 +1366,7 @@ function removeNginx(){
     green " ================================================== "
     if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
         ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+        # uninstall ${configSSLAcmeScriptPath}
         green "  Nginx 卸载完毕, SSL 证书文件已删除!"
         
     else
@@ -1508,6 +1515,7 @@ function installTrojanServer(){
     read configTrojanPasswordPrefixInput
     configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-jin}
 
+
     if [ "$configV2rayVlessMode" != "trojan" ] ; then
         configV2rayTrojanPort=443
 
@@ -1515,7 +1523,6 @@ function installTrojanServer(){
         configV2rayTrojanPort=${isTrojanUserPortInput} 
     fi
 
-    
     mkdir -p ${configTrojanBasePath}
     cd ${configTrojanBasePath}
     rm -rf ${configTrojanBasePath}/*
