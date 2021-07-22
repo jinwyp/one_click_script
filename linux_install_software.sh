@@ -1239,6 +1239,7 @@ function editV2rayPoseidonConfig(){
 
 
 
+configSogaConfigFilePath="/etc/soga/soga.conf"
 
 function installSoga(){
 
@@ -1253,7 +1254,7 @@ function installSoga(){
 
 function replaceSogaConfig(){
 
-    if test -s /etc/soga/soga.conf; then
+    if test -s ${configSogaConfigFilePath}; then
 
         echo
         green "请选择SSL证书申请方式 Soga共有3种: 1 http方式, 2 手动放置证书文件, 3 dns方式 "
@@ -1270,26 +1271,26 @@ function replaceSogaConfig(){
 
             read configSSLDomain
 
-            sed -i 's/cert_mode=/cert_mode=http/g' /etc/soga/soga.conf
+            sed -i 's/cert_mode=/cert_mode=http/g' ${configSogaConfigFilePath}
         else
             getHTTPS
-            sed -i "s?cert_file=?cert_file=${configSSLCertPath}/${configSSLCertFullchainFilename}?g" /etc/soga/soga.conf
-            sed -i "s?key_file=?key_file=${configSSLCertPath}/${configSSLCertKeyFilename}?g" /etc/soga/soga.conf
+            sed -i "s?cert_file=?cert_file=${configSSLCertPath}/${configSSLCertFullchainFilename}?g" ${configSogaConfigFilePath}
+            sed -i "s?key_file=?key_file=${configSSLCertPath}/${configSSLCertKeyFilename}?g" ${configSogaConfigFilePath}
 
         fi
 
-        sed -i 's/type=sspanel-uim/type=v2board/g' /etc/soga/soga.conf
+        sed -i 's/type=sspanel-uim/type=v2board/g' ${configSogaConfigFilePath}
 
-        sed -i "s/cert_domain=/cert_domain=${configSSLDomain}/g" /etc/soga/soga.conf
+        sed -i "s/cert_domain=/cert_domain=${configSSLDomain}/g" ${configSogaConfigFilePath}
 
         read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀 结尾不要带/ :" inputV2boardDomain
-        sed -i "s?webapi_url=?webapi_url=https://${inputV2boardDomain}/?g" /etc/soga/soga.conf
+        sed -i "s?webapi_url=?webapi_url=https://${inputV2boardDomain}/?g" ${configSogaConfigFilePath}
 
         read -p "请输入webapi key 即通信密钥:" inputV2boardWebApiKey
-        sed -i "s/webapi_key=/webapi_key=${inputV2boardWebApiKey}/g" /etc/soga/soga.conf
+        sed -i "s/webapi_key=/webapi_key=${inputV2boardWebApiKey}/g" ${configSogaConfigFilePath}
 
         read -p "请输入节点ID (纯数字):" inputV2boardNodeId
-        sed -i "s/node_id=1/node_id=${inputV2boardNodeId}/g" /etc/soga/soga.conf
+        sed -i "s/node_id=1/node_id=${inputV2boardNodeId}/g" ${configSogaConfigFilePath}
     
         soga restart 
 
@@ -1322,7 +1323,7 @@ function manageSoga(){
 }
 
 function editSogaConfig(){
-    vi /etc/soga/soga.conf
+    vi ${configSogaConfigFilePath}
 }
 
 
@@ -1346,6 +1347,8 @@ function editSogaConfig(){
 configXrayRAccessLogFilePath="${HOME}/xrayr-access.log"
 configXrayRErrorLogFilePath="${HOME}/xrayr-error.log"
 
+configXrayRConfigFilePath="/etc/XrayR/config.yml"
+
 function installXrayR(){
     green " =================================================="
     green "  开始安装 支持V2board面板的 服务器端程序 XrayR !"
@@ -1359,12 +1362,12 @@ function installXrayR(){
 
 function replaceXrayRConfig(){
 
-    if test -s /etc/XrayR/config.yml; then
+    if test -s ${configXrayRConfigFilePath}; then
 
         echo
         green "请选择SSL证书申请方式 XrayR  共有4种: 1 http 方式, 2 file 手动放置证书文件, 3 dns 方式, 4 none 不申请证书"
         green "本脚本提供2种 默认直接回车为 http自动申请模式, 选否则手动放置证书文件同时本脚本也会自动通过acme.sh申请证书"
-        green "如需要使用 dns 申请SSL证书方式, 请手动修改 /etc/XrayR/config.yml 配置文件"
+        green "如需要使用 dns 申请SSL证书方式, 请手动修改 ${configXrayRConfigFilePath} 配置文件"
     
         read -p "请选择SSL证书申请方式 ? 默认直接回车为http自动申请模式, 选否则手动放置证书文件同时也会自动申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
         isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
@@ -1383,15 +1386,15 @@ function replaceXrayRConfig(){
             getHTTPS
             configXrayRSSLRequestMode="file"
         
-            sed -i "s?./cert/node1.test.com.cert?${configSSLCertPath}/${configSSLCertFullchainFilename}?g" /etc/XrayR/config.yml
-            sed -i "s?./cert/node1.test.com.key?${configSSLCertPath}/${configSSLCertKeyFilename}?g" /etc/XrayR/config.yml
+            sed -i "s?./cert/node1.test.com.cert?${configSSLCertPath}/${configSSLCertFullchainFilename}?g" ${configXrayRConfigFilePath}
+            sed -i "s?./cert/node1.test.com.key?${configSSLCertPath}/${configSSLCertKeyFilename}?g" ${configXrayRConfigFilePath}
 
         fi
 
 
-        sed -i "s/CertMode: dns/CertMode: ${configXrayRSSLRequestMode}/g" /etc/XrayR/config.yml
-        sed -i 's/CertDomain: "node1.test.com"/CertDomain: "www.xxxx.net"/g' /etc/XrayR/config.yml
-        sed -i "s/www.xxxx.net/${configSSLDomain}/g" /etc/XrayR/config.yml
+        sed -i "s/CertMode: dns/CertMode: ${configXrayRSSLRequestMode}/g" ${configXrayRConfigFilePath}
+        sed -i 's/CertDomain: "node1.test.com"/CertDomain: "www.xxxx.net"/g' ${configXrayRConfigFilePath}
+        sed -i "s/www.xxxx.net/${configSSLDomain}/g" ${configXrayRConfigFilePath}
 
         echo
         read -p "请选择支持的面板类型 ? 默认直接回车为V2board, 选否则SSpanel, 请输入[Y/n]:" isXrayRPanelTypeInput
@@ -1400,21 +1403,21 @@ function replaceXrayRConfig(){
 
         if [[ $isXrayRPanelTypeInput == [Yy] ]]; then
             configXrayRPanelType="V2board"
-            sed -i 's/PanelType: "SSpanel"/PanelType: "V2board"/g' /etc/XrayR/config.yml
+            sed -i 's/PanelType: "SSpanel"/PanelType: "V2board"/g' ${configXrayRConfigFilePath}
         fi
 
         
         echo
         green "请输入面板域名, 例如www.123.com 不要带有http或https前缀 结尾不要带/"
-        green "请保证输入的V2board或其他面板域名支持Https 访问, 如要改成http请手动修改配置文件 /etc/XrayR/config.yml"
+        green "请保证输入的V2board或其他面板域名支持Https 访问, 如要改成http请手动修改配置文件 ${configXrayRConfigFilePath}"
         read -p "请输入面板域名 :" inputV2boardDomain
-        sed -i "s?http://127.0.0.1:667?https://${inputV2boardDomain}?g" /etc/XrayR/config.yml
+        sed -i "s?http://127.0.0.1:667?https://${inputV2boardDomain}?g" ${configXrayRConfigFilePath}
 
         read -p "请输入ApiKey 即通信密钥:" inputV2boardWebApiKey
-        sed -i "s/123/${inputV2boardWebApiKey}/g" /etc/XrayR/config.yml
+        sed -i "s/123/${inputV2boardWebApiKey}/g" ${configXrayRConfigFilePath}
 
         read -p "请输入节点ID (纯数字):" inputV2boardNodeId
-        sed -i "s/41/${inputV2boardNodeId}/g" /etc/XrayR/config.yml
+        sed -i "s/41/${inputV2boardNodeId}/g" ${configXrayRConfigFilePath}
     
 
         echo
@@ -1424,7 +1427,7 @@ function replaceXrayRConfig(){
 
         if [[ $isXrayRNodeTypeInput == [Nn] ]]; then
             configXrayRNodeType="Trojan"
-            sed -i 's/NodeType: V2ray/NodeType: Trojan/g' /etc/XrayR/config.yml
+            sed -i 's/NodeType: V2ray/NodeType: Trojan/g' ${configXrayRConfigFilePath}
 
         else
             echo
@@ -1432,7 +1435,7 @@ function replaceXrayRConfig(){
             isXrayRVlessSupportInput=${isXrayRVlessSupportInput:-N}
 
             if [[ $isXrayRVlessSupportInput == [Yy] ]]; then
-                sed -i 's/EnableVless: false/EnableVless: true/g' /etc/XrayR/config.yml
+                sed -i 's/EnableVless: false/EnableVless: true/g' ${configXrayRConfigFilePath}
             fi
 
             echo
@@ -1440,14 +1443,14 @@ function replaceXrayRConfig(){
             isXrayRXTLSSupportInput=${isXrayRXTLSSupportInput:-N}
 
             if [[ $isXrayRXTLSSupportInput == [Yy] ]]; then
-                sed -i 's/EnableXTLS: false/EnableXTLS: true/g' /etc/XrayR/config.yml
+                sed -i 's/EnableXTLS: false/EnableXTLS: true/g' ${configXrayRConfigFilePath}
             fi
 
         fi
 
 
-        sed -i "s?# ./access.Log?${configXrayRAccessLogFilePath}?g" /etc/XrayR/config.yml
-        sed -i "s?# ./error.log?${configXrayRErrorLogFilePath}?g" /etc/XrayR/config.yml
+        sed -i "s?# ./access.Log?${configXrayRAccessLogFilePath}?g" ${configXrayRConfigFilePath}
+        sed -i "s?# ./error.log?${configXrayRErrorLogFilePath}?g" ${configXrayRConfigFilePath}
             
 
         XrayR restart 
@@ -1480,8 +1483,71 @@ function manageXrayR(){
 }
 
 function editXrayRConfig(){
-    vi /etc/XrayR/config.yml
+    vi ${configXrayRConfigFilePath}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+configAirUniverseAccessLogFilePath="${HOME}/air-universe-access.log"
+configAirUniverseErrorLogFilePath="${HOME}/air-universe-error.log"
+
+configAirUniverseConfigFilePath="/usr/local/etc/au/au.json"
+configAirUniverseXrayConfigFilePath="/usr/local/etc/xray/config.json"
+
+function installAirUniverse(){
+    green " =================================================="
+    green "  开始安装 支持V2board面板的 服务器端程序 Air-Universe !"
+    green " =================================================="
+
+
+    # bash -c "$(curl -L https://github.com/crossfw/Xray-install/raw/main/install-release.sh)" @ install  
+    # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/install.sh)
+    
+    # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh)
+    wget -O /root/airu_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh" && chmod +x /root/airu_install.sh && /root/airu_install.sh
+
+}
+
+function manageAirUniverse(){
+    echo "Air-Universe 管理脚本使用方法: "
+    echo "------------------------------------------"
+    echo "/root/airu_install.sh              - 显示管理菜单 (功能更多)"
+    echo "/root/airu_install.sh start        - 启动 Air-Universe"
+    echo "/root/airu_install.sh stop         - 停止 Air-Universe"
+    echo "/root/airu_install.sh restart      - 重启 Air-Universe"
+    echo "/root/airu_install.sh status       - 查看 Air-Universe 状态"
+    echo "/root/airu_install.sh enable       - 设置 Air-Universe 开机自启"
+    echo "/root/airu_install.sh disable      - 取消 Air-Universe 开机自启"
+    echo "/root/airu_install.sh log          - 查看 Air-Universe 日志"
+    echo "/root/airu_install.sh update x.x.x - 更新 Air-Universe 指定版本"
+    echo "/root/airu_install.sh install      - 安装 Air-Universe"
+    echo "/root/airu_install.sh uninstall    - 卸载 Air-Universe"
+    echo "/root/airu_install.sh version      - 查看 Air-Universe 版本"
+    echo "------------------------------------------"
+}
+
+function editAirUniverseConfig(){
+    vi ${configAirUniverseConfigFilePath}
+}
+
+function editAirUniverseXrayConfig(){
+    vi ${configAirUniverseXrayConfigFilePath}
+}
+
+
+
+
 
 
 
@@ -1745,7 +1811,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 2020-12-6 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 2021-07-22 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
@@ -1778,13 +1844,19 @@ function start_menu(){
     echo
     green " 31. 安装 Soga 服务器端"
     green " 32. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
-    green " 33. 编辑 Soga 配置文件 /etc/soga/soga.conf"
+    green " 33. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
     
     echo
     green " 41. 安装 XrayR 服务器端"
     green " 42. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
-    green " 43. 编辑 XrayR 配置文件 /etc/soga/soga.conf"
+    green " 43. 编辑 XrayR 配置文件 ${configXrayRConfigFilePath}"
+
     echo
+    green " 51. 安装 Air-Universe 服务器端"
+    green " 52. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
+    green " 53. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
+    green " 54. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
+    echo 
     green " 81. 单独申请域名SSL证书"
     echo
     green " 91. 工具脚本合集 by BlueSkyXN "
@@ -1885,7 +1957,19 @@ function start_menu(){
         43 )
             editXrayRConfig
         ;; 
-
+        51 )
+            setLinuxDateZone
+            installAirUniverse
+        ;;
+        52 )
+            manageAirUniverse
+        ;;                                        
+        53 )
+            editAirUniverseConfig
+        ;; 
+        54 )
+            editAirUniverseXrayConfig
+        ;; 
         81 )
             getHTTPS
         ;;     
