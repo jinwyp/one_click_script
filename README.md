@@ -6,7 +6,7 @@
 * [Trojan 和 V2ray xray 一键安装脚本](#installation-安装方法)
 * [安装 最新版和LTS Linux 内核, BBR 和 BBR Plus 内核](#installation-linux-kernel-wireguard)
 * [一键安装 wireguard, 解决避免弹出Google人机验证和 Netflix 限制问题](#installation-linux-kernel-wireguard)
-* [V2board 服务器端 V2Ray-Poseidon 或 soga 一键安装脚本](#installation-soga)
+* [V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键安装脚本](#installation-soga)
 * [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
 * [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
@@ -168,7 +168,7 @@ Let's Encrypt证书申请频率的限制
 
 
 ## Installation Soga 
-## 安装其他 Linux 软件 和 V2board 服务器端 V2Ray-Poseidon 或 soga 
+## 安装其他 Linux 软件 和 V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键脚本
 
 #### via curl 安装命令 
 
