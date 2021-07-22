@@ -1451,6 +1451,7 @@ function replaceXrayRConfig(){
 
         sed -i "s?# ./access.Log?${configXrayRAccessLogFilePath}?g" ${configXrayRConfigFilePath}
         sed -i "s?# ./error.log?${configXrayRErrorLogFilePath}?g" ${configXrayRConfigFilePath}
+        sed -i "s?Level: none?Level: info?g" ${configXrayRConfigFilePath}
             
 
         XrayR restart 
