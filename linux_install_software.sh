@@ -1499,11 +1499,25 @@ function editXrayRConfig(){
 
 
 
+
+
+
+
+
+
+
+
+configAirUniverseXrayAccessLogFilePath="${HOME}/air-universe-access.log"
+configAirUniverseXrayErrorLogFilePath="${HOME}/air-universe-error.log"
+
+
 configAirUniverseAccessLogFilePath="${HOME}/air-universe-access.log"
 configAirUniverseErrorLogFilePath="${HOME}/air-universe-error.log"
 
 configAirUniverseConfigFilePath="/usr/local/etc/au/au.json"
 configAirUniverseXrayConfigFilePath="/usr/local/etc/xray/config.json"
+
+configXrayPort="$(($RANDOM + 10000))"
 
 function installAirUniverse(){
     green " =================================================="
@@ -1515,25 +1529,94 @@ function installAirUniverse(){
     # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/install.sh)
     
     # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh)
-    wget -O /root/airu_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh" && chmod +x /root/airu_install.sh && /root/airu_install.sh
+    wget -O /root/airu_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh" 
+    chmod +x /root/airu_install.sh 
+    cp -f /root/airu_install.sh /usr/bin/airu
+    
+    /root/airu_install.sh install 
+
+    replaceAirUniverseConfig
+}
+
+function replaceAirUniverseConfig(){
+
+    if test -s ${configAirUniverseConfigFilePath}; then
+
+        echo
+        green "请选择SSL证书申请方式 acme.sh 共有2种: 1 http方式, 2 dns方式"
+        green "Air-Universe 本身没有自动获取证书功能, 使用 acme.sh 申请证书"
+        green "直接回车默认为 http 方式, 选择否则不申请证书"
+        red "如需使用 dns 方式申请证书, 请选择否后, 在后面菜单选择 2 使用ACME获取SSL证书"
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则不申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
+
+        if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
+            echo
+            getHTTPS "air"
+
+            read -r -d '' airUniverseConfigProxyInput << EOM
+        
+        "type": "xray",
+        "alter_id": 1,
+        "auto_generate": true,
+        "in_tags": [
+            "p0"
+        ],
+        "api_address": "127.0.0.1",
+        "api_port": ${configXrayPort},
+        "force_close_tls": false,
+        "log_path": "${configAirUniverseAccessLogFilePath}",
+        "cert": {
+            "cert_path": "${configSSLCertPath}/${configSSLCertFullchainFilename}",
+            "key_path": "${configSSLCertPath}/${configSSLCertKeyFilename}"
+        },
+        "speed_limit_level": [0, 10, 30, 100, 150, 300, 1000]
+        
+EOM
+
+            # https://stackoverflow.com/questions/6684487/sed-replace-with-variable-with-multiple-lines
+
+            TEST="${airUniverseConfigProxyInput//\\/\\\\}"
+            TEST="${TEST//\//\\/}"
+            TEST="${TEST//&/\\&}"
+            TEST="${TEST//$'\n'/\\n}"
+
+            sed -i "s/\"type\":\"xray\"/${TEST}/g" ${configAirUniverseConfigFilePath}
+            sed -i "s/10085/${configXrayPort}/g" ${configAirUniverseXrayConfigFilePath}
+
+            airu restart
+
+            manageAirUniverse
+        else
+            echo
+            green "如需使用 dns 方式申请证书, 在后续菜单选择 2 使用ACME获取SSL证书"
+            read -p "Press enter to continue. 按回车继续运行 airu 命令"
+            airu
+        fi
+
+    else
+        manageAirUniverse
+    fi
+    
 
 }
 
 function manageAirUniverse(){
+    echo -e ""
     echo "Air-Universe 管理脚本使用方法: "
     echo "------------------------------------------"
-    echo "/root/airu_install.sh              - 显示管理菜单 (功能更多)"
-    echo "/root/airu_install.sh start        - 启动 Air-Universe"
-    echo "/root/airu_install.sh stop         - 停止 Air-Universe"
-    echo "/root/airu_install.sh restart      - 重启 Air-Universe"
-    echo "/root/airu_install.sh status       - 查看 Air-Universe 状态"
-    echo "/root/airu_install.sh enable       - 设置 Air-Universe 开机自启"
-    echo "/root/airu_install.sh disable      - 取消 Air-Universe 开机自启"
-    echo "/root/airu_install.sh log          - 查看 Air-Universe 日志"
-    echo "/root/airu_install.sh update x.x.x - 更新 Air-Universe 指定版本"
-    echo "/root/airu_install.sh install      - 安装 Air-Universe"
-    echo "/root/airu_install.sh uninstall    - 卸载 Air-Universe"
-    echo "/root/airu_install.sh version      - 查看 Air-Universe 版本"
+    echo "airu              - 显示管理菜单 (功能更多)"
+    echo "airu start        - 启动 Air-Universe"
+    echo "airu stop         - 停止 Air-Universe"
+    echo "airu restart      - 重启 Air-Universe"
+    echo "airu status       - 查看 Air-Universe 状态"
+    echo "airu enable       - 设置 Air-Universe 开机自启"
+    echo "airu disable      - 取消 Air-Universe 开机自启"
+    echo "airu log          - 查看 Air-Universe 日志"
+    echo "airu update x.x.x - 更新 Air-Universe 指定版本"
+    echo "airu install      - 安装 Air-Universe"
+    echo "airu uninstall    - 卸载 Air-Universe"
+    echo "airu version      - 查看 Air-Universe 版本"
     echo "------------------------------------------"
 }
 
@@ -1543,6 +1626,11 @@ function editAirUniverseConfig(){
 
 function editAirUniverseXrayConfig(){
     vi ${configAirUniverseXrayConfigFilePath}
+}
+
+function removeAirUniverse(){
+    rm -rf /usr/local/etc/xray
+    /root/airu_install.sh uninstall
 }
 
 
@@ -1707,8 +1795,12 @@ function getHTTPS(){
 
     testLinuxPortUsage
 
-    echo
+    if [[ $1 == "air" ]] ; then
+        configSSLCertPath="/usr/local/share/au"
+    fi
 
+
+    echo
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
     green " ================================================== "
@@ -1853,9 +1945,10 @@ function start_menu(){
 
     echo
     green " 51. 安装 Air-Universe 服务器端"
-    green " 52. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
-    green " 53. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
-    green " 54. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
+    red " 52. 卸载 Air-Universe"
+    green " 53. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
+    green " 54. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
+    green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
     echo 
     green " 81. 单独申请域名SSL证书"
     echo
@@ -1962,13 +2055,19 @@ function start_menu(){
             installAirUniverse
         ;;
         52 )
-            manageAirUniverse
+            removeAirUniverse
         ;;                                        
         53 )
+            manageAirUniverse
+        ;;                                        
+        54 )
             editAirUniverseConfig
         ;; 
-        54 )
+        55 )
             editAirUniverseXrayConfig
+        ;; 
+        58 )
+            replaceAirUniverseConfig
         ;; 
         81 )
             getHTTPS
