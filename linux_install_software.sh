@@ -891,7 +891,7 @@ function installV2rayPoseidon(){
         versionV2rayPoseidon=$(getGithubLatestReleaseVersion "ColetteContreras/v2ray-poseidon")
         
         green " =================================================="
-        green "  开始安装 V2ray-Poseidon ${versionV2rayPoseidon}"
+        green "  开始安装 支持V2board面板的 服务器端程序 V2ray-Poseidon ${versionV2rayPoseidon}"
         green " =================================================="
         echo
 
@@ -970,9 +970,11 @@ function replaceV2rayPoseidonConfig(){
     if test -s ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml; then
 
         echo
-        green "请选择SSL证书申请方式 为 http方式 还是 手动放置证书文件, 手动放置证书文件也会自动申请证书"
+        green "请选择SSL证书申请方式 V2ray-Poseidon共有3种: 1 http方式, 2 手动放置证书文件, 3 dns方式 "
+        green "本脚本提供2种 默认直接回车为 手动放置证书文件, 手动放置证书文件本脚本也会自动通过acme.sh申请证书"
+        red "如选否 为 http 自动获取证书方式, 但由于acme.sh脚本2021年8月开始默认从 Letsencrypt 换到 ZeroSSL, 而V2ray-Poseidon已经很长时间没有更新 导致http申请证书模式会出现问题!"
         green "如需要使用 dns 申请SSL证书方式, 请手动修改 docker-compose.yml 配置文件"
-        read -p "请选择SSL证书申请方式 ? 默认直接回车为手动放置证书文件同时也会自动申请证书, 选否则http申请模式, 请输入[Y/n]:" isSSLRequestHTTPInput
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为手动放置证书文件, 选否则http申请模式, 请输入[Y/n]:" isSSLRequestHTTPInput
         isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
 
         if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
@@ -1234,14 +1236,15 @@ function editV2rayPoseidonConfig(){
 
 
 
+
+
+
+
 function installSoga(){
 
     green " =================================================="
-    green "    准备安装 soga !"
+    green "  开始安装 支持V2board面板的 服务器端程序 soga !"
     green " =================================================="
-
-    mkdir -p ${configDockerPath}
-    cd ${configDockerPath}
 
     wget -O soga_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/soga/master/install.sh" && chmod +x soga_install.sh && ./soga_install.sh
 
@@ -1253,7 +1256,8 @@ function replaceSogaConfig(){
     if test -s /etc/soga/soga.conf; then
 
         echo
-        green "请选择SSL证书申请方式 为 http自动申请方式 还是 手动放置证书文件, 手动放置证书文件也会自动申请证书"
+        green "请选择SSL证书申请方式 Soga共有3种: 1 http方式, 2 手动放置证书文件, 3 dns方式 "
+        green "本脚本提供2种 默认直接回车为 http自动申请模式, 选否则手动放置证书文件同时本脚本也会自动通过acme.sh申请证书"
         green "如需要使用 dns 申请SSL证书方式, 请手动修改 soga.conf 配置文件"
         read -p "请选择SSL证书申请方式 ? 默认直接回车为http自动申请模式, 选否则手动放置证书文件同时也会自动申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
         isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
@@ -1295,11 +1299,6 @@ function replaceSogaConfig(){
 }
 
 
-function editSogaConfig(){
-    vi /etc/soga/soga.conf
-}
-
-
 function manageSoga(){
     echo -e ""
     echo "soga 管理脚本使用方法: "
@@ -1322,6 +1321,9 @@ function manageSoga(){
     echo "------------------------------------------"
 }
 
+function editSogaConfig(){
+    vi /etc/soga/soga.conf
+}
 
 
 
@@ -1341,16 +1343,145 @@ function manageSoga(){
 
 
 
+configXrayRAccessLogFilePath="${HOME}/xrayr-access.log"
+configXrayRErrorLogFilePath="${HOME}/xrayr-error.log"
+
+function installXrayR(){
+    green " =================================================="
+    green "  开始安装 支持V2board面板的 服务器端程序 XrayR !"
+    green " =================================================="
+
+    wget -O xrayr_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/XrayR-project/XrayR-release/master/install.sh" && chmod +x xrayr_install.sh && ./xrayr_install.sh
+
+    replaceXrayRConfig
+}
 
 
+function replaceXrayRConfig(){
+
+    if test -s /etc/XrayR/config.yml; then
+
+        echo
+        green "请选择SSL证书申请方式 XrayR  共有4种: 1 http 方式, 2 file 手动放置证书文件, 3 dns 方式, 4 none 不申请证书"
+        green "本脚本提供2种 默认直接回车为 http自动申请模式, 选否则手动放置证书文件同时本脚本也会自动通过acme.sh申请证书"
+        green "如需要使用 dns 申请SSL证书方式, 请手动修改 /etc/XrayR/config.yml 配置文件"
+    
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为http自动申请模式, 选否则手动放置证书文件同时也会自动申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
+
+        configXrayRSSLRequestMode="http"
+        if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
+            echo
+            green " ================================================== "
+            yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+            green " ================================================== "
+
+            read configSSLDomain
+
+            
+        else
+            getHTTPS
+            configXrayRSSLRequestMode="file"
+        
+            sed -i "s?./cert/node1.test.com.cert?${configSSLCertPath}/${configSSLCertFullchainFilename}?g" /etc/XrayR/config.yml
+            sed -i "s?./cert/node1.test.com.key?${configSSLCertPath}/${configSSLCertKeyFilename}?g" /etc/XrayR/config.yml
+
+        fi
 
 
+        sed -i "s/CertMode: dns/CertMode: ${configXrayRSSLRequestMode}/g" /etc/XrayR/config.yml
+        sed -i 's/CertDomain: "node1.test.com"/CertDomain: "www.xxxx.net"/g' /etc/XrayR/config.yml
+        sed -i "s/www.xxxx.net/${configSSLDomain}/g" /etc/XrayR/config.yml
+
+        echo
+        read -p "请选择支持的面板类型 ? 默认直接回车为V2board, 选否则SSpanel, 请输入[Y/n]:" isXrayRPanelTypeInput
+        isXrayRPanelTypeInput=${isXrayRPanelTypeInput:-Y}
+        configXrayRPanelType="SSpanel"
+
+        if [[ $isXrayRPanelTypeInput == [Yy] ]]; then
+            configXrayRPanelType="V2board"
+            sed -i 's/PanelType: "SSpanel"/PanelType: "V2board"/g' /etc/XrayR/config.yml
+        fi
+
+        
+        echo
+        green "请输入面板域名, 例如www.123.com 不要带有http或https前缀 结尾不要带/"
+        green "请保证输入的V2board或其他面板域名支持Https 访问, 如要改成http请手动修改配置文件 /etc/XrayR/config.yml"
+        read -p "请输入面板域名 :" inputV2boardDomain
+        sed -i "s?http://127.0.0.1:667?https://${inputV2boardDomain}?g" /etc/XrayR/config.yml
+
+        read -p "请输入ApiKey 即通信密钥:" inputV2boardWebApiKey
+        sed -i "s/123/${inputV2boardWebApiKey}/g" /etc/XrayR/config.yml
+
+        read -p "请输入节点ID (纯数字):" inputV2boardNodeId
+        sed -i "s/41/${inputV2boardNodeId}/g" /etc/XrayR/config.yml
+    
+
+        echo
+        read -p "请选择支持的节点类型 ? 默认直接回车为V2ray, 选否则为Trojan, 请输入[Y/n]:" isXrayRNodeTypeInput
+        isXrayRNodeTypeInput=${isXrayRNodeTypeInput:-Y}
+        configXrayRNodeType="V2ray"
+
+        if [[ $isXrayRNodeTypeInput == [Nn] ]]; then
+            configXrayRNodeType="Trojan"
+            sed -i 's/NodeType: V2ray/NodeType: Trojan/g' /etc/XrayR/config.yml
+
+        else
+            echo
+            read -p "是否给V2ray启用Vless协议 ? 默认直接回车选择否,默认启用Vmess协议, 选择是则启用Vless协议, 请输入[y/N]:" isXrayRVlessSupportInput
+            isXrayRVlessSupportInput=${isXrayRVlessSupportInput:-N}
+
+            if [[ $isXrayRVlessSupportInput == [Yy] ]]; then
+                sed -i 's/EnableVless: false/EnableVless: true/g' /etc/XrayR/config.yml
+            fi
+
+            echo
+            read -p "是否给V2ray启用XTLS ? 默认直接回车选择否,默认启用Tls, 选择是则启用XTLS, 请输入[y/N]:" isXrayRXTLSSupportInput
+            isXrayRXTLSSupportInput=${isXrayRXTLSSupportInput:-N}
+
+            if [[ $isXrayRXTLSSupportInput == [Yy] ]]; then
+                sed -i 's/EnableXTLS: false/EnableXTLS: true/g' /etc/XrayR/config.yml
+            fi
+
+        fi
 
 
+        sed -i "s?# ./access.Log?${configXrayRAccessLogFilePath}?g" /etc/XrayR/config.yml
+        sed -i "s?# ./error.log?${configXrayRErrorLogFilePath}?g" /etc/XrayR/config.yml
+            
+
+        XrayR restart 
+
+    fi
+
+    manageXrayR
+}
 
 
+function manageXrayR(){
+    echo -e ""
+    echo "XrayR 管理脚本使用方法 (兼容使用xrayr执行，大小写不敏感): "
+    echo "------------------------------------------"
+    echo "XrayR                    - 显示管理菜单 (功能更多)"
+    echo "XrayR start              - 启动 XrayR"
+    echo "XrayR stop               - 停止 XrayR"
+    echo "XrayR restart            - 重启 XrayR"
+    echo "XrayR status             - 查看 XrayR 状态"
+    echo "XrayR enable             - 设置 XrayR 开机自启"
+    echo "XrayR disable            - 取消 XrayR 开机自启"
+    echo "XrayR log                - 查看 XrayR 日志"
+    echo "XrayR update             - 更新 XrayR"
+    echo "XrayR update x.x.x       - 更新 XrayR 指定版本"
+    echo "XrayR config             - 显示配置文件内容"
+    echo "XrayR install            - 安装 XrayR"
+    echo "XrayR uninstall          - 卸载 XrayR"
+    echo "XrayR version            - 查看 XrayR 版本"
+    echo "------------------------------------------"
+}
 
-
+function editXrayRConfig(){
+    vi /etc/XrayR/config.yml
+}
 
 
 
@@ -1644,16 +1775,20 @@ function start_menu(){
     green " 26. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker方式运行 配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
     green " 27. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker Compose 配置文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
     
-
     echo
     green " 31. 安装 Soga 服务器端"
     green " 32. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
     green " 33. 编辑 Soga 配置文件 /etc/soga/soga.conf"
+    
     echo
-    green " 41. 单独申请域名SSL证书"
+    green " 41. 安装 XrayR 服务器端"
+    green " 42. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
+    green " 43. 编辑 XrayR 配置文件 /etc/soga/soga.conf"
     echo
-    green " 61. 工具脚本合集 by BlueSkyXN "
-    green " 62. 工具脚本合集 by jcnf "
+    green " 81. 单独申请域名SSL证书"
+    echo
+    green " 91. 工具脚本合集 by BlueSkyXN "
+    green " 92. 工具脚本合集 by jcnf "
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -1739,15 +1874,25 @@ function start_menu(){
         ;;                                        
         33 )
             editSogaConfig
-        ;;                                        
+        ;; 
         41 )
+            setLinuxDateZone
+            installXrayR
+        ;;
+        42 )
+            manageXrayR
+        ;;                                        
+        43 )
+            editXrayRConfig
+        ;; 
+
+        81 )
             getHTTPS
-            replaceSogaConfig
         ;;     
-        61 )
+        91 )
             toolboxSkybox
         ;;                        
-        62 )
+        92 )
             toolboxJcnf
         ;;                        
         0 )
