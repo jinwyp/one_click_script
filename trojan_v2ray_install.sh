@@ -4160,6 +4160,7 @@ function getHTTPSNoNgix(){
 
                 echo
                 green "是否使用 standalone 方式申请证书? 需要80端口开放, 如已安装nginx或其他web服务器可选否,通过webroot模式安装"
+                red "如选择webroot模式, 请先关闭 nginx或其他web服务器的服务, 保证80端口开放. 申请证书完成后再开启nginx"
                 red "如选择webroot模式, 已安装的 nginx或其他web服务器的网页地址请设置为 ${configWebsitePath}"
                 read -p "是否使用standalone方式申请证书? 直接回车默认standalone, 选否则通过webroot模式申请证书, 请输入[Y/n]:" isDomainSSLWebrootInput
                 isDomainSSLWebrootInput=${isDomainSSLWebrootInput:-Y}
