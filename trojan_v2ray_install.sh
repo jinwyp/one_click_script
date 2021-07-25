@@ -4157,8 +4157,18 @@ function getHTTPSNoNgix(){
 
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-            getHTTPSCertificate "standalone"
 
+                echo
+                green "是否使用 standalone 方式申请证书? 需要80端口开放, 如已安装nginx或其他web服务器可选否,通过webroot模式安装"
+                red "如选择webroot模式, 已安装的 nginx或其他web服务器的网页地址请设置为 ${configWebsitePath}"
+                read -p "是否使用standalone方式申请证书? 直接回车默认standalone, 选否则通过webroot模式申请证书, 请输入[Y/n]:" isDomainSSLWebrootInput
+                isDomainSSLWebrootInput=${isDomainSSLWebrootInput:-Y}
+                if [[ $isDomainSSLWebrootInput == [Yy] ]]; then
+                    getHTTPSCertificate "standalone"
+                else
+                    getHTTPSCertificate
+                fi
+            
         else
             green " =================================================="
             green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
