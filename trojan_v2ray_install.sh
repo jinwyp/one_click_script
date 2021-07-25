@@ -4087,6 +4087,60 @@ function runTrojanWebLog(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function installXUI(){
+
+    stopServiceNginx
+    testLinuxPortUsage
+    installPackage
+
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
+    green " ================================================== "
+
+    read configSSLDomain
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+
+        green " =================================================="
+        green "    开始安装 X-UI 可视化管理面板 !"
+        green " =================================================="
+
+        wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
+
+        green "X-UI 可视化管理面板地址 http://${configSSLDomain}:54321"
+        green " 请确保 54321 端口已经放行, 例如检查linux防火墙或VPS防火墙 54321 端口是否开启"
+        green "X-UI 可视化管理面板 默认管理员用户 admin 密码 admin, 为保证安全,请登陆后尽快修改默认密码 "
+        green " =================================================="
+
+    else
+        exit
+    fi
+}
+function removeXUI(){
+    green " =================================================="
+    /usr/bin/x-ui
+}
+
+
 function installV2rayUI(){
 
     stopServiceNginx
@@ -4260,11 +4314,13 @@ function startMenuOther(){
     green " 4. 查看日志, 管理用户, 查看配置等功能"
     red " 5. 卸载 trojan-web 和 nginx "
     echo
-    green " 6. 安装 v2ray 可视化管理面板V2ray UI 可以同时支持trojan"
-    green " 7. 升级 v2ray UI 到最新版本"
-    red " 8. 卸载 v2ray UI"
+    green " 6. 安装 V2ray 可视化管理面板V2-UI, 可以同时支持trojan"
+    green " 7. 升级 V2-UI 到最新版本"
+    red " 8. 卸载 V2-UI"
+    green " 9. 安装 Xray 可视化管理面板 X-UI, 可以同时支持trojan"
+    red " 10. 升级 或 卸载 X-UI"
     echo
-    red " 安装上面2个可视化管理面板 之前不能用本脚本或其他脚本安装过trojan或v2ray! 2个管理面板也无法同时安装"
+    red " 安装上面3个可视化管理面板 之前不能用本脚本或其他脚本安装过trojan或v2ray! 3个管理面板也无法同时安装"
 
     green " =================================================="
     green " 11. 单独申请域名SSL证书"
@@ -4332,9 +4388,15 @@ function startMenuOther(){
             upgradeV2rayUI
         ;;
         8 )
-            # removeNginx
             removeV2rayUI
         ;;
+        9 )
+            setLinuxDateZone
+            installXUI
+        ;;  
+        10 )
+            removeXUI
+        ;;              
         11 )
             getHTTPSNoNgix
         ;;
