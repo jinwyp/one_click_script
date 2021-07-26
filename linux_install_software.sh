@@ -971,7 +971,7 @@ function replaceV2rayPoseidonConfig(){
 
         echo
         green "请选择SSL证书申请方式 V2ray-Poseidon共有3种: 1 http方式, 2 手动放置证书文件, 3 dns方式 "
-        green "本脚本提供2种 默认直接回车为 手动放置证书文件, 手动放置证书文件本脚本也会自动通过acme.sh申请证书"
+        green "本脚本提供2种 默认直接回车为 手动放置证书文件, 手动放置证书文件, 本脚本也会自动通过acme.sh申请证书"
         red "如选否 为 http 自动获取证书方式, 但由于acme.sh脚本2021年8月开始默认从 Letsencrypt 换到 ZeroSSL, 而V2ray-Poseidon已经很长时间没有更新 导致http申请证书模式会出现问题!"
         green "如需要使用 dns 申请SSL证书方式, 请手动修改 docker-compose.yml 配置文件"
         read -p "请选择SSL证书申请方式 ? 默认直接回车为手动放置证书文件, 选否则http申请模式, 请输入[Y/n]:" isSSLRequestHTTPInput
@@ -1544,16 +1544,18 @@ function replaceAirUniverseConfig(){
     if test -s ${configAirUniverseConfigFilePath}; then
 
         echo
-        green "请选择SSL证书申请方式 acme.sh 共有2种: 1 http方式, 2 dns方式"
+        green "请选择SSL证书申请方式 acme.sh 共有2种: 1 http方式, 2 dns方式, 3 不申请证书"
         green "Air-Universe 本身没有自动获取证书功能, 使用 acme.sh 申请证书"
-        green "直接回车默认为 http 方式, 选择否则不申请证书"
-        red "如需使用 dns 方式申请证书, 请选择否后, 在后面菜单选择 2 使用ACME获取SSL证书"
-        read -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则不申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
-        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为1 http方式,  请输入纯数字:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-1}
 
-        if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
+        if [[  ( $isSSLRequestHTTPInput == "1" ) || ( $isSSLRequestHTTPInput == "2" ) ]]; then
             echo
-            getHTTPS "air"
+            if [[ $isSSLRequestHTTPInput == "1" ]]; then
+                getHTTPS "air" "http"
+            else
+                getHTTPS "air" "dns"
+            fi
 
             read -r -d '' airUniverseConfigProxyInput << EOM
         
@@ -1590,7 +1592,7 @@ EOM
             manageAirUniverse
         else
             echo
-            green "如需使用 dns 方式申请证书, 在后续菜单选择 2 使用ACME获取SSL证书"
+            green "不申请SSL证书"
             read -p "Press enter to continue. 按回车继续运行 airu 命令"
             airu
         fi
@@ -1685,7 +1687,7 @@ function getHTTPSCertificate(){
 
 	if [[ $1 == "standalone" ]] ; then
 
-	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
+	    green "  开始申请证书, acme.sh 通过 http standalone mode 申请 "
         echo
 
 	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain} --keylength ec-256 --server letsencrypt
@@ -1695,6 +1697,51 @@ function getHTTPSCertificate(){
         --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
         --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
         --reloadcmd "systemctl restart nginx.service"
+
+    elif [[ $1 == "dns" ]] ; then
+
+        green "  开始申请证书, acme.sh 通过 dns mode 申请 "
+        echo
+        read -r -p "请输入您的邮箱Email 用于在 ZeroSSL.com 申请SSL证书:" isSSLDNSEmailInput
+        ${configSSLAcmeScriptPath}/acme.sh --register-account  -m ${isSSLDNSEmailInput} --server zerossl
+
+        echo
+        green "请选择 DNS provider DNS 提供商: 1. CloudFlare, 2. AliYun, 3. DNSPod(Tencent) "
+        read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isSSLDNSProviderInput
+        isSSLDNSProviderInput=${isSSLDNSProviderInput:-1}    
+
+        
+        if [ "$isSSLDNSProviderInput" == "1" ]; then
+            read -r -p "Please Input CloudFlare Email: " cf_email
+            export CF_Email="${cf_email}"
+            read -r -p "Please Input CloudFlare Global API Key: " cf_key
+            export CF_Key="${cf_key}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_cf --force --keylength ec-256 --server zerossl
+
+        elif [ "$isSSLDNSProviderInput" == "2" ]; then
+            read -r -p "Please Input Ali Key: " Ali_Key
+            export Ali_Key="${Ali_Key}"
+            read -r -p "Please Input Ali Secret: " Ali_Secret
+            export Ali_Secret="${Ali_Secret}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_ali --force --keylength ec-256 --server zerossl
+
+        elif [ "$isSSLDNSProviderInput" == "3" ]; then
+            read -r -p "Please Input DNSPod ID: " DP_Id
+            export DP_Id="${DP_Id}"
+            read -r -p "Please Input DNSPod Key: " DP_Key
+            export DP_Key="${DP_Key}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_dp --force --keylength ec-256 --server zerossl
+        fi
+
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+        --reloadcmd "systemctl restart nginx.service"
+
+
 	else
 
         mkdir -p ${configRanPath}
@@ -1711,7 +1758,7 @@ function getHTTPSCertificate(){
         nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
         echo
 
-        green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
+        green "  开始申请证书, acme.sh 通过 http webroot mode 申请, 并使用 ran 作为临时的web服务器 "
         echo
         echo
         green "默认通过Letsencrypt.org来申请证书, 如果证书申请失败, 例如一天内通过Letsencrypt.org申请次数过多, 可以选否通过BuyPass.com来申请."
@@ -1814,7 +1861,16 @@ function getHTTPS(){
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
 
-            getHTTPSCertificate "standalone"
+            if [[ $1 == "air" ]] ; then
+                if [[ $2 == "dns" ]] ; then
+                    getHTTPSCertificate "dns"
+                else
+                    getHTTPSCertificate "standalone"
+                fi
+            else
+                getHTTPSCertificate "standalone"
+            fi
+
 
             if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
                 green " =================================================="

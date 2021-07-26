@@ -989,6 +989,57 @@ function compareRealIpWithLocalIp(){
     fi
 }
 
+
+
+
+function getSSLByDifferentSite(){
+
+    echo
+    if [[ $1 == "webrootfolder" ]] ; then
+        read -r -p "请输入Web服务器的html网站根目录路径? 例如/usr/share/nginx/html:" isDomainSSLNginxWebrootFolderInput
+        echo "您输入的网站根目录路径为 ${isDomainSSLNginxWebrootFolderInput}"
+
+        if [ -z ${isDomainSSLNginxWebrootFolderInput} ]; then
+            red "输入的Web服务器的 html 网站根目录路径不能为空, 网站根目录将默认设置为 ${HOME}/website/html, 请修改你的web服务器配置后再申请证书!"
+            configWebsitePath="${HOME}/website/html"
+        else
+            configWebsitePath="${isDomainSSLNginxWebrootFolderInput}"
+        fi
+
+    else
+        configWebsitePath="${HOME}/website/html"
+    fi
+
+
+    echo
+    green "默认通过 Letsencrypt.org 来申请证书, 如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可以选否通过 BuyPass.com 来申请."
+    read -p "是否通过 Letsencrypt.org 来申请证书? 默认直接回车为是, 选否则通过 BuyPass.com 来申请, 请输入[Y/n]:" isDomainSSLFromLetInput
+    isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-Y}
+
+    if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
+        ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
+        
+    else
+        read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
+        isDomainSSLFromBuyPassEmailInput=${isDomainSSLFromBuyPassEmailInput:-test@gmail.com}
+
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
+        
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
+    fi
+
+    echo
+    ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+    --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+    --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+    --reloadcmd "systemctl restart nginx.service"
+
+}
+
+
+
 function getHTTPSCertificate(){
 
     # 申请https证书
@@ -996,67 +1047,99 @@ function getHTTPSCertificate(){
 	mkdir -p ${configWebsitePath}
 	curl https://get.acme.sh | sh
 
+    echo
     green " ================================================== "
+    green "请选择 acme.sh 脚本申请SSL证书方式: 1 http方式, 2 dns方式 "
+    green "默认直接回车为 http 申请方式, 选否则为 dns 方式"
+    read -r -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则为 dns 方式申请证书, 请输入[Y/n]:" isSSLRequestMethodHttpInput
+    isSSLRequestMethodHttpInput=${isSSLRequestMethodHttpInput:-Y}
 
-	if [[ $1 == "standalone" ]] ; then
-	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
-        echo
+    echo
+    if [[ $isSSLRequestMethodHttpInput == [Yy] ]]; then
 
-	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256 --server letsencrypt
-        echo
+        if [[ $1 == "standalone" ]] ; then
+            green "  开始申请证书, acme.sh 通过 http standalone mode 申请 "
+            echo
 
-        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
-        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
-        --reloadcmd "systemctl restart nginx.service"
+            ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256 --server letsencrypt
+            echo
 
-	else
-        # https://github.com/m3ng9i/ran/issues/10
-
-        mkdir -p ${configRanPath}
+            ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+            --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+            --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+            --reloadcmd "systemctl restart nginx.service"
         
-        if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
-            echo
+        elif [[ $1 == "webroot" ]] ; then
+            green "  开始申请证书, acme.sh 通过 http webroot mode 申请, 请确保 web服务器例如nginx 已经运行在80端口 "
+            getSSLByDifferentSite "webrootfolder"
+
         else
-            downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
-            chmod +x ${configRanPath}/ran_linux_amd64
-        fi    
+            # https://github.com/m3ng9i/ran/issues/10
 
-        echo
-        echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
-        nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
-        echo
-	    
-        green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
-        echo
-        echo
-        green "默认通过Letsencrypt.org来申请证书, 如果证书申请失败, 例如一天内通过Letsencrypt.org申请次数过多, 可以选否通过BuyPass.com来申请."
-        read -p "是否通过Letsencrypt.org来申请证书? 默认直接回车为是, 选否则通过BuyPass.com来申请, 请输入[Y/n]:" isDomainSSLFromLetInput
-        isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-Y}
-
-        echo
-        if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
+            mkdir -p ${configRanPath}
             
-        else
-            read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
-            isDomainSSLFromBuyPassEmailInput=${isDomainSSLFromBuyPassEmailInput:-test@gmail.com}
+            if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
+                echo
+            else
+                downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
+                chmod +x ${configRanPath}/ran_linux_amd64
+            fi    
 
             echo
-            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
-            
+            echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
+            nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
             echo
-            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
+            
+            green "  开始申请证书, acme.sh 通过 http webroot mode 申请, 并使用 ran 作为临时的web服务器 "
+            getSSLByDifferentSite
+
+            sleep 4
+            ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
+
         fi
         
+    else
+        green "  开始申请证书, acme.sh 通过 dns mode 申请 "
         echo
+        read -r -p "请输入您的邮箱Email 用于在 ZeroSSL.com 申请SSL证书:" isSSLDNSEmailInput
+        ${configSSLAcmeScriptPath}/acme.sh --register-account  -m ${isSSLDNSEmailInput} --server zerossl
+
+        echo
+        green "请选择 DNS provider DNS 提供商: 1. CloudFlare, 2. AliYun, 3. DNSPod(Tencent) "
+        read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isSSLDNSProviderInput
+        isSSLDNSProviderInput=${isSSLDNSProviderInput:-1}    
+
+        
+        if [ "$isSSLDNSProviderInput" == "1" ]; then
+            read -r -p "Please Input CloudFlare Email: " cf_email
+            export CF_Email="${cf_email}"
+            read -r -p "Please Input CloudFlare Global API Key: " cf_key
+            export CF_Key="${cf_key}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_cf --force --keylength ec-256 --server zerossl
+
+        elif [ "$isSSLDNSProviderInput" == "2" ]; then
+            read -r -p "Please Input Ali Key: " Ali_Key
+            export Ali_Key="${Ali_Key}"
+            read -r -p "Please Input Ali Secret: " Ali_Secret
+            export Ali_Secret="${Ali_Secret}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_ali --force --keylength ec-256 --server zerossl
+
+        elif [ "$isSSLDNSProviderInput" == "3" ]; then
+            read -r -p "Please Input DNSPod ID: " DP_Id
+            export DP_Id="${DP_Id}"
+            read -r -p "Please Input DNSPod Key: " DP_Key
+            export DP_Key="${DP_Key}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_dp --force --keylength ec-256 --server zerossl
+        fi
+
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
         --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
         --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
         --reloadcmd "systemctl restart nginx.service"
 
-        sleep 4
-        ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
 
     green " ================================================== "
@@ -1406,8 +1489,6 @@ function installTrojanV2rayWithNginx(){
     read configSSLDomain
 
     echo
-    echo
-
     green "是否申请证书? 默认为自动申请证书, 如果二次安装或已有证书 可以选否"
     green "如果已经有SSL证书文件请放到下面路径"
     red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
@@ -4212,17 +4293,15 @@ function getHTTPSNoNgix(){
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
 
-                echo
-                green "是否使用 standalone 方式申请证书? 需要80端口开放, 如已安装nginx或其他web服务器可选否,通过webroot模式安装"
-                red "如选择webroot模式, 请先关闭 nginx或其他web服务器的服务, 保证80端口开放. 申请证书完成后再开启nginx"
-                red "如选择webroot模式, 已安装的 nginx或其他web服务器的网页地址请设置为 ${configWebsitePath}"
-                read -p "是否使用standalone方式申请证书? 直接回车默认standalone, 选否则通过webroot模式申请证书, 请输入[Y/n]:" isDomainSSLWebrootInput
-                isDomainSSLWebrootInput=${isDomainSSLWebrootInput:-Y}
-                if [[ $isDomainSSLWebrootInput == [Yy] ]]; then
-                    getHTTPSCertificate "standalone"
-                else
-                    getHTTPSCertificate
-                fi
+            echo
+            green "是否使用 standalone 方式申请证书? 需要80端口没有被占用, 如已安装nginx或其他web服务器可通过webroot模式安装"
+            read -p "是否使用standalone方式申请证书? 直接回车默认standalone, 选否则通过webroot模式申请证书, 请输入[Y/n]:" isDomainSSLWebrootInput
+            isDomainSSLWebrootInput=${isDomainSSLWebrootInput:-Y}
+            if [[ $isDomainSSLWebrootInput == [Yy] ]]; then
+                getHTTPSCertificate "standalone"
+            else
+                getHTTPSCertificate "webroot"
+            fi
             
         else
             green " =================================================="
