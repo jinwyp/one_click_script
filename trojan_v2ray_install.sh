@@ -1106,6 +1106,7 @@ function getHTTPSCertificate(){
 
         echo
         green "请选择 DNS provider DNS 提供商: 1. CloudFlare, 2. AliYun, 3. DNSPod(Tencent) "
+        red "注意 CloudFlare 针对某些免费的域名例如.tk .cf 等  不再支持使用API 申请DNS证书 "
         read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isSSLDNSProviderInput
         isSSLDNSProviderInput=${isSSLDNSProviderInput:-1}    
 
@@ -1116,7 +1117,7 @@ function getHTTPSCertificate(){
             read -r -p "Please Input CloudFlare Global API Key: " cf_key
             export CF_Key="${cf_key}"
 
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_cf --force --keylength ec-256 --server zerossl
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_cf --force --keylength ec-256 --server zerossl --debug 
 
         elif [ "$isSSLDNSProviderInput" == "2" ]; then
             read -r -p "Please Input Ali Key: " Ali_Key
@@ -1124,7 +1125,7 @@ function getHTTPSCertificate(){
             read -r -p "Please Input Ali Secret: " Ali_Secret
             export Ali_Secret="${Ali_Secret}"
 
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_ali --force --keylength ec-256 --server zerossl
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_ali --force --keylength ec-256 --server zerossl --debug 
 
         elif [ "$isSSLDNSProviderInput" == "3" ]; then
             read -r -p "Please Input DNSPod ID: " DP_Id
@@ -1132,7 +1133,7 @@ function getHTTPSCertificate(){
             read -r -p "Please Input DNSPod Key: " DP_Key
             export DP_Key="${DP_Key}"
 
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_dp --force --keylength ec-256 --server zerossl
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_dp --force --keylength ec-256 --server zerossl --debug 
         fi
 
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
