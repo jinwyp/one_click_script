@@ -2260,7 +2260,9 @@ function installV2ray(){
     echo
     green " =================================================="
     yellow " 是否使用 IPv6 解锁流媒体和避免弹出 Google reCAPTCHA 人机验证, 请选择:"
-    red " 解锁需要先安装好 Wireguard 与 Cloudflare Warp, 可用本脚本第1项安装"
+    green " 推荐选择1 不解锁. 解锁需要安装好 Wireguard 与 Cloudflare Warp, 可重新运行本脚本选择第一项安装".
+    red " 推荐先安装 Wireguard 与 Cloudflare Warp 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare Warp也没问题"
+    red " 但如果先安装v2ray或xray, 下面选了非第一项,那么会暂时无法访问google和其他视频网站, 需要继续安装Wireguard 与 Cloudflare Warp 解决"
     echo
     green " 1. 不解锁"
     green " 2. 避免弹出 Google reCAPTCHA 人机验证"
