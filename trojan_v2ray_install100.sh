@@ -989,6 +989,57 @@ function compareRealIpWithLocalIp(){
     fi
 }
 
+
+
+
+function getSSLByDifferentSite(){
+
+    echo
+    if [[ $1 == "webrootfolder" ]] ; then
+        read -r -p "请输入Web服务器的html网站根目录路径? 例如/usr/share/nginx/html:" isDomainSSLNginxWebrootFolderInput
+        echo "您输入的网站根目录路径为 ${isDomainSSLNginxWebrootFolderInput}"
+
+        if [ -z ${isDomainSSLNginxWebrootFolderInput} ]; then
+            red "输入的Web服务器的 html 网站根目录路径不能为空, 网站根目录将默认设置为 ${HOME}/website/html, 请修改你的web服务器配置后再申请证书!"
+            configWebsitePath="${HOME}/website/html"
+        else
+            configWebsitePath="${isDomainSSLNginxWebrootFolderInput}"
+        fi
+
+    else
+        configWebsitePath="${HOME}/website/html"
+    fi
+
+
+    echo
+    green "默认通过 Letsencrypt.org 来申请证书, 如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可以选否通过 BuyPass.com 来申请."
+    read -p "是否通过 Letsencrypt.org 来申请证书? 默认直接回车为是, 选否则通过 BuyPass.com 来申请, 请输入[Y/n]:" isDomainSSLFromLetInput
+    isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-Y}
+
+    if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
+        ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
+        
+    else
+        read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
+        isDomainSSLFromBuyPassEmailInput=${isDomainSSLFromBuyPassEmailInput:-test@gmail.com}
+
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
+        
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
+    fi
+
+    echo
+    ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+    --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+    --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+    --reloadcmd "systemctl restart nginx.service"
+
+}
+
+
+
 function getHTTPSCertificate(){
 
     # 申请https证书
@@ -996,69 +1047,100 @@ function getHTTPSCertificate(){
 	mkdir -p ${configWebsitePath}
 	curl https://get.acme.sh | sh
 
+    echo
     green " ================================================== "
+    green "请选择 acme.sh 脚本申请SSL证书方式: 1 http方式, 2 dns方式 "
+    green "默认直接回车为 http 申请方式, 选否则为 dns 方式"
+    read -r -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则为 dns 方式申请证书, 请输入[Y/n]:" isSSLRequestMethodHttpInput
+    isSSLRequestMethodHttpInput=${isSSLRequestMethodHttpInput:-Y}
 
-	if [[ $1 == "standalone" ]] ; then
-	    green "  开始申请证书, acme.sh 通过 standalone mode 申请 "
-        echo
+    echo
+    if [[ $isSSLRequestMethodHttpInput == [Yy] ]]; then
 
-	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256 --server letsencrypt
-        echo
+        if [[ $1 == "standalone" ]] ; then
+            green "  开始申请证书, acme.sh 通过 http standalone mode 申请 "
+            echo
 
-        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/$configSSLCertKeyFilename \
-        --fullchain-file ${configSSLCertPath}/$configSSLCertFullchainFilename \
-        --reloadcmd "systemctl restart nginx.service"
+            ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain}  --keylength ec-256 --server letsencrypt
+            echo
 
-	else
-        # https://github.com/m3ng9i/ran/issues/10
-
-        mkdir -p ${configRanPath}
+            ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+            --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+            --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+            --reloadcmd "systemctl restart nginx.service"
         
-        if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
-            echo
+        elif [[ $1 == "webroot" ]] ; then
+            green "  开始申请证书, acme.sh 通过 http webroot mode 申请, 请确保 web服务器例如nginx 已经运行在80端口 "
+            getSSLByDifferentSite "webrootfolder"
+
         else
+            # https://github.com/m3ng9i/ran/issues/10
 
-            downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
-            chmod +x ${configRanPath}/ran_linux_amd64
+            mkdir -p ${configRanPath}
             
-        fi    
-
-        echo
-        echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
-        nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
-        echo
-	    green "  开始申请证书, acme.sh 通过 webroot mode 申请 "
-        echo
-        echo
-        green "默认通过Letsencrypt.org来申请证书, 如果证书申请失败, 例如一天内通过Letsencrypt.org申请次数过多, 可以选否通过BuyPass.com来申请."
-        read -p "是否通过Letsencrypt.org来申请证书? 默认直接回车为是, 选否则通过BuyPass.com来申请, 请输入[Y/n]:" isDomainSSLFromLetInput
-        isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-Y}
-
-        echo
-        if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
-            
-        else
-            read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
-            isDomainSSLFromBuyPassEmailInput=${isDomainSSLFromBuyPassEmailInput:-test@gmail.com}
+            if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
+                echo
+            else
+                downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
+                chmod +x ${configRanPath}/ran_linux_amd64
+            fi    
 
             echo
-            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
-            
+            echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
+            nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
             echo
-            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
-         
+            
+            green "  开始申请证书, acme.sh 通过 http webroot mode 申请, 并使用 ran 作为临时的web服务器 "
+            getSSLByDifferentSite
+
+            sleep 4
+            ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
+
         fi
         
+    else
+        green "  开始申请证书, acme.sh 通过 dns mode 申请 "
         echo
+        read -r -p "请输入您的邮箱Email 用于在 ZeroSSL.com 申请SSL证书:" isSSLDNSEmailInput
+        ${configSSLAcmeScriptPath}/acme.sh --register-account  -m ${isSSLDNSEmailInput} --server zerossl
+
+        echo
+        green "请选择 DNS provider DNS 提供商: 1. CloudFlare, 2. AliYun, 3. DNSPod(Tencent) "
+        red "注意 CloudFlare 针对某些免费的域名例如.tk .cf 等  不再支持使用API 申请DNS证书 "
+        read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isSSLDNSProviderInput
+        isSSLDNSProviderInput=${isSSLDNSProviderInput:-1}    
+
+        
+        if [ "$isSSLDNSProviderInput" == "1" ]; then
+            read -r -p "Please Input CloudFlare Email: " cf_email
+            export CF_Email="${cf_email}"
+            read -r -p "Please Input CloudFlare Global API Key: " cf_key
+            export CF_Key="${cf_key}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_cf --force --keylength ec-256 --server zerossl --debug 
+
+        elif [ "$isSSLDNSProviderInput" == "2" ]; then
+            read -r -p "Please Input Ali Key: " Ali_Key
+            export Ali_Key="${Ali_Key}"
+            read -r -p "Please Input Ali Secret: " Ali_Secret
+            export Ali_Secret="${Ali_Secret}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_ali --force --keylength ec-256 --server zerossl --debug 
+
+        elif [ "$isSSLDNSProviderInput" == "3" ]; then
+            read -r -p "Please Input DNSPod ID: " DP_Id
+            export DP_Id="${DP_Id}"
+            read -r -p "Please Input DNSPod Key: " DP_Key
+            export DP_Key="${DP_Key}"
+
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_dp --force --keylength ec-256 --server zerossl --debug 
+        fi
+
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/$configSSLCertKeyFilename \
-        --fullchain-file ${configSSLCertPath}/$configSSLCertFullchainFilename \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
         --reloadcmd "systemctl restart nginx.service"
 
-        sleep 4
-        ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
 
     green " ================================================== "
@@ -1408,12 +1490,10 @@ function installTrojanV2rayWithNginx(){
     read configSSLDomain
 
     echo
-    echo
-
     green "是否申请证书? 默认为自动申请证书, 如果二次安装或已有证书 可以选否"
     green "如果已经有SSL证书文件请放到下面路径"
-    red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-    red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+    red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+    red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
     echo
     read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]:" isDomainSSLRequestInput
     isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
@@ -1424,8 +1504,8 @@ function installTrojanV2rayWithNginx(){
         else
             green " =================================================="
             green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
             green " =================================================="
         fi
     else
@@ -1433,7 +1513,7 @@ function installTrojanV2rayWithNginx(){
     fi
 
 
-    if test -s ${configSSLCertPath}/$configSSLCertFullchainFilename; then
+    if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
         green " ================================================== "
         green "     SSL证书 已检测到获取成功!"
         green " ================================================== "
@@ -1462,6 +1542,7 @@ function installTrojanV2rayWithNginx(){
         exit
     fi    
 }
+
 
 
 
@@ -1520,7 +1601,7 @@ function installTrojanServer(){
         configV2rayTrojanPort=443
 
         inputV2rayServerPort "textMainTrojanPort"
-        configV2rayTrojanPort=${isTrojanUserPortInput} 
+        configV2rayTrojanPort=${isTrojanUserPortInput}
     fi
 
     mkdir -p ${configTrojanBasePath}
@@ -1651,6 +1732,7 @@ function installTrojanServer(){
         "${configTrojanPasswordPrefixInput}202098",
         "${configTrojanPasswordPrefixInput}202099"
 EOM
+
 
     if [ "$isTrojanGo" = "no" ] ; then
 
@@ -1825,7 +1907,7 @@ EOF
     fi
 
     rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
-    cp ${configSSLCertPath}/$configSSLCertFullchainFilename ${configTrojanBasePath}/trojan-win-cli/$configSSLCertFullchainFilename
+    cp ${configSSLCertPath}/${configSSLCertFullchainFilename} ${configTrojanBasePath}/trojan-win-cli/${configSSLCertFullchainFilename}
 
     cat > ${configTrojanBasePath}/trojan-win-cli/config.json <<-EOF
 {
@@ -2258,7 +2340,9 @@ function installV2ray(){
     echo
     green " =================================================="
     yellow " 是否使用 IPv6 解锁流媒体和避免弹出 Google reCAPTCHA 人机验证, 请选择:"
-    red " 解锁需要先安装好 Wireguard 与 Cloudflare Warp, 可用本脚本第1项安装"
+    green " 推荐选择1 不解锁. 解锁需要安装好 Wireguard 与 Cloudflare Warp, 可重新运行本脚本选择第一项安装".
+    red " 推荐先安装 Wireguard 与 Cloudflare Warp 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare Warp也没问题"
+    red " 但如果先安装v2ray或xray, 下面选了非第一项,那么会暂时无法访问google和其他视频网站, 需要继续安装Wireguard 与 Cloudflare Warp 解决"
     echo
     green " 1. 不解锁"
     green " 2. 避免弹出 Google reCAPTCHA 人机验证"
@@ -4423,6 +4507,60 @@ function runTrojanWebLog(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function installXUI(){
+
+    stopServiceNginx
+    testLinuxPortUsage
+    installPackage
+
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
+    green " ================================================== "
+
+    read configSSLDomain
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+
+        green " =================================================="
+        green "    开始安装 X-UI 可视化管理面板 !"
+        green " =================================================="
+
+        wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
+
+        green "X-UI 可视化管理面板地址 http://${configSSLDomain}:54321"
+        green " 请确保 54321 端口已经放行, 例如检查linux防火墙或VPS防火墙 54321 端口是否开启"
+        green "X-UI 可视化管理面板 默认管理员用户 admin 密码 admin, 为保证安全,请登陆后尽快修改默认密码 "
+        green " =================================================="
+
+    else
+        exit
+    fi
+}
+function removeXUI(){
+    green " =================================================="
+    /usr/bin/x-ui
+}
+
+
 function installV2rayUI(){
 
     stopServiceNginx
@@ -4493,13 +4631,22 @@ function getHTTPSNoNgix(){
 
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-            getHTTPSCertificate "standalone"
 
+            echo
+            green "是否使用 standalone 方式申请证书? 需要80端口没有被占用, 如已安装nginx或其他web服务器可通过webroot模式安装"
+            read -p "是否使用standalone方式申请证书? 直接回车默认standalone, 选否则通过webroot模式申请证书, 请输入[Y/n]:" isDomainSSLWebrootInput
+            isDomainSSLWebrootInput=${isDomainSSLWebrootInput:-Y}
+            if [[ $isDomainSSLWebrootInput == [Yy] ]]; then
+                getHTTPSCertificate "standalone"
+            else
+                getHTTPSCertificate "webroot"
+            fi
+            
         else
             green " =================================================="
             green "   不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
-            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
             green " =================================================="
         fi
     else
@@ -4507,11 +4654,11 @@ function getHTTPSNoNgix(){
     fi
 
 
-    if test -s ${configSSLCertPath}/$configSSLCertFullchainFilename; then
+    if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
         green " =================================================="
         green "   域名SSL证书申请成功 !"
-        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/$configSSLCertFullchainFilename "
-        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/$configSSLCertKeyFilename "
+        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
         green " =================================================="
 
         if [[ $1 == "trojan" ]] ; then
@@ -4585,11 +4732,13 @@ function startMenuOther(){
     green " 4. 查看日志, 管理用户, 查看配置等功能"
     red " 5. 卸载 trojan-web 和 nginx "
     echo
-    green " 6. 安装 v2ray 可视化管理面板V2ray UI 可以同时支持trojan"
-    green " 7. 升级 v2ray UI 到最新版本"
-    red " 8. 卸载 v2ray UI"
+    green " 6. 安装 V2ray 可视化管理面板V2-UI, 可以同时支持trojan"
+    green " 7. 升级 V2-UI 到最新版本"
+    red " 8. 卸载 V2-UI"
+    green " 9. 安装 Xray 可视化管理面板 X-UI, 可以同时支持trojan"
+    red " 10. 升级 或 卸载 X-UI"
     echo
-    red " 安装上面2个可视化管理面板 之前不能用本脚本或其他脚本安装过trojan或v2ray! 2个管理面板也无法同时安装"
+    red " 安装上面3个可视化管理面板 之前不能用本脚本或其他脚本安装过trojan或v2ray! 3个管理面板也无法同时安装"
 
     green " =================================================="
     green " 11. 单独申请域名SSL证书"
@@ -4657,9 +4806,15 @@ function startMenuOther(){
             upgradeV2rayUI
         ;;
         8 )
-            # removeNginx
             removeV2rayUI
         ;;
+        9 )
+            setLinuxDateZone
+            installXUI
+        ;;  
+        10 )
+            removeXUI
+        ;;              
         11 )
             getHTTPSNoNgix
         ;;
@@ -4813,7 +4968,7 @@ function start_menu(){
     fi
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray 一键安装脚本 | 2021-04-15 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-08-06 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
