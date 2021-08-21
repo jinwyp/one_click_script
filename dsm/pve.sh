@@ -458,6 +458,7 @@ deb-src http://mirrors.aliyun.com/debian-security buster/updates main contrib no
 
 EOF
 
+	${sudoCmd} apt dist-upgrade
 	${sudoCmd} apt-get update
 
 	green " ================================================== "

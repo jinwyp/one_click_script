@@ -354,7 +354,26 @@ function DSMEditHosts(){
 	green " 请用root 用户登录系统的SSH 运行本命令"
 	green " ================================================== "
 
-	vi /etc/hosts
+    # nameserver 223.5.5.5
+    # nameserver 8.8.8.8
+
+    HostFilePath="/etc/hosts"
+
+    if ! grep -q "github" "${HostFilePath}"; then
+        echo "199.232.69.194               github.global.ssl.fastly.net" >> ${HostFilePath}
+        echo "185.199.108.153              assets-cdn.github.com" >> ${HostFilePath}
+        echo "185.199.108.133              raw.githubusercontent.com" >> ${HostFilePath}
+        echo "140.82.114.3                 github.com" >> ${HostFilePath}
+        echo "104.16.16.35                 registry.npmjs.org" >> ${HostFilePath}
+    fi
+
+    
+
+
+
+
+
+	vi ${HostFilePath}
 }
 
 
@@ -889,7 +908,7 @@ function installV2rayPoseidon(){
     if [[ $isV2rayDockerNotInput == [Yy] ]]; then
 
         versionV2rayPoseidon=$(getGithubLatestReleaseVersion "ColetteContreras/v2ray-poseidon")
-        
+        echo
         green " =================================================="
         green "  开始安装 支持V2board面板的 服务器端程序 V2ray-Poseidon ${versionV2rayPoseidon}"
         green " =================================================="
@@ -1242,10 +1261,11 @@ function editV2rayPoseidonConfig(){
 configSogaConfigFilePath="/etc/soga/soga.conf"
 
 function installSoga(){
-
+    echo
     green " =================================================="
     green "  开始安装 支持V2board面板的 服务器端程序 soga !"
     green " =================================================="
+    echo
 
     wget -O soga_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/soga/master/install.sh" && chmod +x soga_install.sh && ./soga_install.sh
 
@@ -1350,9 +1370,11 @@ configXrayRErrorLogFilePath="${HOME}/xrayr-error.log"
 configXrayRConfigFilePath="/etc/XrayR/config.yml"
 
 function installXrayR(){
+    echo
     green " =================================================="
     green "  开始安装 支持V2board面板的 服务器端程序 XrayR !"
     green " =================================================="
+    echo
 
     wget -O xrayr_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/XrayR-project/XrayR-release/master/install.sh" && chmod +x xrayr_install.sh && ./xrayr_install.sh
 
@@ -1521,10 +1543,11 @@ configAirUniverseXrayConfigFilePath="/usr/local/etc/xray/config.json"
 configXrayPort="$(($RANDOM + 10000))"
 
 function installAirUniverse(){
+    echo
     green " =================================================="
     green "  开始安装 支持V2board面板的 服务器端程序 Air-Universe !"
     green " =================================================="
-
+    echo
 
     # bash -c "$(curl -L https://github.com/crossfw/Xray-install/raw/main/install-release.sh)" @ install  
     # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/install.sh)
@@ -1535,6 +1558,8 @@ function installAirUniverse(){
     cp -f /root/airu_install.sh /usr/bin/airu
     
     /root/airu_install.sh install 
+
+    (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
 
     replaceAirUniverseConfig
 }
@@ -1972,7 +1997,7 @@ function start_menu(){
     green " 5. 编辑 SSH 登录的用户公钥 用于SSH密码登录免登录"
     green " 6. 修改 SSH 登陆端口号"
     green " 7. 设置时区为北京时间"
-    green " 8. 用VI 编辑 /etc/host"
+    green " 8. 用VI 编辑 /etc/hosts"
 
     echo
     green " 11. 安装 Vim Nano Micro 编辑器"

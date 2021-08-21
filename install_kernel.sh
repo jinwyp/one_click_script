@@ -418,9 +418,9 @@ function showLinuxKernelInfoNoDisplay(){
         osKernelBBRStatus="BBR"
     fi
 
-    if [[ ${osKernelVersionFull} == *bbrplus* ]]; then
+    if [[ ${osKernelVersionFull} == *"bbrplus"* ]]; then
         osKernelBBRStatus="BBR Plus"
-    elif [[ ${osKernelVersionFull} == *xanmod* ]]; then
+    elif [[ ${osKernelVersionFull} == *"xanmod"* ]]; then
         osKernelBBRStatus="BBR 和 BBR2"
     fi
 
@@ -428,7 +428,7 @@ function showLinuxKernelInfoNoDisplay(){
 	net_qdisc=`cat /proc/sys/net/core/default_qdisc | awk '{print $1}'`
 	net_ecn=`cat /proc/sys/net/ipv4/tcp_ecn | awk '{print $1}'`
 
-    if [[ ${osKernelVersionBackup} == *4.14.129* ]]; then
+    if [[ ${osKernelVersionBackup} == *"4.14.129"* ]]; then
         # isBBREnabled=$(grep "net.ipv4.tcp_congestion_control" /etc/sysctl.conf | awk -F "=" '{print $2}')
         # isBBREnabled=$(sysctl net.ipv4.tcp_available_congestion_control | awk -F "=" '{print $2}')
 
@@ -500,13 +500,13 @@ function showLinuxKernelInfo(){
         green "           当前系统内核高于4.9, 支持开启 BBR, ${systemBBRRunningStatusText}"
     fi
 
-    if [[ ${osKernelVersionFull} == *xanmod* ]]; then
+    if [[ ${osKernelVersionFull} == *"xanmod"* ]]; then
         green "           当前系统内核已支持开启 BBR2, ${systemBBRRunningStatusText}"
     else
         green "           当前系统内核不支持开启 BBR2"
     fi
 
-    if [[ ${osKernelVersionFull} == *bbrplus* ]]; then
+    if [[ ${osKernelVersionFull} == *"bbrplus"* ]]; then
         green "           当前系统内核已支持开启 BBR Plus, ${systemBBRRunningStatusText}"
     else
         green "           当前系统内核不支持开启 BBR Plus"
@@ -571,7 +571,7 @@ function enableBBRSysctlConfig(){
         read -p "请选择? 直接回车默认选1 BBR, 请输入[1/2]:" BBRTcpInput
         BBRTcpInput=${BBRTcpInput:-1}
         if [[ $BBRTcpInput == [2] ]]; then
-            if [[ ${osKernelVersionFull} == *xanmod* ]]; then
+            if [[ ${osKernelVersionFull} == *"xanmod"* ]]; then
                 currentBBRText="bbr2"
 
                 echo

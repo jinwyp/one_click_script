@@ -639,6 +639,10 @@ function vps_netflix(){
     # wget -N -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
 }
 
+function vps_netflix2(){
+    bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh)
+}
+
 
 function vps_superspeed(){
 	bash <(curl -Lso- https://git.io/superspeed)
@@ -4434,7 +4438,8 @@ function startMenuOther(){
 	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
-    green " 51. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
+    green " 51. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区 by CoiaPrant"
+    green " 52. 测试VPS 是否支持Netflix和更多流媒体平台, 新版脚本 by lmc999"
     echo
     green " 61. 安装 官方宝塔面板"
     green " 62. 安装 宝塔面板破解版 by fenhao.me"
@@ -4568,6 +4573,10 @@ function startMenuOther(){
         51 )
             installPackage
             vps_netflix
+        ;;                    
+        52 )
+            installPackage
+            vps_netflix2
         ;;                    
         61 )
             installBTPanel
