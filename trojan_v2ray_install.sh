@@ -4214,7 +4214,8 @@ function installXUI(){
         green "    开始安装 X-UI 可视化管理面板 !"
         green " =================================================="
 
-        wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
+        # wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
+        wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
 
         green "X-UI 可视化管理面板地址 http://${configSSLDomain}:54321"
         green " 请确保 54321 端口已经放行, 例如检查linux防火墙或VPS防火墙 54321 端口是否开启"
@@ -4248,7 +4249,10 @@ function installV2rayUI(){
         green "    开始安装 V2ray-UI 可视化管理面板 !"
         green " =================================================="
 
+        # bash <(curl -Ls https://raw.githubusercontent.com/tszho-t/v2-ui/master/install.sh)
+
         wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
+        # wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/tszho-t/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
 
         green " V2ray-UI 可视化管理面板地址 http://${configSSLDomain}:65432"
         green " 请确保 65432 端口已经放行, 例如检查linux防火墙或VPS防火墙 65432 端口是否开启"
