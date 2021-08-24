@@ -1585,11 +1585,7 @@ function replaceAirUniverseConfig(){
             read -r -d '' airUniverseConfigProxyInput << EOM
         
         "type": "xray",
-        "alter_id": 1,
         "auto_generate": true,
-        "in_tags": [
-            "p0"
-        ],
         "api_address": "127.0.0.1",
         "api_port": ${configXrayPort},
         "force_close_tls": false,

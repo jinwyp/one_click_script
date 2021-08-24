@@ -4445,7 +4445,7 @@ function startMenuOther(){
     green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
     green " 51. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区 by CoiaPrant"
-    green " 52. 测试VPS 是否支持Netflix和更多流媒体平台, 新版脚本 by lmc999"
+    green " 52. 测试VPS 是否支持Netflix和更多流媒体平台, 新版脚本 by sjlleo"
     echo
     green " 61. 安装 官方宝塔面板"
     green " 62. 安装 宝塔面板破解版 by fenhao.me"
