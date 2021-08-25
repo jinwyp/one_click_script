@@ -632,16 +632,19 @@ function installSoftOhMyZsh(){
 function vps_netflix(){
     # bash <(curl -sSL https://raw.githubusercontent.com/Netflixxp/NF/main/nf.sh)
     # bash <(curl -sSL "https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh")
+    # bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh)
+
 	# wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
     # wget -N --no-check-certificate -O netflixcheck https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixcheck && ./netflixcheck -method full
 
 	wget -N --no-check-certificate -O ./netflix.sh https://github.com/CoiaPrant/MediaUnlock_Test/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
-
-    # wget -N -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
 }
 
 function vps_netflix2(){
-    # bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh)
+	wget -N --no-check-certificate -O ./netflix.sh https://github.com/lmc999/RegionRestrictionCheck/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
+}
+
+function vps_netflixgo(){
     wget -N --no-check-certificate -O netflixcheck https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixcheck && ./netflixcheck -method full
 }
 
@@ -1524,9 +1527,17 @@ function installTrojanV2rayWithNginx(){
         green "     SSL证书 已检测到获取成功!"
         green " ================================================== "
 
+
         if [ "$isNginxWithSSL" = "no" ] ; then
             installWebServerNginx
         else
+
+            if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
+                inputV2rayGRPCPath
+            else
+                inputV2rayWSPath
+            fi
+
             installWebServerNginx "v2ray"
         fi
 
@@ -2344,7 +2355,7 @@ function installV2ray(){
         configV2rayPortShowInfo=${isV2rayUserPortInput}   
 
 
-        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayVlessMode == "wsgrpc" ) ]]; then
+        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) ]]; then
             inputV2rayServerPort "textMainGRPCPort"
 
             configV2rayGRPCPort=${isV2rayUserPortGRPCInput}   
@@ -2353,7 +2364,7 @@ function installV2ray(){
 
 
         echo
-        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayVlessMode == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
+        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
             inputV2rayGRPCPath
         else
             inputV2rayWSPath
@@ -4444,8 +4455,9 @@ function startMenuOther(){
 	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
     green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
-    green " 51. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区 by CoiaPrant"
-    green " 52. 测试VPS 是否支持Netflix和更多流媒体平台, 新版脚本 by sjlleo"
+    green " 51. 测试VPS 是否支持Netflix, Go语言版本 推荐使用 by sjlleo"
+    green " 52. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
+    green " 53. 测试VPS 是否支持Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
     echo
     green " 61. 安装 官方宝塔面板"
     green " 62. 安装 宝塔面板破解版 by fenhao.me"
@@ -4578,9 +4590,13 @@ function startMenuOther(){
         ;;
         51 )
             installPackage
-            vps_netflix
+            vps_netflixgo
         ;;                    
         52 )
+            installPackage
+            vps_netflix
+        ;;                    
+        53 )
             installPackage
             vps_netflix2
         ;;                    
