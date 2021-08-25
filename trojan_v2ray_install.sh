@@ -2274,6 +2274,51 @@ function installV2ray(){
 
     fi
 
+
+    echo
+    green " =================================================="
+    yellow " 是否使用 DNS 解锁流媒体 Netflix HBO Disney 等流媒体网站"
+    green " 如需解锁请填入 解锁 Netflix 的DNS服务器的IP地址, 例如 8.8.8.8"
+    read -p "是否解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
+    isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
+
+
+    if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
+        v2rayConfigDNSInput=""
+
+    else
+
+        read -r -d '' v2rayConfigDNSInput << EOM
+    "dns": {
+        "servers": [
+            {
+                "address": "${isV2rayUnlockDNSInput}",
+                "port": 53,
+                "domains": [
+                    "geosite:netflix",
+                    "geosite:bahamut",
+                    "geosite:hulu",
+                    "geosite:hbo",
+                    "geosite:disney",
+                    "geosite:bbc",
+                    "geosite:4chan",
+                    "geosite:fox",
+                    "geosite:abema",
+                    "geosite:dmm",
+                    "geosite:niconico",
+                    "geosite:pixiv",
+                    "geosite:bilibili",
+                    "geosite:viu"
+                ]
+            },
+        "localhost"
+        ]
+    }, 
+EOM
+
+    fi
+
+
     echo
     green " =================================================="
     yellow " 是否使用 IPv6 解锁流媒体和避免弹出 Google reCAPTCHA 人机验证, 请选择:"
@@ -2787,6 +2832,7 @@ EOM
         "error": "${configV2rayErrorLogFilePath}",
         "loglevel": "warning"
     },
+    ${v2rayConfigDNSInput}
 EOM
 
 
