@@ -697,7 +697,8 @@ function installBTPanel(){
     if [ "$osRelease" == "centos" ]; then
         yum install -y wget && wget -O install.sh http://download.bt.cn/install/install_6.0.sh && sh install.sh
     else
-        curl -sSO http://download.bt.cn/install/install_panel.sh && bash install_panel.sh
+        # curl -sSO http://download.bt.cn/install/install_panel.sh && bash install_panel.sh
+        wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh && sudo bash install.sh
 
     fi
 }
@@ -706,15 +707,15 @@ function installBTPanelCrack(){
     if [ "$osRelease" == "centos" ]; then
         yum install -y wget && wget -O install.sh https://download.fenhao.me/install/install_6.0.sh && sh install.sh
     else
-        curl -sSO https://download.fenhao.me/install/install_panel.sh && bash install_panel.sh
+        wget -O install.sh https://download.fenhao.me/install/install-ubuntu_6.0.sh && sudo bash install.sh
     fi
 }
 
 function installBTPanelCrack2(){
     if [ "$osRelease" == "centos" ]; then
-        yum install -y wget && wget -O install.sh http://download.hostcli.com/install/install_6.0.sh && sh install.sh
+        yum install -y wget && wget -O install.sh http://v7.hostcli.com/install/install_6.0.sh && sh install.sh
     else
-        exit
+        wget -O install.sh http://v7.hostcli.com/install/install-ubuntu_6.0.sh && sudo bash install.sh
     fi
 }
 
@@ -4507,7 +4508,7 @@ function startMenuOther(){
     echo
     green " 61. 安装 官方宝塔面板"
     green " 62. 安装 宝塔面板破解版 by fenhao.me"
-    green " 63. 安装 宝塔面板 7.4.5 纯净版 by hostcli.com"
+    green " 63. 安装 宝塔面板纯净版 by hostcli.com"
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -4652,7 +4653,7 @@ function startMenuOther(){
         62 )
             installBTPanelCrack
         ;;                              
-        62 )
+        63 )
             installBTPanelCrack2
         ;;                              
         81 )
