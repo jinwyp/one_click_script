@@ -1582,10 +1582,13 @@ function replaceAirUniverseConfig(){
                 getHTTPS "air" "dns"
             fi
 
+            airUniverseConfigNodeIdNumberInput=`grep "nodes_type"  ${configAirUniverseConfigFilePath} | awk -F  ":" '{print $2}'`
+
             read -r -d '' airUniverseConfigProxyInput << EOM
         
         "type": "xray",
         "auto_generate": true,
+        "in_tags": ${airUniverseConfigNodeIdNumberInput},
         "api_address": "127.0.0.1",
         "api_port": ${configXrayPort},
         "force_close_tls": false,
