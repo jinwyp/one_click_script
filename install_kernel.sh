@@ -642,9 +642,13 @@ function enableBBRSysctlConfig(){
     isOptimizingSystemInput=${isOptimizingSystemInput:-Y}
 
     if [[ $isOptimizingSystemInput == [Yy] ]]; then
-        addOptimizingSystemConfig
+        addOptimizingSystemConfig "cancel"
     else
-    	sysctl -p
+        echo
+        echo "sysctl -p"
+        echo
+        sysctl -p
+        echo
     fi
 
 }
@@ -710,7 +714,11 @@ function addOptimizingSystemConfig(){
         exit
     fi
 
-    removeOptimizingSystemConfig
+    if [ -z $1 ]; then
+        removeOptimizingSystemConfig
+    fi
+
+    
 
     echo
     green " 开始准备 优化系统网络配置 "

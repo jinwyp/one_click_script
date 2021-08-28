@@ -429,13 +429,21 @@ function installSoftDownload(){
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
-		if ! rpm -qa | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git
+        if ! rpm -qa | grep -qw wget; then
+		    ${osSystemPackage} -y install wget curl git
+        elif ! rpm -qa | grep -qw git; then
+		    ${osSystemPackage} -y install wget curl git
 		fi
 	fi 
 }
 
 function installPackage(){
+    echo
+    green " =================================================="
+    yellow " 开始安装软件"
+    green " =================================================="
+    echo
+
     if [ "$osRelease" == "centos" ]; then
        
         # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
@@ -4497,9 +4505,9 @@ function startMenuOther(){
     green " =================================================="
     red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
     green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 42. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
+    green " 42. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）推荐使用"
 	green " 43. testrace 回程路由测试 （四网路由测试）"
-	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、节点测速） 推荐使用"
     green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
     green " 51. 测试VPS 是否支持Netflix, Go语言版本 推荐使用 by sjlleo"
