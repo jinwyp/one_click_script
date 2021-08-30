@@ -829,7 +829,7 @@ EOF
 
 
 isInstallFromRepo="no"
-userHomePath="${HOME}/linux_kernel"
+userHomePath="${HOME}/download_linux_kernel"
 linuxKernelByUser="elrepo"
 linuxKernelToBBRType=""
 linuxKernelToInstallVersion="5.10"
@@ -2437,7 +2437,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-04-17 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2021-08-29 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="

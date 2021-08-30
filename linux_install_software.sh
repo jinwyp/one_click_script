@@ -1376,6 +1376,8 @@ function installXrayR(){
     green " =================================================="
     echo
 
+    testLinuxPortUsage
+
     wget -O xrayr_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/XrayR-project/XrayR-release/master/install.sh" && chmod +x xrayr_install.sh && ./xrayr_install.sh
 
     replaceXrayRConfig
@@ -1548,6 +1550,8 @@ function installAirUniverse(){
     green "  开始安装 支持V2board面板的 服务器端程序 Air-Universe !"
     green " =================================================="
     echo
+    
+    testLinuxPortUsage
 
     # bash -c "$(curl -L https://github.com/crossfw/Xray-install/raw/main/install-release.sh)" @ install  
     # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/install.sh)
@@ -1985,7 +1989,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 2021-07-22 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 2021-08-29 更新.  系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
