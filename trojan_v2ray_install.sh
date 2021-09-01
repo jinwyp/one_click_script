@@ -788,10 +788,10 @@ configRanPath="${HOME}/ran"
 versionTrojan="1.16.0"
 downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 
-versionTrojanGo="0.10.4"
+versionTrojanGo="0.10.5"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.40.1"
+versionV2ray="4.41.1"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
 versionXray="1.4.2"
@@ -895,7 +895,6 @@ function getGithubLatestReleaseVersion(){
 
 function getTrojanAndV2rayVersion(){
     # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
-    # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
 
     echo ""
 
@@ -907,8 +906,7 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "trojan-go" ]] ; then
         versionTrojanGo=$(getGithubLatestReleaseVersion "p4gefau1t/trojan-go")
-        downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
-        echo "versionTrojanGo: ${versionTrojanGo}"
+        echo "versionTrojanGo: ${versionTrojanGo}"  
     fi
 
     if [[ $1 == "v2ray" ]] ; then
@@ -923,7 +921,6 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "trojan-web" ]] ; then
         versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
-        downloadFilenameTrojanWeb="trojan-linux-amd64"
         echo "versionTrojanWeb: ${versionTrojanWeb}"
     fi
 
@@ -1586,10 +1583,34 @@ function installTrojanV2rayWithNginx(){
 
 
 
+function downloadTrojanBin(){
 
 
+    if [ "$isTrojanGo" = "no" ] ; then
+        if [ -z $1 ]; then
+            tempDownloadTrojanPath="${configTrojanPath}"
+        else
+            tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan"
+        fi    
+        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojan}"
+    else
+        if [ -z $1 ]; then
+            tempDownloadTrojanPath="${configTrojanGoPath}"
+        else
+            tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan-go"
+        fi 
 
-
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.5/trojan-go-linux-amd64.zip
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameTrojanGo="trojan-go-linux-arm.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameTrojanGo="trojan-go-linux-armv8.zip"
+        fi
+        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojanGo}"
+    fi
+}
 
 function installTrojanServer(){
 
@@ -1616,7 +1637,7 @@ function installTrojanServer(){
 
     green " =================================================="
     green " 开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
-    yellow " 请输入trojan密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
+    yellow " 请输入trojan${promptInfoTrojanName}密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     green " =================================================="
 
     read configTrojanPasswordPrefixInput
@@ -1634,16 +1655,7 @@ function installTrojanServer(){
     cd ${configTrojanBasePath}
     rm -rf ${configTrojanBasePath}/*
 
-    if [ "$isTrojanGo" = "no" ] ; then
-        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
-        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configTrojanPath}" "${downloadFilenameTrojan}"
-    else
-        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
-        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanGoPath}" "${downloadFilenameTrojanGo}"
-    fi
-
-
-
+    downloadTrojanBin
 
 
     read -r -d '' trojanConfigUserpasswordInput << EOM
@@ -2098,13 +2110,11 @@ function upgradeTrojan(){
 
     mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
 
+    downloadTrojanBin "upgrade"
+
     if [ "$isTrojanGo" = "no" ] ; then
-        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
-        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configDownloadTempPath}/upgrade/trojan" "${downloadFilenameTrojan}"
         mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
     else
-        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
-        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configDownloadTempPath}/upgrade/trojan-go" "${downloadFilenameTrojanGo}"
         mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
     fi
 
@@ -2137,7 +2147,38 @@ function upgradeTrojan(){
 
 
 
+function downloadV2rayXrayBin(){
+    if [ -z $1 ]; then
+        tempDownloadV2rayPath="${configV2rayPath}"
+    else
+        tempDownloadV2rayPath="${configDownloadTempPath}/upgrade/${promptInfoXrayName}"
+    fi
 
+    if [ "$isXray" = "no" ] ; then
+        # https://github.com/v2fly/v2ray-core/releases/download/v4.41.1/v2ray-linux-64.zip
+        # https://github.com/v2fly/v2ray-core/releases/download/v4.41.1/v2ray-linux-arm32-v6.zip
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameV2ray="v2ray-linux-arm32-v6.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameV2ray="v2ray-linux-arm64-v8a.zip"
+        fi
+
+        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${tempDownloadV2rayPath}" "${downloadFilenameV2ray}"
+
+    else
+        # https://github.com/XTLS/Xray-core/releases/download/v1.4.2/Xray-linux-64.zip
+
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameXray="Xray-linux-arm32-v6.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameXray="Xray-linux-arm64-v8a.zip"
+        fi
+
+        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${tempDownloadV2rayPath}" "${downloadFilenameXray}"
+    fi
+}
 
 
 
@@ -2198,7 +2239,7 @@ function inputV2rayServerPort(){
     if [[ $1 == "textMainTrojanPort" ]]; then
         green "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
         red "不建议用户自定义端口, 建议使用443端口, 除非你需要使用非443端口并明白使用非443端口的安全性!"
-        read -p "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
+        read -p "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
         isTrojanUserPortInput=${isTrojanUserPortInput:-${configV2rayTrojanPort}}
 		checkPortInUse "${isTrojanUserPortInput}" $1 
 	fi    
@@ -2480,18 +2521,7 @@ EOM
     cd ${configV2rayPath}
     rm -rf ${configV2rayPath}/*
 
-
-    if [ "$isXray" = "no" ] ; then
-        # https://github.com/v2fly/v2ray-core/releases/download/v4.27.5/v2ray-linux-64.zip
-        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configV2rayPath}" "${downloadFilenameV2ray}"
-
-    else
-        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${configV2rayPath}" "${downloadFilenameXray}"
-    fi
-
-
-
-
+    downloadV2rayXrayBin
 
 
 
@@ -4004,11 +4034,10 @@ function upgradeV2ray(){
 
     mkdir -p ${configDownloadTempPath}/upgrade/${promptInfoXrayName}
 
+    downloadV2rayXrayBin "upgrade"
+
     if [ "$isXray" = "no" ] ; then
-        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configDownloadTempPath}/upgrade/${promptInfoXrayName}" "${downloadFilenameV2ray}"
         mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
-    else
-        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${configDownloadTempPath}/upgrade/${promptInfoXrayName}" "${downloadFilenameXray}"
     fi
 
     mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/${promptInfoXrayName} ${configV2rayPath}
@@ -4071,7 +4100,18 @@ function upgradeV2ray(){
 
 
 
+function downloadTrojanWebBin(){
 
+    if [[ ${osArchitecture} == "arm" || ${osArchitecture} == "arm64" ]] ; then
+        downloadFilenameTrojanWeb="trojan-linux-arm64"
+    fi
+
+    if [ -z $1 ]; then
+        wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+    else
+        wget -O ${configDownloadTempPath}/upgrade/trojan-web/trojan-web "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+    fi
+}
 
 
 
@@ -4103,7 +4143,7 @@ function installTrojanWeb(){
 
         # https://github.com/Jrohy/trojan/releases/download/v2.10.4/trojan-linux-amd64
         mkdir -p ${configTrojanWebPath}
-        wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+        downloadTrojanWebBin
         chmod +x ${configTrojanWebPath}/trojan-web
 
 
@@ -4134,9 +4174,17 @@ EOF
         green " Trojan-web 可视化管理面板: ${versionTrojanWeb} 安装成功!"
         green " Trojan可视化管理面板地址 https://${configSSLDomain}/${configTrojanWebNginxPath}"
         green " 开始运行命令 ${configTrojanWebPath}/trojan-web 进行初始化设置."
+        echo
+        red " 后续安装步骤: "
+        green " 根据提示选择 1. Let's Encrypt 证书, 申请SSL证书 "
+        green " 证书申请成功后. 继续根据提示 再选择 1.安装docker版mysql(mariadb)."
+        green " mysql(mariadb)启动成功后, 继续根据提示 输入第一个trojan用户的账号密码, 回车后出现 '欢迎使用trojan管理程序' "
+        green " 出现 '欢迎使用trojan管理程序'后 需要不输入数字直接按回车, 这样就会继续安装 nginx 直到完成 "
+        echo
+        green " nginx 安装成功会显示可视化管理面板网址, 请保存下来. 如果没有显示管理面板网址则表明安装失败. "
         green " =================================================="
 
-
+        read -p "按回车继续安装. Press enter to continue"
 
         ${configTrojanWebPath}/trojan-web
 
@@ -4210,8 +4258,8 @@ function upgradeTrojanWeb(){
     ${sudoCmd} systemctl stop trojan-web.service
 
     mkdir -p ${configDownloadTempPath}/upgrade/trojan-web
-
-    wget -O ${configDownloadTempPath}/upgrade/trojan-web/trojan-web "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+    downloadTrojanWebBin "upgrade"
+    
     mv -f ${configDownloadTempPath}/upgrade/trojan-web/trojan-web ${configTrojanWebPath}
     chmod +x ${configTrojanWebPath}/trojan-web
 
@@ -4718,7 +4766,7 @@ function start_menu(){
     fi
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-08-29 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-09-02 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
