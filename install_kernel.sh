@@ -2439,7 +2439,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-08-29 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2021-09-07 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -2479,7 +2479,7 @@ function start_menu(){
     green " 16. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
     green " 17. 安装 内核 5.12, Teddysun 编译"
     green " 18. 安装 内核 5.13, Teddysun 编译"
-    green " 19. 安装 内核 5.14, 下载安装"
+    green " 19. 安装 内核 5.14, 下载安装 (可能会安装当前最新的版本, 即大于5.14内核)"
 
     elif [[ "${osRelease}" == "debian" ]]; then
     # echo
