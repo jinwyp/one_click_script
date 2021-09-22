@@ -429,13 +429,21 @@ function installSoftDownload(){
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
-		if ! rpm -qa | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git
+        if ! rpm -qa | grep -qw wget; then
+		    ${osSystemPackage} -y install wget curl git
+        elif ! rpm -qa | grep -qw git; then
+		    ${osSystemPackage} -y install wget curl git
 		fi
 	fi 
 }
 
 function installPackage(){
+    echo
+    green " =================================================="
+    yellow " 开始安装软件"
+    green " =================================================="
+    echo
+
     if [ "$osRelease" == "centos" ]; then
        
         # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
@@ -632,11 +640,20 @@ function installSoftOhMyZsh(){
 function vps_netflix(){
     # bash <(curl -sSL https://raw.githubusercontent.com/Netflixxp/NF/main/nf.sh)
     # bash <(curl -sSL "https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh")
+    # bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh)
+
 	# wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
+    # wget -N --no-check-certificate -O netflixcheck https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixcheck && ./netflixcheck -method full
 
 	wget -N --no-check-certificate -O ./netflix.sh https://github.com/CoiaPrant/MediaUnlock_Test/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
+}
 
-    # wget -N -O nf https://github.com/sjlleo/netflix-verify/releases/download/2.01/nf_2.01_linux_amd64 && chmod +x nf && clear && ./nf
+function vps_netflix2(){
+	wget -N --no-check-certificate -O ./netflix.sh https://github.com/lmc999/RegionRestrictionCheck/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
+}
+
+function vps_netflixgo(){
+    wget -N --no-check-certificate -O netflixcheck https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixcheck && ./netflixcheck -method full
 }
 
 
@@ -688,7 +705,8 @@ function installBTPanel(){
     if [ "$osRelease" == "centos" ]; then
         yum install -y wget && wget -O install.sh http://download.bt.cn/install/install_6.0.sh && sh install.sh
     else
-        curl -sSO http://download.bt.cn/install/install_panel.sh && bash install_panel.sh
+        # curl -sSO http://download.bt.cn/install/install_panel.sh && bash install_panel.sh
+        wget -O install.sh http://download.bt.cn/install/install-ubuntu_6.0.sh && sudo bash install.sh
 
     fi
 }
@@ -697,15 +715,15 @@ function installBTPanelCrack(){
     if [ "$osRelease" == "centos" ]; then
         yum install -y wget && wget -O install.sh https://download.fenhao.me/install/install_6.0.sh && sh install.sh
     else
-        curl -sSO https://download.fenhao.me/install/install_panel.sh && bash install_panel.sh
+        wget -O install.sh https://download.fenhao.me/install/install-ubuntu_6.0.sh && sudo bash install.sh
     fi
 }
 
 function installBTPanelCrack2(){
     if [ "$osRelease" == "centos" ]; then
-        yum install -y wget && wget -O install.sh http://download.hostcli.com/install/install_6.0.sh && sh install.sh
+        yum install -y wget && wget -O install.sh http://v7.hostcli.com/install/install_6.0.sh && sh install.sh
     else
-        exit
+        wget -O install.sh http://v7.hostcli.com/install/install-ubuntu_6.0.sh && sudo bash install.sh
     fi
 }
 
@@ -770,10 +788,10 @@ configRanPath="${HOME}/ran"
 versionTrojan="1.16.0"
 downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 
-versionTrojanGo="0.10.4"
+versionTrojanGo="0.10.5"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.40.1"
+versionV2ray="4.41.1"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
 versionXray="1.4.2"
@@ -877,7 +895,6 @@ function getGithubLatestReleaseVersion(){
 
 function getTrojanAndV2rayVersion(){
     # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
-    # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
 
     echo ""
 
@@ -889,8 +906,7 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "trojan-go" ]] ; then
         versionTrojanGo=$(getGithubLatestReleaseVersion "p4gefau1t/trojan-go")
-        downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
-        echo "versionTrojanGo: ${versionTrojanGo}"
+        echo "versionTrojanGo: ${versionTrojanGo}"  
     fi
 
     if [[ $1 == "v2ray" ]] ; then
@@ -905,7 +921,6 @@ function getTrojanAndV2rayVersion(){
 
     if [[ $1 == "trojan-web" ]] ; then
         versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
-        downloadFilenameTrojanWeb="trojan-linux-amd64"
         echo "versionTrojanWeb: ${versionTrojanWeb}"
     fi
 
@@ -1518,9 +1533,17 @@ function installTrojanV2rayWithNginx(){
         green "     SSL证书 已检测到获取成功!"
         green " ================================================== "
 
+
         if [ "$isNginxWithSSL" = "no" ] ; then
             installWebServerNginx
         else
+
+            if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
+                inputV2rayGRPCPath
+            else
+                inputV2rayWSPath
+            fi
+
             installWebServerNginx "v2ray"
         fi
 
@@ -1560,10 +1583,34 @@ function installTrojanV2rayWithNginx(){
 
 
 
+function downloadTrojanBin(){
 
 
+    if [ "$isTrojanGo" = "no" ] ; then
+        if [ -z $1 ]; then
+            tempDownloadTrojanPath="${configTrojanPath}"
+        else
+            tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan"
+        fi    
+        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojan}"
+    else
+        if [ -z $1 ]; then
+            tempDownloadTrojanPath="${configTrojanGoPath}"
+        else
+            tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan-go"
+        fi 
 
-
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.5/trojan-go-linux-amd64.zip
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameTrojanGo="trojan-go-linux-arm.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameTrojanGo="trojan-go-linux-armv8.zip"
+        fi
+        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojanGo}"
+    fi
+}
 
 function installTrojanServer(){
 
@@ -1590,7 +1637,7 @@ function installTrojanServer(){
 
     green " =================================================="
     green " 开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
-    yellow " 请输入trojan密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
+    yellow " 请输入trojan${promptInfoTrojanName}密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     green " =================================================="
 
     read configTrojanPasswordPrefixInput
@@ -1601,23 +1648,14 @@ function installTrojanServer(){
         configV2rayTrojanPort=443
 
         inputV2rayServerPort "textMainTrojanPort"
-        configV2rayTrojanPort=${isTrojanUserPortInput}
+        configV2rayTrojanPort=${isTrojanUserPortInput}         
     fi
 
     mkdir -p ${configTrojanBasePath}
     cd ${configTrojanBasePath}
     rm -rf ${configTrojanBasePath}/*
 
-    if [ "$isTrojanGo" = "no" ] ; then
-        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
-        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configTrojanPath}" "${downloadFilenameTrojan}"
-    else
-        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
-        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanGoPath}" "${downloadFilenameTrojanGo}"
-    fi
-
-
-
+    downloadTrojanBin
 
 
     read -r -d '' trojanConfigUserpasswordInput << EOM
@@ -2152,13 +2190,11 @@ function upgradeTrojan(){
 
     mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
 
+    downloadTrojanBin "upgrade"
+
     if [ "$isTrojanGo" = "no" ] ; then
-        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
-        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configDownloadTempPath}/upgrade/trojan" "${downloadFilenameTrojan}"
         mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
     else
-        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.8.1/trojan-go-linux-amd64.zip
-        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configDownloadTempPath}/upgrade/trojan-go" "${downloadFilenameTrojanGo}"
         mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
     fi
 
@@ -2191,7 +2227,38 @@ function upgradeTrojan(){
 
 
 
+function downloadV2rayXrayBin(){
+    if [ -z $1 ]; then
+        tempDownloadV2rayPath="${configV2rayPath}"
+    else
+        tempDownloadV2rayPath="${configDownloadTempPath}/upgrade/${promptInfoXrayName}"
+    fi
 
+    if [ "$isXray" = "no" ] ; then
+        # https://github.com/v2fly/v2ray-core/releases/download/v4.41.1/v2ray-linux-64.zip
+        # https://github.com/v2fly/v2ray-core/releases/download/v4.41.1/v2ray-linux-arm32-v6.zip
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameV2ray="v2ray-linux-arm32-v6.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameV2ray="v2ray-linux-arm64-v8a.zip"
+        fi
+
+        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${tempDownloadV2rayPath}" "${downloadFilenameV2ray}"
+
+    else
+        # https://github.com/XTLS/Xray-core/releases/download/v1.4.2/Xray-linux-64.zip
+
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameXray="Xray-linux-arm32-v6.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameXray="Xray-linux-arm64-v8a.zip"
+        fi
+
+        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${tempDownloadV2rayPath}" "${downloadFilenameXray}"
+    fi
+}
 
 
 
@@ -2252,10 +2319,10 @@ function inputV2rayServerPort(){
     if [[ $1 == "textMainTrojanPort" ]]; then
         green "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
         red "不建议用户自定义端口, 建议使用443端口, 除非你需要使用非443端口并明白使用非443端口的安全性!"
-        read -p "是否自定义${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
+        read -p "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
         isTrojanUserPortInput=${isTrojanUserPortInput:-${configV2rayTrojanPort}}
 		checkPortInUse "${isTrojanUserPortInput}" $1 
-	fi
+	fi    
 }
 
 function checkPortInUse(){ 
@@ -2336,6 +2403,51 @@ function installV2ray(){
         fi
 
     fi
+
+
+    echo
+    green " =================================================="
+    yellow " 是否使用 DNS 解锁流媒体 Netflix HBO Disney 等流媒体网站"
+    green " 如需解锁请填入 解锁 Netflix 的DNS服务器的IP地址, 例如 8.8.8.8"
+    read -p "是否解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
+    isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
+
+
+    if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
+        v2rayConfigDNSInput=""
+
+    else
+
+        read -r -d '' v2rayConfigDNSInput << EOM
+    "dns": {
+        "servers": [
+            {
+                "address": "${isV2rayUnlockDNSInput}",
+                "port": 53,
+                "domains": [
+                    "geosite:netflix",
+                    "geosite:bahamut",
+                    "geosite:hulu",
+                    "geosite:hbo",
+                    "geosite:disney",
+                    "geosite:bbc",
+                    "geosite:4chan",
+                    "geosite:fox",
+                    "geosite:abema",
+                    "geosite:dmm",
+                    "geosite:niconico",
+                    "geosite:pixiv",
+                    "geosite:bilibili",
+                    "geosite:viu"
+                ]
+            },
+        "localhost"
+        ]
+    }, 
+EOM
+
+    fi
+
 
     echo
     green " =================================================="
@@ -2418,7 +2530,7 @@ function installV2ray(){
         configV2rayPortShowInfo=${isV2rayUserPortInput}   
 
 
-        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayVlessMode == "wsgrpc" ) ]]; then
+        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) ]]; then
             inputV2rayServerPort "textMainGRPCPort"
 
             configV2rayGRPCPort=${isV2rayUserPortGRPCInput}   
@@ -2427,7 +2539,7 @@ function installV2ray(){
 
 
         echo
-        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayVlessMode == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
+        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
             inputV2rayGRPCPath
         else
             inputV2rayWSPath
@@ -2489,18 +2601,7 @@ EOM
     cd ${configV2rayPath}
     rm -rf ${configV2rayPath}/*
 
-
-    if [ "$isXray" = "no" ] ; then
-        # https://github.com/v2fly/v2ray-core/releases/download/v4.27.5/v2ray-linux-64.zip
-        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configV2rayPath}" "${downloadFilenameV2ray}"
-
-    else
-        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${configV2rayPath}" "${downloadFilenameXray}"
-    fi
-
-
-
-
+    downloadV2rayXrayBin
 
 
 
@@ -2520,409 +2621,247 @@ EOM
 
     read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
                     {
-                        "password": "${trojanPassword1}",
-                        "level": 0,
-                        "email": "password111@gmail.com"
+                        "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword2}",
-                        "level": 0,
-                        "email": "password112@gmail.com"
+                        "password": "${trojanPassword2}", "level": 0, "email": "password112@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword3}",
-                        "level": 0,
-                        "email": "password113@gmail.com"
+                        "password": "${trojanPassword3}", "level": 0, "email": "password113@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword4}",
-                        "level": 0,
-                        "email": "password114@gmail.com"
+                        "password": "${trojanPassword4}", "level": 0, "email": "password114@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword5}",
-                        "level": 0,
-                        "email": "password115@gmail.com"
+                        "password": "${trojanPassword5}", "level": 0, "email": "password115@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword6}",
-                        "level": 0,
-                        "email": "password116@gmail.com"
+                        "password": "${trojanPassword6}", "level": 0, "email": "password116@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword7}",
-                        "level": 0,
-                        "email": "password117@gmail.com"
+                        "password": "${trojanPassword7}", "level": 0, "email": "password117@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword8}",
-                        "level": 0,
-                        "email": "password118@gmail.com"
+                        "password": "${trojanPassword8}", "level": 0, "email": "password118@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword9}",
-                        "level": 0,
-                        "email": "password119@gmail.com"
+                        "password": "${trojanPassword9}", "level": 0, "email": "password119@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword10}",
-                        "level": 0,
-                        "email": "password120@gmail.com"
+                        "password": "${trojanPassword10}", "level": 0, "email": "password120@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202000",
-                        "level": 0,
-                        "email": "password200@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202000", "level": 0, "email": "password200@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202001",
-                        "level": 0,
-                        "email": "password201@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202001", "level": 0, "email": "password201@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202002",
-                        "level": 0,
-                        "email": "password202@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202002", "level": 0, "email": "password202@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202003",
-                        "level": 0,
-                        "email": "password203@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202003", "level": 0, "email": "password203@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202004",
-                        "level": 0,
-                        "email": "password204@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202004", "level": 0, "email": "password204@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202005",
-                        "level": 0,
-                        "email": "password205@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202005", "level": 0, "email": "password205@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202006",
-                        "level": 0,
-                        "email": "password206@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202006", "level": 0, "email": "password206@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202007",
-                        "level": 0,
-                        "email": "password207@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202007", "level": 0, "email": "password207@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202008",
-                        "level": 0,
-                        "email": "password208@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202008", "level": 0, "email": "password208@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202009",
-                        "level": 0,
-                        "email": "password209@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202009", "level": 0, "email": "password209@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202010",
-                        "level": 0,
-                        "email": "password210@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202010", "level": 0, "email": "password210@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202011",
-                        "level": 0,
-                        "email": "password211@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202011", "level": 0, "email": "password211@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202012",
-                        "level": 0,
-                        "email": "password212@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202012", "level": 0, "email": "password212@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202013",
-                        "level": 0,
-                        "email": "password213@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202013", "level": 0, "email": "password213@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202014",
-                        "level": 0,
-                        "email": "password214@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202014", "level": 0, "email": "password214@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202015",
-                        "level": 0,
-                        "email": "password215@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202015", "level": 0, "email": "password215@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202016",
-                        "level": 0,
-                        "email": "password216@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202016", "level": 0, "email": "password216@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202017",
-                        "level": 0,
-                        "email": "password217@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202017", "level": 0, "email": "password217@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202018",
-                        "level": 0,
-                        "email": "password218@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202018", "level": 0, "email": "password218@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202019",
-                        "level": 0,
-                        "email": "password219@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202019", "level": 0, "email": "password219@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202020",
-                        "level": 0,
-                        "email": "password220@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202020", "level": 0, "email": "password220@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202021",
-                        "level": 0,
-                        "email": "password221@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202021", "level": 0, "email": "password221@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202022",
-                        "level": 0,
-                        "email": "password222@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202022", "level": 0, "email": "password222@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202023",
-                        "level": 0,
-                        "email": "password223@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202023", "level": 0, "email": "password223@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202024",
-                        "level": 0,
-                        "email": "password224@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202024", "level": 0, "email": "password224@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202025",
-                        "level": 0,
-                        "email": "password225@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202025", "level": 0, "email": "password225@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202026",
-                        "level": 0,
-                        "email": "password226@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202026", "level": 0, "email": "password226@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202027",
-                        "level": 0,
-                        "email": "password227@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202027", "level": 0, "email": "password227@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202028",
-                        "level": 0,
-                        "email": "password228@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202028", "level": 0, "email": "password228@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202029",
-                        "level": 0,
-                        "email": "password229@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202029", "level": 0, "email": "password229@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202030",
-                        "level": 0,
-                        "email": "password230@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202030", "level": 0, "email": "password230@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202031",
-                        "level": 0,
-                        "email": "password231@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202031", "level": 0, "email": "password231@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202032",
-                        "level": 0,
-                        "email": "password232@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202032", "level": 0, "email": "password232@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202033",
-                        "level": 0,
-                        "email": "password233@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202033", "level": 0, "email": "password233@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202034",
-                        "level": 0,
-                        "email": "password234@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202034", "level": 0, "email": "password234@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202035",
-                        "level": 0,
-                        "email": "password235@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202035", "level": 0, "email": "password235@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202036",
-                        "level": 0,
-                        "email": "password236@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202036", "level": 0, "email": "password236@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202037",
-                        "level": 0,
-                        "email": "password237@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202037", "level": 0, "email": "password237@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202038",
-                        "level": 0,
-                        "email": "password238@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202038", "level": 0, "email": "password238@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202039",
-                        "level": 0,
-                        "email": "password239@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202039", "level": 0, "email": "password239@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202040",
-                        "level": 0,
-                        "email": "password240@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202040", "level": 0, "email": "password240@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202041",
-                        "level": 0,
-                        "email": "password241@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202041", "level": 0, "email": "password241@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202042",
-                        "level": 0,
-                        "email": "password242@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202042", "level": 0, "email": "password242@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202043",
-                        "level": 0,
-                        "email": "password243@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202043", "level": 0, "email": "password243@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202044",
-                        "level": 0,
-                        "email": "password244@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202044", "level": 0, "email": "password244@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202045",
-                        "level": 0,
-                        "email": "password245@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202045", "level": 0, "email": "password245@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202046",
-                        "level": 0,
-                        "email": "password246@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202046", "level": 0, "email": "password246@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202047",
-                        "level": 0,
-                        "email": "password247@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202047", "level": 0, "email": "password247@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202048",
-                        "level": 0,
-                        "email": "password248@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202048", "level": 0, "email": "password248@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202049",
-                        "level": 0,
-                        "email": "password249@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202049", "level": 0, "email": "password249@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202050",
-                        "level": 0,
-                        "email": "password250@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202050", "level": 0, "email": "password250@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202051",
-                        "level": 0,
-                        "email": "password251@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202051", "level": 0, "email": "password251@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202052",
-                        "level": 0,
-                        "email": "password252@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202052", "level": 0, "email": "password252@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202053",
-                        "level": 0,
-                        "email": "password253@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202053", "level": 0, "email": "password253@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202054",
-                        "level": 0,
-                        "email": "password254@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202054", "level": 0, "email": "password254@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202055",
-                        "level": 0,
-                        "email": "password255@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202055", "level": 0, "email": "password255@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202056",
-                        "level": 0,
-                        "email": "password256@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202056", "level": 0, "email": "password256@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202057",
-                        "level": 0,
-                        "email": "password257@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202057", "level": 0, "email": "password257@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202058",
-                        "level": 0,
-                        "email": "password258@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202058", "level": 0, "email": "password258@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202059",
-                        "level": 0,
-                        "email": "password259@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202059", "level": 0, "email": "password259@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202060",
-                        "level": 0,
-                        "email": "password260@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202060", "level": 0, "email": "password260@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202061",
-                        "level": 0,
-                        "email": "password261@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202061", "level": 0, "email": "password261@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202062",
-                        "level": 0,
-                        "email": "password262@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202062", "level": 0, "email": "password262@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202063",
-                        "level": 0,
-                        "email": "password263@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202063", "level": 0, "email": "password263@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202064",
-                        "level": 0,
-                        "email": "password264@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202064", "level": 0, "email": "password264@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202065",
-                        "level": 0,
-                        "email": "password265@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202065", "level": 0, "email": "password265@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202066",
-                        "level": 0,
-                        "email": "password266@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202066", "level": 0, "email": "password266@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202067",
-                        "level": 0,
-                        "email": "password267@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202067", "level": 0, "email": "password267@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202068",
-                        "level": 0,
-                        "email": "password268@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202068", "level": 0, "email": "password268@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202069",
-                        "level": 0,
-                        "email": "password269@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202069", "level": 0, "email": "password269@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202070",
-                        "level": 0,
-                        "email": "password270@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202070", "level": 0, "email": "password270@gmail.com"
                     }
 
 EOM
@@ -3106,6 +3045,7 @@ EOM
         "error": "${configV2rayErrorLogFilePath}",
         "loglevel": "warning"
     },
+    ${v2rayConfigDNSInput}
 EOM
 
 
@@ -4268,11 +4208,10 @@ function upgradeV2ray(){
 
     mkdir -p ${configDownloadTempPath}/upgrade/${promptInfoXrayName}
 
+    downloadV2rayXrayBin "upgrade"
+
     if [ "$isXray" = "no" ] ; then
-        downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${configDownloadTempPath}/upgrade/${promptInfoXrayName}" "${downloadFilenameV2ray}"
         mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
-    else
-        downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${configDownloadTempPath}/upgrade/${promptInfoXrayName}" "${downloadFilenameXray}"
     fi
 
     mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/${promptInfoXrayName} ${configV2rayPath}
@@ -4335,7 +4274,18 @@ function upgradeV2ray(){
 
 
 
+function downloadTrojanWebBin(){
 
+    if [[ ${osArchitecture} == "arm" || ${osArchitecture} == "arm64" ]] ; then
+        downloadFilenameTrojanWeb="trojan-linux-arm64"
+    fi
+
+    if [ -z $1 ]; then
+        wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+    else
+        wget -O ${configDownloadTempPath}/upgrade/trojan-web/trojan-web "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+    fi
+}
 
 
 
@@ -4367,7 +4317,7 @@ function installTrojanWeb(){
 
         # https://github.com/Jrohy/trojan/releases/download/v2.10.4/trojan-linux-amd64
         mkdir -p ${configTrojanWebPath}
-        wget -O ${configTrojanWebPath}/trojan-web --no-check-certificate "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+        downloadTrojanWebBin
         chmod +x ${configTrojanWebPath}/trojan-web
 
 
@@ -4398,9 +4348,17 @@ EOF
         green " Trojan-web 可视化管理面板: ${versionTrojanWeb} 安装成功!"
         green " Trojan可视化管理面板地址 https://${configSSLDomain}/${configTrojanWebNginxPath}"
         green " 开始运行命令 ${configTrojanWebPath}/trojan-web 进行初始化设置."
+        echo
+        red " 后续安装步骤: "
+        green " 根据提示选择 1. Let's Encrypt 证书, 申请SSL证书 "
+        green " 证书申请成功后. 继续根据提示 再选择 1.安装docker版mysql(mariadb)."
+        green " mysql(mariadb)启动成功后, 继续根据提示 输入第一个trojan用户的账号密码, 回车后出现 '欢迎使用trojan管理程序' "
+        green " 出现 '欢迎使用trojan管理程序'后 需要不输入数字直接按回车, 这样就会继续安装 nginx 直到完成 "
+        echo
+        green " nginx 安装成功会显示可视化管理面板网址, 请保存下来. 如果没有显示管理面板网址则表明安装失败. "
         green " =================================================="
 
-
+        read -p "按回车继续安装. Press enter to continue"
 
         ${configTrojanWebPath}/trojan-web
 
@@ -4474,8 +4432,8 @@ function upgradeTrojanWeb(){
     ${sudoCmd} systemctl stop trojan-web.service
 
     mkdir -p ${configDownloadTempPath}/upgrade/trojan-web
-
-    wget -O ${configDownloadTempPath}/upgrade/trojan-web/trojan-web "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
+    downloadTrojanWebBin "upgrade"
+    
     mv -f ${configDownloadTempPath}/upgrade/trojan-web/trojan-web ${configTrojanWebPath}
     chmod +x ${configTrojanWebPath}/trojan-web
 
@@ -4544,7 +4502,8 @@ function installXUI(){
         green "    开始安装 X-UI 可视化管理面板 !"
         green " =================================================="
 
-        wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
+        # wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
+        wget -O x_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh" && chmod +x x_ui_install.sh && ./x_ui_install.sh
 
         green "X-UI 可视化管理面板地址 http://${configSSLDomain}:54321"
         green " 请确保 54321 端口已经放行, 例如检查linux防火墙或VPS防火墙 54321 端口是否开启"
@@ -4578,7 +4537,10 @@ function installV2rayUI(){
         green "    开始安装 V2ray-UI 可视化管理面板 !"
         green " =================================================="
 
+        # bash <(curl -Ls https://raw.githubusercontent.com/tszho-t/v2-ui/master/install.sh)
+
         wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
+        # wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/tszho-t/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
 
         green " V2ray-UI 可视化管理面板地址 http://${configSSLDomain}:65432"
         green " 请确保 65432 端口已经放行, 例如检查linux防火墙或VPS防火墙 65432 端口是否开启"
@@ -4765,16 +4727,18 @@ function startMenuOther(){
     green " =================================================="
     red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
     green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 42. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）"
+    green " 42. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）推荐使用"
 	green " 43. testrace 回程路由测试 （四网路由测试）"
-	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、速度）"
+	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、节点测速） 推荐使用"
     green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
     echo
-    green " 51. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区"
+    green " 51. 测试VPS 是否支持Netflix, Go语言版本 推荐使用 by sjlleo"
+    green " 52. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
+    green " 53. 测试VPS 是否支持Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
     echo
     green " 61. 安装 官方宝塔面板"
     green " 62. 安装 宝塔面板破解版 by fenhao.me"
-    green " 63. 安装 宝塔面板 7.4.5 纯净版 by hostcli.com"
+    green " 63. 安装 宝塔面板纯净版 by hostcli.com"
     echo
     green " 9. 返回上级菜单"
     green " 0. 退出脚本"
@@ -4903,7 +4867,15 @@ function startMenuOther(){
         ;;
         51 )
             installPackage
+            vps_netflixgo
+        ;;                    
+        52 )
+            installPackage
             vps_netflix
+        ;;                    
+        53 )
+            installPackage
+            vps_netflix2
         ;;                    
         61 )
             installBTPanel
@@ -4911,7 +4883,7 @@ function startMenuOther(){
         62 )
             installBTPanelCrack
         ;;                              
-        62 )
+        63 )
             installBTPanelCrack2
         ;;                              
         81 )
@@ -4968,7 +4940,7 @@ function start_menu(){
     fi
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-08-06 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-09-23 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
