@@ -339,6 +339,7 @@ function setLinuxDateZone(){
         ntpdate -q 0.rhel.pool.ntp.org
         systemctl enable ntpd
         systemctl restart ntpd
+        ntpdate -u  pool.ntp.org
     else
         $osSystemPackage install -y ntp
         systemctl enable ntp
@@ -1563,7 +1564,9 @@ function installAirUniverse(){
     
     /root/airu_install.sh install 
 
-    (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart xray.service ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "35 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
+
 
     replaceAirUniverseConfig
 }
@@ -1615,8 +1618,12 @@ EOM
             sed -i "s/\"type\":\"xray\"/${TEST}/g" ${configAirUniverseConfigFilePath}
             sed -i "s/10085/${configXrayPort}/g" ${configAirUniverseXrayConfigFilePath}
 
-            airu restart
+            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
+            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
+            systemctl restart xray.service
+            airu restart
+            
             manageAirUniverse
         else
             echo
@@ -1624,6 +1631,8 @@ EOM
             read -p "Press enter to continue. 按回车继续运行 airu 命令"
             airu
         fi
+
+
 
     else
         manageAirUniverse
