@@ -416,23 +416,23 @@ function upgradeScript(){
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget git
+			${osSystemPackage} -y install wget git unzip
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 		if ! dpkg -l | grep -qw curl; then
-			${osSystemPackage} -y install curl git
+			${osSystemPackage} -y install curl git unzip
 			
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
         if ! rpm -qa | grep -qw wget; then
-		    ${osSystemPackage} -y install wget curl git
+		    ${osSystemPackage} -y install wget curl git unzip
         elif ! rpm -qa | grep -qw git; then
-		    ${osSystemPackage} -y install wget curl git
+		    ${osSystemPackage} -y install wget curl git unzip
 		fi
 	fi 
 }
