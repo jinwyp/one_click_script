@@ -1760,11 +1760,18 @@ EOM
 
     # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
 
-    sed -i '/outbounds/,/^&/d' ${configAirUniverseXrayConfigFilePath}
-    cat >> ${configAirUniverseXrayConfigFilePath} <<-EOF
+    if [[ $isV2rayUnlockGoogleInput == "1" ]]; then
+        echo
+    else
+        sed -i '/outbounds/,/^&/d' ${configAirUniverseXrayConfigFilePath}
+        cat >> ${configAirUniverseXrayConfigFilePath} <<-EOF
 
   ${xrayConfigProxyInput}
 EOF
+    fi
+
+    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
+    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
     systemctl restart xray.service
     airu restart
