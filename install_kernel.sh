@@ -2317,6 +2317,11 @@ function checkWireguardBootStatus(){
         green " 状态显示-- Wireguard 已启动失败! 请查看 Wireguard 运行日志, 寻找错误后重启 Wireguard "
     else
         green " 状态显示-- Wireguard 已启动成功! "
+        echo
+        echo "wgcf trace"
+        echo
+        wgcf trace
+        echo
     fi
 }
 
@@ -2439,7 +2444,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-09-23 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2021-10-12 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="

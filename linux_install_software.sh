@@ -1618,6 +1618,8 @@ EOM
             sed -i "s/\"type\":\"xray\"/${TEST}/g" ${configAirUniverseConfigFilePath}
             sed -i "s/10085/${configXrayPort}/g" ${configAirUniverseXrayConfigFilePath}
 
+
+
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
@@ -1639,6 +1641,133 @@ EOM
     fi
     
 
+}
+
+
+function replaceAirUniverseConfigIPV6(){
+
+    echo
+    green " =================================================="
+    yellow " 是否使用 IPv6 解锁流媒体和避免弹出 Google reCAPTCHA 人机验证, 请选择:"
+    green " 推荐选择1 不解锁. 解锁需要安装好 Wireguard 与 Cloudflare Warp, 可重新运行本脚本选择第一项安装".
+    red " 推荐先安装 Wireguard 与 Cloudflare Warp 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare Warp也没问题"
+    red " 但如果先安装v2ray或xray, 下面选了非第一项,那么会暂时无法访问google和其他视频网站, 需要继续安装Wireguard 与 Cloudflare Warp 解决"
+    echo
+    green " 1. 不解锁"
+    green " 2. 避免弹出 Google reCAPTCHA 人机验证"
+    green " 3. 解锁 Netflex 限制"
+    green " 4. 解锁 Youtube 和 Youtube Premium"
+    green " 5. 解锁 全部流媒体 包括 Netflex, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico 等"
+    green " 11. 同时解锁 2 和 3 项,  即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflex 限制"
+    green " 12. 同时解锁 2 和 3 和 4 项, 即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflex 和 Youtube 限制"
+    green " 13. 同时解锁 全部流媒体 和 避免弹出 Google reCAPTCHA 人机验证"
+    echo
+    read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
+    isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
+
+    V2rayUnlockText=""
+
+    if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
+        V2rayUnlockText="\"geosite:google\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
+        V2rayUnlockText="\"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
+        
+    elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
+        V2rayUnlockText="\"geosite:youtube\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "5" ]]; then
+        V2rayUnlockText="\"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "11" ]]; then
+        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "12" ]]; then
+        V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
+
+    elif [[ $isV2rayUnlockGoogleInput == "13" ]]; then
+        V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+    else
+        V2rayUnlockText=""
+    fi
+            
+
+    read -r -d '' xrayConfigProxyInput << EOM
+        
+  "outbounds": [
+    {
+      "tag": "direct",
+      "protocol": "freedom",
+      "settings": {}
+    },
+    {
+      "tag": "blackhole",
+      "protocol": "blackhole",
+      "settings": {}
+    },
+    {
+      "tag":"IP6_out",
+      "protocol": "freedom",
+      "settings": {
+          "domainStrategy": "UseIPv6" 
+      }
+    }
+  ],
+  "routing": {
+    "rules": [
+      {
+        "inboundTag": [
+          "api"
+        ],
+        "outboundTag": "api",
+        "type": "field"
+      },
+      {
+        "type": "field",
+        "outboundTag": "IP6_out",
+        "domain": [${V2rayUnlockText}] 
+      }, 
+      {
+        "type": "field",
+        "protocol": [
+          "bittorrent"
+        ],
+        "outboundTag": "blackhole"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "127.0.0.1/32",
+          "10.0.0.0/8",
+          "fc00::/7",
+          "fe80::/10",
+          "172.16.0.0/12"
+        ],
+        "outboundTag": "blackhole"
+      }
+    ]
+  }
+}
+
+EOM
+
+    # https://stackoverflow.com/questions/6684487/sed-replace-with-variable-with-multiple-lines
+
+    TESTNEW="${xrayConfigProxyInput//\\/\\\\}"
+    TESTNEW="${TESTNEW//\//\\/}"
+    TESTNEW="${TESTNEW//&/\\&}"
+    TESTNEW="${TESTNEW//$'\n'/\\n}"
+
+    # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
+
+    sed -i '/outbounds/,/^&/d' ${configAirUniverseXrayConfigFilePath}
+    cat >> ${configAirUniverseXrayConfigFilePath} <<-EOF
+
+  ${xrayConfigProxyInput}
+EOF
+
+    systemctl restart xray.service
+    airu restart
 }
 
 function manageAirUniverse(){
@@ -1998,7 +2127,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-09-23 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-10-12 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
@@ -2044,6 +2173,7 @@ function start_menu(){
     green " 53. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
     green " 54. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
+    green " 56. 配合WARP(Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
     echo 
     green " 81. 单独申请域名SSL证书"
     echo
@@ -2160,6 +2290,9 @@ function start_menu(){
         ;; 
         55 )
             editAirUniverseXrayConfig
+        ;; 
+        56 )
+            replaceAirUniverseConfigIPV6
         ;; 
         58 )
             replaceAirUniverseConfig
