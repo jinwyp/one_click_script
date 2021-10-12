@@ -1769,7 +1769,8 @@ EOM
   ${xrayConfigProxyInput}
 EOF
     fi
-
+    
+    configSSLCertPath="/usr/local/share/au"
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
@@ -2086,7 +2087,14 @@ function getHTTPS(){
 
 
 
-
+# 更新本脚本
+function upgradeScript(){
+    wget -Nq --no-check-certificate -O ./linux_install_software.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh"
+    green " 本脚本升级成功! "
+    chmod +x ./linux_install_software.sh
+    sleep 2s
+    exec "./linux_install_software.sh"
+}
 
 
 
@@ -2182,10 +2190,12 @@ function start_menu(){
     green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
     green " 56. 配合WARP(Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
     echo 
-    green " 81. 单独申请域名SSL证书"
+    green " 71. 单独申请域名SSL证书"
     echo
-    green " 91. 工具脚本合集 by BlueSkyXN "
-    green " 92. 工具脚本合集 by jcnf "
+    green " 81. 工具脚本合集 by BlueSkyXN "
+    green " 82. 工具脚本合集 by jcnf "
+    echo
+    green " 88. 升级脚本"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -2304,15 +2314,19 @@ function start_menu(){
         58 )
             replaceAirUniverseConfig
         ;; 
-        81 )
+        71 )
             getHTTPS
         ;;     
-        91 )
+       
+        81 )
             toolboxSkybox
         ;;                        
-        92 )
+        82 )
             toolboxJcnf
-        ;;                        
+        ;;      
+        88 )
+            upgradeScript
+        ;;                           
         0 )
             exit 1
         ;;
