@@ -416,23 +416,23 @@ function upgradeScript(){
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget git
+			${osSystemPackage} -y install wget git unzip
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 		if ! dpkg -l | grep -qw curl; then
-			${osSystemPackage} -y install curl git
+			${osSystemPackage} -y install curl git unzip
 			
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
         if ! rpm -qa | grep -qw wget; then
-		    ${osSystemPackage} -y install wget curl git
+		    ${osSystemPackage} -y install wget curl git unzip
         elif ! rpm -qa | grep -qw git; then
-		    ${osSystemPackage} -y install wget curl git
+		    ${osSystemPackage} -y install wget curl git unzip
 		fi
 	fi 
 }
@@ -2474,22 +2474,22 @@ EOM
         V2rayUnlockText="\"geosite:google\""
 
     elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
-        V2rayUnlockText="\"geosite:netflix\""
+        V2rayUnlockText="\"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
         
     elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
         V2rayUnlockText="\"geosite:youtube\""
 
     elif [[ $isV2rayUnlockGoogleInput == "5" ]]; then
-        V2rayUnlockText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+        V2rayUnlockText="\"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
 
     elif [[ $isV2rayUnlockGoogleInput == "11" ]]; then
-        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\""
+        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
 
     elif [[ $isV2rayUnlockGoogleInput == "12" ]]; then
-        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\", \"geosite:youtube\""
+        V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
 
     elif [[ $isV2rayUnlockGoogleInput == "13" ]]; then
-        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+        V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
     else
         V2rayUnlockText=""
     fi
@@ -2862,124 +2862,162 @@ EOM
                     },
                     {
                         "password": "${configTrojanPasswordPrefixInput}202070", "level": 0, "email": "password270@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202071", "level": 0, "email": "password271@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202072", "level": 0, "email": "password272@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202073", "level": 0, "email": "password273@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202074", "level": 0, "email": "password274@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202075", "level": 0, "email": "password275@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202076", "level": 0, "email": "password276@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202077", "level": 0, "email": "password277@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202078", "level": 0, "email": "password278@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202079", "level": 0, "email": "password279@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202080", "level": 0, "email": "password280@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202081", "level": 0, "email": "password281@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202082", "level": 0, "email": "password282@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202083", "level": 0, "email": "password283@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202084", "level": 0, "email": "password284@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202085", "level": 0, "email": "password285@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202086", "level": 0, "email": "password286@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202087", "level": 0, "email": "password287@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202088", "level": 0, "email": "password288@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202089", "level": 0, "email": "password289@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202090", "level": 0, "email": "password290@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202091", "level": 0, "email": "password291@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202092", "level": 0, "email": "password292@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202093", "level": 0, "email": "password293@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202094", "level": 0, "email": "password294@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202095", "level": 0, "email": "password295@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202096", "level": 0, "email": "password296@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202097", "level": 0, "email": "password297@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202098", "level": 0, "email": "password298@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202099", "level": 0, "email": "password299@gmail.com"
                     }
 
 EOM
 
 
+
     read -r -d '' v2rayConfigUserpasswordInput << EOM
                     {
-                        "id": "${v2rayPassword1}",
-                        "level": 0,
-                        "email": "password11@gmail.com"
+                        "id": "${v2rayPassword1}", "level": 0, "email": "password11@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword2}",
-                        "level": 0,
-                        "email": "password12@gmail.com"
+                        "id": "${v2rayPassword2}", "level": 0, "email": "password12@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword3}",
-                        "level": 0,
-                        "email": "password13@gmail.com"
+                        "id": "${v2rayPassword3}", "level": 0, "email": "password13@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword4}",
-                        "level": 0,
-                        "email": "password14@gmail.com"
+                        "id": "${v2rayPassword4}", "level": 0, "email": "password14@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword5}",
-                        "level": 0,
-                        "email": "password15@gmail.com"
+                        "id": "${v2rayPassword5}", "level": 0, "email": "password15@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword6}",
-                        "level": 0,
-                        "email": "password16@gmail.com"
+                        "id": "${v2rayPassword6}", "level": 0, "email": "password16@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword7}",
-                        "level": 0,
-                        "email": "password17@gmail.com"
+                        "id": "${v2rayPassword7}", "level": 0, "email": "password17@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword8}",
-                        "level": 0,
-                        "email": "password18@gmail.com"
+                        "id": "${v2rayPassword8}", "level": 0, "email": "password18@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword9}",
-                        "level": 0,
-                        "email": "password19@gmail.com"
+                        "id": "${v2rayPassword9}", "level": 0, "email": "password19@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword10}",
-                        "level": 0,
-                        "email": "password20@gmail.com"
+                        "id": "${v2rayPassword10}", "level": 0, "email": "password20@gmail.com"
                     }
 EOM
 
     read -r -d '' v2rayConfigUserpasswordDirectInput << EOM
                     {
-                        "id": "${v2rayPassword1}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password11@gmail.com"
+                        "id": "${v2rayPassword1}", "flow": "xtls-rprx-direct", "level": 0, "email": "password11@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword2}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password12@gmail.com"
+                        "id": "${v2rayPassword2}", "flow": "xtls-rprx-direct", "level": 0, "email": "password12@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword3}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password13@gmail.com"
+                        "id": "${v2rayPassword3}", "flow": "xtls-rprx-direct", "level": 0, "email": "password13@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword4}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password14@gmail.com"
+                        "id": "${v2rayPassword4}", "flow": "xtls-rprx-direct", "level": 0, "email": "password14@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword5}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password15@gmail.com"
+                        "id": "${v2rayPassword5}", "flow": "xtls-rprx-direct", "level": 0, "email": "password15@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword6}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password16@gmail.com"
+                        "id": "${v2rayPassword6}", "flow": "xtls-rprx-direct", "level": 0, "email": "password16@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword7}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password17@gmail.com"
+                        "id": "${v2rayPassword7}", "flow": "xtls-rprx-direct", "level": 0, "email": "password17@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword8}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password18@gmail.com"
+                        "id": "${v2rayPassword8}", "flow": "xtls-rprx-direct", "level": 0, "email": "password18@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword9}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password19@gmail.com"
+                        "id": "${v2rayPassword9}", "flow": "xtls-rprx-direct", "level": 0, "email": "password19@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword10}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password20@gmail.com"
+                        "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com"
                     }
 EOM
 
@@ -4048,7 +4086,7 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 密码8: ${trojanPassword8}
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
-您指定前缀的密码共71个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202070 都可以使用
+您指定前缀的密码共100个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202099 都可以使用
 例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用
 
 
@@ -4775,10 +4813,10 @@ function startMenuOther(){
         9 )
             setLinuxDateZone
             installXUI
-        ;;  
+        ;;
         10 )
             removeXUI
-        ;;              
+        ;;          
         11 )
             getHTTPSNoNgix
         ;;
@@ -4793,7 +4831,7 @@ function startMenuOther(){
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
             getHTTPSNoNgix "trojan"
-        ;;          
+        ;;
         15 )
             configV2rayWSorGrpc="ws"
             getHTTPSNoNgix "v2ray"
@@ -4801,25 +4839,24 @@ function startMenuOther(){
         16 )
             configV2rayWSorGrpc="grpc"
             getHTTPSNoNgix "v2ray"
-            
-        ;;                
+        ;;
         17 )
             configV2rayVlessMode="vlessgrpc"
             getHTTPSNoNgix "v2ray"
-        ;; 
+        ;;
         18 )
             configV2rayVlessMode="vlessws"
             getHTTPSNoNgix "v2ray"
-        ;; 
+        ;;
         19 )
             configV2rayVlessMode="vmessws"
             getHTTPSNoNgix "v2ray"
-        ;;    
+        ;;
 
         21 )
             configV2rayVlessMode="vlessxtlsws"
             getHTTPSNoNgix "v2ray"
-        ;; 
+        ;;
         22 )
             configV2rayVlessMode="trojan"
             getHTTPSNoNgix "both"
@@ -4828,7 +4865,7 @@ function startMenuOther(){
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             getHTTPSNoNgix "both"
-        ;;    
+        ;;
         24 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
@@ -4838,24 +4875,24 @@ function startMenuOther(){
         25 )
             configV2rayVlessMode="vlessxtlstrojan"
             getHTTPSNoNgix "v2ray"
-        ;;          
+        ;;
         27 )
             removeTrojan
-        ;;    
+        ;;
         28 )
             isTrojanGo="yes"
             removeTrojan
         ;;
         29 )
             removeV2ray
-        ;;  
+        ;;
                                                      
         41 )
             vps_superspeed
         ;;
         42 )
             vps_bench
-        ;;        
+        ;;
         43 )
             vps_testrace
         ;;
@@ -4868,30 +4905,30 @@ function startMenuOther(){
         51 )
             installPackage
             vps_netflixgo
-        ;;                    
+        ;;
         52 )
             installPackage
             vps_netflix
-        ;;                    
+        ;;
         53 )
             installPackage
             vps_netflix2
-        ;;                    
+        ;;
         61 )
             installBTPanel
         ;;
         62 )
             installBTPanelCrack
-        ;;                              
+        ;;
         63 )
             installBTPanelCrack2
-        ;;                              
+        ;;
         81 )
             installBBR
         ;;
         82 )
             installBBR2
-        ;;                              
+        ;;
         9)
             start_menu
         ;;
@@ -4940,7 +4977,7 @@ function start_menu(){
     fi
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-09-23 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-10-12 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
@@ -5104,16 +5141,19 @@ function start_menu(){
         ;;
         30 )
             startMenuOther
-        ;;        
+        ;;     
+        77 )
+            vps_netflixgo
+        ;;
+        80 )
+            installPackage
+        ;;                 
         81 )
             installBBR
         ;;
         82 )
             installBBR2
         ;;        
-        83 )
-            installPackage
-        ;;
         88 )
             upgradeScript
         ;;

@@ -2541,271 +2541,161 @@ EOM
 
     read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
                     {
-                        "password": "${trojanPassword1}",
-                        "level": 0,
-                        "email": "password111@gmail.com"
+                        "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword2}",
-                        "level": 0,
-                        "email": "password112@gmail.com"
+                        "password": "${trojanPassword2}", "level": 0, "email": "password112@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword3}",
-                        "level": 0,
-                        "email": "password113@gmail.com"
+                        "password": "${trojanPassword3}", "level": 0, "email": "password113@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword4}",
-                        "level": 0,
-                        "email": "password114@gmail.com"
+                        "password": "${trojanPassword4}", "level": 0, "email": "password114@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword5}",
-                        "level": 0,
-                        "email": "password115@gmail.com"
+                        "password": "${trojanPassword5}", "level": 0, "email": "password115@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword6}",
-                        "level": 0,
-                        "email": "password116@gmail.com"
+                        "password": "${trojanPassword6}", "level": 0, "email": "password116@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword7}",
-                        "level": 0,
-                        "email": "password117@gmail.com"
+                        "password": "${trojanPassword7}", "level": 0, "email": "password117@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword8}",
-                        "level": 0,
-                        "email": "password118@gmail.com"
+                        "password": "${trojanPassword8}", "level": 0, "email": "password118@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword9}",
-                        "level": 0,
-                        "email": "password119@gmail.com"
+                        "password": "${trojanPassword9}", "level": 0, "email": "password119@gmail.com"
                     },
                     {
-                        "password": "${trojanPassword10}",
-                        "level": 0,
-                        "email": "password120@gmail.com"
+                        "password": "${trojanPassword10}", "level": 0, "email": "password120@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202001",
-                        "level": 0,
-                        "email": "password201@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202001", "level": 0, "email": "password201@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202002",
-                        "level": 0,
-                        "email": "password202@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202002", "level": 0, "email": "password202@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202003",
-                        "level": 0,
-                        "email": "password203@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202003", "level": 0, "email": "password203@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202004",
-                        "level": 0,
-                        "email": "password204@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202004", "level": 0, "email": "password204@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202005",
-                        "level": 0,
-                        "email": "password205@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202005", "level": 0, "email": "password205@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202006",
-                        "level": 0,
-                        "email": "password206@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202006", "level": 0, "email": "password206@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202007",
-                        "level": 0,
-                        "email": "password207@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202007", "level": 0, "email": "password207@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202008",
-                        "level": 0,
-                        "email": "password208@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202008", "level": 0, "email": "password208@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202009",
-                        "level": 0,
-                        "email": "password209@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202009", "level": 0, "email": "password209@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202010",
-                        "level": 0,
-                        "email": "password210@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202010", "level": 0, "email": "password210@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202011",
-                        "level": 0,
-                        "email": "password211@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202011", "level": 0, "email": "password211@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202012",
-                        "level": 0,
-                        "email": "password212@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202012", "level": 0, "email": "password212@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202013",
-                        "level": 0,
-                        "email": "password213@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202013", "level": 0, "email": "password213@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202014",
-                        "level": 0,
-                        "email": "password214@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202014", "level": 0, "email": "password214@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202015",
-                        "level": 0,
-                        "email": "password215@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202015", "level": 0, "email": "password215@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202016",
-                        "level": 0,
-                        "email": "password216@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202016", "level": 0, "email": "password216@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202017",
-                        "level": 0,
-                        "email": "password217@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202017", "level": 0, "email": "password217@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202018",
-                        "level": 0,
-                        "email": "password218@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202018", "level": 0, "email": "password218@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202019",
-                        "level": 0,
-                        "email": "password219@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202019", "level": 0, "email": "password219@gmail.com"
                     },
                     {
-                        "password": "${configTrojanPasswordPrefixInput}202020",
-                        "level": 0,
-                        "email": "password220@gmail.com"
+                        "password": "${configTrojanPasswordPrefixInput}202020", "level": 0, "email": "password220@gmail.com"
                     }
 EOM
 
 
     read -r -d '' v2rayConfigUserpasswordInput << EOM
                     {
-                        "id": "${v2rayPassword1}",
-                        "level": 0,
-                        "email": "password11@gmail.com"
+                        "id": "${v2rayPassword1}", "level": 0, "email": "password11@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword2}",
-                        "level": 0,
-                        "email": "password12@gmail.com"
+                        "id": "${v2rayPassword2}", "level": 0, "email": "password12@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword3}",
-                        "level": 0,
-                        "email": "password13@gmail.com"
+                        "id": "${v2rayPassword3}", "level": 0, "email": "password13@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword4}",
-                        "level": 0,
-                        "email": "password14@gmail.com"
+                        "id": "${v2rayPassword4}", "level": 0, "email": "password14@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword5}",
-                        "level": 0,
-                        "email": "password15@gmail.com"
+                        "id": "${v2rayPassword5}", "level": 0, "email": "password15@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword6}",
-                        "level": 0,
-                        "email": "password16@gmail.com"
+                        "id": "${v2rayPassword6}", "level": 0, "email": "password16@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword7}",
-                        "level": 0,
-                        "email": "password17@gmail.com"
+                        "id": "${v2rayPassword7}", "level": 0, "email": "password17@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword8}",
-                        "level": 0,
-                        "email": "password18@gmail.com"
+                        "id": "${v2rayPassword8}", "level": 0, "email": "password18@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword9}",
-                        "level": 0,
-                        "email": "password19@gmail.com"
+                        "id": "${v2rayPassword9}", "level": 0, "email": "password19@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword10}",
-                        "level": 0,
-                        "email": "password20@gmail.com"
+                        "id": "${v2rayPassword10}", "level": 0, "email": "password20@gmail.com"
                     }
 EOM
 
     read -r -d '' v2rayConfigUserpasswordDirectInput << EOM
                     {
-                        "id": "${v2rayPassword1}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password11@gmail.com"
+                        "id": "${v2rayPassword1}", "flow": "xtls-rprx-direct", "level": 0, "email": "password11@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword2}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password12@gmail.com"
+                        "id": "${v2rayPassword2}", "flow": "xtls-rprx-direct", "level": 0, "email": "password12@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword3}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password13@gmail.com"
+                        "id": "${v2rayPassword3}", "flow": "xtls-rprx-direct", "level": 0, "email": "password13@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword4}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password14@gmail.com"
+                        "id": "${v2rayPassword4}", "flow": "xtls-rprx-direct", "level": 0, "email": "password14@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword5}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password15@gmail.com"
+                        "id": "${v2rayPassword5}", "flow": "xtls-rprx-direct", "level": 0, "email": "password15@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword6}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password16@gmail.com"
+                        "id": "${v2rayPassword6}", "flow": "xtls-rprx-direct", "level": 0, "email": "password16@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword7}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password17@gmail.com"
+                        "id": "${v2rayPassword7}", "flow": "xtls-rprx-direct", "level": 0, "email": "password17@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword8}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password18@gmail.com"
+                        "id": "${v2rayPassword8}", "flow": "xtls-rprx-direct", "level": 0, "email": "password18@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword9}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password19@gmail.com"
+                        "id": "${v2rayPassword9}", "flow": "xtls-rprx-direct", "level": 0, "email": "password19@gmail.com"
                     },
                     {
-                        "id": "${v2rayPassword10}",
-                        "flow": "xtls-rprx-direct",
-                        "level": 0,
-                        "email": "password20@gmail.com"
+                        "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com"
                     }
 EOM
 
@@ -4601,10 +4491,10 @@ function startMenuOther(){
         9 )
             setLinuxDateZone
             installXUI
-        ;;  
+        ;;
         10 )
             removeXUI
-        ;;              
+        ;;          
         11 )
             getHTTPSNoNgix
         ;;
@@ -4619,7 +4509,7 @@ function startMenuOther(){
             isTrojanGo="yes"
             isTrojanGoSupportWebsocket="true"
             getHTTPSNoNgix "trojan"
-        ;;          
+        ;;
         15 )
             configV2rayWSorGrpc="ws"
             getHTTPSNoNgix "v2ray"
@@ -4627,25 +4517,24 @@ function startMenuOther(){
         16 )
             configV2rayWSorGrpc="grpc"
             getHTTPSNoNgix "v2ray"
-            
-        ;;                
+        ;;
         17 )
             configV2rayVlessMode="vlessgrpc"
             getHTTPSNoNgix "v2ray"
-        ;; 
+        ;;
         18 )
             configV2rayVlessMode="vlessws"
             getHTTPSNoNgix "v2ray"
-        ;; 
+        ;;
         19 )
             configV2rayVlessMode="vmessws"
             getHTTPSNoNgix "v2ray"
-        ;;    
+        ;;
 
         21 )
             configV2rayVlessMode="vlessxtlsws"
             getHTTPSNoNgix "v2ray"
-        ;; 
+        ;;
         22 )
             configV2rayVlessMode="trojan"
             getHTTPSNoNgix "both"
@@ -4654,7 +4543,7 @@ function startMenuOther(){
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
             getHTTPSNoNgix "both"
-        ;;    
+        ;;
         24 )
             configV2rayVlessMode="trojan"
             isTrojanGo="yes"
@@ -4664,24 +4553,24 @@ function startMenuOther(){
         25 )
             configV2rayVlessMode="vlessxtlstrojan"
             getHTTPSNoNgix "v2ray"
-        ;;          
+        ;;
         27 )
             removeTrojan
-        ;;    
+        ;;
         28 )
             isTrojanGo="yes"
             removeTrojan
         ;;
         29 )
             removeV2ray
-        ;;  
+        ;;
                                                      
         41 )
             vps_superspeed
         ;;
         42 )
             vps_bench
-        ;;        
+        ;;
         43 )
             vps_testrace
         ;;
@@ -4694,30 +4583,30 @@ function startMenuOther(){
         51 )
             installPackage
             vps_netflixgo
-        ;;                    
+        ;;
         52 )
             installPackage
             vps_netflix
-        ;;                    
+        ;;
         53 )
             installPackage
             vps_netflix2
-        ;;                    
+        ;;
         61 )
             installBTPanel
         ;;
         62 )
             installBTPanelCrack
-        ;;                              
+        ;;
         63 )
             installBTPanelCrack2
-        ;;                              
+        ;;
         81 )
             installBBR
         ;;
         82 )
             installBBR2
-        ;;                              
+        ;;
         9)
             start_menu
         ;;
@@ -4932,18 +4821,17 @@ function start_menu(){
             startMenuOther
         ;;     
         77 )
-            installPackage
             vps_netflixgo
-        ;;                
+        ;;
+        80 )
+            installPackage
+        ;;                 
         81 )
             installBBR
         ;;
         82 )
             installBBR2
         ;;        
-        83 )
-            installPackage
-        ;;
         88 )
             upgradeScript
         ;;
