@@ -4930,7 +4930,11 @@ function start_menu(){
         ;;
         30 )
             startMenuOther
-        ;;        
+        ;;     
+        77 )
+            installPackage
+            vps_netflixgo
+        ;;                
         81 )
             installBBR
         ;;
