@@ -395,8 +395,9 @@ function listInstalledLinuxKernel(){
         # dpkg-query -l | grep linux-
         # apt list --installed | grep linux-
         echo
-        red " 如安装内核遇到kernel linux-image linux-headers 版本不一致问题, 请手动卸载已安装的kernel" 
-        red " 卸载内核命令 apt remove -y --purge linux-xxx名称"         
+        red " 如安装内核遇到kernel linux-image linux-headers 版本不一致问题, 请手动卸载已安装的kernel"
+        red " 卸载内核命令1 apt remove -y --purge linux-xxx名称"
+        red " 卸载内核命令2 apt autoremove -y --purge linux-xxx名称"
 
 	elif [[ "${osRelease}" == "centos" ]]; then
         ${sudoCmd} rpm -qa | grep kernel
@@ -1440,12 +1441,13 @@ function removeCentosKernel(){
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
             rpmOLdKernelName=$(awk "NR==${integer}" <<< "${rpmOLdKernelNameList}")
-            green " 开始卸载第 ${integer} 个内核: ${rpmOLdKernelName}. 命令: rpm --nodeps -e ${rpmOLdKernelName}"
+            green "+++++ 开始卸载第 ${integer} 个内核: ${rpmOLdKernelName}. 命令: rpm --nodeps -e ${rpmOLdKernelName}"
             rpm --nodeps -e ${rpmOLdKernelName}
-            green " 已卸载第 ${integer} 个内核 ${rpmOLdKernelName}"
+            green "+++++ 已卸载第 ${integer} 个内核 ${rpmOLdKernelName} +++++"
             echo
         done
         yellow "========== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
+        echo
     else
         red " 当前需要卸载的系统旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 数量为0 !" 
     fi
@@ -1784,10 +1786,11 @@ function installDebianUbuntuKernel(){
 function removeDebianKernelMulti(){
     listInstalledLinuxKernel
 
+    echo
     if [ -z $1 ]; then
-        red " 开始准备删除 linux-headers linux-modules 内核, 建议删除 "
+        red "===== 开始准备删除 linux-headers linux-modules 内核, 建议删除 "
     else
-        red " 开始准备删除 linux-image 内核, 建议删除 "
+        red "===== 开始准备删除 linux-image 内核, 建议删除 "
     fi
 
     red " 注意: 删除内核有风险, 可能会导致VPS无法启动, 请先做好备份! "
@@ -1799,7 +1802,9 @@ function removeDebianKernelMulti(){
 
         if [ -z $1 ]; then
             removeDebianKernel "linux-modules-extra"
+            removeDebianKernel "linux-modules"
             removeDebianKernel "linux-headers"
+            removeDebianKernel "linux-image"
             # removeDebianKernel "linux-kbuild"
             # removeDebianKernel "linux-compiler"
             # removeDebianKernel "linux-libc"
@@ -1830,6 +1835,7 @@ function removeDebianKernel(){
     # https://stackoverflow.com/questions/16212656/grep-exclude-multiple-strings
     # https://stackoverflow.com/questions/29269259/extract-value-of-column-from-a-line-variable
 
+    # https://askubuntu.com/questions/187888/what-is-the-correct-way-to-completely-remove-an-application
     
     if [ "${rpmOldKernelNumber}" -gt "0" ]; then
         yellow "========== 准备开始删除旧内核 ${removeKernelNameText} ${osKernelVersionBackup}, 当前要安装新内核版本为: ${grepExcludelinuxKernelVersion}"
@@ -1837,12 +1843,14 @@ function removeDebianKernel(){
         echo
         for((integer = 1; integer <= ${rpmOldKernelNumber}; integer++)); do   
             rpmOLdKernelName=$(awk "NR==${integer}" <<< "${rpmOLdKernelNameList}")
-            green " 开始卸载第 ${integer} 个内核: ${rpmOLdKernelName}. 命令: apt remove --purge ${rpmOLdKernelName}"
+            green "+++++ 开始卸载第 ${integer} 个内核: ${rpmOLdKernelName}. 命令: apt remove --purge ${rpmOLdKernelName}"
             ${sudoCmd} apt remove -y --purge ${rpmOLdKernelName}
-            green " 已卸载第 ${integer} 个内核 ${rpmOLdKernelName}"
+            ${sudoCmd} apt autoremove -y ${rpmOLdKernelName}
+            green "+++++ 已卸载第 ${integer} 个内核 ${rpmOLdKernelName} +++++"
             echo
         done
         yellow "========== 共 ${rpmOldKernelNumber} 个旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 已经卸载完成"
+        echo
     else
         red " 当前需要卸载的系统旧内核 ${removeKernelNameText} ${osKernelVersionBackup} 数量为0 !" 
     fi
@@ -2122,6 +2130,8 @@ function enableWireguardIPV6OrIPV4(){
     
     ${sudoCmd} systemctl stop wg-quick@wgcf
 
+    cp /etc/resolv.conf /etc/resolv.conf.bak.warp
+
     sed -i '/nameserver 2a00\:1098\:2b\:\:1/d' /etc/resolv.conf
 
     sed -i '/nameserver 8\.8/d' /etc/resolv.conf
@@ -2299,6 +2309,7 @@ function removeWireguard(){
     sed -i '/nameserver 9\.9\.9\.9/d' /etc/resolv.conf
     sed -i '/nameserver 9\.9\.9\.10/d' /etc/resolv.conf
 
+    cp -f /etc/resolv.conf.bak.warp /etc/resolv.conf
 
     modprobe -r wireguard
 
@@ -2484,19 +2495,19 @@ function start_menu(){
     green " 16. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
     green " 17. 安装 内核 5.12, Teddysun 编译"
     green " 18. 安装 内核 5.13, Teddysun 编译"
-    green " 19. 安装 内核 5.14, 下载安装 (可能会安装当前最新的版本, 即大于5.14内核)"
+    green " 19. 安装 内核 5.14, 下载安装 (会安装当前最新的版本, 可能大于5.14内核)"
 
     elif [[ "${osRelease}" == "debian" ]]; then
     # echo
     green " 21. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
     echo
-    green " 22. 安装 最新版本内核 5.12, 通过 Ubuntu kernel mainline 安装"
+    green " 22. 安装 最新版本内核 5.14, 通过 Ubuntu kernel mainline 安装"
     green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
 
     elif [[ "${osRelease}" == "ubuntu" ]]; then
-    green " 22. 安装 最新版本内核 5.12, 通过 Ubuntu kernel mainline 安装"
+    green " 22. 安装 最新版本内核 5.14, 通过 Ubuntu kernel mainline 安装"
     green " 23. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 24. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 25. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -2523,35 +2534,35 @@ function start_menu(){
         1 )
             showLinuxKernelInfo
             listInstalledLinuxKernel
-        ;;   
+        ;;
         2 )
            enableBBRSysctlConfig "bbr"
         ;;
         3 )
            enableBBRSysctlConfig "bbrplus"
-        ;;        
+        ;;
         4 )
            addOptimizingSystemConfig
-        ;;        
+        ;;
         5 )
            removeOptimizingSystemConfig
            sysctl -p
-        ;;        
+        ;;
         6 )
            installWireguard
         ;;
         7 )
            checkWireguard
-        ;;    
+        ;;
         8 )
            removeWireguard
-        ;;    
+        ;;
         9 )
            enableWireguardIPV6OrIPV4 "redo"
-        ;;    
+        ;;
         10 )
            preferIPV4 "redo"
-        ;;    
+        ;;
         11 )
             linuxKernelToInstallVersion="5.14"
             isInstallFromRepo="yes"
@@ -2585,18 +2596,18 @@ function start_menu(){
         18 )
             linuxKernelToInstallVersion="5.13"
             installKernel
-        ;;        
+        ;; 
         19 )
             linuxKernelToInstallVersion="5.14"
             installKernel
-        ;;        
+        ;;
         21 )
             linuxKernelToInstallVersion="5.10"
             isInstallFromRepo="yes"
             installKernel
         ;;
         22 )
-            linuxKernelToInstallVersion="5.12.17"
+            linuxKernelToInstallVersion="5.14.11"
             installKernel
         ;;
         23 ) 
@@ -2608,9 +2619,9 @@ function start_menu(){
             installKernel
         ;;
         25 )
-            linuxKernelToInstallVersion="5.10.50"
+            linuxKernelToInstallVersion="5.10.72"
             installKernel
-        ;;                
+        ;;
         31 )
             linuxKernelToInstallVersion="4.14.129"
             linuxKernelToBBRType="bbrplus"
@@ -2650,7 +2661,7 @@ function start_menu(){
             linuxKernelToInstallVersion="5.11"
             linuxKernelToBBRType="bbrplus"
             installKernel
-        ;;        
+        ;;
         41 )
             linuxKernelToInstallVersion="5.10"
             linuxKernelToBBRType="xanmod"

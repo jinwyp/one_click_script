@@ -484,7 +484,7 @@ EOF
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
         cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
-deb https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
 
@@ -505,8 +505,8 @@ EOF
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
         # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
-        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF 
-deb http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+deb [arch=amd64] http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 EOF
         
