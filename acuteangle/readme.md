@@ -4,7 +4,7 @@
 1. 下载 PVE镜像 proxmox.img.gz  地址 https://n3450.cloud/proxmox.img.gz
 2. 下载 SystemRescue Linux 启动盘  地址 https://osdn.net/projects/systemrescuecd/storage/releases/7.01/systemrescue-7.01-amd64.iso 或  https://n3450.cloud/systemrescue-7.01-amd64.iso
 
-3. 下载autorun脚本 https://rt1.jinss2.cf/autorun, 可选下载初始化脚本 https://rt1.jinss2.cf/date.sh 
+3. 下载autorun脚本 https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/autorun, 可选下载初始化脚本 https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/date.sh 
 
 
 ### 开始制作启动盘和安装PVE：
@@ -16,7 +16,7 @@
 
 5. 插入网线会通过dhcp获取ip的。进入PVE的命令行环境后，使用用户名和密码为"root/password"进行登陆。 首次进入要执行下面初始化脚本, 需要已经正常联网. 然后根据提示可以选择DHCP获取IP或手动指定IP地址。
 ```bash
-wget --no-check-certificate https://rt1.jinss2.cf/date.sh && chmod +x ./date.sh && ./date.sh reset
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/date.sh && chmod +x ./date.sh && ./date.sh reset
 ```
 
 如果没有联网,可以执行 bash /reset.sh 来初始化系统, 但会导致重启后获取不到IP连不上网, 请慎重使用。 所以没有联网推荐插入网线重启后运行上一条命令。
