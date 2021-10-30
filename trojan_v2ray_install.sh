@@ -4893,25 +4893,28 @@ function start_menu(){
         ;;
         35 )
             editLinuxLoginWithPublicKey
-        ;;                 
+        ;;
         29 )
             startMenuOther
         ;;
         30 )
             startMenuOther
-        ;;     
+        ;;
+        76 )
+            vps_netflixlite
+        ;;
         77 )
             vps_netflixgo
         ;;
         80 )
             installPackage
-        ;;                 
+        ;;
         81 )
             installBBR
         ;;
         82 )
             installBBR2
-        ;;        
+        ;;
         88 )
             upgradeScript
         ;;

@@ -2092,8 +2092,8 @@ function installWireguard(){
         fi
 
 
-        warp-cli --accept-tos register
-        warp-cli --accept-tos set-mode proxy
+        yes | warp-cli register
+        yes | warp-cli set-mode proxy
         warp-cli --accept-tos connect
         warp-cli --accept-tos enable-always-on
 
@@ -2103,11 +2103,9 @@ function installWireguard(){
         green " ================================================== "
         green "  Wireguard 和 Cloudflare 官方 WARP Client 安装成功 !"
         green "  WARP Sock5 端口号 ${configWarpPort} "
-        #green "  Cloudflare Warp 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
-        #green "  Cloudflare Warp 生成的 Wireguard 配置文件路径: ${configWireGuardConfigFilePath} "
         echo
-        green "  WARP 停止命令: warp-cli disconnect , 停止Always-On命令 warp-cli disable-always-on "
-        green "  WARP 启动命令: warp-cli connect  开启Always-On命令(保持一直连接WARP): warp-cli enable-always-on "
+        green "  WARP 停止命令: warp-cli disconnect , 停止Always-On命令: warp-cli disable-always-on "
+        green "  WARP 启动命令: warp-cli connect , 开启Always-On命令(保持一直连接WARP): warp-cli enable-always-on "
         green "  WARP 查看日志: journalctl -n 100 -u warp-svc"
         green "  WARP 查看运行状态: warp-cli status"
         green "  WARP 查看连接信息: warp-cli warp-stats"
@@ -2133,7 +2131,7 @@ function installWireguard(){
 
         cd ${configWgcfConfigFolderPath}
 
-        # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
+        # https://github.com/ViRb3/wgcf/releases/download/v2.2.9/wgcf_2.2.9_linux_amd64
         wget -O ${configWgcfConfigFolderPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
         
 
@@ -2150,8 +2148,34 @@ function installWireguard(){
         
         # ${configWgcfConfigFolderPath}/wgcf register --config "${configWgcfAccountFilePath}"
 
-        yes | ${configWgcfConfigFolderPath}/wgcf register 
-        ${configWgcfConfigFolderPath}/wgcf generate 
+        if [[ -f ${configWgcfAccountFilePath} ]]; then
+            echo
+        else
+            yes | ${configWgcfConfigFolderPath}/wgcf register 
+        fi
+
+        echo
+        green " 如果已购买WARP+ subscription 订阅, 可以填入 license key 启用WARP+"
+        green " 查看方法 Android手机, 打开 open Cloudflare 1.1.1.1 app, 点击右上菜单 click hamburger menu button on the top-right corner "
+        green " Navigate to: Account > Key, 选择 Account 菜单里的key 就是 license key"
+        green " 没有购买过WARP+ 订阅请直接按回车跳过, Press enter to continue without WARP+"
+        echo
+        read -p "请填写 license key?  直接回车默认跳过此步, 请输入:" isWARPLicenseKeyInput
+        isWARPLicenseKeyInput=${isWARPLicenseKeyInput:-n}
+
+        if [[ ${isWARPLicenseKeyInput} == [Nn] ]]; then
+            echo
+        else 
+            sed -i "s/license_key =.*/license_key = \"${isWARPLicenseKeyInput}\"/g" ${configWgcfAccountFilePath}
+            WGCF_LICENSE_KEY="${isWARPLicenseKeyInput}" wgcf update
+        fi
+
+        if [[ -f ${configWgcfProfileFilePath} ]]; then
+            echo
+        else
+            yes | ${configWgcfConfigFolderPath}/wgcf generate 
+        fi
+        
 
         cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
 
@@ -2200,9 +2224,9 @@ function installWireguard(){
 
         echo
         green " ================================================== "
-        green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
-        green "  Cloudflare Warp 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
-        green "  Cloudflare Warp 生成的 Wireguard 配置文件路径: ${configWireGuardConfigFilePath} "
+        green "  Wireguard 和 Cloudflare WARP 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
+        green "  Cloudflare WARP 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
+        green "  Cloudflare WARP 生成的 Wireguard 配置文件路径: ${configWireGuardConfigFilePath} "
         echo
         green "  Wireguard 停止命令: systemctl stop wg-quick@wgcf  启动命令: systemctl start wg-quick@wgcf  重启命令: systemctl restart wg-quick@wgcf"
         green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf"
@@ -2392,14 +2416,26 @@ function removeWireguard(){
 
     elif [[ "${osRelease}" == "centos" ]]; then
         yum remove -y cloudflare-warp 
-
     fi
 
+    echo
+    echo
+    read -p "是否删除Wgcf申请的账号文件, 默认建议不删除, 方便以后不用在重新注册, 请输入[y/N]:" isWgcfAccountFileRemoveInput
+    isWgcfAccountFileRemoveInput=${isWgcfAccountFileRemoveInput:-n}
+
+    echo
+    if [[ $isWgcfAccountFileRemoveInput == [Yy] ]]; then
+        rm -rf ${configWgcfConfigFolderPath}
+        green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已删除!"
+        
+    else
+        rm -f ${configWgcfProfileFilePath}
+        green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已保留! "
+    fi
+    echo
 
     rm -f ${configWgcfBinPath}/wgcf
-    rm -rf ${configWgcfConfigFolderPath}
     rm -rf ${configWireGuardConfigFileFolder}
-
     rm -f ${osSystemMdPath}wg-quick@wgcf.service
 
     rm -f /usr/bin/wg
@@ -2455,7 +2491,7 @@ function checkWarpClientStatus(){
         green " 状态显示-- Warp 已启动成功! "
         echo
 
-        isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} | grep warp | cut -d= -f2)
+        isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} --connect-timeout 3 | grep warp | cut -d= -f2)
         case ${isWarpClientMode} in
         on)
             green " 状态显示-- WARP Sock5 代理已启动成功, 端口${configWarpPort}! "
@@ -2469,10 +2505,10 @@ function checkWarpClientStatus(){
         esac
     fi
     green " ================================================== "
-    echo
-    echo "curl ${cloudflare_Trace_URL}"
-    echo
-    curl ${cloudflare_Trace_URL}
+    #echo
+    #echo "curl ${cloudflare_Trace_URL}"
+    #echo
+    #curl ${cloudflare_Trace_URL}
     echo
     echo "curl -x 'socks5h://127.0.0.1:40000' ${cloudflare_Trace_URL}"
     echo
