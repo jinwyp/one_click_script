@@ -2393,7 +2393,7 @@ EOM
     red " 推荐先安装 Wireguard 与 Cloudflare WARP 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare WARP也没问题"
     red " 但如果先安装v2ray或xray, 选了解锁google或其他流媒体, 那么会暂时无法访问google和其他视频网站, 需要继续安装Wireguard 与 Cloudflare WARP解决"
     echo
-    read -p "请输入1, 2, 3? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockWarpModeInput
+    read -p "请输入? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockWarpModeInput
     isV2rayUnlockWarpModeInput=${isV2rayUnlockWarpModeInput:-1}
 
     V2rayUnlockRuleText=""
@@ -2402,7 +2402,7 @@ EOM
         echo
     elif [[ $isV2rayUnlockWarpModeInput == "4" ]]; then
         echo
-        green " =================================================="
+        echo
         green " 选择4 通过转发到可解锁的v2ray或xray服务器解锁"
         green " 也可以自行修改v2ray或xray配置, 在 outbounds 字段中增加一个tag为 V2Ray-out 的可解锁的v2ray服务器"
 
@@ -2421,22 +2421,25 @@ EOM
         isV2rayUnlockServerProtocolInput=${isV2rayUnlockServerProtocolInput:-2}
 
         isV2rayUnlockOutboundServerProtocolText="vless"
-        if [[ $isV2rayUnlockWarpModeInput == [45] ]]; then
+        if [[ $isV2rayUnlockServerProtocolInput == "4" || $isV2rayUnlockServerProtocolInput == "5" ]]; then
             isV2rayUnlockOutboundServerProtocolText="vmess"
         fi
 
 
         isV2rayUnlockOutboundServerTCPText="tcp"
-        if [[ $isV2rayUnlockWarpModeInput == [35] ]]; then
+        if [[ $isV2rayUnlockServerProtocolInput == "3" ||  $isV2rayUnlockServerProtocolInput == "5" ]]; then
             isV2rayUnlockOutboundServerTCPText="ws"
+            echo
+            yellow " 请填写可解锁流媒体的V2ray或Xray服务器Websocket Path, 默认为/"
+            read -p "请填写Websocket Path? 直接回车默认为/ , 请输入(不要包含/):" isV2rayUnlockServerWSPathInput
+            isV2rayUnlockServerWSPathInput=${isV2rayUnlockServerWSPathInput:-""}
         fi
-
 
         read -r -d '' unlockOutboundServerXTLSFlowText << EOM
 
 EOM
         isV2rayUnlockOutboundServerTLSText="tls"
-        if [[ $isV2rayUnlockWarpModeInput == "2" ]]; then
+        if [[ $isV2rayUnlockServerProtocolInput == "2" ]]; then
             isV2rayUnlockOutboundServerTCPText="tcp"
             isV2rayUnlockOutboundServerTLSText="xtls"
             read -r -d '' unlockOutboundServerXTLSFlowText << EOM
@@ -2449,25 +2452,20 @@ EOM
 
         echo
         yellow " 请填写可解锁流媒体的V2ray或Xray服务器地址, 例如 www.example.com"
-        read -p "请填写可解锁流媒体服务器地址? 直接回车默认为本机 , 请输入:" isV2rayUnlockServerDomainInput
+        read -p "请填写可解锁流媒体服务器地址? 直接回车默认为本机, 请输入:" isV2rayUnlockServerDomainInput
         isV2rayUnlockServerDomainInput=${isV2rayUnlockServerDomainInput:-127.0.0.1}
 
         echo
         yellow " 请填写可解锁流媒体的V2ray或Xray服务器端口号, 例如 443"
-        read -p "请填写可解锁流媒体服务器地址? 直接回车默认为443 , 请输入:" isV2rayUnlockServerPortInput
+        read -p "请填写可解锁流媒体服务器地址? 直接回车默认为443, 请输入:" isV2rayUnlockServerPortInput
         isV2rayUnlockServerPortInput=${isV2rayUnlockServerPortInput:-443}
 
         echo
         yellow " 请填写可解锁流媒体的V2ray或Xray服务器的用户UUID, 例如 5783a3e7-e373-51cd-8642-c83782b807c5"
-        read -p "请填写用户UUID? 直接回车默认为111 , 请输入:" isV2rayUnlockServerUserIDInput
+        read -p "请填写用户UUID? 直接回车默认为111, 请输入:" isV2rayUnlockServerUserIDInput
         isV2rayUnlockServerUserIDInput=${isV2rayUnlockServerUserIDInput:-111}
 
-        if [[ $isV2rayUnlockServerProtocolInput == [35] ]]; then
-            echo
-            yellow " 请填写可解锁流媒体的V2ray或Xray服务器Websocket Path, 默认为/"
-            read -p "请填写Websocket Path? 直接回车默认为/ , 请输入(不要包含/):" isV2rayUnlockServerWSPathInput
-            isV2rayUnlockServerWSPathInput=${isV2rayUnlockServerWSPathInput:-""}
-        fi
+
 
 
         read -r -d '' v2rayConfigOutboundV2rayServerInput << EOM
