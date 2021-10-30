@@ -2091,9 +2091,23 @@ function installWireguard(){
             exit
         fi
 
+        echo 
+        echo
+        read -p "是否生成随机的WARP Sock5 端口号? 直接回车默认 40000 不生成随机端口号, 请输入[y/N]:" isWarpPortInput
+        isWarpPortInput=${isWarpPortInput:-n}
+
+        if [[ $isWarpPortInput == [Nn] ]]; then
+            echo
+        else
+            configWarpPort="$(($RANDOM + 10000))"
+        fi
+        
+
+        ${sudoCmd} systemctl enable warp-svc
 
         yes | warp-cli register
         yes | warp-cli set-mode proxy
+        warp-cli --accept-tos set-proxy-port ${configWarpPort}
         warp-cli --accept-tos connect
         warp-cli --accept-tos enable-always-on
 
@@ -2510,7 +2524,7 @@ function checkWarpClientStatus(){
     #echo
     #curl ${cloudflare_Trace_URL}
     echo
-    echo "curl -x 'socks5h://127.0.0.1:40000' ${cloudflare_Trace_URL}"
+    echo "curl -x 'socks5h://127.0.0.1:${configWarpPort}' ${cloudflare_Trace_URL}"
     echo
     curl -x "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} 
     echo
