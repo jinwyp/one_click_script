@@ -2477,7 +2477,7 @@ EOM
         if [[ $isV2rayUnlockWarpModeInput == "4" ]]; then
             echo
             echo
-            green " 选择4 通过转发到可解锁的v2ray或xray服务器解锁"
+            green " 已选择4 通过转发到可解锁的v2ray或xray服务器解锁"
             green " 也可以自行修改v2ray或xray配置, 在 outbounds 字段中增加一个tag为 V2Ray_out 的可解锁的v2ray服务器"
 
             V2rayUnlockOutboundTagText="V2Ray_out"
@@ -2487,12 +2487,12 @@ EOM
             yellow " 请选择可解锁流媒体的V2ray或Xray服务器的协议 "
             green " 1. VLess + TCP + TLS"
             green " 2. VLess + TCP + XTLS"
-            green " 3. VLess + WS + TLS"
+            green " 3. VLess + WS + TLS (支持CDN)"
             green " 4. VMess + TCP + TLS"
-            green " 5. VMess + WS + TLS"
+            green " 5. VMess + WS + TLS (支持CDN)"
             echo
-            read -p "请选择协议? 直接回车默认选2, 请输入纯数字:" isV2rayUnlockServerProtocolInput
-            isV2rayUnlockServerProtocolInput=${isV2rayUnlockServerProtocolInput:-2}
+            read -p "请选择协议? 直接回车默认选3, 请输入纯数字:" isV2rayUnlockServerProtocolInput
+            isV2rayUnlockServerProtocolInput=${isV2rayUnlockServerProtocolInput:-3}
 
             isV2rayUnlockOutboundServerProtocolText="vless"
             if [[ $isV2rayUnlockServerProtocolInput == "4" || $isV2rayUnlockServerProtocolInput == "5" ]]; then
@@ -2508,9 +2508,8 @@ EOM
                 isV2rayUnlockServerWSPathInput=${isV2rayUnlockServerWSPathInput:-""}
             fi
 
-            read -r -d '' unlockOutboundServerXTLSFlowText << EOM
-EOM
 
+            unlockOutboundServerXTLSFlowText=""
             isV2rayUnlockOutboundServerTLSText="tls"
             if [[ $isV2rayUnlockServerProtocolInput == "2" ]]; then
                 isV2rayUnlockOutboundServerTCPText="tcp"
@@ -2546,7 +2545,7 @@ EOM
             isV2rayUnlockServerPortInput=${isV2rayUnlockServerPortInput:-443}
 
             echo
-            yellow " 请填写可解锁流媒体的V2ray或Xray服务器的用户UUID, 例如 5783a3e7-e373-51cd-8642-c83782b807c5"
+            yellow " 请填写可解锁流媒体的V2ray或Xray服务器的用户UUID, 例如 4aeaf80d-f89e-46a2-b3dc-bb815eae75ba"
             read -p "请填写用户UUID? 直接回车默认为111, 请输入:" isV2rayUnlockServerUserIDInput
             isV2rayUnlockServerUserIDInput=${isV2rayUnlockServerUserIDInput:-111}
 
