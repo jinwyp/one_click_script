@@ -2335,11 +2335,12 @@ function installV2ray(){
     fi
 
 
+
     echo
     green " =================================================="
     yellow " 是否使用 DNS 解锁流媒体 Netflix HBO Disney 等流媒体网站"
     green " 如需解锁请填入 解锁 Netflix 的DNS服务器的IP地址, 例如 8.8.8.8"
-    read -p "是否解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
+    read -p "是否使用DNS解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
 
     V2rayDNSUnlockText=""
@@ -2395,23 +2396,120 @@ EOM
     read -p "请输入1, 2, 3? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockWarpModeInput
     isV2rayUnlockWarpModeInput=${isV2rayUnlockWarpModeInput:-1}
 
-    V2rayUnlockText=""
-    V2rayWarpModeText=""
+    V2rayUnlockRuleText=""
+    V2rayUnlockOutboundTagText=""
     if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
         echo
     elif [[ $isV2rayUnlockWarpModeInput == "4" ]]; then
         echo
+        green " =================================================="
         green " 选择4 通过转发到可解锁的v2ray或xray服务器解锁"
-        green " 请自行修改v2ray或xray配置, 在 outbounds 字段中增加一个tag为 V2Ray-out 的可解锁的v2ray服务器"
-        green " 可解锁的v2ray或xray服务器 使用 vmess 或 vless 协议 或其他v2ray支持的协议都可以 "
-        green " 具体写法 类似与反向代理, 可以参考 反向代理 https://guide.v2fly.org/app/reverse.html "
-        green " 本脚本会把下面选择符合规则的流量转发到  V2Ray-out 这个tag的服务器 "
-        V2rayWarpModeText="V2Ray-out"
+        green " 也可以自行修改v2ray或xray配置, 在 outbounds 字段中增加一个tag为 V2Ray-out 的可解锁的v2ray服务器"
+
+        V2rayUnlockOutboundTagText="V2Ray-out"
+
+        echo
+        echo
+        yellow " 请选择可解锁流媒体的V2ray或Xray服务器的协议 "
+        green " 1. VLess + TCP + TLS"
+        green " 2. VLess + TCP + XTLS"
+        green " 3. VLess + WS + TLS"
+        green " 4. VMess + TCP + TLS"
+        green " 5. VMess + WS + TLS"
+        echo
+        read -p "请选择协议? 直接回车默认选2, 请输入纯数字:" isV2rayUnlockServerProtocolInput
+        isV2rayUnlockServerProtocolInput=${isV2rayUnlockServerProtocolInput:-2}
+
+        isV2rayUnlockOutboundServerProtocolText="vless"
+        if [[ $isV2rayUnlockWarpModeInput == [45] ]]; then
+            isV2rayUnlockOutboundServerProtocolText="vmess"
+        fi
+
+
+        isV2rayUnlockOutboundServerTCPText="tcp"
+        if [[ $isV2rayUnlockWarpModeInput == [35] ]]; then
+            isV2rayUnlockOutboundServerTCPText="ws"
+        fi
+
+
+        read -r -d '' unlockOutboundServerXTLSFlowText << EOM
+
+EOM
+        isV2rayUnlockOutboundServerTLSText="tls"
+        if [[ $isV2rayUnlockWarpModeInput == "2" ]]; then
+            isV2rayUnlockOutboundServerTCPText="tcp"
+            isV2rayUnlockOutboundServerTLSText="xtls"
+            read -r -d '' unlockOutboundServerXTLSFlowText << EOM
+                                "flow": "xtls-rprx-splice",
+EOM
+        fi
+
+
+
+
+        echo
+        yellow " 请填写可解锁流媒体的V2ray或Xray服务器地址, 例如 www.example.com"
+        read -p "请填写可解锁流媒体服务器地址? 直接回车默认为本机 , 请输入:" isV2rayUnlockServerDomainInput
+        isV2rayUnlockServerDomainInput=${isV2rayUnlockServerDomainInput:-127.0.0.1}
+
+        echo
+        yellow " 请填写可解锁流媒体的V2ray或Xray服务器端口号, 例如 443"
+        read -p "请填写可解锁流媒体服务器地址? 直接回车默认为443 , 请输入:" isV2rayUnlockServerPortInput
+        isV2rayUnlockServerPortInput=${isV2rayUnlockServerPortInput:-443}
+
+        echo
+        yellow " 请填写可解锁流媒体的V2ray或Xray服务器的用户UUID, 例如 5783a3e7-e373-51cd-8642-c83782b807c5"
+        read -p "请填写用户UUID? 直接回车默认为111 , 请输入:" isV2rayUnlockServerUserIDInput
+        isV2rayUnlockServerUserIDInput=${isV2rayUnlockServerUserIDInput:-111}
+
+        if [[ $isV2rayUnlockServerProtocolInput == [35] ]]; then
+            echo
+            yellow " 请填写可解锁流媒体的V2ray或Xray服务器Websocket Path, 默认为/"
+            read -p "请填写Websocket Path? 直接回车默认为/ , 请输入(不要包含/):" isV2rayUnlockServerWSPathInput
+            isV2rayUnlockServerWSPathInput=${isV2rayUnlockServerWSPathInput:-""}
+        fi
+
+
+        read -r -d '' v2rayConfigOutboundV2rayServerInput << EOM
+
+        {
+            "tag": "V2Ray-out",
+            "protocol": "${isV2rayUnlockOutboundServerProtocolText}",
+            "settings": {
+                "vnext": [
+                    {
+                        "address": "${isV2rayUnlockServerDomainInput}",
+                        "port": ${isV2rayUnlockServerPortInput},
+                        "users": [
+                            {
+                                "id": "${isV2rayUnlockServerUserIDInput}",
+                                "encryption": "none",
+                                ${unlockOutboundServerXTLSFlowText}
+                                "level": 0
+                            }
+                        ]
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "${isV2rayUnlockOutboundServerTCPText}",
+                "security": "${isV2rayUnlockOutboundServerTLSText}",
+                "tlsSettings": {
+                    "serverName": "${isV2rayUnlockServerDomainInput}"
+                },
+                "wsSettings": {
+                    "path": "/${isV2rayUnlockServerWSPathInput}"
+                }
+            }
+        },
+
+EOM
+
     else
         if [[ $isV2rayUnlockWarpModeInput == "2" ]]; then
-            V2rayWarpModeText="WARP_out"
+            V2rayUnlockOutboundTagText="WARP_out"
         else
-            V2rayWarpModeText="IP6_out"
+            V2rayUnlockOutboundTagText="IP6_out"
         fi
 
         echo
@@ -2434,41 +2532,40 @@ EOM
         isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
 
         if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
-            V2rayUnlockText="\"geosite:google\""
+            V2rayUnlockRuleText="\"geosite:google\""
 
         elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
-            V2rayUnlockText="\"geosite:netflix\""
+            V2rayUnlockRuleText="\"geosite:netflix\""
             
         elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
-            V2rayUnlockText="\"geosite:youtube\""
+            V2rayUnlockRuleText="\"geosite:youtube\""
 
         elif [[ $isV2rayUnlockGoogleInput == "5" ]]; then
-            V2rayUnlockText="\"geosite:pornhub\""
+            V2rayUnlockRuleText="\"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockGoogleInput == "6" ]]; then
-            V2rayUnlockText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+            V2rayUnlockRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockGoogleInput == "11" ]]; then
-            V2rayUnlockText="\"geosite:google\", \"geosite:netflix\""
+            V2rayUnlockRuleText="\"geosite:google\", \"geosite:netflix\""
 
         elif [[ $isV2rayUnlockGoogleInput == "12" ]]; then
-            V2rayUnlockText="\"geosite:google\", \"geosite:pornhub\""
+            V2rayUnlockRuleText="\"geosite:google\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockGoogleInput == "13" ]]; then
-            V2rayUnlockText="\"geosite:google\", \"geosite:pornhub\", \"geosite:netflix\""
+            V2rayUnlockRuleText="\"geosite:google\", \"geosite:pornhub\", \"geosite:netflix\""
 
         elif [[ $isV2rayUnlockGoogleInput == "14" ]]; then
-            V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
+            V2rayUnlockRuleText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockGoogleInput == "15" ]]; then
-            V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+            V2rayUnlockRuleText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
         else
-            V2rayUnlockText=""
+            V2rayUnlockRuleText=""
         fi
 
     fi
 
-    
 
 
 	echo				
@@ -2764,7 +2861,7 @@ EOM
             "tag": "direct",
             "protocol": "freedom",
             "settings": {
-                "domainStrategy": "${V2rayDNSUnlockText}",
+                "domainStrategy": "${V2rayDNSUnlockText}"
             }
         },
         {
@@ -2774,6 +2871,7 @@ EOM
         }
     ]
 EOM
+
 
     else
 
@@ -2793,6 +2891,7 @@ EOM
                 "domainStrategy": "UseIPv6" 
             }
         },
+        ${v2rayConfigOutboundV2rayServerInput}
         {
             "tag": "WARP_out",
             "protocol": "socks",
@@ -2813,8 +2912,8 @@ EOM
         "rules": [
             {
                 "type": "field",
-                "outboundTag": "${V2rayWarpModeText}",
-                "domain": [${V2rayUnlockText}] 
+                "outboundTag": "${V2rayUnlockOutboundTagText}",
+                "domain": [${V2rayUnlockRuleText}] 
             },
             {
                 "type": "field",
