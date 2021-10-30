@@ -2522,7 +2522,7 @@ EOM
                 read -p "请选择Flow 参数? 直接回车默认选1, 请输入纯数字:" isV2rayUnlockServerFlowInput
                 isV2rayUnlockServerFlowInput=${isV2rayUnlockServerFlowInput:-1}
 
-                if [[ $isV2rayUnlockServerProtocolInput == "1" ]]; then
+                if [[ $isV2rayUnlockServerFlowInput == "1" ]]; then
                     read -r -d '' unlockOutboundServerXTLSFlowText << EOM
                                 "flow": "xtls-rprx-direct",
 EOM
