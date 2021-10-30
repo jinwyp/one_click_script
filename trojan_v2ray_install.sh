@@ -459,7 +459,7 @@ EOF
         if ! rpm -qa | grep -qw iperf3; then
 			${sudoCmd} ${osSystemPackage} install -y epel-release
 
-            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y curl wget git unzip zip tar bind-utils
             ${osSystemPackage} install -y xz jq redhat-lsb-core 
             ${osSystemPackage} install -y iputils
             ${osSystemPackage} install -y iperf3
@@ -652,6 +652,11 @@ function vps_netflix2(){
 	wget -N --no-check-certificate -O ./netflix.sh https://github.com/lmc999/RegionRestrictionCheck/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
 }
 
+function vps_netflixlite(){
+	wget -N --no-check-certificate -O ./netflix.sh https://raw.githubusercontent.com/aipeach/SimpleNetflix/dev/nf.sh && chmod +x ./netflix.sh && ./netflix.sh
+}
+
+
 function vps_netflixgo(){
     wget -N --no-check-certificate -O netflixcheck https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixcheck && ./netflixcheck -method full
 }
@@ -676,6 +681,10 @@ function vps_testrace(){
 
 function vps_LemonBench(){
     wget -O LemonBench.sh -N --no-check-certificate https://ilemonra.in/LemonBenchIntl && chmod +x LemonBench.sh && ./LemonBench.sh fast
+}
+
+function vps_autoBestTrace(){
+    wget -O autoBestTrace.sh -N --no-check-certificate https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && ./autoBestTrace.sh
 }
 
 
@@ -1178,7 +1187,8 @@ function installWebServerNginx(){
 
     stopServiceV2ray
     
-    ${osSystemPackage} install nginx -y
+    ${osSystemPackage} install -y nginx
+    ${osSystemPackage} install -y nginx-mod-stream
     ${sudoCmd} systemctl enable nginx.service
     ${sudoCmd} systemctl stop nginx.service
 
@@ -2332,12 +2342,12 @@ function installV2ray(){
     read -p "是否解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
 
-
+    V2rayDNSUnlockText=""
     if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
         v2rayConfigDNSInput=""
-
+        V2rayDNSUnlockText="AsIs"
     else
-
+        V2rayDNSUnlockText="UseIP"
         read -r -d '' v2rayConfigDNSInput << EOM
     "dns": {
         "servers": [
@@ -2346,6 +2356,7 @@ function installV2ray(){
                 "port": 53,
                 "domains": [
                     "geosite:netflix",
+                    "geosite:youtube",
                     "geosite:bahamut",
                     "geosite:hulu",
                     "geosite:hbo",
@@ -2358,7 +2369,8 @@ function installV2ray(){
                     "geosite:niconico",
                     "geosite:pixiv",
                     "geosite:bilibili",
-                    "geosite:viu"
+                    "geosite:viu",
+                    "geosite:pornhub"
                 ]
             },
         "localhost"
@@ -2369,53 +2381,97 @@ EOM
     fi
 
 
+
+    echo
     echo
     green " =================================================="
-    yellow " 是否使用 IPv6 解锁流媒体和避免弹出 Google reCAPTCHA 人机验证, 请选择:"
-    green " 推荐选择1 不解锁. 解锁需要安装好 Wireguard 与 Cloudflare Warp, 可重新运行本脚本选择第一项安装".
-    red " 推荐先安装 Wireguard 与 Cloudflare Warp 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare Warp也没问题"
-    red " 但如果先安装v2ray或xray, 下面选了非第一项,那么会暂时无法访问google和其他视频网站, 需要继续安装Wireguard 与 Cloudflare Warp 解决"
+    yellow " 使用 Cloudflare WARP的 Sock5代理 还是 IPv6 解锁 流媒体 Netflix 等网站和避免弹出 Google reCAPTCHA 人机验证"
+    green " 1 不使用解锁, 2 使用 WARP Sock5代理解锁, 3 使用 WARP IPv6 解锁, 4 通过转发到可解锁的v2ray或xray服务器解锁"
     echo
-    green " 1. 不解锁"
-    green " 2. 避免弹出 Google reCAPTCHA 人机验证"
-    green " 3. 解锁 Netflex 限制"
-    green " 4. 解锁 Youtube 和 Youtube Premium"
-    green " 5. 解锁 全部流媒体 包括 Netflex, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico 等"
-    green " 11. 同时解锁 2 和 3 项,  即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflex 限制"
-    green " 12. 同时解锁 2 和 3 和 4 项, 即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflex 和 Youtube 限制"
-    green " 13. 同时解锁 全部流媒体 和 避免弹出 Google reCAPTCHA 人机验证"
+    green " 默认选1 不解锁. 选择2,3解锁需要安装好 Wireguard 与 Cloudflare WARP, 可重新运行本脚本选择第一项安装".
+    red " 推荐先安装 Wireguard 与 Cloudflare WARP 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare WARP也没问题"
+    red " 但如果先安装v2ray或xray, 选了解锁google或其他流媒体, 那么会暂时无法访问google和其他视频网站, 需要继续安装Wireguard 与 Cloudflare WARP解决"
     echo
-    read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
-    isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
+    read -p "请输入1, 2, 3? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockWarpModeInput
+    isV2rayUnlockWarpModeInput=${isV2rayUnlockWarpModeInput:-1}
 
     V2rayUnlockText=""
-
-    if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
-        V2rayUnlockText="\"geosite:google\""
-
-    elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
-        V2rayUnlockText="\"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
-        
-    elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
-        V2rayUnlockText="\"geosite:youtube\""
-
-    elif [[ $isV2rayUnlockGoogleInput == "5" ]]; then
-        V2rayUnlockText="\"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
-
-    elif [[ $isV2rayUnlockGoogleInput == "11" ]]; then
-        V2rayUnlockText="\"geosite:google\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
-
-    elif [[ $isV2rayUnlockGoogleInput == "12" ]]; then
-        V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\""
-
-    elif [[ $isV2rayUnlockGoogleInput == "13" ]]; then
-        V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"nflxvideo.net\", \"nflxext.com\", \"nflxso.net\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+    V2rayWarpModeText=""
+    if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
+        echo
+    elif [[ $isV2rayUnlockWarpModeInput == "4" ]]; then
+        echo
+        green " 选择4 通过转发到可解锁的v2ray或xray服务器解锁"
+        green " 请自行修改v2ray或xray配置, 在 outbounds 字段中增加一个tag为 V2Ray-out 的可解锁的v2ray服务器"
+        green " 可解锁的v2ray或xray服务器 使用 vmess 或 vless 协议 或其他v2ray支持的协议都可以 "
+        green " 具体写法 类似与反向代理, 可以参考 反向代理 https://guide.v2fly.org/app/reverse.html "
+        green " 本脚本会把下面选择符合规则的流量转发到  V2Ray-out 这个tag的服务器 "
+        V2rayWarpModeText="V2Ray-out"
     else
-        V2rayUnlockText=""
+        if [[ $isV2rayUnlockWarpModeInput == "2" ]]; then
+            V2rayWarpModeText="WARP_out"
+        else
+            V2rayWarpModeText="IP6_out"
+        fi
+
+        echo
+        green " =================================================="
+        yellow " 请选择要解锁的网站:"
+        echo
+        green " 1. 不解锁"
+        green " 2. 避免弹出 Google reCAPTCHA 人机验证"
+        green " 3. 解锁 Netflix 限制"
+        green " 4. 解锁 Youtube 和 Youtube Premium"
+        green " 5. 解锁 Pornhub, 解决视频变成玉米无法观看问题"
+        green " 6. 解锁 全部流媒体 包括 Netflix, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico, dmm, Pornhub 等"
+        green " 11. 同时解锁 2 和 3 项,  即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflix 限制"
+        green " 12. 同时解锁 2 和 5 项,  即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Pornhub 限制"
+        green " 13. 同时解锁 2, 3, 5项, 即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflix 和 Pornhub 限制"
+        green " 14. 同时解锁 2, 3, 4, 5项, 即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflix, Youtube 和 Pornhub 限制"
+        green " 15. 同时解锁 全部流媒体 和 避免弹出 Google reCAPTCHA 人机验证"
+        echo
+        read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
+        isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
+
+        if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
+            V2rayUnlockText="\"geosite:google\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
+            V2rayUnlockText="\"geosite:netflix\""
+            
+        elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
+            V2rayUnlockText="\"geosite:youtube\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "5" ]]; then
+            V2rayUnlockText="\"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "6" ]]; then
+            V2rayUnlockText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "11" ]]; then
+            V2rayUnlockText="\"geosite:google\", \"geosite:netflix\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "12" ]]; then
+            V2rayUnlockText="\"geosite:google\", \"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "13" ]]; then
+            V2rayUnlockText="\"geosite:google\", \"geosite:pornhub\", \"geosite:netflix\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "14" ]]; then
+            V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockGoogleInput == "15" ]]; then
+            V2rayUnlockText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+        else
+            V2rayUnlockText=""
+        fi
+
     fi
 
+    
 
-					
+
+	echo				
     echo
     read -p "是否自定义${promptInfoXrayName}的密码? 直接回车默认创建随机密码, 请输入自定义UUID密码:" isV2rayUserPassordInput
     isV2rayUserPassordInput=${isV2rayUserPassordInput:-''}
@@ -2700,14 +2756,16 @@ EOM
 EOM
 
 
-    if [[ $isV2rayUnlockGoogleInput == "1" ]]; then
+    if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
 
         read -r -d '' v2rayConfigOutboundInput << EOM
     "outbounds": [
         {
             "tag": "direct",
             "protocol": "freedom",
-            "settings": {}
+            "settings": {
+                "domainStrategy": "${V2rayDNSUnlockText}",
+            }
         },
         {
             "tag": "blocked",
@@ -2724,7 +2782,9 @@ EOM
         {
             "tag":"IP4_out",
             "protocol": "freedom",
-            "settings": {}
+            "settings": {
+                "domainStrategy": "${V2rayDNSUnlockText}"
+            }
         },
         {
             "tag":"IP6_out",
@@ -2732,13 +2792,28 @@ EOM
             "settings": {
                 "domainStrategy": "UseIPv6" 
             }
+        },
+        {
+            "tag": "WARP_out",
+            "protocol": "socks",
+            "settings": {
+                "servers": [
+                    {
+                        "address": "127.0.0.1",
+                        "port": 40000
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp"
+            }
         }
     ],    
     "routing": {
         "rules": [
             {
                 "type": "field",
-                "outboundTag": "IP6_out",
+                "outboundTag": "${V2rayWarpModeText}",
                 "domain": [${V2rayUnlockText}] 
             },
             {
@@ -4447,10 +4522,12 @@ function startMenuOther(){
 	green " 43. testrace 回程路由测试 （四网路由测试）"
 	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、节点测速） 推荐使用"
     green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+    green " 46. 只测回程 节点回程测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     echo
     green " 51. 测试VPS 是否支持Netflix, Go语言版本 推荐使用 by sjlleo"
-    green " 52. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
-    green " 53. 测试VPS 是否支持Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
+    green " 52. 测试VPS 是否支持Netflix, 和 Youtube  by aipeach"
+    green " 53. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
+    green " 54. 测试VPS 是否支持Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
     echo
     green " 61. 安装 官方宝塔面板"
     green " 62. 安装 宝塔面板破解版 by fenhao.me"
@@ -4580,16 +4657,19 @@ function startMenuOther(){
         45 )
             vps_zbench
         ;;
+        46 )
+            vps_autoBestTrace
+        ;;        
         51 )
-            installPackage
             vps_netflixgo
         ;;
         52 )
-            installPackage
-            vps_netflix
+            vps_netflixlite
         ;;
         53 )
-            installPackage
+            vps_netflix
+        ;;
+        54 )
             vps_netflix2
         ;;
         61 )
@@ -4655,7 +4735,7 @@ function start_menu(){
     fi
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-10-12 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-10-30 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"

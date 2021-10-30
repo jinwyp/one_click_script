@@ -5,7 +5,7 @@
 
 * [Trojan 和 V2ray xray 一键安装脚本](#installation-安装方法)
 * [安装 最新版和LTS Linux 内核, BBR 和 BBR Plus 内核](#installation-linux-kernel-wireguard)
-* [一键安装 wireguard, 解决避免弹出Google人机验证和 Netflix 限制问题](#installation-linux-kernel-wireguard)
+* [安装 wireguard 和 Cloudflare WARP, 解锁 Netflix 区域限制 和 避免弹出Google人机验证](#installation-linux-kernel-wireguard)
 * [V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键安装脚本](#installation-xrayr)
 * [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
@@ -23,7 +23,8 @@
 7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
 8. trojan 和 v2ray 可视化管理面板安装. 
 9. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix Youtube 等流媒体网站限制问题, 同时v2ray支持相应的配置
-10. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon 或 soga 
+10. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix Youtube 等流媒体网站限制问题, 同时v2ray支持相应的配置
+11. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 
 12. 本脚本没有偷跑服务器流量的网页或其他屏蔽bt流量的等限制. 默认网页仅为bootstarp最简单的模板
 13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 而其他脚本写死固定端口容易被检测
 14. 本脚本不推荐安装多种v2ray的多种协议共存, 协议越多安全性越低, 而且也不会提高速度, 强烈不建议使用其他脚本同时安装多个协议
@@ -63,12 +64,19 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ## Installation Linux kernel Wireguard 
 
-#### 通过 wget 命令安装 Linux 内核 和 Wireguard 
+#### 通过 wget 命令安装 Linux 内核 和 Wireguard  via wget to install script
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
 
 ```
+
+####  通过 curl 命令安装 Linux 内核 和 Wireguard  via curl to install script
+
+```bash
+curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+```
+
 
 
 ## 使用说明 Usage 
@@ -103,12 +111,14 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 6. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
 
 
-### Netflix Unlock 解锁Netflix 区域限制 和 避免弹出Google人机验证
+### Netflix Unlock 解锁Netflix 等其他流媒体网站的区域限制 和 避免弹出Google人机验证
 
-1. 运行脚本后选择1 进入linux 内核安装菜单, 根据提示安装 linux 内核 5.10或5.11 都可以.
-2. 更换内核重启后, 选择1 进入linux 内核安装菜单, 选择2 使用BBR加速
-3. 重启后, 选择1, 再选择6 安装 Wireguard 和 cloudflare Warp. 
-4. 确认Wireguard启动成功后, 运行脚本后选择11或12 或其他选项 安装v2ray或xray, 安装过程中根据提示 选择netflix 和 google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
+1. 运行脚本后选择1 进入linux 内核安装菜单, 根据提示安装 linux 内核 5.10或5.14 都可以.
+2. 更换内核重启后, 选择1 进入linux 内核安装菜单, 选择2 使用BBR加速 和 Cake算法 优化VPS参数后 重启
+3. 重启后, 选择1, 再选择6 安装 Wireguard 和 cloudflare WARP. 
+4. 确认Wireguard启动成功后, 运行脚本后选择14 或 11 或其他选项 安装v2ray或xray, 安装过程中根据提示 选择netflix 和 google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
+5. 本脚本集合了所有解锁 Netflix 网站的方法, 目前有 1 使用DNS解锁, 2 使用IPv6解锁, 3 使用WARP sock5 代理解锁, 4 使用转发到可解锁的V2ray或Xray服务器解锁
+6. 目前网上搭建解锁反代服务器是使用 sniproxy + dns的方式, 本脚本稍后推出 nginx stream + dns, nginx + xray, nginx + v2ray, nginx + sock5, 非常灵活的各种方式搭建解锁反代服务器, 以便达到一台VPS可以同时做网站+提供解锁+v2ray+trojan的目的
 
 
 

@@ -1619,7 +1619,8 @@ EOM
             sed -i "s/10085/${configXrayPort}/g" ${configAirUniverseXrayConfigFilePath}
 
 
-
+            replaceAirUniverseConfigIPV6
+            
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
@@ -1750,13 +1751,6 @@ function replaceAirUniverseConfigIPV6(){
 }
 
 EOM
-
-    # https://stackoverflow.com/questions/6684487/sed-replace-with-variable-with-multiple-lines
-
-    TESTNEW="${xrayConfigProxyInput//\\/\\\\}"
-    TESTNEW="${TESTNEW//\//\\/}"
-    TESTNEW="${TESTNEW//&/\\&}"
-    TESTNEW="${TESTNEW//$'\n'/\\n}"
 
     # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
 
@@ -2142,7 +2136,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-10-12 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-10-30 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="

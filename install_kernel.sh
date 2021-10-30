@@ -106,9 +106,11 @@ getLinuxOSVersion(){
         osReleaseVersion=$(grep -oE '[0-9.]+' /etc/issue)
     fi
 
+    # https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
+
     if [ -f /etc/os-release ]; then
         # freedesktop.org and systemd
-        . /etc/os-release
+        source /etc/os-release
         osInfo=$NAME
         osReleaseVersionNo=$VERSION_ID
 
@@ -1916,6 +1918,9 @@ configWgcfProfileFilePath="${configWgcfConfigFolderPath}/wgcf-profile.conf"
 configWireGuardConfigFileFolder="/etc/wireguard"
 configWireGuardConfigFilePath="/etc/wireguard/wgcf.conf"
 
+
+configWarpPort="40000"
+
 function installWireguard(){
 
     versionWgcf=$(getGithubLatestReleaseVersion "ViRb3/wgcf")
@@ -1930,13 +1935,25 @@ function installWireguard(){
 
 
     green " =================================================="
-    green "    开始安装 WireGuard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} !"
+    green " 准备安装 WireGuard 和 Cloudflare Warp 工具"
     echo
+    red " 安装前建议用本脚本升级linux内核到5.6以上 例如5.10 LTS内核. 也可以不升级内核, 具体请看下面说明"
     red " 如果是新的干净的没有换过内核的系统(例如没有安装过BBR Plus内核), 不要退出安装其他内核, 直接继续安装 WireGuard"
     red " 如果安装过其他内核(例如安装过BBR Plus内核), 建议先安装高于5.6以上的内核, 低于5.6的内核也可以继续安装, 但有几率无法启动 WireGuard"
     red " 如遇到 WireGuard 启动失败, 建议重做新系统后, 不要更换其他内核, 直接安装WireGuard"
     green " =================================================="
+
+
     echo
+    green " 1. 安装官方 Cloudflare WARP Client, 用于启动HTTPS or SOCKS5代理"
+    green " 2. 安装 Cloudflare WARP 命令行工具 Wgcf ${versionWgcf}, 用于启动 IPv4和IPv6 支持"
+    echo
+    read -p "请选择, 直接回车默认选2 安装Wgcf工具, 请输入[1/2]:" isInstallWARPToolInput
+	isInstallWARPToolInput=${isInstallWARPToolInput:-2}
+    echo
+    echo
+
+
 
     isKernelSupportWireGuardVersion="5.6"
     isKernelBuildInWireGuardModule="no"
@@ -1962,19 +1979,22 @@ function installWireguard(){
 	fi
 
     echo
+    echo
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
             ${sudoCmd} apt-get update
             ${sudoCmd} apt install -y openresolv
             # ${sudoCmd} apt install -y resolvconf
-            ${sudoCmd} apt install net-tools iproute2 dnsutils
+            ${sudoCmd} apt install -y net-tools iproute2 dnsutils
             echo
             if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
                 green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
+                echo
                 ${sudoCmd} apt install -y wireguard-tools 
             else
                 # 安装 wireguard-dkms 后 ubuntu 20 系统 会同时安装 5.4.0-71   内核
                 green " 当前系统内核版本低于5.6,  直接安装 wireguard wireguard"
+                echo
                 ${sudoCmd} apt install -y wireguard
                 # ${sudoCmd} apt install -y wireguard-tools 
             fi
@@ -1995,7 +2015,7 @@ function installWireguard(){
         if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
 
             green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
-
+            echo
             if [ "${osReleaseVersionNo}" -eq 7 ]; then
                 ${sudoCmd} yum install -y yum-plugin-elrepo
             fi
@@ -2029,99 +2049,174 @@ function installWireguard(){
         fi
     fi
 
-
-    echo
-    green " =================================================="
-    green " 开始安装 Cloudflare Warp 命令行工具 Wgcf "
-    echo
-
-    mkdir -p ${configWgcfConfigFolderPath}
-    mkdir -p ${configWgcfBinPath}
-    mkdir -p ${configWireGuardConfigFileFolder}
-
-    cd ${configWgcfConfigFolderPath}
-
-    # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
-    wget -O ${configWgcfConfigFolderPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
     
 
-    if [[ -f ${configWgcfConfigFolderPath}/wgcf ]]; then
-        green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
+	if [[ ${isInstallWARPToolInput} == [1] ]]; then
+
+        # https://developers.cloudflare.com/warp-client/setting-up/linux
+
         echo
+        green " =================================================="
+        green " Prepare to install Cloudflare WARP Official client "
+        green " Cloudflare WARP Official client only support Debian 10/11、Ubuntu 20.04/16.04、CentOS 8"
+        green " =================================================="
+        echo
+
+        if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+            ${sudoCmd} apt install -y gnupg 
+            ${sudoCmd} apt install -y apt-transport-https 
+
+            curl https://pkg.cloudflareclient.com/pubkey.gpg | ${sudoCmd} apt-key add -
+            
+            echo "deb http://pkg.cloudflareclient.com/ $osReleaseVersionCodeName main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+            ${sudoCmd} apt-get update
+            ${sudoCmd} apt install -y cloudflare-warp 
+
+        elif [[ "${osRelease}" == "centos" ]]; then
+            if [ "${osReleaseVersionNo}" -eq 7 ]; then
+                # ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el7.rpm
+                red "Cloudflare WARP Official client Not Support on Centos 7"
+            else
+                ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
+            fi
+
+            ${sudoCmd} yum install -y cloudflare-warp
+        fi
+
+        if [[ ! -f "/bin/warp-cli" ]]; then
+            green " =================================================="
+            red "  ${osInfo}${osReleaseVersionNo} ${osReleaseVersionCodeName} not support Cloudflare WARP official client ! "
+            green " =================================================="
+            exit
+        fi
+
+
+        warp-cli --accept-tos register
+        warp-cli --accept-tos set-mode proxy
+        warp-cli --accept-tos connect
+        warp-cli --accept-tos enable-always-on
+
+        checkWarpClientStatus
+
+        echo
+        green " ================================================== "
+        green "  Wireguard 和 Cloudflare 官方 WARP Client 安装成功 !"
+        green "  WARP Sock5 端口号 ${configWarpPort} "
+        #green "  Cloudflare Warp 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
+        #green "  Cloudflare Warp 生成的 Wireguard 配置文件路径: ${configWireGuardConfigFilePath} "
+        echo
+        green "  WARP 停止命令: warp-cli disconnect , 停止Always-On命令 warp-cli disable-always-on "
+        green "  WARP 启动命令: warp-cli connect  开启Always-On命令(保持一直连接WARP): warp-cli enable-always-on "
+        green "  WARP 查看日志: journalctl -n 100 -u warp-svc"
+        green "  WARP 查看运行状态: warp-cli status"
+        green "  WARP 查看连接信息: warp-cli warp-stats"
+        green "  WARP 查看设置信息: warp-cli settings"
+        green "  WARP 查看账户信息: warp-cli account"
+        echo
+        green "  用本脚本安装v2ray或xray 可以选择是否 解锁 Netflix 限制 和 避免弹出 Google reCAPTCHA 人机验证 !"
+        echo
+        green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
+        green " ================================================== "
+
     else
-        red "  Wgcf ${versionWgcf} 下载失败!"
-        exit 255
+
+
+        echo
+        green " =================================================="
+        green " 开始安装 Cloudflare Warp 命令行工具 Wgcf "
+        echo
+
+        mkdir -p ${configWgcfConfigFolderPath}
+        mkdir -p ${configWgcfBinPath}
+        mkdir -p ${configWireGuardConfigFileFolder}
+
+        cd ${configWgcfConfigFolderPath}
+
+        # https://github.com/ViRb3/wgcf/releases/download/v2.2.2/wgcf_2.2.2_linux_amd64
+        wget -O ${configWgcfConfigFolderPath}/wgcf --no-check-certificate "https://github.com/ViRb3/wgcf/releases/download/v${versionWgcf}/${downloadFilenameWgcf}"
+        
+
+        if [[ -f ${configWgcfConfigFolderPath}/wgcf ]]; then
+            green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
+            echo
+        else
+            red "  Wgcf ${versionWgcf} 下载失败!"
+            exit 255
+        fi
+
+        ${sudoCmd} chmod +x ${configWgcfConfigFolderPath}/wgcf
+        cp ${configWgcfConfigFolderPath}/wgcf ${configWgcfBinPath}
+        
+        # ${configWgcfConfigFolderPath}/wgcf register --config "${configWgcfAccountFilePath}"
+
+        yes | ${configWgcfConfigFolderPath}/wgcf register 
+        ${configWgcfConfigFolderPath}/wgcf generate 
+
+        cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
+
+        enableWireguardIPV6OrIPV4
+
+        echo 
+        green " 开始临时启动 Wireguard, 用于测试是否启动正常, 运行命令: wg-quick up wgcf"
+        ${sudoCmd} wg-quick up wgcf
+
+        echo 
+        green " 开始验证 Wireguard 是否启动正常, 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
+        echo
+        echo "curl -6 ip.p3terx.com"
+        curl -6 ip.p3terx.com 
+        echo
+        isWireguardIpv6Working=$(curl -6 ip.p3terx.com | grep CLOUDFLARENET )
+        echo
+
+        if [[ -n "$isWireguardIpv6Working" ]]; then	
+            green " Wireguard 启动正常, 已成功通过 CLOUDFLARE Warp 提供的 IPv6 访问网络! "
+        else 
+            green " ================================================== "
+            red " Wireguard 通过 curl -6 ip.p3terx.com, 检测使用CLOUDFLARENET的IPV6 访问失败"
+            red " 请检查linux 内核安装是否正确"
+            red " 安装会继续运行, 也有可能安装成功, 只是IPV6 没有使用"
+            red " 检查 WireGuard 是否启动成功, 可运行查看运行状态命令: systemctl status wg-quick@wgcf"
+            red " 如果 WireGuard 启动失败, 可运行查看日志命令 寻找原因: journalctl -n 50 -u wg-quick@wgcf"
+            red " 如遇到 WireGuard 启动失败, 建议重做新系统后, 不要更换其他内核, 直接安装WireGuard"
+            green " ================================================== "
+        fi
+
+        echo
+        green " 关闭临时启动用于测试的 Wireguard, 运行命令: wg-quick down wgcf "
+        ${sudoCmd} wg-quick down wgcf
+        echo
+
+        ${sudoCmd} systemctl daemon-reload
+        
+        # 设置开机启动
+        ${sudoCmd} systemctl enable wg-quick@wgcf
+
+        # 启用守护进程
+        ${sudoCmd} systemctl start wg-quick@wgcf
+
+        checkWireguardBootStatus
+
+        echo
+        green " ================================================== "
+        green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
+        green "  Cloudflare Warp 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
+        green "  Cloudflare Warp 生成的 Wireguard 配置文件路径: ${configWireGuardConfigFilePath} "
+        echo
+        green "  Wireguard 停止命令: systemctl stop wg-quick@wgcf  启动命令: systemctl start wg-quick@wgcf  重启命令: systemctl restart wg-quick@wgcf"
+        green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf"
+        green "  Wireguard 查看运行状态: systemctl status wg-quick@wgcf"
+        echo
+        green "  用本脚本安装v2ray或xray 可以选择是否 解锁 Netflix 限制 和 避免弹出 Google reCAPTCHA 人机验证 !"
+        echo
+        green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
+        green "  可参考 如何使用 IPv6 访问 Netflix 的教程 https://ybfl.xyz/111.html 或 https://toutyrater.github.io/app/netflix.html!"
+        green " ================================================== "
+
     fi
 
-    ${sudoCmd} chmod +x ${configWgcfConfigFolderPath}/wgcf
-    cp ${configWgcfConfigFolderPath}/wgcf ${configWgcfBinPath}
-    
-    # ${configWgcfConfigFolderPath}/wgcf register --config "${configWgcfAccountFilePath}"
 
-    ${configWgcfConfigFolderPath}/wgcf register 
-    ${configWgcfConfigFolderPath}/wgcf generate 
-
-    cp ${configWgcfProfileFilePath} ${configWireGuardConfigFilePath}
-
-    enableWireguardIPV6OrIPV4
-
-    echo 
-    green " 开始临时启动 Wireguard, 用于测试是否启动正常, 运行命令: wg-quick up wgcf"
-    ${sudoCmd} wg-quick up wgcf
-
-    echo 
-    green " 开始验证 Wireguard 是否启动正常, 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
-    echo
-    echo "curl -6 ip.p3terx.com"
-    curl -6 ip.p3terx.com 
-    echo
-    isWireguardIpv6Working=$(curl -6 ip.p3terx.com | grep CLOUDFLARENET )
-    echo
-
-	if [[ -n "$isWireguardIpv6Working" ]]; then	
-		green " Wireguard 启动正常, 已成功通过 CLOUDFLARE Warp 提供的 IPv6 访问网络! "
-	else 
-		green " ================================================== "
-		red " Wireguard 通过 curl -6 ip.p3terx.com, 检测使用CLOUDFLARENET的IPV6 访问失败"
-        red " 请检查linux 内核安装是否正确"
-        red " 安装会继续运行, 也有可能安装成功, 只是IPV6 没有使用"
-        red " 检查 WireGuard 是否启动成功, 可运行查看运行状态命令: systemctl status wg-quick@wgcf"
-        red " 如果 WireGuard 启动失败, 可运行查看日志命令 寻找原因: journalctl -n 50 -u wg-quick@wgcf"
-        red " 如遇到 WireGuard 启动失败, 建议重做新系统后, 不要更换其他内核, 直接安装WireGuard"
-		green " ================================================== "
-	fi
-
-    echo
-    green " 关闭临时启动用于测试的 Wireguard, 运行命令: wg-quick down wgcf "
-    ${sudoCmd} wg-quick down wgcf
-    echo
-
-    ${sudoCmd} systemctl daemon-reload
-    
-    # 设置开机启动
-    ${sudoCmd} systemctl enable wg-quick@wgcf
-
-    # 启用守护进程
-    ${sudoCmd} systemctl start wg-quick@wgcf
-
-    checkWireguardBootStatus
-
-    echo
-    green " ================================================== "
-    green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 安装成功 !"
-    green "  Cloudflare Warp 申请的账户配置文件路径: ${configWgcfAccountFilePath} "
-    green "  Cloudflare Warp 生成的 Wireguard 配置文件路径: ${configWireGuardConfigFilePath} "
-    echo
-    green "  Wireguard 停止命令: systemctl stop wg-quick@wgcf  启动命令: systemctl start wg-quick@wgcf  重启命令: systemctl restart wg-quick@wgcf"
-    green "  Wireguard 查看日志: journalctl -n 50 -u wg-quick@wgcf"
-    green "  Wireguard 查看运行状态: systemctl status wg-quick@wgcf"
-    echo
-    green "  用本脚本安装v2ray或xray 可以选择是否 解锁 Netflix 限制 和 避免弹出 Google reCAPTCHA 人机验证 !"
-    echo
-    green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
-    green "  可参考 如何使用 IPv6 访问 Netflix 的教程 https://ybfl.xyz/111.html 或 https://toutyrater.github.io/app/netflix.html!"
-    green " ================================================== "
-    
 }
 
 function enableWireguardIPV6OrIPV4(){
@@ -2290,6 +2385,17 @@ function removeWireguard(){
     $osSystemPackage -y remove wireguard-tools
     $osSystemPackage -y remove wireguard
 
+    if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+
+        ${sudoCmd} apt purge -y cloudflare-warp 
+        rm -f /etc/apt/sources.list.d/cloudflare-client.list
+
+    elif [[ "${osRelease}" == "centos" ]]; then
+        yum remove -y cloudflare-warp 
+
+    fi
+
+
     rm -f ${configWgcfBinPath}/wgcf
     rm -rf ${configWgcfConfigFolderPath}
     rm -rf ${configWireGuardConfigFileFolder}
@@ -2323,11 +2429,13 @@ function removeWireguard(){
 
 function checkWireguardBootStatus(){
     echo
+    green " ================================================== "
     isWireguardBootSuccess=$(systemctl status wg-quick@wgcf | grep -E "Active: active")
     if [[ -z "${isWireguardBootSuccess}" ]]; then
         green " 状态显示-- Wireguard 已启动失败! 请查看 Wireguard 运行日志, 寻找错误后重启 Wireguard "
     else
         green " 状态显示-- Wireguard 已启动成功! "
+        green " ================================================== "
         echo
         echo "wgcf trace"
         echo
@@ -2336,12 +2444,51 @@ function checkWireguardBootStatus(){
     fi
 }
 
+cloudflare_Trace_URL='https://www.cloudflare.com/cdn-cgi/trace'
+function checkWarpClientStatus(){
+    echo
+    green " ================================================== "
+    isWarpClientBootSuccess=$(systemctl is-active warp-svc | grep -E "active")
+    if [[ -z "${isWarpClientBootSuccess}" ]]; then
+        green " 状态显示-- Warp 已启动失败! 请查看 Warp 运行日志, 寻找错误后重启 Warp "
+    else
+        green " 状态显示-- Warp 已启动成功! "
+        echo
+
+        isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} | grep warp | cut -d= -f2)
+        case ${isWarpClientMode} in
+        on)
+            green " 状态显示-- WARP Sock5 代理已启动成功, 端口${configWarpPort}! "
+            ;;
+        plus)
+            green " 状态显示-- WARP+ Sock5 代理已启动成功, 端口${configWarpPort}! "
+            ;;
+        *)
+            green " 状态显示-- WARP Sock5 代理启动失败! "
+            ;;
+        esac
+    fi
+    green " ================================================== "
+    echo
+    echo "curl ${cloudflare_Trace_URL}"
+    echo
+    curl ${cloudflare_Trace_URL}
+    echo
+    echo "curl -x 'socks5h://127.0.0.1:40000' ${cloudflare_Trace_URL}"
+    echo
+    curl -x "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} 
+    echo
+}
+
+
 function checkWireguard(){
     echo
     green " =================================================="
     echo
     green " 1. 查看当前系统内核版本, 检查是否装了多个版本内核导致 Wireguard 启动失败"
-    green " 2. 查看 Wireguard 运行状态"
+    echo
+    green " 2. 查看 Wireguard 和 WARP Sock5 代理运行状态"
+    echo
     green " 3. 查看 Wireguard 运行日志, 如果 Wireguard 启动失败 请用此项查找问题"
     green " 4. 启动 Wireguard "
     green " 5. 停止 Wireguard "
@@ -2349,6 +2496,15 @@ function checkWireguard(){
     green " 7. 查看 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
     green " 8. 用VI 编辑 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
     echo
+    green " 11. 查看 WARP Sock5 运行日志, 如果 WARP 启动失败 请用此项查找问题"  
+    green " 12. 启动 WARP Sock5 代理"
+    green " 13. 停止 WARP Sock5 代理"
+    green " 14. 重启 WARP Sock5 代理"    
+    green " 15. 查看 WARP Sock5 运行状态  warp-cli status"    
+    green " 16. 查看 WARP Sock5 连接信息  warp-cli warp-stats"    
+    green " 17. 查看 WARP Sock5 设置信息  warp-cli settings"    
+    green " 18. 查看 WARP Sock5 账户信息  warp-cli account"      
+    
     green " =================================================="
     green " 0. 退出脚本"
     echo
@@ -2357,50 +2513,124 @@ function checkWireguard(){
         1 )
             showLinuxKernelInfo
             listInstalledLinuxKernel
-        ;;   
+        ;;
         2 )
             echo
-            echo "systemctl status wg-quick@wgcf"
-            systemctl status wg-quick@wgcf
-            red " 请查看上面 Active: 一行信息, 如果文字是绿色 active 则为启动正常, 否则启动失败"
+            #echo "systemctl status wg-quick@wgcf"
+            #systemctl status wg-quick@wgcf
+            #red " 请查看上面 Active: 一行信息, 如果文字是绿色 active 则为启动正常, 否则启动失败"
             checkWireguardBootStatus
+            checkWarpClientStatus
         ;;
         3 )
             echo
-            echo "journalctl -n 50 -u wg-quick@wgcf"
-            journalctl -n 50 -u wg-quick@wgcf
+            echo "journalctl -n 100 -u wg-quick@wgcf"
+            journalctl -n 100 -u wg-quick@wgcf
             red " 请查看上面包含 Error 的信息行, 查找启动失败的原因 "
-        ;;        
+        ;;
         4 )
             echo
             echo "systemctl start wg-quick@wgcf"
             systemctl start wg-quick@wgcf
+            echo
             green " Wireguard 已启动 !"
             checkWireguardBootStatus
-        ;;        
+        ;;
         5 )
             echo
             echo "systemctl stop wg-quick@wgcf"
             systemctl stop wg-quick@wgcf
+            echo
             green " Wireguard 已停止 !"
-        ;;       
+        ;;
         6 )
             echo
             echo "systemctl restart wg-quick@wgcf"
             systemctl restart wg-quick@wgcf
             green " Wireguard 已重启 !"
+            echo
             checkWireguardBootStatus
-        ;;       
+        ;;
         7 )
             echo
             echo "cat ${configWireGuardConfigFilePath}"
             cat ${configWireGuardConfigFilePath}
-        ;;       
+        ;;
         8 )
             echo
             echo "vi ${configWireGuardConfigFilePath}"
             vi ${configWireGuardConfigFilePath}
-        ;; 
+        ;;
+        11 )
+            echo
+            echo "journalctl --no-pager -u warp-svc "
+            journalctl --no-pager -u warp-svc 
+            red " 请查看上面包含 Error 的信息行, 查找启动失败的原因 "
+        ;;
+        12 )
+            echo
+            echo "warp-cli connect"
+            warp-cli connect
+            echo
+            echo "warp-cli enable-always-on"
+            warp-cli enable-always-on
+            echo
+            green " WARP Sock5 代理 已启动 !"
+            checkWarpClientStatus
+        ;;
+        13 )
+            echo
+            echo "warp-cli disable-always-on"
+            warp-cli disable-always-on
+            echo
+            echo "warp-cli disconnect"
+            warp-cli disconnect
+            echo
+            green " WARP Sock5 代理 已停止 !"
+            checkWarpClientStatus
+        ;;
+        14 )
+            echo
+            echo "warp-cli disable-always-on"
+            warp-cli disable-always-on
+            echo
+            echo "warp-cli disconnect"
+            warp-cli disconnect
+            echo
+            echo "systemctl restart warp-svc"
+            systemctl restart warp-svc
+            sleep 5
+            read -p "Press enter to continue"
+            echo
+            echo "warp-cli connect"
+            warp-cli connect
+            echo
+            echo "warp-cli enable-always-on"
+            warp-cli enable-always-on
+            echo
+            green " WARP Sock5 代理 已重启 !"
+            checkWarpClientStatus
+        ;;
+        15 )
+            echo
+            echo "warp-cli status"
+            warp-cli status
+        ;;
+        16 )
+            echo
+            echo "warp-cli warp-stats"
+            warp-cli warp-stats
+        ;;
+        17 )
+            echo
+            echo "warp-cli settings"
+            warp-cli settings
+        ;;
+        18 )
+            echo
+            echo "warp-cli account"
+            warp-cli account
+        ;;                
         0 )
             exit 1
         ;;
@@ -2455,7 +2685,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-10-12 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2021-10-30 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -2478,9 +2708,9 @@ function start_menu(){
     green " 4. 优化 系统网络配置"
     red " 5. 删除 系统网络优化配置"
     echo
-    green " 6. 安装 WireGuard 和 Cloudflare Warp, 用于解锁 Netflix 限制和避免弹出Google人机验证"
-    green " 7. 重启 WireGuard, 查看 WireGuard 运行状态和错误日志, 如果WireGuard启动失败 请选该项排查错误"
-    red " 8. 卸载 WireGuard" 
+    green " 6. 安装 WireGuard 和 Cloudflare WARP, 用于解锁 Netflix 限制和避免弹出Google人机验证"
+    green " 7. 重启和查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"
+    red " 8. 卸载 WireGuard 和 Cloudflare WARP" 
     green " 9. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 10. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
     echo
@@ -2524,7 +2754,7 @@ function start_menu(){
     green " 38. 安装 BBR Plus 内核 5.11 LTS, UJX6N 编译"   
     echo
     green " 41. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
-    green " 42. 安装 XanMod Kernel 内核 5.11, 官方源安装 "    
+    green " 42. 安装 XanMod Kernel 内核 5.14, 官方源安装 "    
     echo
     green " =================================================="
     green " 0. 退出脚本"
@@ -2669,7 +2899,7 @@ function start_menu(){
             installKernel
         ;;
         42 )
-            linuxKernelToInstallVersion="5.11"
+            linuxKernelToInstallVersion="5.14"
             linuxKernelToBBRType="xanmod"
             isInstallFromRepo="yes"
             installKernel
