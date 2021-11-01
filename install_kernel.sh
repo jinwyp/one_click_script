@@ -1915,11 +1915,109 @@ configWgcfBinPath="/usr/local/bin"
 configWgcfConfigFolderPath="${HOME}/wireguard"
 configWgcfAccountFilePath="${configWgcfConfigFolderPath}/wgcf-account.toml"
 configWgcfProfileFilePath="${configWgcfConfigFolderPath}/wgcf-profile.conf"
+configWARPPortFilePath="${configWgcfConfigFolderPath}/warp-port"
 configWireGuardConfigFileFolder="/etc/wireguard"
 configWireGuardConfigFilePath="/etc/wireguard/wgcf.conf"
 
 
 configWarpPort="40000"
+
+
+function installWARPClient(){
+
+    # https://developers.cloudflare.com/warp-client/setting-up/linux
+
+    echo
+    green " =================================================="
+    green " Prepare to install Cloudflare WARP Official client "
+    green " Cloudflare WARP Official client only support Debian 10/11、Ubuntu 20.04/16.04、CentOS 8"
+    green " =================================================="
+    echo
+
+    if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+        ${sudoCmd} apt install -y gnupg 
+        ${sudoCmd} apt install -y apt-transport-https 
+
+        curl https://pkg.cloudflareclient.com/pubkey.gpg | ${sudoCmd} apt-key add -
+        
+        echo "deb http://pkg.cloudflareclient.com/ $osReleaseVersionCodeName main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+        ${sudoCmd} apt-get update
+        ${sudoCmd} apt install -y cloudflare-warp 
+
+    elif [[ "${osRelease}" == "centos" ]]; then
+        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+            # ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el7.rpm
+            red "Cloudflare WARP Official client is not supported on Centos 7"
+        else
+            ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
+        fi
+
+        ${sudoCmd} yum install -y cloudflare-warp
+    fi
+
+    if [[ ! -f "/bin/warp-cli" ]]; then
+        green " =================================================="
+        red "  ${osInfo}${osReleaseVersionNo} ${osReleaseVersionCodeName} is not supported ! "
+        green " =================================================="
+        exit
+    fi
+
+    echo 
+    echo
+    read -p "是否生成随机的WARP Sock5 端口号? 直接回车默认 40000 不生成随机端口号, 请输入[y/N]:" isWarpPortInput
+    isWarpPortInput=${isWarpPortInput:-n}
+
+    if [[ $isWarpPortInput == [Nn] ]]; then
+        echo
+    else
+        configWarpPort="$(($RANDOM + 10000))"
+    fi
+    
+    mkdir -p ${configWgcfConfigFolderPath}
+    echo "${configWarpPort}" > "${configWARPPortFilePath}"
+
+    ${sudoCmd} systemctl enable warp-svc
+
+    yes | warp-cli register
+    yes | warp-cli set-mode proxy
+    warp-cli --accept-tos set-proxy-port ${configWarpPort}
+    warp-cli --accept-tos connect
+    warp-cli --accept-tos enable-always-on
+
+    checkWarpClientStatus
+
+
+    (crontab -l ; echo "10 6 * * 0,1,2,3,4,5,6 warp-cli disable-always-on ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "11 6 * * 0,1,2,3,4,5,6 warp-cli disconnect ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "12 6 * * 0,1,2,3,4,5,6 systemctl restart warp-svc ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "16 6 * * 0,1,2,3,4,5,6 warp-cli connect ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "17 6 * * 0,1,2,3,4,5,6 warp-cli enable-always-on ") | sort - | uniq - | crontab -
+
+
+
+
+
+    echo
+    green " ================================================== "
+    green "  Wireguard 和 Cloudflare 官方 WARP Client 安装成功 !"
+    green "  WARP Sock5 端口号 ${configWarpPort} "
+    echo
+    green "  WARP 停止命令: warp-cli disconnect , 停止Always-On命令: warp-cli disable-always-on "
+    green "  WARP 启动命令: warp-cli connect , 开启Always-On命令(保持一直连接WARP): warp-cli enable-always-on "
+    green "  WARP 查看日志: journalctl -n 100 -u warp-svc"
+    green "  WARP 查看运行状态: warp-cli status"
+    green "  WARP 查看连接信息: warp-cli warp-stats"
+    green "  WARP 查看设置信息: warp-cli settings"
+    green "  WARP 查看账户信息: warp-cli account"
+    echo
+    green "  用本脚本安装v2ray或xray 可以选择是否 解锁 Netflix 限制 和 避免弹出 Google reCAPTCHA 人机验证 !"
+    echo
+    green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
+    green " ================================================== "
+
+}
+
 
 function installWireguard(){
 
@@ -1935,7 +2033,7 @@ function installWireguard(){
 
 
     green " =================================================="
-    green " 准备安装 WireGuard 和 Cloudflare Warp 工具"
+    green " 准备安装 WireGuard 和 Cloudflare WARP 工具"
     echo
     red " 安装前建议用本脚本升级linux内核到5.6以上 例如5.10 LTS内核. 也可以不升级内核, 具体请看下面说明"
     red " 如果是新的干净的没有换过内核的系统(例如没有安装过BBR Plus内核), 不要退出安装其他内核, 直接继续安装 WireGuard"
@@ -1947,6 +2045,7 @@ function installWireguard(){
     echo
     green " 1. 安装官方 Cloudflare WARP Client, 用于启动HTTPS or SOCKS5代理"
     green " 2. 安装 Cloudflare WARP 命令行工具 Wgcf ${versionWgcf}, 用于启动 IPv4和IPv6 支持"
+    green " 3. 同时安装 官方 Cloudflare WARP Client 和 命令行工具 Wgcf, 不推荐 "
     echo
     read -p "请选择, 直接回车默认选2 安装Wgcf工具, 请输入[1/2]:" isInstallWARPToolInput
 	isInstallWARPToolInput=${isInstallWARPToolInput:-2}
@@ -2052,91 +2151,13 @@ function installWireguard(){
     
 
 	if [[ ${isInstallWARPToolInput} == [1] ]]; then
-
-        # https://developers.cloudflare.com/warp-client/setting-up/linux
-
-        echo
-        green " =================================================="
-        green " Prepare to install Cloudflare WARP Official client "
-        green " Cloudflare WARP Official client only support Debian 10/11、Ubuntu 20.04/16.04、CentOS 8"
-        green " =================================================="
-        echo
-
-        if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
-            ${sudoCmd} apt install -y gnupg 
-            ${sudoCmd} apt install -y apt-transport-https 
-
-            curl https://pkg.cloudflareclient.com/pubkey.gpg | ${sudoCmd} apt-key add -
-            
-            echo "deb http://pkg.cloudflareclient.com/ $osReleaseVersionCodeName main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
-
-            ${sudoCmd} apt-get update
-            ${sudoCmd} apt install -y cloudflare-warp 
-
-        elif [[ "${osRelease}" == "centos" ]]; then
-            if [ "${osReleaseVersionNo}" -eq 7 ]; then
-                # ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el7.rpm
-                red "Cloudflare WARP Official client Not Support on Centos 7"
-            else
-                ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
-            fi
-
-            ${sudoCmd} yum install -y cloudflare-warp
-        fi
-
-        if [[ ! -f "/bin/warp-cli" ]]; then
-            green " =================================================="
-            red "  ${osInfo}${osReleaseVersionNo} ${osReleaseVersionCodeName} not support Cloudflare WARP official client ! "
-            green " =================================================="
-            exit
-        fi
-
-        echo 
-        echo
-        read -p "是否生成随机的WARP Sock5 端口号? 直接回车默认 40000 不生成随机端口号, 请输入[y/N]:" isWarpPortInput
-        isWarpPortInput=${isWarpPortInput:-n}
-
-        if [[ $isWarpPortInput == [Nn] ]]; then
-            echo
-        else
-            configWarpPort="$(($RANDOM + 10000))"
-        fi
-        
-
-        ${sudoCmd} systemctl enable warp-svc
-
-        yes | warp-cli register
-        yes | warp-cli set-mode proxy
-        warp-cli --accept-tos set-proxy-port ${configWarpPort}
-        warp-cli --accept-tos connect
-        warp-cli --accept-tos enable-always-on
-
-        checkWarpClientStatus
-
-        echo
-        green " ================================================== "
-        green "  Wireguard 和 Cloudflare 官方 WARP Client 安装成功 !"
-        green "  WARP Sock5 端口号 ${configWarpPort} "
-        echo
-        green "  WARP 停止命令: warp-cli disconnect , 停止Always-On命令: warp-cli disable-always-on "
-        green "  WARP 启动命令: warp-cli connect , 开启Always-On命令(保持一直连接WARP): warp-cli enable-always-on "
-        green "  WARP 查看日志: journalctl -n 100 -u warp-svc"
-        green "  WARP 查看运行状态: warp-cli status"
-        green "  WARP 查看连接信息: warp-cli warp-stats"
-        green "  WARP 查看设置信息: warp-cli settings"
-        green "  WARP 查看账户信息: warp-cli account"
-        echo
-        green "  用本脚本安装v2ray或xray 可以选择是否 解锁 Netflix 限制 和 避免弹出 Google reCAPTCHA 人机验证 !"
-        echo
-        green "  其他脚本安装的v2ray或xray 请自行替换 v2ray或xray 配置文件!"
-        green " ================================================== "
+        installWARPClient
 
     else
 
-
         echo
         green " =================================================="
-        green " 开始安装 Cloudflare Warp 命令行工具 Wgcf "
+        green " 开始安装 Cloudflare WARP 命令行工具 Wgcf "
         echo
 
         mkdir -p ${configWgcfConfigFolderPath}
@@ -2150,7 +2171,7 @@ function installWireguard(){
         
 
         if [[ -f ${configWgcfConfigFolderPath}/wgcf ]]; then
-            green " Cloudflare Warp 命令行工具 Wgcf ${versionWgcf} 下载成功!"
+            green " Cloudflare WARP 命令行工具 Wgcf ${versionWgcf} 下载成功!"
             echo
         else
             red "  Wgcf ${versionWgcf} 下载失败!"
@@ -2200,7 +2221,7 @@ function installWireguard(){
         ${sudoCmd} wg-quick up wgcf
 
         echo 
-        green " 开始验证 Wireguard 是否启动正常, 检测是否使用 CLOUDFLARE 的 ipv6 访问 !"
+        green " 开始验证 Wireguard 是否启动正常, 检测是否使用 Cloudflare 的 ipv6 访问 !"
         echo
         echo "curl -6 ip.p3terx.com"
         curl -6 ip.p3terx.com 
@@ -2209,7 +2230,7 @@ function installWireguard(){
         echo
 
         if [[ -n "$isWireguardIpv6Working" ]]; then	
-            green " Wireguard 启动正常, 已成功通过 CLOUDFLARE Warp 提供的 IPv6 访问网络! "
+            green " Wireguard 启动正常, 已成功通过 Cloudflare WARP 提供的 IPv6 访问网络! "
         else 
             green " ================================================== "
             red " Wireguard 通过 curl -6 ip.p3terx.com, 检测使用CLOUDFLARENET的IPV6 访问失败"
@@ -2254,6 +2275,9 @@ function installWireguard(){
 
     fi
 
+	if [[ ${isInstallWARPToolInput} == "3" ]]; then
+        installWARPClient
+    fi
 
 }
 
@@ -2403,7 +2427,7 @@ function preferIPV4(){
 
 function removeWireguard(){
     green " ================================================== "
-    red " 准备卸载已安装 Wireguard 和 Cloudflare Warp 命令行工具 Wgcf "
+    red " 准备卸载 Wireguard, Cloudflare WARP Client 和 命令行工具 Wgcf "
     green " ================================================== "
 
     if [[ -f "${configWgcfBinPath}/wgcf" || -f "${configWgcfConfigFolderPath}/wgcf" || -f "/wgcf" ]]; then
@@ -2451,6 +2475,8 @@ function removeWireguard(){
     rm -f ${configWgcfBinPath}/wgcf
     rm -rf ${configWireGuardConfigFileFolder}
     rm -f ${osSystemMdPath}wg-quick@wgcf.service
+    rm -f ${configWARPPortFilePath}
+
 
     rm -f /usr/bin/wg
     rm -f /usr/bin/wg-quick
@@ -2469,8 +2495,11 @@ function removeWireguard(){
 
     modprobe -r wireguard
 
+    crontab -l | grep -v 'warp-cli'  | crontab -
+    crontab -l | grep -v 'warp-svc'  | crontab -
+
     green " ================================================== "
-    green "  Wireguard 和 Cloudflare Warp 命令行工具 Wgcf 卸载完毕 !"
+    green "  Wireguard, Cloudflare WARP Client 和 命令行工具 Wgcf 卸载完毕 !"
     green " ================================================== "
 
   
@@ -2482,7 +2511,7 @@ function checkWireguardBootStatus(){
     green " ================================================== "
     isWireguardBootSuccess=$(systemctl status wg-quick@wgcf | grep -E "Active: active")
     if [[ -z "${isWireguardBootSuccess}" ]]; then
-        green " 状态显示-- Wireguard 已启动失败! 请查看 Wireguard 运行日志, 寻找错误后重启 Wireguard "
+        green " 状态显示-- Wireguard 已启动${Red_font_prefix}失败${Green_font_prefix}! 请查看 Wireguard 运行日志, 寻找错误后重启 Wireguard "
     else
         green " 状态显示-- Wireguard 已启动成功! "
         green " ================================================== "
@@ -2496,25 +2525,30 @@ function checkWireguardBootStatus(){
 
 cloudflare_Trace_URL='https://www.cloudflare.com/cdn-cgi/trace'
 function checkWarpClientStatus(){
+    
+    if [[ -f "${configWARPPortFilePath}" ]]; then
+        configWarpPort=$(cat ${configWARPPortFilePath})
+    fi
+    
     echo
     green " ================================================== "
     isWarpClientBootSuccess=$(systemctl is-active warp-svc | grep -E "active")
     if [[ -z "${isWarpClientBootSuccess}" ]]; then
-        green " 状态显示-- Warp 已启动失败! 请查看 Warp 运行日志, 寻找错误后重启 Warp "
+        green " 状态显示-- WARP 已启动${Red_font_prefix}失败${Green_font_prefix}! 请查看 WARP 运行日志, 寻找错误后重启 WARP "
     else
-        green " 状态显示-- Warp 已启动成功! "
+        green " 状态显示-- WARP 已启动成功! "
         echo
 
         isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} --connect-timeout 3 | grep warp | cut -d= -f2)
         case ${isWarpClientMode} in
         on)
-            green " 状态显示-- WARP Sock5 代理已启动成功, 端口${configWarpPort}! "
+            green " 状态显示-- WARP Sock5 代理已启动成功, 端口号 ${configWarpPort} ! "
             ;;
         plus)
-            green " 状态显示-- WARP+ Sock5 代理已启动成功, 端口${configWarpPort}! "
+            green " 状态显示-- WARP+ Sock5 代理已启动成功, 端口号 ${configWarpPort} ! "
             ;;
         *)
-            green " 状态显示-- WARP Sock5 代理启动失败! "
+            green " 状态显示-- WARP Sock5 代理启动${Red_font_prefix}失败${Green_font_prefix}! "
             ;;
         esac
     fi
@@ -2535,7 +2569,7 @@ function checkWireguard(){
     echo
     green " =================================================="
     echo
-    green " 1. 查看当前系统内核版本, 检查是否装了多个版本内核导致 Wireguard 启动失败"
+    green " 1. 查看当前系统内核版本, 检查是否因为装了多个版本内核导致 Wireguard 启动失败"
     echo
     green " 2. 查看 Wireguard 和 WARP Sock5 代理运行状态"
     echo
@@ -2549,7 +2583,8 @@ function checkWireguard(){
     green " 11. 查看 WARP Sock5 运行日志, 如果 WARP 启动失败 请用此项查找问题"  
     green " 12. 启动 WARP Sock5 代理"
     green " 13. 停止 WARP Sock5 代理"
-    green " 14. 重启 WARP Sock5 代理"    
+    green " 14. 重启 WARP Sock5 代理"
+    echo
     green " 15. 查看 WARP Sock5 运行状态  warp-cli status"    
     green " 16. 查看 WARP Sock5 连接信息  warp-cli warp-stats"    
     green " 17. 查看 WARP Sock5 设置信息  warp-cli settings"    
@@ -2563,6 +2598,9 @@ function checkWireguard(){
         1 )
             showLinuxKernelInfo
             listInstalledLinuxKernel
+            
+            checkWireguardBootStatus
+            checkWarpClientStatus
         ;;
         2 )
             echo
@@ -2650,6 +2688,7 @@ function checkWireguard(){
             echo "systemctl restart warp-svc"
             systemctl restart warp-svc
             sleep 5
+            echo
             read -p "Press enter to continue"
             echo
             echo "warp-cli connect"

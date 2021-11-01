@@ -1436,6 +1436,7 @@ EOF
 function removeNginx(){
 
     ${sudoCmd} systemctl stop nginx.service
+    ${sudoCmd} systemctl disable nginx.service
 
     echo
     green " ================================================== "
@@ -2344,7 +2345,7 @@ function installV2ray(){
     read -p "是否使用DNS解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
 
-    V2rayDNSUnlockText=""
+    V2rayDNSUnlockText="AsIs"
     if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
         v2rayConfigDNSInput=""
         V2rayDNSUnlockText="AsIs"
@@ -2418,7 +2419,7 @@ EOM
             unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}
 
         else
-            V2rayUnlockOutboundTagText="IP6_out"
+            V2rayUnlockOutboundTagText="IPv6_out"
         fi
 
         echo
@@ -2900,14 +2901,14 @@ EOM
         read -r -d '' v2rayConfigOutboundInput << EOM
     "outbounds": [
         {
-            "tag":"IP4_out",
+            "tag":"IPv4_out",
             "protocol": "freedom",
             "settings": {
                 "domainStrategy": "${V2rayDNSUnlockText}"
             }
         },
         {
-            "tag":"IP6_out",
+            "tag":"IPv6_out",
             "protocol": "freedom",
             "settings": {
                 "domainStrategy": "UseIPv6" 
@@ -2929,7 +2930,7 @@ EOM
                 "network": "tcp"
             }
         }
-    ],    
+    ],
     "routing": {
         "rules": [
             {
@@ -2939,7 +2940,7 @@ EOM
             },
             {
                 "type": "field",
-                "outboundTag": "IP4_out",
+                "outboundTag": "IPv4_out",
                 "network": "udp,tcp"
             }
         ]

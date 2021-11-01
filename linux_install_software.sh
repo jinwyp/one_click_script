@@ -1576,7 +1576,7 @@ function installAirUniverse(){
     /root/airu_install.sh install 
 
     (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart xray.service ") | sort - | uniq - | crontab -
-    (crontab -l ; echo "35 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "32 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
 
 
     replaceAirUniverseConfig
@@ -1666,7 +1666,7 @@ function replaceAirUniverseConfigIPV6(){
     read -p "是否使用DNS解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
 
-    V2rayDNSUnlockText=""
+    V2rayDNSUnlockText="AsIs"
     if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
         v2rayConfigDNSInput=""
         V2rayDNSUnlockText="AsIs"
@@ -1741,7 +1741,7 @@ EOM
             read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认40000, 请输入纯数字:" unlockWARPServerPortInput
             unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}
         else
-            V2rayUnlockOutboundTagText="IP6_out"
+            V2rayUnlockOutboundTagText="IPv6_out"
         fi
 
         echo
@@ -1933,7 +1933,7 @@ EOM
             "settings": {}
         },
         {
-            "tag":"IP6_out",
+            "tag":"IPv6_out",
             "protocol": "freedom",
             "settings": {
                 "domainStrategy": "UseIPv6" 
