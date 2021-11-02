@@ -1710,7 +1710,7 @@ EOM
     echo
     echo
     green " =================================================="
-    yellow " 使用 Cloudflare WARP的 Sock5代理 还是 IPv6 解锁 流媒体 Netflix 等网站和避免弹出 Google reCAPTCHA 人机验证"
+    yellow " 是否使用 Cloudflare WARP 解锁 流媒体 Netflix 等网站和避免弹出 Google reCAPTCHA 人机验证"
     green " 1. 不使用解锁"
     green " 2. 使用 WARP Sock5 代理解锁"
     green " 3. 使用 WARP IPv6 解锁"
@@ -1723,15 +1723,18 @@ EOM
     read -p "请输入? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockWarpModeInput
     isV2rayUnlockWarpModeInput=${isV2rayUnlockWarpModeInput:-1}
 
-    V2rayUnlockRuleText=""
-    V2rayUnlockOutboundTagText=""
+    V2rayUnlockVideoSiteRuleText=""
+    V2rayUnlockGoogleRuleText=""
+
+    xrayConfigRuleInput=""
+    V2rayUnlockVideoSiteOutboundTagText=""
     unlockWARPServerIpInput="127.0.0.1"
     unlockWARPServerPortInput="40000"
     if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
         echo
     else
         if [[ $isV2rayUnlockWarpModeInput == "2" ]]; then
-            V2rayUnlockOutboundTagText="WARP_out"
+            V2rayUnlockVideoSiteOutboundTagText="WARP_out"
 
             echo
             read -p "请输入WARP Sock5 代理服务器地址? 直接回车默认本机 127.0.0.1, 请输入:" unlockWARPServerIpInput
@@ -1740,70 +1743,18 @@ EOM
             echo
             read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认40000, 请输入纯数字:" unlockWARPServerPortInput
             unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}
-        else
-            V2rayUnlockOutboundTagText="IPv6_out"
-        fi
 
-        echo
-        green " =================================================="
-        yellow " 请选择要解锁的网站:"
-        echo
-        green " 1. 不解锁"
-        green " 2. 避免弹出 Google reCAPTCHA 人机验证"
-        green " 3. 解锁 Netflix 限制"
-        green " 4. 解锁 Youtube 和 Youtube Premium"
-        green " 5. 解锁 Pornhub, 解决视频变成玉米无法观看问题"
-        green " 6. 解锁 全部流媒体 包括 Netflix, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico, dmm, Pornhub 等"
-        green " 11. 同时解锁 2 和 3 项,  即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflix 限制"
-        green " 12. 同时解锁 2 和 5 项,  即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Pornhub 限制"
-        green " 13. 同时解锁 2, 3, 5项, 即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflix 和 Pornhub 限制"
-        green " 14. 同时解锁 2, 3, 4, 5项, 即为 避免弹出 Google reCAPTCHA 人机验证 和 解锁 Netflix, Youtube 和 Pornhub 限制"
-        green " 15. 同时解锁 全部流媒体 和 避免弹出 Google reCAPTCHA 人机验证"
-        echo
-        read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
-        isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
+        elif [[ $isV2rayUnlockWarpModeInput == "3" ]]; then
 
-        if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
-            V2rayUnlockRuleText="\"geosite:google\""
+            V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
 
-        elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
-            V2rayUnlockRuleText="\"geosite:netflix\""
-            
-        elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
-            V2rayUnlockRuleText="\"geosite:youtube\""
+        elif [[ $isV2rayUnlockWarpModeInput == "4" ]]; then
 
-        elif [[ $isV2rayUnlockGoogleInput == "5" ]]; then
-            V2rayUnlockRuleText="\"geosite:pornhub\""
-
-        elif [[ $isV2rayUnlockGoogleInput == "6" ]]; then
-            V2rayUnlockRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
-
-        elif [[ $isV2rayUnlockGoogleInput == "11" ]]; then
-            V2rayUnlockRuleText="\"geosite:google\", \"geosite:netflix\""
-
-        elif [[ $isV2rayUnlockGoogleInput == "12" ]]; then
-            V2rayUnlockRuleText="\"geosite:google\", \"geosite:pornhub\""
-
-        elif [[ $isV2rayUnlockGoogleInput == "13" ]]; then
-            V2rayUnlockRuleText="\"geosite:google\", \"geosite:pornhub\", \"geosite:netflix\""
-
-        elif [[ $isV2rayUnlockGoogleInput == "14" ]]; then
-            V2rayUnlockRuleText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
-
-        elif [[ $isV2rayUnlockGoogleInput == "15" ]]; then
-            V2rayUnlockRuleText="\"geosite:google\", \"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
-        else
-            V2rayUnlockRuleText=""
-        fi
-
-
-        if [[ $isV2rayUnlockWarpModeInput == "4" ]]; then
-            echo
             echo
             green " 已选择4 通过转发到可解锁的v2ray或xray服务器解锁"
-            green " 也可以自行修改v2ray或xray配置, 在 outbounds 字段中增加一个tag为 V2Ray_out 的可解锁的v2ray服务器"
+            green " 可自行修改v2ray或xray配置, 在 outbounds 字段中增加一个tag为 V2Ray_out 的可解锁的v2ray服务器"
 
-            V2rayUnlockOutboundTagText="V2Ray_out"
+            V2rayUnlockVideoSiteOutboundTagText="V2Ray_out"
 
             echo
             echo
@@ -1840,22 +1791,21 @@ EOM
 
                 echo
                 yellow " 请选择可解锁流媒体的V2ray或Xray服务器 XTLS模式下的Flow "
-                green " 1. VLess + TCP + XTLS (xtls-rprx-direct)"
+                green " 1. VLess + TCP + XTLS (xtls-rprx-direct) 推荐"
                 green " 2. VLess + TCP + XTLS (xtls-rprx-splice) 此项可能会无法连接"
                 read -p "请选择Flow 参数? 直接回车默认选1, 请输入纯数字:" isV2rayUnlockServerFlowInput
                 isV2rayUnlockServerFlowInput=${isV2rayUnlockServerFlowInput:-1}
 
+                unlockOutboundServerXTLSFlowValue="xtls-rprx-direct"
                 if [[ $isV2rayUnlockServerFlowInput == "1" ]]; then
-                    read -r -d '' unlockOutboundServerXTLSFlowText << EOM
-                                "flow": "xtls-rprx-direct",
-EOM
+                    unlockOutboundServerXTLSFlowValue="xtls-rprx-direct"
                 else
-                    read -r -d '' unlockOutboundServerXTLSFlowText << EOM
-                                "flow": "xtls-rprx-splice",
-EOM
+                    unlockOutboundServerXTLSFlowValue="xtls-rprx-splice"
                 fi
+                read -r -d '' unlockOutboundServerXTLSFlowText << EOM
+                                "flow": "${unlockOutboundServerXTLSFlowValue}",
+EOM
             fi
-
 
 
             echo
@@ -1876,7 +1826,6 @@ EOM
 
 
             read -r -d '' v2rayConfigOutboundV2rayServerInput << EOM
-
         {
             "tag": "V2Ray_out",
             "protocol": "${isV2rayUnlockOutboundServerProtocolText}",
@@ -1901,37 +1850,138 @@ EOM
                 "security": "${isV2rayUnlockOutboundServerTLSText}",
                 "${isV2rayUnlockOutboundServerTLSText}Settings": {
                     "serverName": "${isV2rayUnlockServerDomainInput}"
-                },
+                },                
                 "wsSettings": {
                     "path": "/${isV2rayUnlockServerWSPathInput}"
                 }
             }
         },
-
 EOM
         fi
+
+
+        echo
+        echo
+        green " =================================================="
+        yellow " 请选择要解锁的流媒体网站:"
+        echo
+        green " 1. 不解锁"
+        green " 2. 解锁 Netflix 限制"
+        green " 3. 解锁 Youtube 和 Youtube Premium"
+        green " 4. 解锁 Pornhub, 解决视频变成玉米无法观看问题"
+        green " 5. 同时解锁 2, 4项, 即为 解锁 Netflix 和 Pornhub 限制"
+        green " 6. 同时解锁 2, 3, 4项, 即为 解锁 Netflix, Youtube 和 Pornhub 限制"
+        green " 9. 解锁 全部流媒体 包括 Netflix, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico, dmm, Pornhub 等"
+        echo
+        read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockVideoSiteInput
+        isV2rayUnlockVideoSiteInput=${isV2rayUnlockVideoSiteInput:-1}
+
+        if [[ $isV2rayUnlockVideoSiteInput == "2" ]]; then
+            V2rayUnlockVideoSiteRuleText+="\"geosite:netflix\""
+            
+        elif [[ $isV2rayUnlockVideoSiteInput == "3" ]]; then
+            V2rayUnlockVideoSiteRuleText+="\"geosite:youtube\""
+
+        elif [[ $isV2rayUnlockVideoSiteInput == "4" ]]; then
+            V2rayUnlockVideoSiteRuleText+="\"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockVideoSiteInput == "5" ]]; then
+            V2rayUnlockVideoSiteRuleText+="\"geosite:netflix\", \"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockVideoSiteInput == "6" ]]; then
+            V2rayUnlockVideoSiteRuleText+="\"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockVideoSiteInput == "9" ]]; then
+            V2rayUnlockVideoSiteRuleText+="\"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+
+        fi
+
+
+        echo
+        echo
+        green " =================================================="
+        yellow " 请选择避免弹出 Google reCAPTCHA 人机验证的方式"
+        echo
+        green " 1. 不解锁"
+        green " 2. 使用 WARP Sock5 代理解锁"
+        green " 3. 使用 WARP IPv6 解锁"
+        green " 4. 通过转发到可解锁的v2ray或xray服务器解锁"
+        echo
+        read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
+        isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
+
+        if [[ $isV2rayUnlockWarpModeInput == $isV2rayUnlockGoogleInput ]]; then
+            V2rayUnlockVideoSiteRuleText="\"geosite:google\", "
+
+        read -r -d '' xrayConfigRuleInput << EOM
+            {
+                "type": "field",
+                "outboundTag": "${V2rayUnlockVideoSiteOutboundTagText}",
+                "domain": [${V2rayUnlockVideoSiteRuleText}] 
+            },
+EOM
+
+        else
+            V2rayUnlockGoogleRuleText="\"geosite:google\""
+
+            if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
+                V2rayUnlockGoogleOutboundTagText="WARP_out"
+                echo
+                read -p "请输入WARP Sock5 代理服务器地址? 直接回车默认本机 127.0.0.1, 请输入:" unlockWARPServerIpInput
+                unlockWARPServerIpInput=${unlockWARPServerIpInput:-127.0.0.1}
+
+                echo
+                read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认40000, 请输入纯数字:" unlockWARPServerPortInput
+                unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}            
+
+            elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
+                V2rayUnlockGoogleOutboundTagText="IPv6_out"
+
+            elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
+                V2rayUnlockGoogleOutboundTagText="V2Ray_out"
+            else
+                V2rayUnlockGoogleOutboundTagText="IPv4_out"
+            fi
+
+        read -r -d '' xrayConfigRuleInput << EOM
+            {
+                "type": "field",
+                "outboundTag": "${V2rayUnlockGoogleOutboundTagText}",
+                "domain": [${V2rayUnlockGoogleRuleText}] 
+            },
+            {
+                "type": "field",
+                "outboundTag": "${V2rayUnlockVideoSiteOutboundTagText}",
+                "domain": [${V2rayUnlockVideoSiteRuleText}] 
+            },
+EOM
+        fi
+
 
     fi
 
 
-            
+
+
 
     read -r -d '' xrayConfigProxyInput << EOM
     
     ${v2rayConfigDNSInput}
     "outbounds": [
         {
-            "tag": "direct",
+            "tag": "IPv4_out",
             "protocol": "freedom",
             "settings": {
                 "domainStrategy": "${V2rayDNSUnlockText}"
             }
-        },
+        },        
         {
             "tag": "blackhole",
             "protocol": "blackhole",
             "settings": {}
         },
+
+        ${v2rayConfigOutboundV2rayServerInput}
         {
             "tag":"IPv6_out",
             "protocol": "freedom",
@@ -1939,7 +1989,6 @@ EOM
                 "domainStrategy": "UseIPv6" 
             }
         },
-        ${v2rayConfigOutboundV2rayServerInput}
         {
             "tag": "WARP_out",
             "protocol": "socks",
@@ -1965,11 +2014,7 @@ EOM
                 "outboundTag": "api",
                 "type": "field"
             },
-            {
-                "type": "field",
-                "outboundTag": "${V2rayUnlockOutboundTagText}",
-                "domain": [${V2rayUnlockRuleText}] 
-            }, 
+            ${xrayConfigRuleInput}
             {
                 "type": "field",
                 "protocol": [
@@ -1991,7 +2036,6 @@ EOM
         ]
     }
 }
-
 EOM
 
     # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
@@ -2005,7 +2049,8 @@ EOM
   ${xrayConfigProxyInput}
 EOF
     fi
-    
+
+
     configSSLCertPath="/usr/local/share/au"
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
@@ -2378,7 +2423,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-10-30 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2021-11-03 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="

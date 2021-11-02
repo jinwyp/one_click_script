@@ -2190,10 +2190,13 @@ function installWireguard(){
         fi
 
         echo
-        green " 如果已购买WARP+ subscription 订阅, 可以填入 license key 启用WARP+"
-        green " 查看方法 Android手机, 打开 open Cloudflare 1.1.1.1 app, 点击右上菜单 click hamburger menu button on the top-right corner "
+        echo
+        green " =================================================="
+        yellow " 如果已购买WARP+ subscription 订阅, 可以填入 license key 启用WARP+"
+        green " 查看方法: Android手机, 打开 open Cloudflare 1.1.1.1 app, 点击右上菜单 click hamburger menu button on the top-right corner "
         green " Navigate to: Account > Key, 选择 Account 菜单里的key 就是 license key"
-        green " 没有购买过WARP+ 订阅请直接按回车跳过, Press enter to continue without WARP+"
+        echo
+        yellow " 没有购买过WARP+ 订阅请直接按回车跳过, Press enter to continue without WARP+"
         echo
         read -p "请填写 license key?  直接回车默认跳过此步, 请输入:" isWARPLicenseKeyInput
         isWARPLicenseKeyInput=${isWARPLicenseKeyInput:-n}
@@ -2774,7 +2777,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-10-30 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2021-11-03 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
