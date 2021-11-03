@@ -952,21 +952,21 @@ function getLatestCentosKernelVersion(){
                     elrepo_kernel_version_ml_Teddysun510=${ver}
                 fi
 
-                if [[ ${ver} == *"5.13"* ]]; then
+                if [[ ${ver} == *"5.15"* ]]; then
                     # echo "符合所选版本的Linux 内核版本: ${ver}"
-                    elrepo_kernel_version_ml_Teddysun513=${ver}
+                    elrepo_kernel_version_ml_Teddysun515=${ver}
                 fi
 
-                if [[ ${ver} == *"5.12"* ]]; then
+                if [[ ${ver} == *"5.14"* ]]; then
                     # echo "符合所选版本的Linux 内核版本: ${ver}"
-                    elrepo_kernel_version_ml_Teddysun512=${ver}
+                    elrepo_kernel_version_ml_Teddysun514=${ver}
                 fi
             done
 
             elrepo_kernel_version_ml_TeddysunLatest=${elrepo_kernel_version_ml2_array[-1]}
             green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_TeddysunLatest}" 
             green "由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun510}" 
-            green "由 Teddysun 编译的 Centos 最新的Linux 5.xx 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun513}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 5.xx 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun514}" 
             
         fi
     fi
@@ -1072,7 +1072,7 @@ function installCentosKernelManual(){
         if [ "${kernelVersionFirstletter}" = "5" ]; then 
             linuxKernelByUser="elrepo"
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.11" || "${linuxKernelToInstallVersion}" == "5.12" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.14" ]]; then 
                 linuxKernelByUserTeddysun="Teddysun"
             fi
         else
@@ -1113,17 +1113,17 @@ function installCentosKernelManual(){
             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
 
-        elif [ "${linuxKernelToInstallVersion}" = "5.13" ]; then 
+        elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then
             elrepo_kernel_name="kernel-ml"
-            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun513}
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun515}
             elrepo_kernel_filename=""
             ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
 
             # https://fr1.teddyvps.com/kernel/el8/kernel-ml-devel-5.11.13-1.el8.elrepo.x86_64.rpm 
 
-        elif [ "${linuxKernelToInstallVersion}" = "5.12" ]; then 
+        elif [ "${linuxKernelToInstallVersion}" = "5.14" ]; then
             elrepo_kernel_name="kernel-ml"
-            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun512}
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun514}
             elrepo_kernel_filename=""
             ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
 
@@ -2537,8 +2537,9 @@ function checkWarpClientStatus(){
     else
         green " 状态显示-- WARP 已启动成功! "
         echo
-
-        isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} --connect-timeout 3 | grep warp | cut -d= -f2)
+        
+        sleep 3s
+        isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} --connect-timeout 5 | grep warp | cut -d= -f2)
         case ${isWarpClientMode} in
         on)
             green " 状态显示-- WARP Sock5 代理已启动成功, 端口号 ${configWarpPort} ! "
@@ -2686,7 +2687,7 @@ function checkWireguard(){
             echo
             echo "systemctl restart warp-svc"
             systemctl restart warp-svc
-            sleep 5
+            sleep 5s
             echo
             read -p "Press enter to continue"
             echo
@@ -2804,16 +2805,15 @@ function start_menu(){
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
-    green " 11. 安装 最新版本内核 5.14, 通过elrepo源安装"
+    green " 11. 安装 最新版本内核 5.15, 通过elrepo源安装"
     green " 12. 安装 最新版本LTS内核 5.4 LTS, 通过elrepo源安装"
     echo
     green " 13. 安装 内核 4.14 LTS, 下载安装"
     green " 14. 安装 内核 4.19 LTS, 下载安装"
     green " 15. 安装 内核 5.4 LTS, 下载安装"
     green " 16. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
-    green " 17. 安装 内核 5.12, Teddysun 编译"
-    green " 18. 安装 内核 5.13, Teddysun 编译"
-    green " 19. 安装 内核 5.14, 下载安装 (会安装当前最新的版本, 可能大于5.14内核)"
+    green " 17. 安装 内核 5.14, Teddysun 编译"
+    green " 18. 安装 内核 5.15, Teddysun 编译"
 
     elif [[ "${osRelease}" == "debian" ]]; then
     # echo
@@ -2881,7 +2881,7 @@ function start_menu(){
            preferIPV4 "redo"
         ;;
         11 )
-            linuxKernelToInstallVersion="5.14"
+            linuxKernelToInstallVersion="5.15"
             isInstallFromRepo="yes"
             installKernel
         ;;
@@ -2907,15 +2907,11 @@ function start_menu(){
             installKernel
         ;;
         17 )
-            linuxKernelToInstallVersion="5.12"
-            installKernel
-        ;;
-        18 )
-            linuxKernelToInstallVersion="5.13"
+            linuxKernelToInstallVersion="5.14"
             installKernel
         ;; 
-        19 )
-            linuxKernelToInstallVersion="5.14"
+        18 )
+            linuxKernelToInstallVersion="5.15"
             installKernel
         ;;
         21 )

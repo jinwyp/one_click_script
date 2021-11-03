@@ -1877,22 +1877,22 @@ EOM
         isV2rayUnlockVideoSiteInput=${isV2rayUnlockVideoSiteInput:-1}
 
         if [[ $isV2rayUnlockVideoSiteInput == "2" ]]; then
-            V2rayUnlockVideoSiteRuleText+="\"geosite:netflix\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\""
             
         elif [[ $isV2rayUnlockVideoSiteInput == "3" ]]; then
-            V2rayUnlockVideoSiteRuleText+="\"geosite:youtube\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:youtube\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "4" ]]; then
-            V2rayUnlockVideoSiteRuleText+="\"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "5" ]]; then
-            V2rayUnlockVideoSiteRuleText+="\"geosite:netflix\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "6" ]]; then
-            V2rayUnlockVideoSiteRuleText+="\"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "9" ]]; then
-            V2rayUnlockVideoSiteRuleText+="\"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
 
         fi
 
@@ -1911,7 +1911,12 @@ EOM
         isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
 
         if [[ $isV2rayUnlockWarpModeInput == $isV2rayUnlockGoogleInput ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:google\", "
+            V2rayUnlockVideoSiteRuleText+=", \"geosite:google\" "
+            V2rayUnlockVideoSiteRuleTextFirstChar="${V2rayUnlockVideoSiteRuleText:0:1}"
+
+            if [[ $V2rayUnlockVideoSiteRuleTextFirstChar == "," ]]; then
+                V2rayUnlockVideoSiteRuleText="${V2rayUnlockVideoSiteRuleText:1}"
+            fi
 
         read -r -d '' xrayConfigRuleInput << EOM
             {
