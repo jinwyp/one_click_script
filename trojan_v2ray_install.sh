@@ -653,7 +653,7 @@ function vps_netflix2(){
 }
 
 function vps_netflixlite(){
-	wget -N --no-check-certificate -O ./netflix.sh https://raw.githubusercontent.com/aipeach/SimpleNetflix/dev/nf.sh && chmod +x ./netflix.sh && ./netflix.sh
+	wget -N --no-check-certificate -O ./netflix.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./netflix.sh && ./netflix.sh
 }
 
 
