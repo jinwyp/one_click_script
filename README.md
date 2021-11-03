@@ -40,9 +40,8 @@
 ## Installation 安装方法  
 
 #### Usage 脚本使用方法
-```
+```bash
 bash <(curl -Lso- https://git.io/oneclick)
-
 ```
 
 
@@ -56,7 +55,6 @@ curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
-
 ```
 
 
@@ -72,16 +70,14 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ## Installation Linux kernel Wireguard 
 
 #### Usage 脚本使用方法
-```
+```bash
 bash <(curl -Lso- https://git.io/kernel.sh)
-
 ```
 
 #### 通过 wget 命令安装 Linux 内核 和 Wireguard  via wget to install script
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
-
 ```
 
 
