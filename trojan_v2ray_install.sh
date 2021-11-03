@@ -663,8 +663,9 @@ function vps_netflixgo(){
 
 
 function vps_superspeed(){
-	bash <(curl -Lso- https://git.io/superspeed)
+	bash <(curl -Lso- https://git.io/superspeed.sh)
 	#wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+	#wget -N --no-check-certificate https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 }
 
 function vps_bench(){
