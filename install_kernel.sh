@@ -2429,12 +2429,18 @@ function removeWireguard(){
     red " 准备卸载 Wireguard, Cloudflare WARP Client 和 命令行工具 Wgcf "
     green " ================================================== "
 
-    if [[ -f "${configWgcfBinPath}/wgcf" || -f "${configWgcfConfigFolderPath}/wgcf" || -f "/wgcf" ]]; then
+    if [[ -f "${configWgcfBinPath}/wgcf" || -f "${configWgcfConfigFolderPath}/wgcf" || -f "/wgcf" || -f "/usr/bin/warp-cli" ]]; then
         ${sudoCmd} systemctl stop wg-quick@wgcf.service
         ${sudoCmd} systemctl disable wg-quick@wgcf.service
 
         ${sudoCmd} wg-quick down wgcf
         ${sudoCmd} wg-quick disable wgcf
+
+
+        ${sudoCmd} warp-cli disable-always-on
+        ${sudoCmd} warp-cli disconnect
+        ${sudoCmd} systemctl stop warp-svc
+        sleep 5s
     else 
         red " 系统没有安装 Wireguard 和 Wgcf, 退出卸载"
         echo
