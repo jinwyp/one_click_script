@@ -39,6 +39,13 @@
 
 ## Installation 安装方法  
 
+#### Usage 脚本使用方法
+```
+bash <(curl -Lso- https://git.io/oneclick)
+
+```
+
+
 ####  通过 curl 命令安装  via curl to install script
 
 ```bash
@@ -64,19 +71,18 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ## Installation Linux kernel Wireguard 
 
+#### Usage 脚本使用方法
+```
+bash <(curl -Lso- https://git.io/kernel.sh)
+
+```
+
 #### 通过 wget 命令安装 Linux 内核 和 Wireguard  via wget to install script
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
 
 ```
-
-####  通过 curl 命令安装 Linux 内核 和 Wireguard  via curl to install script
-
-```bash
-curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
-```
-
 
 
 ## 使用说明 Usage 
@@ -207,3 +213,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 [CFIP]: https://github.com/BlueSkyXN/CFIP/releases
 [CloudflareScanner]: https://github.com/Spedoske/CloudflareScanner/releases/tag/1.1.2
 [CloudflareSpeedTest]: https://github.com/XIU2/CloudflareSpeedTest/releases/tag/v1.4.9
+
+
+
+
