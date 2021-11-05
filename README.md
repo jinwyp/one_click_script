@@ -1,4 +1,4 @@
-# Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
+# Easy install v2ray (xray) and trojan (trojan-go)
 
 
 # 脚本感谢 Fork与 [jinwyp/one_click_script]
