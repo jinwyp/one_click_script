@@ -865,22 +865,22 @@ function downloadFile(){
 function installKernel(){
 
     if [ "${linuxKernelToInstallVersion}" = "5.14" ]; then 
-        bbrplusKernelVersion="5.14.15-1"
+        bbrplusKernelVersion="5.14.17-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
-        bbrplusKernelVersion="5.10.76-1"
+        bbrplusKernelVersion="5.10.78-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "5.4" ]; then 
-        bbrplusKernelVersion="5.4.156-1"
+        bbrplusKernelVersion="5.4.158-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then 
-        bbrplusKernelVersion="4.19.214-1"
+        bbrplusKernelVersion="4.19.216-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
-        bbrplusKernelVersion="4.14.253-1"
+        bbrplusKernelVersion="4.14.254-1"
 
     elif [ "${linuxKernelToInstallVersion}" = "4.9" ]; then 
-        bbrplusKernelVersion="4.9.288-1"
+        bbrplusKernelVersion="4.9.289-1"
     fi    
 
 
