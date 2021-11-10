@@ -454,6 +454,7 @@ name=nginx repo
 baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/\$basearch/
 gpgcheck=0
 enabled=1
+sslverify=0
 
 EOF
         if ! rpm -qa | grep -qw iperf3; then
