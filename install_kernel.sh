@@ -112,8 +112,8 @@ getLinuxOSVersion(){
         # freedesktop.org and systemd
         source /etc/os-release
         osInfo=$NAME
-        osReleaseVersionNo=$VERSION_ID
-
+        osReleaseVersionNo=$(echo $VERSION_ID | sed 's/\..*//')    
+        
         if [ -n $VERSION_CODENAME ]; then
             osReleaseVersionCodeName=$VERSION_CODENAME
         fi

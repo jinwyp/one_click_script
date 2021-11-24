@@ -41,6 +41,7 @@ osInfo=""
 osRelease=""
 osReleaseVersion=""
 osReleaseVersionNo=""
+osReleaseVersionNoShort=""
 osReleaseVersionCodeName="CodeName"
 osSystemPackage=""
 osSystemMdPath=""
@@ -159,6 +160,8 @@ getLinuxOSVersion(){
         osInfo=$(uname -s)
         osReleaseVersionNo=$(uname -r)
     fi
+
+    osReleaseVersionNoShort=$(echo $osReleaseVersionNo | sed 's/\..*//')
 }
 
 osPort80=""
@@ -222,7 +225,7 @@ function testLinuxPortUsage(){
     fi
 
     if [ "$osRelease" == "centos" ]; then
-        if  [[ ${osReleaseVersionNo} == "6" || ${osReleaseVersionNo} == "5" ]]; then
+        if  [[ ${osReleaseVersionNoShort} == "6" || ${osReleaseVersionNoShort} == "5" ]]; then
             green " =================================================="
             red " 本脚本不支持 Centos 6 或 Centos 6 更早的版本"
             green " =================================================="
@@ -234,7 +237,7 @@ function testLinuxPortUsage(){
         ${sudoCmd} systemctl disable firewalld
 
     elif [ "$osRelease" == "ubuntu" ]; then
-        if  [[ ${osReleaseVersionNo} == "14" || ${osReleaseVersionNo} == "12" ]]; then
+        if  [[ ${osReleaseVersionNoShort} == "14" || ${osReleaseVersionNoShort} == "12" ]]; then
             green " =================================================="
             red " 本脚本不支持 Ubuntu 14 或 Ubuntu 14 更早的版本"
             green " =================================================="
@@ -336,9 +339,9 @@ function changeLinuxSSHPort(){
 
         if [ "$osRelease" == "centos" ] ; then
 
-            if  [[ ${osReleaseVersionNo} == "7" ]]; then
+            if  [[ ${osReleaseVersionNoShort} == "7" ]]; then
                 yum -y install policycoreutils-python
-            elif  [[ ${osReleaseVersionNo} == "8" ]]; then
+            elif  [[ ${osReleaseVersionNoShort} == "8" ]]; then
                 yum -y install policycoreutils-python-utils
             fi
 
@@ -366,6 +369,8 @@ function changeLinuxSSHPort(){
     fi
 }
 
+
+# 设置北京时区
 function setLinuxDateZone(){
 
     tempCurrentDateZone=$(date +'%z')
@@ -395,6 +400,33 @@ function setLinuxDateZone(){
 
     fi
     echo
+    
+    if [ "$osRelease" == "centos" ]; then   
+        if  [[ ${osReleaseVersionNoShort} == "7" ]]; then
+            $osSystemPackage -y install ntpdate
+            ntpdate -q 0.rhel.pool.ntp.org
+            systemctl enable ntpd
+            systemctl restart ntpd
+            ntpdate -u  pool.ntp.org
+
+        elif  [[ ${osReleaseVersionNoShort} == "8" ]]; then
+            $osSystemPackage -y install chrony
+            systemctl enable chronyd
+            systemctl restart chronyd
+
+            firewall-cmd --permanent --add-service=ntp
+            firewall-cmd --reload    
+
+            chronyc sources
+
+            echo
+        fi
+        
+    else
+        $osSystemPackage install -y ntp
+        systemctl enable ntp
+        systemctl restart ntp
+    fi    
 }
 
 
@@ -451,7 +483,7 @@ function installPackage(){
         cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
 [nginx]
 name=nginx repo
-baseurl=https://nginx.org/packages/centos/$osReleaseVersionNo/\$basearch/
+baseurl=https://nginx.org/packages/centos/$osReleaseVersionNoShort/\$basearch/
 gpgcheck=0
 enabled=1
 
@@ -469,7 +501,7 @@ EOF
 
 
         # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
-        if  [[ ${osReleaseVersionNo} == "8" ]]; then
+        if  [[ ${osReleaseVersionNoShort} == "8" ]]; then
             ${sudoCmd} yum module -y reset nginx
             ${sudoCmd} yum module -y enable nginx:1.18
             ${sudoCmd} yum module list nginx
