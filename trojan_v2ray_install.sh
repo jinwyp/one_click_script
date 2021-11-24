@@ -400,7 +400,7 @@ function setLinuxDateZone(){
 
     fi
     echo
-    
+
     if [ "$osRelease" == "centos" ]; then   
         if  [[ ${osReleaseVersionNoShort} == "7" ]]; then
             $osSystemPackage -y install ntpdate
