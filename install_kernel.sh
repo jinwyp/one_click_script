@@ -2923,10 +2923,10 @@ function start_menu(){
             checkWarpClientStatus
         ;;        
         11 )
-           installWireguard
+           installWARPClient
         ;;
         12 )
-           installWARPClient
+           installWireguard
         ;;      
         13 )
            installWireguard
