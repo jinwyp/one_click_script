@@ -2481,6 +2481,7 @@ function removeWireguard(){
     green "  Wireguard 和 Cloudflare WARP 命令行工具 Wgcf 卸载完毕 !"
     green " ================================================== "
 
+    removeWARP
 }
 
 function removeWARP(){
@@ -2843,7 +2844,7 @@ function start_menu(){
     green " 11. 安装官方 Cloudflare WARP Client 启动SOCKS5代理, 用于解锁 Netflix 限制"
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf ${versionWgcf}, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
     green " 13. 同时安装 官方 Cloudflare WARP Client, WireGuard 和 命令行工具 Wgcf, 不推荐 "
-    red " 14. 卸载 WireGuard 和 Cloudflare WARP" 
+    red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client" 
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 16. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
     green " 17. 查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"    
