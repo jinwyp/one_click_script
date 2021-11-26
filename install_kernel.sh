@@ -959,7 +959,7 @@ function getLatestCentosKernelVersion(){
         else
             elrepo_kernel_version_ml=${elrepo_kernel_version_ml_teddysun_ftp_array[-1]} 
             elrepo_kernel_version_ml_Teddysun_number_temp= $(echo ${elrepo_kernel_version_ml} | grep -oe "\.[0-9]*\." | grep -e "[0-9]*" )
-            elrepo_kernel_version_ml_Teddysun_latest_version_middle=$((elrepo_kernel_version_ml_TeddysunLatestMiddleNumber-1))
+            elrepo_kernel_version_ml_Teddysun_latest_version_middle=$((elrepo_kernel_version_ml_Teddysun_number_temp-1))
             elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
             
 
