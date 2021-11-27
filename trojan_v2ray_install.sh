@@ -843,6 +843,7 @@ downloadFilenameXray="Xray-linux-64.zip"
 versionTrojanWeb="2.10.5"
 downloadFilenameTrojanWeb="trojan-linux-amd64"
 
+isTrojanMultiPassword="no"
 promptInfoTrojanName=""
 isTrojanGo="no"
 isTrojanGoSupportWebsocket="false"
@@ -871,6 +872,7 @@ nginxErrorLogFilePath="${HOME}/nginx-error.log"
 promptInfoXrayInstall="V2ray"
 promptInfoXrayVersion=""
 promptInfoXrayName="v2ray"
+promptInfoXrayNameServiceName=""
 isXray="no"
 
 configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
@@ -1630,7 +1632,6 @@ function installTrojanV2rayWithNginx(){
 
 function downloadTrojanBin(){
 
-
     if [ "$isTrojanGo" = "no" ] ; then
         if [ -z $1 ]; then
             tempDownloadTrojanPath="${configTrojanPath}"
@@ -1702,7 +1703,7 @@ function installTrojanServer(){
 
     downloadTrojanBin
 
-
+    if [ "${isTrojanMultiPassword}" = "no" ] ; then
     read -r -d '' trojanConfigUserpasswordInput << EOM
         "${trojanPassword1}",
         "${trojanPassword2}",
@@ -1735,6 +1736,124 @@ function installTrojanServer(){
         "${configTrojanPasswordPrefixInput}202019",
         "${configTrojanPasswordPrefixInput}202020"
 EOM
+
+    else
+
+    read -r -d '' trojanConfigUserpasswordInput << EOM
+        "${trojanPassword1}",
+        "${trojanPassword2}",
+        "${trojanPassword3}",
+        "${trojanPassword4}",
+        "${trojanPassword5}",
+        "${trojanPassword6}",
+        "${trojanPassword7}",
+        "${trojanPassword8}",
+        "${trojanPassword9}",
+        "${trojanPassword10}",
+        "${configTrojanPasswordPrefixInput}202000",
+        "${configTrojanPasswordPrefixInput}202001",
+        "${configTrojanPasswordPrefixInput}202002",
+        "${configTrojanPasswordPrefixInput}202003",
+        "${configTrojanPasswordPrefixInput}202004",
+        "${configTrojanPasswordPrefixInput}202005",
+        "${configTrojanPasswordPrefixInput}202006",
+        "${configTrojanPasswordPrefixInput}202007",
+        "${configTrojanPasswordPrefixInput}202008",
+        "${configTrojanPasswordPrefixInput}202009",
+        "${configTrojanPasswordPrefixInput}202010",
+        "${configTrojanPasswordPrefixInput}202011",
+        "${configTrojanPasswordPrefixInput}202012",
+        "${configTrojanPasswordPrefixInput}202013",
+        "${configTrojanPasswordPrefixInput}202014",
+        "${configTrojanPasswordPrefixInput}202015",
+        "${configTrojanPasswordPrefixInput}202016",
+        "${configTrojanPasswordPrefixInput}202017",
+        "${configTrojanPasswordPrefixInput}202018",
+        "${configTrojanPasswordPrefixInput}202019",
+        "${configTrojanPasswordPrefixInput}202020",
+        "${configTrojanPasswordPrefixInput}202021",
+        "${configTrojanPasswordPrefixInput}202022",
+        "${configTrojanPasswordPrefixInput}202023",
+        "${configTrojanPasswordPrefixInput}202024",
+        "${configTrojanPasswordPrefixInput}202025",
+        "${configTrojanPasswordPrefixInput}202026",
+        "${configTrojanPasswordPrefixInput}202027",
+        "${configTrojanPasswordPrefixInput}202028",
+        "${configTrojanPasswordPrefixInput}202029",
+        "${configTrojanPasswordPrefixInput}202030",
+        "${configTrojanPasswordPrefixInput}202031",
+        "${configTrojanPasswordPrefixInput}202032",
+        "${configTrojanPasswordPrefixInput}202033",
+        "${configTrojanPasswordPrefixInput}202034",
+        "${configTrojanPasswordPrefixInput}202035",
+        "${configTrojanPasswordPrefixInput}202036",
+        "${configTrojanPasswordPrefixInput}202037",
+        "${configTrojanPasswordPrefixInput}202038",
+        "${configTrojanPasswordPrefixInput}202039",
+        "${configTrojanPasswordPrefixInput}202040",
+        "${configTrojanPasswordPrefixInput}202041",
+        "${configTrojanPasswordPrefixInput}202042",
+        "${configTrojanPasswordPrefixInput}202043",
+        "${configTrojanPasswordPrefixInput}202044",
+        "${configTrojanPasswordPrefixInput}202045",
+        "${configTrojanPasswordPrefixInput}202046",
+        "${configTrojanPasswordPrefixInput}202047",
+        "${configTrojanPasswordPrefixInput}202048",
+        "${configTrojanPasswordPrefixInput}202049",
+        "${configTrojanPasswordPrefixInput}202050",
+        "${configTrojanPasswordPrefixInput}202051",
+        "${configTrojanPasswordPrefixInput}202052",
+        "${configTrojanPasswordPrefixInput}202053",
+        "${configTrojanPasswordPrefixInput}202054",
+        "${configTrojanPasswordPrefixInput}202055",
+        "${configTrojanPasswordPrefixInput}202056",
+        "${configTrojanPasswordPrefixInput}202057",
+        "${configTrojanPasswordPrefixInput}202058",
+        "${configTrojanPasswordPrefixInput}202059",
+        "${configTrojanPasswordPrefixInput}202060",
+        "${configTrojanPasswordPrefixInput}202061",
+        "${configTrojanPasswordPrefixInput}202062",
+        "${configTrojanPasswordPrefixInput}202063",
+        "${configTrojanPasswordPrefixInput}202064",
+        "${configTrojanPasswordPrefixInput}202065",
+        "${configTrojanPasswordPrefixInput}202066",
+        "${configTrojanPasswordPrefixInput}202067",
+        "${configTrojanPasswordPrefixInput}202068",
+        "${configTrojanPasswordPrefixInput}202069",
+        "${configTrojanPasswordPrefixInput}202070",
+        "${configTrojanPasswordPrefixInput}202071",
+        "${configTrojanPasswordPrefixInput}202072",
+        "${configTrojanPasswordPrefixInput}202073",
+        "${configTrojanPasswordPrefixInput}202074",
+        "${configTrojanPasswordPrefixInput}202075",
+        "${configTrojanPasswordPrefixInput}202076",
+        "${configTrojanPasswordPrefixInput}202077",
+        "${configTrojanPasswordPrefixInput}202078",
+        "${configTrojanPasswordPrefixInput}202079",
+        "${configTrojanPasswordPrefixInput}202080",
+        "${configTrojanPasswordPrefixInput}202081",
+        "${configTrojanPasswordPrefixInput}202082",
+        "${configTrojanPasswordPrefixInput}202083",
+        "${configTrojanPasswordPrefixInput}202084",
+        "${configTrojanPasswordPrefixInput}202085",
+        "${configTrojanPasswordPrefixInput}202086",
+        "${configTrojanPasswordPrefixInput}202087",
+        "${configTrojanPasswordPrefixInput}202088",
+        "${configTrojanPasswordPrefixInput}202089",
+        "${configTrojanPasswordPrefixInput}202090",
+        "${configTrojanPasswordPrefixInput}202091",
+        "${configTrojanPasswordPrefixInput}202092",
+        "${configTrojanPasswordPrefixInput}202093",
+        "${configTrojanPasswordPrefixInput}202094",
+        "${configTrojanPasswordPrefixInput}202095",
+        "${configTrojanPasswordPrefixInput}202096",
+        "${configTrojanPasswordPrefixInput}202097",
+        "${configTrojanPasswordPrefixInput}202098",
+        "${configTrojanPasswordPrefixInput}202099"
+EOM
+
+    fi
+
 
 
     if [ "$isTrojanGo" = "no" ] ; then
@@ -1988,7 +2107,12 @@ EOF
 	yellow "密码8: ${trojanPassword8}"
 	yellow "密码9: ${trojanPassword9}"
 	yellow "密码10: ${trojanPassword10}"
-	yellow "您指定前缀的密码共20个: 从 ${configTrojanPasswordPrefixInput}202001 到 ${configTrojanPasswordPrefixInput}202020 都可以使用"
+
+    tempTextInfoTrojanPassword="您指定前缀的密码共100个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202099 都可以使用"
+    if [ "${isTrojanMultiPassword}" = "no" ] ; then
+        tempTextInfoTrojanPassword="您指定前缀的密码共20个: 从 ${configTrojanPasswordPrefixInput}202001 到 ${configTrojanPasswordPrefixInput}202020 都可以使用"
+    fi
+	yellow "${tempTextInfoTrojanPassword}" 
 	yellow "例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用"
 
     if [[ ${isTrojanGoSupportWebsocket} == "true" ]]; then
@@ -2097,7 +2221,7 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $confi
 密码8: ${trojanPassword8}
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
-您指定前缀的密码共20个: 从 ${configTrojanPasswordPrefixInput}202001 到 ${configTrojanPasswordPrefixInput}202020 都可以使用
+${tempTextInfoTrojanPassword}
 例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用
 
 如果是trojan-go开启了Websocket，那么Websocket path 路径为: /${configTrojanGoWebSocketPath}
@@ -2424,7 +2548,7 @@ EOM
     green " =================================================="
     yellow " 是否使用 Cloudflare WARP 解锁 流媒体 Netflix 等网站和避免弹出 Google reCAPTCHA 人机验证"
     green " 1. 不使用解锁"
-    green " 2. 使用 WARP Sock5 代理解锁"
+    green " 2. 使用 WARP Sock5 代理解锁 推荐使用"
     green " 3. 使用 WARP IPv6 解锁"
     green " 4. 通过转发到可解锁的v2ray或xray服务器解锁"
     echo
@@ -2442,6 +2566,15 @@ EOM
     V2rayUnlockVideoSiteOutboundTagText=""
     unlockWARPServerIpInput="127.0.0.1"
     unlockWARPServerPortInput="40000"
+    configWARPPortFilePath="${HOME}/wireguard/warp-port"
+    configWARPPortLocalServerPort="40000"
+    configWARPPortLocalServerText=""
+
+    if [[ -f "${configWARPPortFilePath}" ]]; then
+        configWARPPortLocalServerPort="$(cat ${configWARPPortFilePath})"
+        configWARPPortLocalServerText="检测到本地 WARP Sock5 已经运行, 端口号 ${configWARPPortLocalServerPort}"
+    fi
+
     if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
         echo
     else
@@ -2453,8 +2586,9 @@ EOM
             unlockWARPServerIpInput=${unlockWARPServerIpInput:-127.0.0.1}
 
             echo
-            read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认40000, 请输入纯数字:" unlockWARPServerPortInput
-            unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}
+            yellow " ${configWARPPortLocalServerText}"
+            read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" unlockWARPServerPortInput
+            unlockWARPServerPortInput=${unlockWARPServerPortInput:-$configWARPPortLocalServerPort}
 
         elif [[ $isV2rayUnlockWarpModeInput == "3" ]]; then
 
@@ -2616,7 +2750,7 @@ EOM
         echo
         green " 1. 不解锁"
         green " 2. 使用 WARP Sock5 代理解锁"
-        green " 3. 使用 WARP IPv6 解锁"
+        green " 3. 使用 WARP IPv6 解锁 推荐使用"
         green " 4. 通过转发到可解锁的v2ray或xray服务器解锁"
         echo
         read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
@@ -2657,8 +2791,9 @@ EOM
                 unlockWARPServerIpInput=${unlockWARPServerIpInput:-127.0.0.1}
 
                 echo
-                read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认40000, 请输入纯数字:" unlockWARPServerPortInput
-                unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}            
+                yellow " ${configWARPPortLocalServerText}"
+                read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" unlockWARPServerPortInput
+                unlockWARPServerPortInput=${unlockWARPServerPortInput:-$configWARPPortLocalServerPort}       
 
             elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
                 V2rayUnlockGoogleOutboundTagText="IPv6_out"
@@ -2821,6 +2956,7 @@ EOM
     trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
 
+    if [ "${isTrojanMultiPassword}" = "no" ] ; then
     read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
                     {
                         "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com"
@@ -2913,7 +3049,342 @@ EOM
                         "password": "${configTrojanPasswordPrefixInput}202020", "level": 0, "email": "password220@gmail.com"
                     }
 EOM
+    else
 
+    read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
+                    {
+                        "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword2}", "level": 0, "email": "password112@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword3}", "level": 0, "email": "password113@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword4}", "level": 0, "email": "password114@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword5}", "level": 0, "email": "password115@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword6}", "level": 0, "email": "password116@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword7}", "level": 0, "email": "password117@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword8}", "level": 0, "email": "password118@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword9}", "level": 0, "email": "password119@gmail.com"
+                    },
+                    {
+                        "password": "${trojanPassword10}", "level": 0, "email": "password120@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202000", "level": 0, "email": "password200@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202001", "level": 0, "email": "password201@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202002", "level": 0, "email": "password202@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202003", "level": 0, "email": "password203@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202004", "level": 0, "email": "password204@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202005", "level": 0, "email": "password205@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202006", "level": 0, "email": "password206@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202007", "level": 0, "email": "password207@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202008", "level": 0, "email": "password208@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202009", "level": 0, "email": "password209@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202010", "level": 0, "email": "password210@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202011", "level": 0, "email": "password211@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202012", "level": 0, "email": "password212@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202013", "level": 0, "email": "password213@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202014", "level": 0, "email": "password214@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202015", "level": 0, "email": "password215@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202016", "level": 0, "email": "password216@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202017", "level": 0, "email": "password217@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202018", "level": 0, "email": "password218@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202019", "level": 0, "email": "password219@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202020", "level": 0, "email": "password220@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202021", "level": 0, "email": "password221@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202022", "level": 0, "email": "password222@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202023", "level": 0, "email": "password223@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202024", "level": 0, "email": "password224@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202025", "level": 0, "email": "password225@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202026", "level": 0, "email": "password226@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202027", "level": 0, "email": "password227@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202028", "level": 0, "email": "password228@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202029", "level": 0, "email": "password229@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202030", "level": 0, "email": "password230@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202031", "level": 0, "email": "password231@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202032", "level": 0, "email": "password232@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202033", "level": 0, "email": "password233@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202034", "level": 0, "email": "password234@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202035", "level": 0, "email": "password235@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202036", "level": 0, "email": "password236@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202037", "level": 0, "email": "password237@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202038", "level": 0, "email": "password238@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202039", "level": 0, "email": "password239@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202040", "level": 0, "email": "password240@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202041", "level": 0, "email": "password241@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202042", "level": 0, "email": "password242@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202043", "level": 0, "email": "password243@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202044", "level": 0, "email": "password244@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202045", "level": 0, "email": "password245@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202046", "level": 0, "email": "password246@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202047", "level": 0, "email": "password247@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202048", "level": 0, "email": "password248@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202049", "level": 0, "email": "password249@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202050", "level": 0, "email": "password250@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202051", "level": 0, "email": "password251@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202052", "level": 0, "email": "password252@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202053", "level": 0, "email": "password253@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202054", "level": 0, "email": "password254@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202055", "level": 0, "email": "password255@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202056", "level": 0, "email": "password256@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202057", "level": 0, "email": "password257@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202058", "level": 0, "email": "password258@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202059", "level": 0, "email": "password259@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202060", "level": 0, "email": "password260@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202061", "level": 0, "email": "password261@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202062", "level": 0, "email": "password262@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202063", "level": 0, "email": "password263@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202064", "level": 0, "email": "password264@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202065", "level": 0, "email": "password265@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202066", "level": 0, "email": "password266@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202067", "level": 0, "email": "password267@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202068", "level": 0, "email": "password268@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202069", "level": 0, "email": "password269@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202070", "level": 0, "email": "password270@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202071", "level": 0, "email": "password271@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202072", "level": 0, "email": "password272@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202073", "level": 0, "email": "password273@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202074", "level": 0, "email": "password274@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202075", "level": 0, "email": "password275@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202076", "level": 0, "email": "password276@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202077", "level": 0, "email": "password277@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202078", "level": 0, "email": "password278@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202079", "level": 0, "email": "password279@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202080", "level": 0, "email": "password280@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202081", "level": 0, "email": "password281@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202082", "level": 0, "email": "password282@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202083", "level": 0, "email": "password283@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202084", "level": 0, "email": "password284@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202085", "level": 0, "email": "password285@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202086", "level": 0, "email": "password286@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202087", "level": 0, "email": "password287@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202088", "level": 0, "email": "password288@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202089", "level": 0, "email": "password289@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202090", "level": 0, "email": "password290@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202091", "level": 0, "email": "password291@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202092", "level": 0, "email": "password292@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202093", "level": 0, "email": "password293@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202094", "level": 0, "email": "password294@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202095", "level": 0, "email": "password295@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202096", "level": 0, "email": "password296@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202097", "level": 0, "email": "password297@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202098", "level": 0, "email": "password298@gmail.com"
+                    },
+                    {
+                        "password": "${configTrojanPasswordPrefixInput}202099", "level": 0, "email": "password299@gmail.com"
+                    }
+
+EOM
+    fi
 
     read -r -d '' v2rayConfigUserpasswordInput << EOM
                     {
@@ -3594,7 +4065,7 @@ EOF
     # 增加 V2ray启动脚本
     if [ "$isXray" = "no" ] ; then
     
-        cat > ${osSystemMdPath}v2ray.service <<-EOF
+        cat > ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service <<-EOF
 [Unit]
 Description=V2Ray
 Documentation=https://www.v2fly.org/
@@ -3617,7 +4088,7 @@ RestartPreventExitStatus=23
 WantedBy=multi-user.target
 EOF
     else
-        cat > ${osSystemMdPath}xray.service <<-EOF
+        cat > ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service <<-EOF
 [Unit]
 Description=Xray
 Documentation=https://www.v2fly.org/
@@ -3642,11 +4113,11 @@ EOF
     fi
 
     ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
-    ${sudoCmd} chmod +x ${osSystemMdPath}${promptInfoXrayName}.service
+    ${sudoCmd} chmod +x ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
     ${sudoCmd} systemctl daemon-reload
     
-    ${sudoCmd} systemctl enable ${promptInfoXrayName}.service
-    ${sudoCmd} systemctl restart ${promptInfoXrayName}.service
+    ${sudoCmd} systemctl enable ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+    ${sudoCmd} systemctl restart ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
 
 
 
@@ -4056,7 +4527,7 @@ EOF
     # 设置 cron 定时任务
     # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
 
-    (crontab -l ; echo "20 4 * * 0,1,2,3,4,5,6 systemctl restart ${promptInfoXrayName}.service") | sort - | uniq - | crontab -
+    (crontab -l ; echo "20 4 * * 0,1,2,3,4,5,6 systemctl restart ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service") | sort - | uniq - | crontab -
 
 
     green "======================================================================"
@@ -4070,9 +4541,10 @@ EOF
 	red "    ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json !"
 	green "    ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} !"
 	green "    ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath} ! "
-	green "    ${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}.service "
-	green "    ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  启动命令: systemctl start ${promptInfoXrayName}.service  重启命令: systemctl restart ${promptInfoXrayName}.service"
-	green "    ${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}.service "
+	green "    ${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
+	green "    ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service  启动命令: systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
+	green "    ${promptInfoXrayInstall} 重启命令: systemctl restart ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service"
+	green "    ${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
 	green "    ${promptInfoXrayInstall} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
 	echo ""
@@ -4114,12 +4586,12 @@ ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json
 ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath}
 ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath}
 
-${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}.service
+${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
 
-${promptInfoXrayInstall} 启动命令: systemctl start ${promptInfoXrayName}.service  
-${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}.service  
-${promptInfoXrayInstall} 重启命令: systemctl restart ${promptInfoXrayName}.service
-${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}.service 
+${promptInfoXrayInstall} 启动命令: systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service  
+${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service  
+${promptInfoXrayInstall} 重启命令: systemctl restart ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service 
 
 ${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !
 
@@ -4149,6 +4621,12 @@ function removeV2ray(){
         promptInfoXrayName="xray"
         isXray="yes"
     fi
+    if [ -f "${osSystemMdPath}${promptInfoXrayName}.service " ]; then
+        promptInfoXrayNameServiceName=""
+    else
+        promptInfoXrayNameServiceName="-jin"
+    fi
+
 
     echo
     green " ================================================== "
@@ -4156,12 +4634,12 @@ function removeV2ray(){
     green " ================================================== "
     echo
 
-    ${sudoCmd} systemctl stop ${promptInfoXrayName}.service
-    ${sudoCmd} systemctl disable ${promptInfoXrayName}.service
+    ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+    ${sudoCmd} systemctl disable ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
 
 
     rm -rf ${configV2rayPath}
-    rm -f ${osSystemMdPath}${promptInfoXrayName}.service
+    rm -f ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
     rm -f ${configV2rayAccessLogFilePath}
     rm -f ${configV2rayErrorLogFilePath}
 
@@ -4178,6 +4656,11 @@ function upgradeV2ray(){
         promptInfoXrayName="xray"
         isXray="yes"
     fi
+    if [ -f "${osSystemMdPath}${promptInfoXrayName}.service " ]; then
+        promptInfoXrayNameServiceName=""
+    else
+        promptInfoXrayNameServiceName="-jin"
+    fi
 
     if [ "$isXray" = "no" ] ; then
         getTrojanAndV2rayVersion "v2ray"
@@ -4193,7 +4676,7 @@ function upgradeV2ray(){
 
 
 
-    ${sudoCmd} systemctl stop ${promptInfoXrayName}.service
+    ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
 
     mkdir -p ${configDownloadTempPath}/upgrade/${promptInfoXrayName}
 
@@ -4208,7 +4691,7 @@ function upgradeV2ray(){
     mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
 
     ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
-    ${sudoCmd} systemctl start ${promptInfoXrayName}.service
+    ${sudoCmd} systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
 
 
     if [ "$isXray" = "no" ] ; then
@@ -5098,6 +5581,18 @@ function start_menu(){
         30 )
             startMenuOther
         ;;
+        66 )
+            promptInfoXrayNameServiceName="-jin"
+            echo "promptInfoXrayNameServiceName: -jin"
+            sleep 3s
+            start_menu
+        ;;
+        67 )
+            isTrojanMultiPassword="yes"
+            echo "isTrojanMultiPassword: yes"
+            sleep 3s
+            start_menu
+        ;;        
         76 )
             vps_netflixlite
         ;;

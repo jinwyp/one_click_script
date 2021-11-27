@@ -1716,7 +1716,7 @@ EOM
     green " =================================================="
     yellow " 是否使用 Cloudflare WARP 解锁 流媒体 Netflix 等网站和避免弹出 Google reCAPTCHA 人机验证"
     green " 1. 不使用解锁"
-    green " 2. 使用 WARP Sock5 代理解锁"
+    green " 2. 使用 WARP Sock5 代理解锁 推荐使用"
     green " 3. 使用 WARP IPv6 解锁"
     green " 4. 通过转发到可解锁的v2ray或xray服务器解锁"
     echo
@@ -1734,6 +1734,15 @@ EOM
     V2rayUnlockVideoSiteOutboundTagText=""
     unlockWARPServerIpInput="127.0.0.1"
     unlockWARPServerPortInput="40000"
+    configWARPPortFilePath="${HOME}/wireguard/warp-port"
+    configWARPPortLocalServerPort="40000"
+    configWARPPortLocalServerText=""
+
+    if [[ -f "${configWARPPortFilePath}" ]]; then
+        configWARPPortLocalServerPort="$(cat ${configWARPPortFilePath})"
+        configWARPPortLocalServerText="检测到本地 WARP Sock5 已经运行, 端口号 ${configWARPPortLocalServerPort}"
+    fi
+    
     if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
         echo
     else
@@ -1745,8 +1754,9 @@ EOM
             unlockWARPServerIpInput=${unlockWARPServerIpInput:-127.0.0.1}
 
             echo
-            read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认40000, 请输入纯数字:" unlockWARPServerPortInput
-            unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}
+            yellow " ${configWARPPortLocalServerText}"
+            read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" unlockWARPServerPortInput
+            unlockWARPServerPortInput=${unlockWARPServerPortInput:-$configWARPPortLocalServerPort}
 
         elif [[ $isV2rayUnlockWarpModeInput == "3" ]]; then
 
@@ -1908,7 +1918,7 @@ EOM
         echo
         green " 1. 不解锁"
         green " 2. 使用 WARP Sock5 代理解锁"
-        green " 3. 使用 WARP IPv6 解锁"
+        green " 3. 使用 WARP IPv6 解锁 推荐使用"
         green " 4. 通过转发到可解锁的v2ray或xray服务器解锁"
         echo
         read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
@@ -1940,8 +1950,9 @@ EOM
                 unlockWARPServerIpInput=${unlockWARPServerIpInput:-127.0.0.1}
 
                 echo
-                read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认40000, 请输入纯数字:" unlockWARPServerPortInput
-                unlockWARPServerPortInput=${unlockWARPServerPortInput:-40000}            
+                yellow " ${configWARPPortLocalServerText}"
+                read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" unlockWARPServerPortInput
+                unlockWARPServerPortInput=${unlockWARPServerPortInput:-$configWARPPortLocalServerPort}           
 
             elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
                 V2rayUnlockGoogleOutboundTagText="IPv6_out"

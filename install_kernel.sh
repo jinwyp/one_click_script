@@ -1974,7 +1974,7 @@ function installWARPClient(){
     ${sudoCmd} systemctl enable warp-svc
 
     yes | warp-cli register
-
+    echo
     echo "warp-cli set-mode proxy"
     warp-cli set-mode proxy
     echo
