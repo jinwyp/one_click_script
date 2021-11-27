@@ -1583,11 +1583,6 @@ function installAirUniverse(){
     (crontab -l ; echo "32 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
 
 
-    replaceAirUniverseConfig
-}
-
-function replaceAirUniverseConfig(){
-
     if test -s ${configAirUniverseConfigFilePath}; then
 
         echo
@@ -1634,7 +1629,7 @@ EOM
             sed -i "s/10085/${configXrayPort}/g" ${configAirUniverseXrayConfigFilePath}
 
 
-            replaceAirUniverseConfigIPV6
+            replaceAirUniverseConfigIPV6 "norestart"
             
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
@@ -1651,12 +1646,10 @@ EOM
         fi
 
 
-
     else
         manageAirUniverse
     fi
     
-
 }
 
 
@@ -1788,12 +1781,21 @@ EOM
             fi
 
             isV2rayUnlockOutboundServerTCPText="tcp"
+            unlockOutboundServerWebSocketSettingText=""
             if [[ $isV2rayUnlockServerProtocolInput == "3" ||  $isV2rayUnlockServerProtocolInput == "5" ]]; then
                 isV2rayUnlockOutboundServerTCPText="ws"
                 echo
                 yellow " 请填写可解锁流媒体的V2ray或Xray服务器Websocket Path, 默认为/"
                 read -p "请填写Websocket Path? 直接回车默认为/ , 请输入(不要包含/):" isV2rayUnlockServerWSPathInput
                 isV2rayUnlockServerWSPathInput=${isV2rayUnlockServerWSPathInput:-""}
+                read -r -d '' unlockOutboundServerWebSocketSettingText << EOM
+
+                ,
+                "wsSettings": {
+                    "path": "/${isV2rayUnlockServerWSPathInput}"
+                }
+
+EOM                
             fi
 
 
@@ -1864,10 +1866,8 @@ EOM
                 "security": "${isV2rayUnlockOutboundServerTLSText}",
                 "${isV2rayUnlockOutboundServerTLSText}Settings": {
                     "serverName": "${isV2rayUnlockServerDomainInput}"
-                },                
-                "wsSettings": {
-                    "path": "/${isV2rayUnlockServerWSPathInput}"
                 }
+                ${unlockOutboundServerWebSocketSettingText}  
             }
         },
 EOM
@@ -2075,14 +2075,21 @@ EOF
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
-    systemctl restart xray.service
-    airu restart
+    # -z 为空
+    if [[ -z $1 ]]; then
+        
+        systemctl restart xray.service
+        airu restart
+
+    fi
+
 }
 
 function manageAirUniverse(){
     echo -e ""
-    echo "Air-Universe 管理脚本使用方法: "
-    echo "------------------------------------------"
+    green " =================================================="       
+    echo "    Air-Universe 管理脚本使用方法: "
+    echo 
     echo "airu              - 显示管理菜单 (功能更多)"
     echo "airu start        - 启动 Air-Universe"
     echo "airu stop         - 停止 Air-Universe"
@@ -2096,6 +2103,10 @@ function manageAirUniverse(){
     echo "airu uninstall    - 卸载 Air-Universe"
     echo "airu version      - 查看 Air-Universe 版本"
     echo "------------------------------------------"
+    green " Air-Universe 配置文件 ${configAirUniverseConfigFilePath} "
+    green " Xray 配置文件 ${configAirUniverseXrayConfigFilePath}"
+    green " =================================================="    
+    echo
 }
 
 function editAirUniverseConfig(){
@@ -2270,8 +2281,9 @@ function getHTTPSCertificate(){
 
 
 function compareRealIpWithLocalIp(){
-
-    yellow " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
+    echo
+    echo
+    green " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
     read -p "是否检测域名指向的IP正确? 请输入[Y/n]?" isDomainValidInput
     isDomainValidInput=${isDomainValidInput:-Y}
 
@@ -2330,7 +2342,8 @@ function getHTTPS(){
     green " ================================================== "
 
     read configSSLDomain
-
+    
+    echo
     read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]?" isDomainSSLRequestInput
     isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
@@ -2611,9 +2624,6 @@ function start_menu(){
         ;; 
         56 )
             replaceAirUniverseConfigIPV6
-        ;; 
-        58 )
-            replaceAirUniverseConfig
         ;; 
         71 )
             getHTTPS

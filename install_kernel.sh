@@ -2646,7 +2646,7 @@ function checkWireguard(){
     green " 4. 启动 Wireguard "
     green " 5. 停止 Wireguard "
     green " 6. 重启 Wireguard "
-    green " 7. 查看 Wireguard 运行状态 wgcf status"
+    green " 7. 查看 Wireguard 和 WARP 运行状态 wgcf status "
     green " 8. 查看 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
     green " 9. 用VI 编辑 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
     echo
@@ -2704,13 +2704,16 @@ function checkWireguard(){
             checkWireguardBootStatus
         ;;
         7 )
-            echo "Check device status:"
-            echo "wgcf status"
+            echo
+            green "Running command 'wgcf status' to check device status :"
+            echo
             wgcf status
             echo
-            echo "Verify Warp/Warp+ works:"
-            echo "wgcf trace"
-            wgcf trace            
+            echo
+            green "Running command 'wgcf trace' to verify WARP/WARP+ works :"
+            echo
+            wgcf trace
+            echo          
         ;; 
         8 )
             echo
@@ -2840,14 +2843,15 @@ function start_menu(){
     green " 7. 重启 Wireguard "    
     green " 8. 查看 WARP Sock5 代理运行状态"
     green " 9. 重启 WARP Sock5"    
+    green " 10. 查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"  
     echo
     green " 11. 安装官方 Cloudflare WARP Client 启动SOCKS5代理, 用于解锁 Netflix 限制"
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf ${versionWgcf}, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
     green " 13. 同时安装 官方 Cloudflare WARP Client, WireGuard 和 命令行工具 Wgcf, 不推荐 "
     red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client" 
+    echo
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 16. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
-    green " 17. 查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"    
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -2915,13 +2919,16 @@ function start_menu(){
         7 )
             restartWireguard
             checkWireguardBootStatus
-        ;;        
+        ;;
         8 )
             checkWarpClientStatus
         ;;
         9 )
             restartWARP
             checkWarpClientStatus
+        ;;
+        10 )
+           checkWireguard
         ;;        
         11 )
            installWARPClient
@@ -2941,10 +2948,7 @@ function start_menu(){
         ;;
         16 )
            preferIPV4 "redo"
-        ;;
-        17 )
-           checkWireguard
-        ;;        
+        ;;     
         31 )
             linuxKernelToInstallVersion="5.15"
             isInstallFromRepo="yes"

@@ -2620,12 +2620,22 @@ EOM
             fi
 
             isV2rayUnlockOutboundServerTCPText="tcp"
+            unlockOutboundServerWebSocketSettingText=""
             if [[ $isV2rayUnlockServerProtocolInput == "3" ||  $isV2rayUnlockServerProtocolInput == "5" ]]; then
                 isV2rayUnlockOutboundServerTCPText="ws"
                 echo
                 yellow " 请填写可解锁流媒体的V2ray或Xray服务器Websocket Path, 默认为/"
                 read -p "请填写Websocket Path? 直接回车默认为/ , 请输入(不要包含/):" isV2rayUnlockServerWSPathInput
                 isV2rayUnlockServerWSPathInput=${isV2rayUnlockServerWSPathInput:-""}
+                read -r -d '' unlockOutboundServerWebSocketSettingText << EOM
+
+                ,
+                "wsSettings": {
+                    "path": "/${isV2rayUnlockServerWSPathInput}"
+                }
+
+EOM
+
             fi
 
 
@@ -2696,10 +2706,8 @@ EOM
                 "security": "${isV2rayUnlockOutboundServerTLSText}",
                 "${isV2rayUnlockOutboundServerTLSText}Settings": {
                     "serverName": "${isV2rayUnlockServerDomainInput}"
-                },                
-                "wsSettings": {
-                    "path": "/${isV2rayUnlockServerWSPathInput}"
                 }
+                ${unlockOutboundServerWebSocketSettingText}
             }
         },
 EOM
