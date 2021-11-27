@@ -958,10 +958,10 @@ function getLatestCentosKernelVersion(){
             red " 无法获取到由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号 "
         else
             elrepo_kernel_version_ml=${elrepo_kernel_version_ml_teddysun_ftp_array[-1]} 
-            elrepo_kernel_version_ml_Teddysun_number_temp= $(echo ${elrepo_kernel_version_ml} | grep -oe "\.[0-9]*\." | grep -e "[0-9]*" )
+            elrepo_kernel_version_ml_Teddysun_number_temp=$(echo ${elrepo_kernel_version_ml} | grep -oe "\.[0-9]*\." | grep -oe "[0-9]*" )
             elrepo_kernel_version_ml_Teddysun_latest_version_middle=$((elrepo_kernel_version_ml_Teddysun_number_temp-1))
             elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
-            
+
 
             for ver in ${elrepo_kernel_version_ml_teddysun_ftp_array[@]}; do
                 
@@ -971,7 +971,7 @@ function getLatestCentosKernelVersion(){
                 fi
 
                 if [[ ${ver} == *"${elrepo_kernel_version_ml_Teddysun_latest_version}"* ]]; then
-                    echo "符合所选版本的Linux 内核版本: ${ver}, ${elrepo_kernel_version_ml_Teddysun_latest_version}"
+                    # echo "符合所选版本的Linux 内核版本: ${ver}, ${elrepo_kernel_version_ml_Teddysun_latest_version}"
                     elrepo_kernel_version_ml_Teddysun_latest=${ver}
                 fi
             done

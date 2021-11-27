@@ -1634,8 +1634,12 @@ EOM
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
+            echo
+            green " =================================================="
             systemctl restart xray.service
             airu restart
+            green " Air-Universe 安装成功 !"
+            green " =================================================="
             
             manageAirUniverse
         else
@@ -1789,15 +1793,13 @@ EOM
                 read -p "请填写Websocket Path? 直接回车默认为/ , 请输入(不要包含/):" isV2rayUnlockServerWSPathInput
                 isV2rayUnlockServerWSPathInput=${isV2rayUnlockServerWSPathInput:-""}
                 read -r -d '' unlockOutboundServerWebSocketSettingText << EOM
-
                 ,
                 "wsSettings": {
                     "path": "/${isV2rayUnlockServerWSPathInput}"
                 }
+EOM
 
-EOM                
             fi
-
 
             unlockOutboundServerXTLSFlowText=""
             isV2rayUnlockOutboundServerTLSText="tls"
@@ -1821,6 +1823,7 @@ EOM
                 read -r -d '' unlockOutboundServerXTLSFlowText << EOM
                                 "flow": "${unlockOutboundServerXTLSFlowValue}",
 EOM
+
             fi
 
 
@@ -2077,9 +2080,11 @@ EOF
 
     # -z 为空
     if [[ -z $1 ]]; then
-        
+        echo
+        green " =================================================="
         systemctl restart xray.service
         airu restart
+        green " =================================================="
 
     fi
 
