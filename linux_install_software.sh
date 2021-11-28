@@ -1638,6 +1638,7 @@ EOM
             green " =================================================="
             systemctl restart xray.service
             airu restart
+            echo
             green " Air-Universe 安装成功 !"
             green " =================================================="
             
@@ -2461,19 +2462,17 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2021-11-03 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2021-11-29 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
-    green " 2. 安装 老版本 BBR-PLUS 加速4合一脚本 by chiakge"
-    green " 3. 安装 新版本 BBR-PLUS 加速6合一脚本 by ylx2016"
     echo
-    green " 5. 编辑 SSH 登录的用户公钥 用于SSH密码登录免登录"
+    green " 5. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
     green " 6. 修改 SSH 登陆端口号"
     green " 7. 设置时区为北京时间"
     green " 8. 用VI 编辑 /etc/hosts"
-
+    
     echo
     green " 11. 安装 Vim Nano Micro 编辑器"
     green " 12. 安装 Nodejs 与 PM2"
@@ -2533,9 +2532,13 @@ function start_menu(){
         ;;
         6 )
             changeLinuxSSHPort
+            sleep 10s
+            start_menu
         ;;
         7 )
             setLinuxDateZone
+            sleep 4s
+            start_menu
         ;;
         8 )
             DSMEditHosts

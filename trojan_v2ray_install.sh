@@ -701,6 +701,9 @@ function vps_superspeed(){
 	#wget -N --no-check-certificate https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 }
 
+function vps_yabs(){
+	curl -sL yabs.sh | bash
+}
 function vps_bench(){
 	wget -N --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh && chmod +x bench.sh && bash bench.sh
 }
@@ -5204,15 +5207,16 @@ function startMenuOther(){
     red " 29. 卸载 v2ray或Xray"   
     green " =================================================="
     red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
-    green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）"
-    green " 42. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 多处数据中心的节点测试 ）推荐使用"
-	green " 43. testrace 回程路由测试 （四网路由测试）"
-	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、节点测速） 推荐使用"
+    green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）推荐使用 "
+    green " 42. yet-another-bench-script 综合测试 （包含 CPU IO 测试 国际多个数据节点网速测试）推荐使用"
+    green " 43. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 国内多个数据节点网速测试）"
+	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、节点测速） "
     green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
-    green " 46. 只测回程 节点回程测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
+    green " 46. testrace 回程路由测试 by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
+    green " 47. autoBestTrace 回程路由测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     echo
     green " 51. 测试VPS 是否支持Netflix, Go语言版本 推荐使用 by sjlleo"
-    green " 52. 测试VPS 是否支持Netflix, 和 Youtube  by aipeach"
+    green " 52. 测试VPS 是否支持Netflix 和 Youtube 支持WARP sock5 测试 推荐使用"
     green " 53. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
     green " 54. 测试VPS 是否支持Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
     echo
@@ -5333,10 +5337,10 @@ function startMenuOther(){
             vps_superspeed
         ;;
         42 )
-            vps_bench
-        ;;
+            vps_yabs
+        ;;        
         43 )
-            vps_testrace
+            vps_bench
         ;;
         44 )
             vps_LemonBench
@@ -5345,6 +5349,9 @@ function startMenuOther(){
             vps_zbench
         ;;
         46 )
+            vps_testrace
+        ;;        
+        47 )
             vps_autoBestTrace
         ;;        
         51 )
@@ -5422,7 +5429,7 @@ function start_menu(){
     fi
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-11-03 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-11-29 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
@@ -5460,7 +5467,7 @@ function start_menu(){
     green " 32. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
-    green " 35. 用 VI 编辑 authorized_keys 文件, 方便填入公钥, 免密码登录, 增加安全性"
+    green " 35. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
     green " 88. 升级脚本"
     green " 0. 退出脚本"
     echo

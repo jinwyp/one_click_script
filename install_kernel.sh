@@ -2822,7 +2822,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-11-03 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2021-11-29 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -2843,12 +2843,14 @@ function start_menu(){
     green " 3. 开启 BBR Plus 加速"
     green " 4. 优化 系统网络配置"
     red " 5. 删除 系统网络优化配置"
+
     echo
     green " 6. 查看 Wireguard 运行状态"
     green " 7. 重启 Wireguard "    
     green " 8. 查看 WARP Sock5 代理运行状态"
     green " 9. 重启 WARP Sock5"    
     green " 10. 查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"  
+
     echo
     green " 11. 安装官方 Cloudflare WARP Client 启动SOCKS5代理, 用于解锁 Netflix 限制"
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf ${versionWgcf}, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
