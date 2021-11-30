@@ -697,8 +697,13 @@ function vps_netflixgo(){
 
 function vps_superspeed(){
 	bash <(curl -Lso- https://git.io/superspeed.sh)
+    #wget -N --no-check-certificate https://raw.githubusercontent.com/flyzy2005/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+    #wget -N --no-check-certificate https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+
+    # bash <(curl -Lso- https://git.io/superspeed)
 	#wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
-	#wget -N --no-check-certificate https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+	
+	#wget -N --no-check-certificate https://raw.githubusercontent.com/oooldking/script/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 }
 
 function vps_yabs(){
@@ -5224,7 +5229,7 @@ function startMenuOther(){
     green " 62. 安装 宝塔面板破解版 by fenhao.me"
     green " 63. 安装 宝塔面板纯净版 by hostcli.com"
     echo
-    green " 9. 返回上级菜单"
+    green " 99. 返回上级菜单"
     green " 0. 退出脚本"
     echo
     read -p "请输入数字:" menuNumberInput
@@ -5381,7 +5386,7 @@ function startMenuOther(){
         82 )
             installBBR2
         ;;
-        9)
+        99)
             start_menu
         ;;
         0 )
