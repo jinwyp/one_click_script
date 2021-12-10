@@ -4631,93 +4631,108 @@ EOF
     
 
 function removeV2ray(){
-    if [ -f "${configV2rayPath}/xray" ]; then
-        promptInfoXrayName="xray"
-        isXray="yes"
-    fi
-    if [ -f "${osSystemMdPath}${promptInfoXrayName}.service " ]; then
-        promptInfoXrayNameServiceName=""
+
+    if [[ -f "${configV2rayPath}/xray" || -f "${configV2rayPath}/v2ray" ]]; then
+
+        if [ -f "${configV2rayPath}/xray" ]; then
+            promptInfoXrayName="xray"
+            isXray="yes"
+        fi
+
+        if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service " ]; then
+            promptInfoXrayNameServiceName="-jin"
+        else
+            promptInfoXrayNameServiceName=""
+        fi
+
+        echo
+        green " ================================================== "
+        red " 准备卸载已安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName} "
+        green " ================================================== "
+        echo
+
+        ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+        ${sudoCmd} systemctl disable ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+
+
+        rm -rf ${configV2rayPath}
+        rm -f ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+        rm -f ${configV2rayAccessLogFilePath}
+        rm -f ${configV2rayErrorLogFilePath}
+
+        echo
+        green " ================================================== "
+        green "  ${promptInfoXrayName}${promptInfoXrayNameServiceName} 卸载完毕 !"
+        green " ================================================== "
+        
     else
-        promptInfoXrayNameServiceName="-jin"
+        red " 系统没有安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName}, 退出卸载"
     fi
-
-
-    echo
-    green " ================================================== "
-    red " 准备卸载已安装 ${promptInfoXrayName} "
-    green " ================================================== "
     echo
 
-    ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-    ${sudoCmd} systemctl disable ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-
-
-    rm -rf ${configV2rayPath}
-    rm -f ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-    rm -f ${configV2rayAccessLogFilePath}
-    rm -f ${configV2rayErrorLogFilePath}
-
-    echo
-    green " ================================================== "
-    green "  ${promptInfoXrayName} 卸载完毕 !"
-    green " ================================================== "
-    echo
 }
 
 
 function upgradeV2ray(){
-    if [ -f "${configV2rayPath}/xray" ]; then
-        promptInfoXrayName="xray"
-        isXray="yes"
-    fi
-    if [ -f "${osSystemMdPath}${promptInfoXrayName}.service " ]; then
-        promptInfoXrayNameServiceName=""
+
+    if [[ -f "${configV2rayPath}/xray" || -f "${configV2rayPath}/v2ray" ]]; then
+        if [ -f "${configV2rayPath}/xray" ]; then
+            promptInfoXrayName="xray"
+            isXray="yes"
+        fi
+
+        if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service " ]; then
+            promptInfoXrayNameServiceName="-jin"
+        else
+            promptInfoXrayNameServiceName=""
+        fi
+
+        if [ "$isXray" = "no" ] ; then
+            getTrojanAndV2rayVersion "v2ray"
+            green " =================================================="
+            green "       开始升级 V2ray Version: ${versionV2ray} !"
+            green " =================================================="
+        else
+            getTrojanAndV2rayVersion "xray"
+            green " =================================================="
+            green "       开始升级 Xray Version: ${versionXray} !"
+            green " =================================================="
+        fi
+
+
+        ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+
+        mkdir -p ${configDownloadTempPath}/upgrade/${promptInfoXrayName}
+
+        downloadV2rayXrayBin "upgrade"
+
+        if [ "$isXray" = "no" ] ; then
+            mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
+        fi
+
+        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/${promptInfoXrayName} ${configV2rayPath}
+        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
+        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
+
+        ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
+        ${sudoCmd} systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+
+
+        if [ "$isXray" = "no" ] ; then
+            green " ================================================== "
+            green "     升级成功 V2ray Version: ${versionV2ray} !"
+            green " ================================================== "
+        else
+            getTrojanAndV2rayVersion "xray"
+            green " =================================================="
+            green "     升级成功 Xray Version: ${versionXray} !"
+            green " =================================================="
+        fi
+                
     else
-        promptInfoXrayNameServiceName="-jin"
+        red " 系统没有安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName}, 退出卸载"
     fi
-
-    if [ "$isXray" = "no" ] ; then
-        getTrojanAndV2rayVersion "v2ray"
-        green " =================================================="
-        green "       开始升级 V2ray Version: ${versionV2ray} !"
-        green " =================================================="
-    else
-        getTrojanAndV2rayVersion "xray"
-        green " =================================================="
-        green "       开始升级 Xray Version: ${versionXray} !"
-        green " =================================================="
-    fi
-
-
-
-    ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-
-    mkdir -p ${configDownloadTempPath}/upgrade/${promptInfoXrayName}
-
-    downloadV2rayXrayBin "upgrade"
-
-    if [ "$isXray" = "no" ] ; then
-        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
-    fi
-
-    mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/${promptInfoXrayName} ${configV2rayPath}
-    mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
-    mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
-
-    ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
-    ${sudoCmd} systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-
-
-    if [ "$isXray" = "no" ] ; then
-        green " ================================================== "
-        green "     升级成功 V2ray Version: ${versionV2ray} !"
-        green " ================================================== "
-    else
-        getTrojanAndV2rayVersion "xray"
-        green " =================================================="
-        green "     升级成功 Xray Version: ${versionXray} !"
-        green " =================================================="
-    fi
+    echo
 }
 
 

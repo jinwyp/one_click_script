@@ -2483,6 +2483,7 @@ function removeWireguard(){
 
     else 
         red " 系统没有安装 Wireguard 和 Wgcf, 退出卸载"
+        echo
     fi
 
 
@@ -2519,6 +2520,7 @@ function removeWARP(){
         green " ================================================== "        
     else 
         red " 系统没有安装 Cloudflare WARP linux client, 退出卸载"
+        echo
     fi
 
 }
