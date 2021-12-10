@@ -2435,58 +2435,58 @@ function removeWireguard(){
         ${sudoCmd} wg-quick down wgcf
         ${sudoCmd} wg-quick disable wgcf
 
+
+        if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+
+            $osSystemPackage -y remove wireguard-tools
+            $osSystemPackage -y remove wireguard
+
+        elif [[ "${osRelease}" == "centos" ]]; then
+            $osSystemPackage -y remove kmod-wireguard
+            $osSystemPackage -y remove wireguard-dkms
+            $osSystemPackage -y remove wireguard-tools
+        fi
+
+        echo
+        read -p "是否删除Wgcf申请的账号文件, 默认不删除, 方便以后不用在重新注册, 请输入[y/N]:" isWgcfAccountFileRemoveInput
+        isWgcfAccountFileRemoveInput=${isWgcfAccountFileRemoveInput:-n}
+
+        echo
+        if [[ $isWgcfAccountFileRemoveInput == [Yy] ]]; then
+            rm -rf ${configWgcfConfigFolderPath}
+            green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已删除!"
+            
+        else
+            rm -f ${configWgcfProfileFilePath}
+            green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已保留! "
+        fi
+        
+
+        rm -f ${configWgcfBinPath}/wgcf
+        rm -rf ${configWireGuardConfigFileFolder}
+        rm -f ${osSystemMdPath}wg-quick@wgcf.service
+
+        rm -f /usr/bin/wg
+        rm -f /usr/bin/wg-quick
+        rm -f /usr/share/man/man8/wg.8
+        rm -f /usr/share/man/man8/wg-quick.8
+
+        [ -d "/etc/wireguard" ] && ("rm -rf /etc/wireguard")
+
+        cp -f ${configWireGuardDNSBackupFilePath} /etc/resolv.conf
+
+        modprobe -r wireguard
+
+        green " ================================================== "
+        green "  Wireguard 和 Cloudflare WARP 命令行工具 Wgcf 卸载完毕 !"
+        green " ================================================== "
+
     else 
         red " 系统没有安装 Wireguard 和 Wgcf, 退出卸载"
-        exit
-    fi
-
-    if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
-
-        $osSystemPackage -y remove wireguard-tools
-        $osSystemPackage -y remove wireguard
-
-    elif [[ "${osRelease}" == "centos" ]]; then
-        $osSystemPackage -y remove kmod-wireguard
-        $osSystemPackage -y remove wireguard-dkms
-        $osSystemPackage -y remove wireguard-tools
     fi
 
 
-    echo
-    read -p "是否删除Wgcf申请的账号文件, 默认不删除, 方便以后不用在重新注册, 请输入[y/N]:" isWgcfAccountFileRemoveInput
-    isWgcfAccountFileRemoveInput=${isWgcfAccountFileRemoveInput:-n}
 
-    echo
-    if [[ $isWgcfAccountFileRemoveInput == [Yy] ]]; then
-        rm -rf ${configWgcfConfigFolderPath}
-        green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已删除!"
-        
-    else
-        rm -f ${configWgcfProfileFilePath}
-        green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已保留! "
-    fi
-    
-
-    rm -f ${configWgcfBinPath}/wgcf
-    rm -rf ${configWireGuardConfigFileFolder}
-    rm -f ${osSystemMdPath}wg-quick@wgcf.service
-
-    rm -f /usr/bin/wg
-    rm -f /usr/bin/wg-quick
-    rm -f /usr/share/man/man8/wg.8
-    rm -f /usr/share/man/man8/wg-quick.8
-
-    [ -d "/etc/wireguard" ] && ("rm -rf /etc/wireguard")
-
-    cp -f ${configWireGuardDNSBackupFilePath} /etc/resolv.conf
-
-    modprobe -r wireguard
-
-    green " ================================================== "
-    green "  Wireguard 和 Cloudflare WARP 命令行工具 Wgcf 卸载完毕 !"
-    green " ================================================== "
-
-    removeWARP
 }
 
 function removeWARP(){
@@ -2499,29 +2499,27 @@ function removeWARP(){
         ${sudoCmd} warp-cli disconnect
         ${sudoCmd} systemctl stop warp-svc
         sleep 5s
+
+        if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+
+            ${sudoCmd} apt purge -y cloudflare-warp 
+            rm -f /etc/apt/sources.list.d/cloudflare-client.list
+
+        elif [[ "${osRelease}" == "centos" ]]; then
+            yum remove -y cloudflare-warp 
+        fi
+
+        rm -f ${configWARPPortFilePath}
+
+        crontab -l | grep -v 'warp-cli'  | crontab -
+        crontab -l | grep -v 'warp-svc'  | crontab -
+
+        green " ================================================== "
+        green "  Cloudflare WARP linux client 卸载完毕 !"
+        green " ================================================== "        
     else 
         red " 系统没有安装 Cloudflare WARP linux client, 退出卸载"
-        exit
     fi
-
-
-    if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
-
-        ${sudoCmd} apt purge -y cloudflare-warp 
-        rm -f /etc/apt/sources.list.d/cloudflare-client.list
-
-    elif [[ "${osRelease}" == "centos" ]]; then
-        yum remove -y cloudflare-warp 
-    fi
-
-    rm -f ${configWARPPortFilePath}
-
-    crontab -l | grep -v 'warp-cli'  | crontab -
-    crontab -l | grep -v 'warp-svc'  | crontab -
-
-    green " ================================================== "
-    green "  Cloudflare WARP linux client 卸载完毕 !"
-    green " ================================================== "
 
 }
 
@@ -2950,6 +2948,7 @@ function start_menu(){
         ;;              
         14 )
            removeWireguard
+           removeWARP
         ;;
         15 )
            enableWireguardIPV6OrIPV4 "redo"
