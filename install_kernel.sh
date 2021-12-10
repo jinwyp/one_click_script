@@ -2552,15 +2552,14 @@ function checkWarpClientStatus(){
     
     echo
     green " ================================================== "
-    isWarpClientBootSuccess=$(systemctl is-active warp-svc | grep -E "active")
+    sleep 2s
+    isWarpClientBootSuccess=$(systemctl is-active warp-svc | grep -E "inactive")
     if [[ -z "${isWarpClientBootSuccess}" ]]; then
-        green " 状态显示-- WARP 已启动${Red_font_prefix}失败${Green_font_prefix}! 请查看 WARP 运行日志, 寻找错误后重启 WARP "
-    else
         green " 状态显示-- WARP 已启动成功! "
         echo
         
-        sleep 3s
         isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} --connect-timeout 5 | grep warp | cut -d= -f2)
+        sleep 3s
         case ${isWarpClientMode} in
         on)
             green " 状态显示-- WARP Sock5 代理已启动成功, 端口号 ${configWarpPort} ! "
@@ -2577,7 +2576,9 @@ function checkWarpClientStatus(){
         echo
         echo "curl -x 'socks5h://127.0.0.1:${configWarpPort}' ${cloudflare_Trace_URL}"
         echo
-        curl -x "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} 
+        curl -x "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL}     
+    else
+        green " 状态显示-- WARP 已启动${Red_font_prefix}失败${Green_font_prefix}! 请查看 WARP 运行日志, 寻找错误后重启 WARP "
     fi
     green " ================================================== "
     echo
