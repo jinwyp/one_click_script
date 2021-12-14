@@ -2558,7 +2558,7 @@ function checkWarpClientStatus(){
         green " 状态显示-- WARP 已启动成功! "
         echo
         
-        isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} --connect-timeout 5 | grep warp | cut -d= -f2)
+        isWarpClientMode=$(curl -sx "socks5h://127.0.0.1:${configWarpPort}" ${cloudflare_Trace_URL} --connect-timeout 20 | grep warp | cut -d= -f2)
         sleep 3s
         case ${isWarpClientMode} in
         on)

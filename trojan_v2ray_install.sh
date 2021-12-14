@@ -824,7 +824,6 @@ configSSLDomain=""
 
 configSSLAcmeScriptPath="${HOME}/.acme.sh"
 configWebsiteFatherPath="${HOME}/website"
-configSSLCertBakPath="${HOME}/sslbackup"
 configSSLCertPath="${HOME}/website/cert"
 configSSLCertKeyFilename="private.key"
 configSSLCertFullchainFilename="fullchain.cer"
@@ -1496,18 +1495,14 @@ function removeNginx(){
     fi
 
 
-    rm -rf ${configSSLCertBakPath}
-    mkdir -p ${configSSLCertBakPath}
-    cp -f ${configSSLCertPath}/* ${configSSLCertBakPath}
 
-    rm -rf ${configWebsiteFatherPath}
+
+
     rm -f ${nginxAccessLogFilePath}
     rm -f ${nginxErrorLogFilePath}
 
     rm -f ${configReadme}
-
     rm -rf "/etc/nginx"
-    
     
     rm -rf ${configDownloadTempPath}
 
@@ -1517,17 +1512,17 @@ function removeNginx(){
     echo
     green " ================================================== "
     if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
+        rm -rf ${configWebsiteFatherPath}
         ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
         # uninstall ${configSSLAcmeScriptPath}
         green "  Nginx 卸载完毕, SSL 证书文件已删除!"
         
     else
-        mkdir -p ${configSSLCertPath}
-        cp -f ${configSSLCertBakPath}/* ${configSSLCertPath}
+
+        rm -rf ${configWebsitePath}
         green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
     fi
 
-    rm -rf ${configSSLCertBakPath}
     green " ================================================== "
     echo
 }
@@ -2246,60 +2241,83 @@ EOF
 
 function removeTrojan(){
 
-    isTrojanGoInstall
+    if [[ -f "${configTrojanBasePath}/trojan" || -f "${configTrojanBasePath}/trojan-go" ]]; then
+        if [ -f "${configTrojanBasePath}/trojan-go" ] ; then
+            configTrojanBasePath="${configTrojanGoPath}"
+            promptInfoTrojanName="-go"
+        else
+            configTrojanBasePath="${configTrojanPath}"
+            promptInfoTrojanName=""
+        fi
 
-    ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
-    ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
+        ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
+        ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
 
-    echo
-    green " ================================================== "
-    red " 准备卸载已安装的trojan${promptInfoTrojanName}"
-    green " ================================================== "
-    echo
+        echo
+        green " ================================================== "
+        red " 准备卸载已安装的trojan${promptInfoTrojanName}"
+        green " ================================================== "
+        echo
 
-    rm -rf ${configTrojanBasePath}
-    rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
-    rm -f ${configTrojanLogFile}
-    rm -f ${configTrojanGoLogFile}
+        rm -rf ${configTrojanBasePath}
+        rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
+        rm -f ${configTrojanLogFile}
+        rm -f ${configTrojanGoLogFile}
 
-    rm -f ${configReadme}
+        rm -f ${configReadme}
 
-    crontab -r
+        crontab -r
 
-    echo
-    green " ================================================== "
-    green "  trojan${promptInfoTrojanName} 和 nginx 卸载完毕 !"
-    green "  crontab 定时任务 删除完毕 !"
-    green " ================================================== "
+        echo
+        green " ================================================== "
+        green "  trojan${promptInfoTrojanName} !"
+        green "  crontab 定时任务 删除完毕 !"
+        green " ================================================== "
+        
+    else
+        red " 系统没有安装 trojan${promptInfoTrojanName}, 退出卸载"
+    fi
     echo
 }
 
 
 function upgradeTrojan(){
 
-    isTrojanGoInstall
+    if [[ -f "${configTrojanBasePath}/trojan" || -f "${configTrojanBasePath}/trojan-go" ]]; then
+        if [ -f "${configTrojanBasePath}/trojan-go" ] ; then
+            isTrojanGo="yes"
+        else
+            isTrojanGo="no"
+        fi
 
-    green " ================================================== "
-    green "     开始升级 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion}"
-    green " ================================================== "
+        isTrojanGoInstall
 
-    ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
+        green " ================================================== "
+        green "     开始升级 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion}"
+        green " ================================================== "
 
-    mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
+        ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
 
-    downloadTrojanBin "upgrade"
+        mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
 
-    if [ "$isTrojanGo" = "no" ] ; then
-        mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
+        downloadTrojanBin "upgrade"
+
+        if [ "$isTrojanGo" = "no" ] ; then
+            mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
+        else
+            mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
+        fi
+
+        ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
+
+        green " ================================================== "
+        green "     升级成功 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
+        green " ================================================== "
+
     else
-        mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
+        red " 系统没有安装 trojan${promptInfoTrojanName}, 退出卸载"
     fi
-
-    ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
-
-    green " ================================================== "
-    green "     升级成功 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
-    green " ================================================== "
+    echo
 
 }
 
