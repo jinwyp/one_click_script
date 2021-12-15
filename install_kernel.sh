@@ -1934,6 +1934,7 @@ function installWARPClient(){
     echo
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+        ${sudoCmd} apt-key del 835b8acb
         ${sudoCmd} apt install -y gnupg 
         ${sudoCmd} apt install -y apt-transport-https 
 
@@ -1945,11 +1946,14 @@ function installWARPClient(){
         ${sudoCmd} apt install -y cloudflare-warp 
 
     elif [[ "${osRelease}" == "centos" ]]; then
+        ${sudoCmd} rpm -e gpg-pubkey-835b8acb-*
+
         if [ "${osReleaseVersionNo}" -eq 7 ]; then
             # ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el7.rpm
             red "Cloudflare WARP Official client is not supported on Centos 7"
         else
-            ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
+            ${sudoCmd} rpm -ivh --replacepkgs --replacefiles https://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
+            # ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
         fi
 
         ${sudoCmd} yum install -y cloudflare-warp
