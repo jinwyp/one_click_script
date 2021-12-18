@@ -1478,52 +1478,54 @@ EOF
 
 function removeNginx(){
 
-    ${sudoCmd} systemctl stop nginx.service
-    ${sudoCmd} systemctl disable nginx.service
+    if [[ -f "${nginxConfigPath}" ]]; then
 
-    echo
-    green " ================================================== "
-    red " 准备卸载已安装的nginx"
-    green " ================================================== "
-    echo
+        ${sudoCmd} systemctl stop nginx.service
+        ${sudoCmd} systemctl disable nginx.service
 
-    if [ "$osRelease" == "centos" ]; then
-        yum remove -y nginx
-    else
-        apt autoremove -y --purge nginx nginx-common nginx-core
-        apt-get remove --purge nginx nginx-full nginx-common nginx-core
-    fi
+        echo
+        green " ================================================== "
+        red " 准备卸载已安装的nginx"
+        green " ================================================== "
+        echo
+
+        if [ "$osRelease" == "centos" ]; then
+            yum remove -y nginx
+        else
+            apt autoremove -y --purge nginx nginx-common nginx-core
+            apt-get remove --purge nginx nginx-full nginx-common nginx-core
+        fi
 
 
+        rm -f ${nginxAccessLogFilePath}
+        rm -f ${nginxErrorLogFilePath}
 
-
-
-    rm -f ${nginxAccessLogFilePath}
-    rm -f ${nginxErrorLogFilePath}
-
-    rm -f ${configReadme}
-    rm -rf "/etc/nginx"
-    
-    rm -rf ${configDownloadTempPath}
-
-    read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
-    isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
-
-    echo
-    green " ================================================== "
-    if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
-        rm -rf ${configWebsiteFatherPath}
-        ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
-        # uninstall ${configSSLAcmeScriptPath}
-        green "  Nginx 卸载完毕, SSL 证书文件已删除!"
+        rm -f ${configReadme}
+        rm -rf "/etc/nginx"
         
+        rm -rf ${configDownloadTempPath}
+
+        read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
+        isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
+
+        echo
+        green " ================================================== "
+        if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
+            rm -rf ${configWebsiteFatherPath}
+            ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+            # uninstall ${configSSLAcmeScriptPath}
+            green "  Nginx 卸载完毕, SSL 证书文件已删除!"
+            
+        else
+
+            rm -rf ${configWebsitePath}
+            green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
+        fi
+
+        green " ================================================== "
     else
-
-        rm -rf ${configWebsitePath}
-        green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
-    fi
-
-    green " ================================================== "
+        red " 系统没有安装 nginx, 退出卸载"
+    fi    
     echo
 }
 
@@ -2241,14 +2243,17 @@ EOF
 
 function removeTrojan(){
 
-    if [[ -f "${configTrojanBasePath}/trojan" || -f "${configTrojanBasePath}/trojan-go" ]]; then
-        if [ -f "${configTrojanBasePath}/trojan-go" ] ; then
-            configTrojanBasePath="${configTrojanGoPath}"
-            promptInfoTrojanName="-go"
-        else
-            configTrojanBasePath="${configTrojanPath}"
-            promptInfoTrojanName=""
-        fi
+    if [ -f "${configTrojanPath}/trojan" ] ; then
+        configTrojanBasePath="${configTrojanPath}"
+        promptInfoTrojanName=""
+    fi
+
+    if [ -f "${configTrojanGoPath}/trojan-go" ] ; then
+        configTrojanBasePath="${configTrojanGoPath}"
+        promptInfoTrojanName="-go"
+    fi
+
+    if [[ -f "${configTrojanPath}/trojan" || -f "${configTrojanGoPath}/trojan-go" ]]; then
 
         ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
         ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
@@ -2270,7 +2275,7 @@ function removeTrojan(){
 
         echo
         green " ================================================== "
-        green "  trojan${promptInfoTrojanName} !"
+        green "  trojan${promptInfoTrojanName} 卸载完毕 !"
         green "  crontab 定时任务 删除完毕 !"
         green " ================================================== "
         
