@@ -1896,7 +1896,8 @@ EOM
         green " 4. 解锁 Pornhub, 解决视频变成玉米无法观看问题"
         green " 5. 同时解锁 2, 4项, 即为 解锁 Netflix 和 Pornhub 限制"
         green " 6. 同时解锁 2, 3, 4项, 即为 解锁 Netflix, Youtube 和 Pornhub 限制"
-        green " 7. 同时解锁 Netflix, Hulu, HBO, Disney, Youtube 和 Pornhub 限制"
+        green " 7. 同时解锁 Netflix, Hulu, HBO, Disney 和 Pornhub 限制"
+        green " 8. 同时解锁 Netflix, Hulu, HBO, Disney, Youtube 和 Pornhub 限制"
         green " 9. 解锁 全部流媒体 包括 Netflix, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico, dmm, Pornhub 等"
         echo
         read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockVideoSiteInput
@@ -1918,6 +1919,9 @@ EOM
             V2rayUnlockVideoSiteRuleText="\"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "7" ]]; then
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
+
+        elif [[ $isV2rayUnlockVideoSiteInput == "8" ]]; then
             V2rayUnlockVideoSiteRuleText="\"geosite:youtube\", \"geosite:netflix\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "9" ]]; then
