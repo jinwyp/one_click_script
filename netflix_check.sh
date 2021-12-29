@@ -156,11 +156,16 @@ function testNetflixOneMethod(){
         netflixLinkOwn="https://www.netflix.com/title/80018499"
 
 
-        green " Test Url: $1 ${netflixLinkIndex}"
+#        green " Test Url: $1 ${netflixLinkIndex}"
         resultIndex=$($1 ${netflixLinkIndex} 2>&1)
 
+        if [[ -z "${resultIndex}" ]];then
+            echo -e "${Font_Red}已被 Netflix 屏蔽, 403 访问错误 ${Font_Suffix}"
+            return
+        fi
+
         if [ "${resultIndex}" == "Not Available" ];then
-            echo -e "${Font_Red} Netflix 不提供此地区服务 ${Font_Suffix}"
+            echo -e "${Font_Red}Netflix 不提供此地区服务 ${Font_Suffix}"
             return
         fi
 
@@ -169,7 +174,9 @@ function testNetflixOneMethod(){
             return
         fi
 
-        green " Test Url: $1 ${netflixLinkOwn}"
+
+
+#        green " Test Url: $1 ${netflixLinkOwn}"
         resultOwn=$($1 ${netflixLinkIndex} 2>&1)
 
         if [[ "${resultOwn}" == *"page-404"* ]] || [[ "${resultOwn}" == *"NSEZ-403"* ]];then
@@ -177,6 +184,17 @@ function testNetflixOneMethod(){
             return
         fi
 
+
+#        green " Test Url: $1 -fi https://www.netflix.com/title/80018499 2>&1"
+        resultRegion=`tr [:lower:] [:upper:] <<< $($1 -fi "https://www.netflix.com/title/80018499" 2>&1 | sed -n '8p' | awk '{print $2}' | cut -d '/' -f4 | cut -d '-' -f1)`
+
+        netflixRegion="${resultRegion}"
+        echo "${netflixRegion}"
+        echo
+
+        if [[ "${resultRegion}" == *"INDEX"* ]] || [[ "${resultRegion}" == *"index"* ]];then
+           netflixRegion="US"
+        fi
 
 
         result1=$($1 "https://www.netflix.com/title/70143836" 2>&1)
@@ -187,18 +205,13 @@ function testNetflixOneMethod(){
         result6=$($1 "https://www.netflix.com/title/70202589" 2>&1)
 
         if [[ "$result1" == *"page-404"* ]] && [[ "$result2" == *"page-404"* ]] && [[ "$result3" == *"page-404"* ]] && [[ "$result4" == *"page-404"* ]] && [[ "$result5" == *"page-404"* ]] && [[ "$result6" == *"page-404"* ]]; then
-            echo -e "${Font_Yellow}本机 $2 仅解锁 Netflix 自制剧${Font_Suffix}"
+            echo -e "${Font_Yellow}本机 $2 仅解锁 Netflix 自制剧${Font_Suffix}. 区域: ${netflixRegion}"
             return
         fi
 
-        green " Test Url: $1 -fi https://www.netflix.com/title/80018499"
-        resultRegion=`tr [:lower:] [:upper:] <<< $($1 -fi "https://www.netflix.com/title/80018499" 2>&1 | sed -n '8p' | awk '{print $2}' | cut -d '/' -f4 | cut -d '-' -f1)`
 
-        if [[ "${resultRegion}" == *"INDEX"* ]] || [[ "${resultRegion}" == *"index"* ]];then
-           region="US"
-        fi
 
-        echo -e "${Font_Green}恭喜 本机 $2 解锁全部 Netflix 剧集 包括非自制剧 区域: ${region} ${Font_Suffix}"
+        echo -e "${Font_Green}恭喜 本机 $2 解锁 Netflix 全部剧集 包括非自制剧. 区域: ${netflixRegion} ${Font_Suffix}"
         return
 
     else
