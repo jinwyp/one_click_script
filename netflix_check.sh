@@ -156,7 +156,7 @@ function testNetflixOneMethod(){
         netflixLinkOwn="https://www.netflix.com/title/80018499"
 
 
-#        green " Test Url: $1 ${netflixLinkIndex}"
+        green " Test Url: $1 ${netflixLinkIndex}"
         resultIndex=$($1 ${netflixLinkIndex} 2>&1)
 
         if [ "${resultIndex}" == "Not Available" ];then
@@ -169,7 +169,7 @@ function testNetflixOneMethod(){
             return
         fi
 
-#        green " Test Url: $1 ${netflixLinkOwn}"
+        green " Test Url: $1 ${netflixLinkOwn}"
         resultOwn=$($1 ${netflixLinkIndex} 2>&1)
 
         if [[ "${resultOwn}" == *"page-404"* ]] || [[ "${resultOwn}" == *"NSEZ-403"* ]];then
@@ -191,7 +191,7 @@ function testNetflixOneMethod(){
             return
         fi
 
-
+        green " Test Url: $1 -fi https://www.netflix.com/title/80018499"
         resultRegion=`tr [:lower:] [:upper:] <<< $($1 -fi "https://www.netflix.com/title/80018499" 2>&1 | sed -n '8p' | awk '{print $2}' | cut -d '/' -f4 | cut -d '-' -f1)`
 
         if [[ "${resultRegion}" == *"INDEX"* ]] || [[ "${resultRegion}" == *"index"* ]];then
