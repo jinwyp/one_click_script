@@ -1892,6 +1892,18 @@ function removeDebianKernel(){
 
 
 
+function vps_netflix_jin(){
+	wget -N --no-check-certificate -O ./netflix_check.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2867,6 +2879,7 @@ function start_menu(){
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 16. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
     echo
+    green " 21. 测试VPS 是否支持 Netflix 非自制剧解锁 支持 WARP sock5 测试 强烈推荐使用 "
 
     if [[ "${osRelease}" == "centos" ]]; then
     green " 31. 安装 最新版本内核 5.15, 通过elrepo源安装"
@@ -2963,7 +2976,10 @@ function start_menu(){
         ;;
         16 )
            preferIPV4 "redo"
-        ;;     
+        ;;
+        21 )
+           vps_netflix_jin
+        ;;
         31 )
             linuxKernelToInstallVersion="5.15"
             isInstallFromRepo="yes"

@@ -685,13 +685,14 @@ function vps_netflix2(){
 	wget -N --no-check-certificate -O ./netflix.sh https://github.com/lmc999/RegionRestrictionCheck/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
 }
 
-function vps_netflixlite(){
-	wget -N --no-check-certificate -O ./netflix.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./netflix.sh && ./netflix.sh
+function vps_netflix_jin(){
+	wget -N --no-check-certificate -O ./netflix_check.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
 }
 
 
 function vps_netflixgo(){
     wget -N --no-check-certificate -O netflixcheck https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixcheck && ./netflixcheck -method full
+    wget -N --no-check-certificate -O disneypluscheck https://github.com/sjlleo/VerifyDisneyPlus/releases/download/1.01/dp_1.01_linux_amd64 && chmod +x ./disneypluscheck && ./disneypluscheck
 }
 
 
@@ -5270,8 +5271,8 @@ function startMenuOther(){
     green " 46. testrace 回程路由测试 by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace 回程路由测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     echo
-    green " 51. 测试VPS 是否支持Netflix, Go语言版本 推荐使用 by sjlleo"
-    green " 52. 测试VPS 是否支持Netflix 和 Youtube 支持WARP sock5 测试 推荐使用"
+    green " 51. 测试VPS 是否支持 Netflix 非自制剧解锁 支持 WARP sock5 测试, 强烈推荐使用 "
+    green " 52. 测试VPS 是否支持Netflix, Go语言版本 推荐使用 by sjlleo"
     green " 53. 测试VPS 是否支持Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
     green " 54. 测试VPS 是否支持Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
     echo
@@ -5410,10 +5411,10 @@ function startMenuOther(){
             vps_autoBestTrace
         ;;        
         51 )
-            vps_netflixgo
+            vps_netflix_jin
         ;;
         52 )
-            vps_netflixlite
+            vps_netflixgo
         ;;
         53 )
             vps_netflix
@@ -5660,12 +5661,10 @@ function start_menu(){
             echo "isTrojanMultiPassword: yes"
             sleep 3s
             start_menu
-        ;;        
-        76 )
-            vps_netflixlite
         ;;
         77 )
             vps_netflixgo
+            vps_netflix_jin
         ;;
         80 )
             installPackage
