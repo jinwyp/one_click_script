@@ -189,8 +189,7 @@ function testNetflixOneMethod(){
         resultRegion=`tr [:lower:] [:upper:] <<< $($1 -fi "https://www.netflix.com/title/80018499" 2>&1 | sed -n '8p' | awk '{print $2}' | cut -d '/' -f4 | cut -d '-' -f1)`
 
         netflixRegion="${resultRegion}"
-        echo "${netflixRegion}"
-        echo
+#        echo "${netflixRegion}"
 
         if [[ "${resultRegion}" == *"INDEX"* ]] || [[ "${resultRegion}" == *"index"* ]];then
            netflixRegion="US"
