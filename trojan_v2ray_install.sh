@@ -2603,7 +2603,7 @@ EOM
 
     if [[ -f "${configWARPPortFilePath}" ]]; then
         configWARPPortLocalServerPort="$(cat ${configWARPPortFilePath})"
-        configWARPPortLocalServerText="检测到本地 WARP Sock5 已经运行, 端口号 ${configWARPPortLocalServerPort}"
+        configWARPPortLocalServerText="检测到本机已安装 WARP Sock5, 端口号 ${configWARPPortLocalServerPort}"
     fi
 
     if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
