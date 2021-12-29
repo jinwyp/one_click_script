@@ -2862,24 +2862,20 @@ function start_menu(){
     green " 3. 开启 BBR Plus 加速"
     green " 4. 优化 系统网络配置"
     red " 5. 删除 系统网络优化配置"
-
     echo
     green " 6. 查看 Wireguard 运行状态"
     green " 7. 重启 Wireguard "    
     green " 8. 查看 WARP Sock5 代理运行状态"
     green " 9. 重启 WARP Sock5"    
-    green " 10. 查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"  
-
-    echo
+    yellow " 10. 查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"
     green " 11. 安装官方 Cloudflare WARP Client 启动SOCKS5代理, 用于解锁 Netflix 限制"
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf ${versionWgcf}, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
     green " 13. 同时安装 官方 Cloudflare WARP Client, WireGuard 和 命令行工具 Wgcf, 不推荐 "
-    red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client" 
-    echo
+    red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client"
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 16. 设置 VPS服务器 IPv4 还是 IPv6 网络优先访问"
-    echo
     green " 21. 测试VPS 是否支持 Netflix 非自制剧解锁 支持 WARP sock5 测试 强烈推荐使用 "
+    echo
 
     if [[ "${osRelease}" == "centos" ]]; then
     green " 31. 安装 最新版本内核 5.15, 通过elrepo源安装"
