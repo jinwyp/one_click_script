@@ -91,7 +91,7 @@ function testNetflixAll(){
             testWARPEnabled
 
             yellow " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Netflix 情况"
-            curlCommand="${curlCommand} -x socks5://127.0.0.1:${warpPortInput}"
+            curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
             curlInfo="IPv4 CloudFlare WARP"
         fi
 
@@ -156,7 +156,7 @@ function testNetflixOneMethod(){
         netflixLinkOwn="https://www.netflix.com/title/80018499"
 
 
-#        green " Test Url: $1 ${netflixLinkIndex}"
+        # green " Test Url: $1 ${netflixLinkIndex}"
         resultIndex=$($1 ${netflixLinkIndex} 2>&1)
 
         if [[ -z "${resultIndex}" ]];then
@@ -176,7 +176,7 @@ function testNetflixOneMethod(){
 
 
 
-#        green " Test Url: $1 ${netflixLinkOwn}"
+        # green " Test Url: $1 ${netflixLinkOwn}"
         resultOwn=$($1 ${netflixLinkIndex} 2>&1)
 
         if [[ "${resultOwn}" == *"page-404"* ]] || [[ "${resultOwn}" == *"NSEZ-403"* ]];then
@@ -185,11 +185,11 @@ function testNetflixOneMethod(){
         fi
 
 
-#        green " Test Url: $1 -fi https://www.netflix.com/title/80018499 2>&1"
+        green " Test Url: $1 -fi https://www.netflix.com/title/80018499 2>&1 | sed -n '8p'"
         resultRegion=`tr [:lower:] [:upper:] <<< $($1 -fi "https://www.netflix.com/title/80018499" 2>&1 | sed -n '8p' | awk '{print $2}' | cut -d '/' -f4 | cut -d '-' -f1)`
 
         netflixRegion="${resultRegion}"
-#        echo "${netflixRegion}"
+        # echo "x-robots-tag: ${netflixRegion}"
 
         if [[ "${resultRegion}" == *"INDEX"* ]] || [[ "${resultRegion}" == *"index"* ]];then
            netflixRegion="US"
@@ -263,7 +263,7 @@ function testYoutubeAll(){
         else
 
             yellow " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Youtube Premium 情况"
-            curlCommand="${curlCommand} -x socks5://127.0.0.1:${warpPortInput}"
+            curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
             curlInfo="IPv4 CloudFlare WARP"
         fi
 
