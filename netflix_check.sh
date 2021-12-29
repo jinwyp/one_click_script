@@ -158,10 +158,14 @@ function testNetflixOneMethod(){
 
         # green " Test Url: $1 ${netflixLinkIndex}"
         resultIndex=$($1 ${netflixLinkIndex} 2>&1)
+        
 
         if [[ -z "${resultIndex}" ]];then
-            echo -e "${Font_Red}已被 Netflix 屏蔽, 403 访问错误 ${Font_Suffix}"
-            return
+            resultIndex2=$($1 ${netflixLinkIndex} 2>&1)
+            if [[ -z "${resultIndex2}" ]];then
+                echo -e "${Font_Red}已被 Netflix 屏蔽, 403 访问错误 ${Font_Suffix}"
+                return
+            fi
         fi
 
         if [ "${resultIndex}" == "Not Available" ];then
