@@ -953,8 +953,9 @@ function getLatestCentosKernelVersion(){
         fi
     else
         elrepo_kernel_version_ml_teddysun_ftp_array=($(wget --no-check-certificate -qO- https://fr1.teddyvps.com/kernel/el8 | awk -F'>kernel-ml-' '/>kernel-ml-[4-9]./{print $2}' | cut -d- -f1 | sort -V))
+        elrepo_kernel_version_ml_teddysun_ftp_array_lts=($(wget --no-check-certificate -qO- https://fr1.teddyvps.com/kernel/el8 | awk -F'>kernel-ml-' '/>kernel-ml-[4-9]./{print $2}'  | grep -v "elrepo" | cut -d- -f1 | sort -V))
        
-        if [ ${#elrepo_kernel_version_ml_teddysun_ftp_array[@]} -eq 0 ]; then
+        if [ ${#elrepo_kernel_version_ml_teddysun_ftp_array_lts[@]} -eq 0 ]; then
             red " 无法获取到由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号 "
         else
             elrepo_kernel_version_ml=${elrepo_kernel_version_ml_teddysun_ftp_array[-1]} 
@@ -962,11 +963,11 @@ function getLatestCentosKernelVersion(){
             elrepo_kernel_version_ml_Teddysun_latest_version_middle=$((elrepo_kernel_version_ml_Teddysun_number_temp-1))
             elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
 
-
-            for ver in ${elrepo_kernel_version_ml_teddysun_ftp_array[@]}; do
+            # https://stackoverflow.com/questions/229551/how-to-check-if-a-string-contains-a-substring-in-bash
+            for ver in ${elrepo_kernel_version_ml_teddysun_ftp_array_lts[@]}; do
                 
                 if [[ ${ver} == *"5.10"* ]]; then
-                    # echo "符合所选版本的Linux 内核版本: ${ver}"
+                    # echo "符合所选版本的Linux 5.10 内核版本: ${ver}"
                     elrepo_kernel_version_ml_Teddysun510=${ver}
                 fi
 
@@ -974,6 +975,7 @@ function getLatestCentosKernelVersion(){
                     # echo "符合所选版本的Linux 内核版本: ${ver}, ${elrepo_kernel_version_ml_Teddysun_latest_version}"
                     elrepo_kernel_version_ml_Teddysun_latest=${ver}
                 fi
+
             done
 
             green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml}" 

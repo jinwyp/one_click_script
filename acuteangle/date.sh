@@ -62,7 +62,6 @@ function main() {
 
 
 
-
 dateFilePath="/root/date.log"
 function saveDateToFile(){
 	green " ================================================== "

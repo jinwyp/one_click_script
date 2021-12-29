@@ -12,7 +12,7 @@
 1. 用 rufus U盘写入工具 将 systemrescue-7.01-amd64.iso 写入U盘 
 2. U盘写入完成后, 复制 autorun 脚本 和 proxmox.img.gz 到U盘根目录 (如果是PVE官方下载的 proxmox-ve_6.4-1.iso 需要用压缩软件压缩成gz格式,并改名为proxmox.img.gz)
 3. 插入U盘到 锐角云 HDMI口旁边的USB, 开机按F7选择U盘引导后 (一般U盘为第二项 UEFI：你的U盘名称 例如 SanDisk, Partition 1)。
-4. 进入SystemRescue 菜单后 选择第二项 Boot SystemRescue and Copy system to Ram (Copytoram) 进入, 然后会自动运行autorun脚本, 根据提示选择Y 安装PVE或n 退出。 随后耐心等待直至屏幕变化，设备会自动重启。此时可以插入网线连接好路由器
+4. 进入SystemRescue 菜单后 选择第二项 Boot SystemRescue and Copy system to Ram (Copytoram) 进入, 然后会自动运行autorun脚本, 根据提示选择Y 安装PVE或n 退出。 随后耐心等待直至屏幕变化，设备会自动重启。此时可以插入网线连接好路由器. (注意 如果使用PVE官方下载的 proxmox-ve_6.4-1.iso 安装 需要修改代码才能安装到EMMC硬盘上,请看下面注意部分).
 
 5. 插入网线会通过dhcp获取ip的。进入PVE的命令行环境后，使用用户名和密码为"root/password"进行登陆。 首次进入要执行下面初始化脚本, 需要已经正常联网. 然后根据提示可以选择DHCP获取IP或手动指定IP地址。
 ```bash
@@ -29,11 +29,11 @@ chmod +x ./mnt/usb1/date.sh && /mnt/usb1/date.sh firstrun
 ```
 
 
-#### 注意
+#### 注意 解决 Proxmox VE 无法安装到 eMMC 上的问题
 
 1. 如果使用PVE官方6.4的iso安装 默认无法安装到EMMC存储上 需要 修改代码 可以参考这篇文章 https://lookas2001.com/%E8%A7%A3%E5%86%B3-proxmox-ve-%E6%97%A0%E6%B3%95%E5%AE%89%E8%A3%85%E5%88%B0-emmc-%E4%B8%8A%E7%9A%84%E9%97%AE%E9%A2%98/
 
-2. 启动 PVE 安装程序后 进入安装初始界面后 点击 Install Proxmox VE (Debug mode), 在第一次提示你可以输入命令的时候输入 Ctrl-D ，继续安装过程, 在第二次提示你可以输入命令的时候输入 vi /usr/bin/proxinstall 编辑文件（或者使用其他文字编辑器如 nano）. 输入 /unable to get device 定位到对应位置 , 找到如下代码:
+2. 具体方法如下: 启动 PVE 安装程序后 进入安装初始界面后 点击 Install Proxmox VE (Debug mode), 在第一次提示你可以输入命令的时候输入 Ctrl-D ，继续安装过程, 在第二次提示你可以输入命令的时候输入 vi /usr/bin/proxinstall 编辑文件（或者使用其他文字编辑器如 nano）. 输入 /unable to get device 定位到对应位置 , 找到如下代码:
 ```
 
     } elsif ($dev =~ m|^/dev/[^/]+/hd[a-z]$|) {
