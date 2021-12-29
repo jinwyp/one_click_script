@@ -59,15 +59,6 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ```
 
 
-## Netflix-Check
-#### Netflix 非自制剧解锁 检测脚本 全网最准确检测脚本 支持IPv6 和 Cloudflare WARP Sock5 代理检测
-
-#### 通过 wget 命令安装 via wget to install script
-
-```bash
-wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
-```
-
 
 ![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
 
@@ -88,6 +79,16 @@ bash <(curl -Lso- https://git.io/kernel.sh)
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+```
+
+
+## Netflix-Check
+#### Netflix 非自制剧解锁 检测脚本 全网最准确检测脚本 支持IPv6 和 Cloudflare WARP Sock5 代理检测
+
+#### 通过 wget 命令安装 via wget to install script
+
+```bash
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
 ```
 
 
