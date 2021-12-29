@@ -65,7 +65,6 @@ function testIPV6Enabled(){
     if [[ ${cmd1SysCtlIpv6} == "0" && ${cmd2SysCtlIpv6} == "0" ]]; then
         isIPV6Enabled="true"
     fi
-
 }
 
 
@@ -98,7 +97,7 @@ function testNetflixAll(){
 
     elif [[ $1 == "ipv6" ]]; then
 
-        if [[ "${isIPV6Enabled}"=="false" ]]; then
+        if [[ "${isIPV6Enabled}" == "false" ]]; then
             red " 本机IPv6 没有开启 是否继续测试IPv6 "
             read -p "是否继续测试IPv6? 直接回车默认不继续测试 请输入[y/N]:" isIpv6ContinueInput
             isIpv6ContinueInput=${isIpv6ContinueInput:-n}
