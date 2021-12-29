@@ -195,7 +195,6 @@ function testNetflixOneMethod(){
            netflixRegion="US"
         fi
 
-
         result1=$($1 "https://www.netflix.com/title/70143836" 2>&1)
         result2=$($1 "https://www.netflix.com/title/80027042" 2>&1)
         result3=$($1 "https://www.netflix.com/title/70140425" 2>&1)
@@ -204,7 +203,7 @@ function testNetflixOneMethod(){
         result6=$($1 "https://www.netflix.com/title/70202589" 2>&1)
 
         if [[ "$result1" == *"page-404"* ]] && [[ "$result2" == *"page-404"* ]] && [[ "$result3" == *"page-404"* ]] && [[ "$result4" == *"page-404"* ]] && [[ "$result5" == *"page-404"* ]] && [[ "$result6" == *"page-404"* ]]; then
-            echo -e "${Font_Yellow}本机 $2 仅解锁 Netflix 自制剧${Font_Suffix}. 区域: ${netflixRegion}"
+            echo -e "${Font_Yellow}本机 $2 仅解锁 Netflix 自制剧. 区域: ${netflixRegion} ${Font_Suffix}"
             return
         fi
 
