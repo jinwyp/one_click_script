@@ -70,7 +70,7 @@ function testIPV6Enabled(){
 
 
 function testNetflixAll(){
-    curlCommand="curl --connect-timeout 10 -sL --user-agent "${UA_Browser}""
+    curlCommand="curl --connect-timeout 10 -sL"
     curlInfo="IPv4"
 
     if [[ $1 == "ipv4" ]]; then
@@ -99,7 +99,7 @@ function testNetflixAll(){
     elif [[ $1 == "ipv6" ]]; then
 
         if [[ "${isIPV6Enabled}"=="false" ]]; then
-            yellow " 本机IPv6 没有开启 是否继续测试IPv6 "
+            red " 本机IPv6 没有开启 是否继续测试IPv6 "
             read -p "是否继续测试IPv6? 直接回车默认不继续测试 请输入[y/N]:" isIpv6ContinueInput
             isIpv6ContinueInput=${isIpv6ContinueInput:-n}
 
@@ -108,6 +108,7 @@ function testNetflixAll(){
                 echo
                 return
             else
+                echo
                 yellow " 开始测试本机的IPv6 解锁 Netflix 情况"
                 curlCommand="${curlCommand} -6"
                 curlInfo="IPv6"
@@ -207,33 +208,6 @@ function testNetflixOneMethod(){
 
 }
 
-function startNetflixTest(){
-
-    testIPV6Enabled
-
-    echo
-    green " =================================================="
-    green " Netflix 非自制剧解锁 检测脚本 By JinWYP"
-    green " =================================================="
-
-    testNetflixAll "ipv4"
-    testNetflixAll "ipv4warp"
-    testNetflixAll "ipv6"
-}
-
-
-
-function startYoutubeTest(){
-
-    green " =================================================="
-    green " Youtube Premium 准备开始检测 "
-    green " =================================================="
-
-    testYoutubeAll "ipv4"
-    testYoutubeAll "ipv4warp"
-    testYoutubeAll "ipv6"
-
-}
 
 
 
@@ -258,7 +232,9 @@ function startYoutubeTest(){
 
 
 function testYoutubeAll(){
-    curlCommand="curl --connect-timeout 10 -sS --user-agent "${UA_Browser}""
+#    curlCommand="curl --connect-timeout 10 -s --user-agent ${UA_Browser}"
+    curlCommand="curl --connect-timeout 10 -s"
+
     curlInfo="IPv4"
 
 
@@ -274,7 +250,6 @@ function testYoutubeAll(){
             echo
             return
         else
-            testWARPEnabled
 
             yellow " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Youtube Premium 情况"
             curlCommand="${curlCommand} -x socks5://127.0.0.1:${warpPortInput}"
@@ -284,9 +259,6 @@ function testYoutubeAll(){
     elif [[ $1 == "ipv6" ]]; then
 
         if [[ "${isIPV6Enabled}"=="false" ]]; then
-            yellow " 本机IPv6 没有开启 是否继续测试IPv6 "
-            read -p "是否继续测试IPv6? 直接回车默认不继续测试 请输入[y/N]:" isIpv6ContinueInput
-            isIpv6ContinueInput=${isIpv6ContinueInput:-n}
 
             if [[ ${isIpv6ContinueInput} == [Nn] ]]; then
                 red " 已退出 本机IPv6 测试 "
@@ -337,9 +309,9 @@ function testYoutubeOneMethod(){
         resultYoutube=$($1 ${youtubeLinkRed} | sed 's/,/\n/g' | grep countryCode | cut -d '"' -f4)
 
         if [ ! -n "${resultYoutube}" ]; then
-            echo -e "${Font_Yellow}YouTube 角标不显示 可能不支持 YouTube Premium${Font_Suffix}"
+            echo -e "${Font_White}YouTube 角标不显示 可能不支持 YouTube Premium${Font_Suffix}"
         else
-            echo -e "${Font_Green}本机支持 YouTube Premium, 角标: ${resultYoutube}${Font_Suffix}"
+            echo -e "${Font_Green}本机 $2 支持 YouTube Premium, 角标: ${resultYoutube}${Font_Suffix}"
         fi
 
     else
@@ -351,5 +323,35 @@ function testYoutubeOneMethod(){
 
 
 
+
+
+
+
+
+
+
+
+function startNetflixTest(){
+
+    testIPV6Enabled
+
+    echo
+    green " =================================================="
+    green " Netflix 非自制剧解锁 检测脚本 By JinWYP"
+    green " =================================================="
+
+    testNetflixAll "ipv4"
+    testNetflixAll "ipv4warp"
+    testNetflixAll "ipv6"
+
+    green " ===== Youtube Premium 准备开始检测 ====="
+
+    testYoutubeAll "ipv4"
+    testYoutubeAll "ipv4warp"
+    testYoutubeAll "ipv6"
+}
+
+
+
 startNetflixTest
-startYoutubeTest
+
