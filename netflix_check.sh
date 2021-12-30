@@ -73,7 +73,7 @@ function testNetflixAll(){
     curlInfo="IPv4"
 
     if [[ $1 == "ipv4" ]]; then
-        yellow " 开始测试本机的IPv4 解锁 Netflix 情况"
+        bold " 开始测试本机的IPv4 解锁 Netflix 情况"
         curlCommand="${curlCommand} -4"
         curlInfo="IPv4"
 
@@ -89,7 +89,7 @@ function testNetflixAll(){
         else
             testWARPEnabled
 
-            yellow " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Netflix 情况"
+            bold " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Netflix 情况"
             curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
             curlInfo="IPv4 CloudFlare WARP"
         fi
@@ -108,12 +108,12 @@ function testNetflixAll(){
                 return
             else
                 echo
-                yellow " 开始测试本机的IPv6 解锁 Netflix 情况"
+                bold " 开始测试本机的IPv6 解锁 Netflix 情况"
                 curlCommand="${curlCommand} -6"
                 curlInfo="IPv6"
             fi
         else
-                yellow " 开始测试本机的IPv6 解锁 Netflix 情况"
+                bold " 开始测试本机的IPv6 解锁 Netflix 情况"
                 curlCommand="${curlCommand} -6"
                 curlInfo="IPv6"
 
@@ -121,7 +121,7 @@ function testNetflixAll(){
 
 
     elif [[ $1 == "ipv6warp" ]]; then
-        yellow " 开始测试本机的IPv6 通过CloudFlare WARP 解锁 Netflix 情况"
+        bold " 开始测试本机的IPv6 通过CloudFlare WARP 解锁 Netflix 情况"
         curlCommand="${curlCommand} -6"
         curlInfo="IPv6 CloudFlare WARP"
 
@@ -156,34 +156,35 @@ function testNetflixOneMethod(){
 
 
         # green " Test Url: $1 ${netflixLinkIndex}"
-        resultIndex=$($1 ${netflixLinkIndex} 2>&1)
+        resultIndex=$($1 -S ${netflixLinkIndex} 2>&1)
         
-
+        if [[ "${resultIndex}" == "curl"* ]];then
+            red " 网络错误 无法打开 Netflix 网站"
+            return
+        fi
+        
         if [[ -z "${resultIndex}" ]];then
-            resultIndex2=$($1 ${netflixLinkIndex} 2>&1)
+            resultIndex2=$($1 -S ${netflixLinkIndex} 2>&1)
             if [[ -z "${resultIndex2}" ]];then
-                echo -e "${Font_Red}已被 Netflix 屏蔽, 403 访问错误 ${Font_Suffix}"
+                red " 已被 Netflix 屏蔽, 403 访问错误 "
                 return
             fi
         fi
 
         if [ "${resultIndex}" == "Not Available" ];then
-            echo -e "${Font_Red}Netflix 不提供此地区服务 ${Font_Suffix}"
+            red " Netflix 不提供此地区服务 "
             return
         fi
 
-        if [[ "${resultIndex}" == "curl"* ]];then
-            echo -e "${Font_Red}网络错误 无法打开 Netflix 网站${Font_Suffix}"
-            return
-        fi
+
 
 
 
         # green " Test Url: $1 ${netflixLinkOwn}"
-        resultOwn=$($1 ${netflixLinkIndex} 2>&1)
+        resultOwn=$($1 -S ${netflixLinkIndex} 2>&1)
 
         if [[ "${resultOwn}" == *"page-404"* ]] || [[ "${resultOwn}" == *"NSEZ-403"* ]];then
-            echo -e "${Font_Red} 本机 $2 不能看 Netflix 任何剧集 ${Font_Suffix}"
+            red " 本机 $2 不能播放 Netflix 任何剧集"
             return
         fi
 
@@ -198,21 +199,19 @@ function testNetflixOneMethod(){
            netflixRegion="US"
         fi
 
-        result1=$($1 "https://www.netflix.com/title/70143836" 2>&1)
-        result2=$($1 "https://www.netflix.com/title/80027042" 2>&1)
-        result3=$($1 "https://www.netflix.com/title/70140425" 2>&1)
-        result4=$($1 "https://www.netflix.com/title/70283261" 2>&1)
-        result5=$($1 "https://www.netflix.com/title/70143860" 2>&1)
-        result6=$($1 "https://www.netflix.com/title/70202589" 2>&1)
+        result1=$($1 -S "https://www.netflix.com/title/70143836" 2>&1)
+        result2=$($1 -S "https://www.netflix.com/title/80027042" 2>&1)
+        result3=$($1 -S "https://www.netflix.com/title/70140425" 2>&1)
+        result4=$($1 -S "https://www.netflix.com/title/70283261" 2>&1)
+        result5=$($1 -S "https://www.netflix.com/title/70143860" 2>&1)
+        result6=$($1 -S "https://www.netflix.com/title/70202589" 2>&1)
 
         if [[ "$result1" == *"page-404"* ]] && [[ "$result2" == *"page-404"* ]] && [[ "$result3" == *"page-404"* ]] && [[ "$result4" == *"page-404"* ]] && [[ "$result5" == *"page-404"* ]] && [[ "$result6" == *"page-404"* ]]; then
-            echo -e "${Font_Yellow}本机 $2 仅解锁 Netflix 自制剧. 区域: ${netflixRegion} ${Font_Suffix}"
+            yellow " 本机 $2 仅解锁 Netflix 自制剧, 无法播放非自制剧. 区域: ${netflixRegion}"
             return
         fi
 
-
-
-        echo -e "${Font_Green}恭喜 本机 $2 解锁 Netflix 全部剧集 包括非自制剧. 区域: ${netflixRegion} ${Font_Suffix}"
+        green " 恭喜 本机 $2 解锁 Netflix 全部剧集 包括非自制剧. 区域: ${netflixRegion} "
         return
 
     else
@@ -253,7 +252,7 @@ function testYoutubeAll(){
 
 
     if [[ $1 == "ipv4" ]]; then
-        yellow " 开始测试本机的IPv4 解锁 Youtube Premium 情况"
+        bold " 开始测试本机的IPv4 解锁 Youtube Premium 情况"
         curlCommand="${curlCommand} -4"
         curlInfo="IPv4"
 
@@ -265,7 +264,7 @@ function testYoutubeAll(){
             return
         else
 
-            yellow " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Youtube Premium 情况"
+            bold " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Youtube Premium 情况"
             curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
             curlInfo="IPv4 CloudFlare WARP"
         fi
@@ -279,19 +278,19 @@ function testYoutubeAll(){
                 echo
                 return
             else
-                yellow " 开始测试本机的IPv6 解锁 Youtube Premium 情况"
+                bold " 开始测试本机的IPv6 解锁 Youtube Premium 情况"
                 curlCommand="${curlCommand} -6"
                 curlInfo="IPv6"
             fi
         else
-                yellow " 开始测试本机的IPv6 解锁 Youtube Premium 情况"
+                bold " 开始测试本机的IPv6 解锁 Youtube Premium 情况"
                 curlCommand="${curlCommand} -6"
                 curlInfo="IPv6"
 
         fi
 
     elif [[ $1 == "ipv6warp" ]]; then
-        yellow " 开始测试本机的IPv6 通过CloudFlare WARP 解锁 Youtube Premium 情况"
+        bold " 开始测试本机的IPv6 通过CloudFlare WARP 解锁 Youtube Premium 情况"
         curlCommand="${curlCommand} -6"
         curlInfo="IPv6 CloudFlare WARP"
 
@@ -317,15 +316,23 @@ function testYoutubeOneMethod(){
 
     if [[ -n "$1" ]]; then
 
-        youtubeLinkRed="https://www.netflix.com/"
+        youtubeLinkRed="https://www.youtube.com/red"
 
 #        green " Test Url: $1 ${youtubeLinkRed}"
+
+        resultYoutubeIndex=$($1 -S ${youtubeLinkRed} 2>&1)
+  
+        if [[ "${resultYoutubeIndex}" == "curl"* ]];then
+            red " 网络错误 无法打开 YouTube 网站"
+            return
+        fi
+
         resultYoutube=$($1 ${youtubeLinkRed} | sed 's/,/\n/g' | grep countryCode | cut -d '"' -f4)
 
         if [ ! -n "${resultYoutube}" ]; then
-            echo -e "${Font_White}YouTube 角标不显示 可能不支持 YouTube Premium${Font_Suffix}"
+            yellow " YouTube 角标不显示 可能不支持 YouTube Premium"
         else
-            echo -e "${Font_Green}本机 $2 支持 YouTube Premium, 角标: ${resultYoutube}${Font_Suffix}"
+            green " 本机 $2 支持 YouTube Premium, 角标: ${resultYoutube}"
         fi
 
     else
@@ -353,6 +360,7 @@ function startNetflixTest(){
     green " =================================================="
     green " Netflix 非自制剧解锁 检测脚本 By JinWYP"
     green " =================================================="
+    echo
 
     testNetflixAll "ipv4"
     testNetflixAll "ipv4warp"
