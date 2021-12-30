@@ -154,7 +154,7 @@ function testNetflixOneMethod(){
         netflixLinkOwn="https://www.netflix.com/title/80018499"
 
 
-        # green " Test Url: $1 ${netflixLinkIndex}"
+        # green " Test Url: $1 -S ${netflixLinkIndex}"
         resultIndex=$($1 -S ${netflixLinkIndex} 2>&1)
         
         if [[ "${resultIndex}" == "curl"* ]];then
@@ -179,7 +179,7 @@ function testNetflixOneMethod(){
 
 
 
-        # green " Test Url: $1 ${netflixLinkOwn}"
+        # green " Test Url: $1 -S ${netflixLinkOwn}"
         resultOwn=$($1 -S ${netflixLinkIndex} 2>&1)
 
         if [[ "${resultOwn}" == *"page-404"* ]] || [[ "${resultOwn}" == *"NSEZ-403"* ]];then
