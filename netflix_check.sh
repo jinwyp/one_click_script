@@ -39,8 +39,7 @@ function testWARPEnabled(){
 
     if [[ -f "${configWARPPortFilePath}" ]]; then
         configWARPPortLocalServerPort="$(cat ${configWARPPortFilePath})"
-        configWARPPortLocalServerText="检测到本机已安装 WARP Sock5, 端口号 ${configWARPPortLocalServerPort}"
-        yellow "${configWARPPortLocalServerText}"
+        yellow "检测到本机已安装 WARP Sock5, 端口号 ${configWARPPortLocalServerPort}"
         echo
     fi
 
