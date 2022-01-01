@@ -2646,8 +2646,9 @@ function installV2ray(){
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
 
     V2rayDNSUnlockText="AsIs"
+    v2rayConfigDNSInput=""
+
     if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
-        v2rayConfigDNSInput=""
         V2rayDNSUnlockText="AsIs"
     else
         V2rayDNSUnlockText="UseIP"
@@ -2758,8 +2759,8 @@ EOM
         green " 2. 解锁 Netflix 限制"
         green " 3. 解锁 Youtube 和 Youtube Premium"
         green " 4. 解锁 Pornhub, 解决视频变成玉米无法观看问题"
-        green " 5. 同时解锁 2, 4项, 即为 解锁 Netflix 和 Pornhub 限制"
-        green " 6. 同时解锁 2, 3, 4项, 即为 解锁 Netflix, Youtube 和 Pornhub 限制"
+        green " 5. 同时解锁 Netflix 和 Pornhub 限制"
+        green " 6. 同时解锁 Netflix, Youtube 和 Pornhub 限制"
         green " 7. 同时解锁 Netflix, Hulu, HBO, Disney 和 Pornhub 限制"
         green " 8. 同时解锁 Netflix, Hulu, HBO, Disney, Youtube 和 Pornhub 限制"
         green " 9. 解锁 全部流媒体 包括 Netflix, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico, dmm, Pornhub 等"
@@ -2780,20 +2781,76 @@ EOM
             V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "6" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:youtube\", \"geosite:netflix\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "7" ]]; then
             V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "8" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:youtube\", \"geosite:netflix\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "9" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:youtube\", \"geosite:netflix\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
 
         fi
 
     fi
+
+
+
+
+    echo
+    echo
+    yellow " 某大佬提供了可以解锁Netflix新加坡区的V2ray服务器, 不保证一直可用"
+    read -p "是否通过神秘力量解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
+    isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
+
+    v2rayConfigRouteGoNetflixInput=""
+    v2rayConfigOutboundV2rayGoNetflixServerInput=""
+    if [[ $isV2rayUnlockGoNetflixInput == [Nn] ]]; then
+        echo
+    else
+        removeString="\"geosite:netflix\", "
+        V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString"}
+        read -r -d '' v2rayConfigRouteGoNetflixInput << EOM
+            {
+                "type": "field",
+                "outboundTag": "GoNetflix",
+                "domain": [ "geosite:netflix" ] 
+            },
+EOM
+
+        read -r -d '' v2rayConfigOutboundV2rayGoNetflixServerInput << EOM
+        {
+            "tag": "GoNetflix",
+            "protocol": "vmess",
+            "streamSettings": {
+                "network": "ws",
+                "security": "tls",
+                "tlsSettings": {
+                    "allowInsecure": false
+                },
+                "wsSettings": {
+                    "path": "ws"
+                }
+            },
+            "mux": {
+                "enabled": true,
+                "concurrency": 8
+            },
+            "settings": {
+                "vnext": [{
+                    "address": "free-sg-01.gonetflix.xyz",
+                    "port": 443,
+                    "users": [
+                        { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
+                    ]
+                }]
+            }
+        },
+EOM
+    fi
+
 
 
     echo
@@ -2820,6 +2877,7 @@ EOM
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
         "rules": [
+            ${v2rayConfigRouteGoNetflixInput}
             {
                 "type": "field",
                 "outboundTag": "${V2rayUnlockVideoSiteOutboundTagText}",
@@ -2861,6 +2919,7 @@ EOM
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
         "rules": [
+            ${v2rayConfigRouteGoNetflixInput}
             {
                 "type": "field",
                 "outboundTag": "${V2rayUnlockGoogleOutboundTagText}",
@@ -3522,8 +3581,9 @@ EOM
             "protocol": "blackhole",
             "settings": {}
         },
-        
+
         ${v2rayConfigOutboundV2rayServerInput}
+        ${v2rayConfigOutboundV2rayGoNetflixServerInput}
         {
             "tag":"IPv6_out",
             "protocol": "freedom",
@@ -3545,34 +3605,8 @@ EOM
             "streamSettings": {
                 "network": "tcp"
             }
-        },
-        {
-            "tag": "GoNetflix",
-            "protocol": "vmess",
-            "streamSettings": {
-                "network": "ws",
-                "security": "tls",
-                "tlsSettings": {
-                    "allowInsecure": false
-                },
-                "wsSettings": {
-                    "path": "ws"
-                }
-            },
-            "mux": {
-                "enabled": true,
-                "concurrency": 8
-            },
-            "settings": {
-                "vnext": [{
-                    "address": "free-sg-01.gonetflix.xyz",
-                    "port": 443,
-                    "users": [
-                        { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
-                    ]
-                }]
-            }
-        }          
+        }
+
     ]
 
 EOM
@@ -5514,7 +5548,7 @@ function start_menu(){
     fi
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2021-11-29 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-1-2 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"

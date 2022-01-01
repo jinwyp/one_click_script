@@ -2100,7 +2100,10 @@ function installWireguard(){
 
 	if [[ ${isContinueInput} == [Yy] ]]; then
 		echo
+        green " =================================================="
         green " 开始安装 WireGuard "
+        green " =================================================="
+        echo
 	else 
         green " 建议请先用本脚本安装 linux kernel 5.6 以上的内核 !"
 		exit
@@ -2192,6 +2195,7 @@ function installWGCF(){
     echo
     green " =================================================="
     green " 开始安装 Cloudflare WARP 命令行工具 Wgcf ${versionWgcf}"
+    green " =================================================="
     echo
 
     mkdir -p ${configWgcfConfigFolderPath}
@@ -2871,7 +2875,7 @@ function start_menu(){
     showLinuxKernelInfoNoDisplay
 
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2021-11-29 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2022-1-2 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
