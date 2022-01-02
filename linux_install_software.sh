@@ -1582,6 +1582,11 @@ function installAirUniverse(){
     (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart xray.service ") | sort - | uniq - | crontab -
     (crontab -l ; echo "32 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
 
+    mkdir -p /root/xray
+    wget -O /root/xray/xray150.zip https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip
+    unzip -d /root/xray /root/xray/xray150.zip
+    mv -f /root/xray/xray /usr/local/bin 
+    chmod +x /usr/local/bin/*
 
     if test -s ${configAirUniverseConfigFilePath}; then
 

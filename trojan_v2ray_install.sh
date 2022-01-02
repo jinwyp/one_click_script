@@ -847,7 +847,7 @@ downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 versionV2ray="4.41.1"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.4.2"
+versionXray="1.5.0"
 downloadFilenameXray="Xray-linux-64.zip"
 
 versionTrojanWeb="2.10.5"
@@ -2370,7 +2370,7 @@ function downloadV2rayXrayBin(){
         downloadAndUnzip "https://github.com/v2fly/v2ray-core/releases/download/v${versionV2ray}/${downloadFilenameV2ray}" "${tempDownloadV2rayPath}" "${downloadFilenameV2ray}"
 
     else
-        # https://github.com/XTLS/Xray-core/releases/download/v1.4.2/Xray-linux-64.zip
+        # https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip
 
         if [[ ${osArchitecture} == "arm" ]] ; then
             downloadFilenameXray="Xray-linux-arm32-v6.zip"
