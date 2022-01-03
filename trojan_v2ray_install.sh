@@ -844,7 +844,7 @@ downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 versionTrojanGo="0.10.5"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.41.1"
+versionV2ray="4.44.0"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
 versionXray="1.5.0"
@@ -965,7 +965,7 @@ function getTrojanAndV2rayVersion(){
     fi
 
     if [[ $1 == "v2ray" ]] ; then
-        versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
+        # versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
         echo "versionV2ray: ${versionV2ray}"
     fi
 
