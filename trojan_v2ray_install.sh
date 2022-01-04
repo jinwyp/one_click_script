@@ -2871,6 +2871,11 @@ EOM
             V2rayUnlockVideoSiteRuleText="${V2rayUnlockVideoSiteRuleText:1}"
         fi
 
+        if [[ "${isV2rayUnlockGoogleInput}" == "1" ]]; then
+            V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
+            V2rayUnlockVideoSiteRuleText="\"test.com\""
+        fi 
+
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
         "rules": [
