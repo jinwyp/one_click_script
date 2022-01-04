@@ -1552,9 +1552,6 @@ function installTrojanV2rayWithNginx(){
 
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
-    if [[ $1 == "repair" ]] ; then
-        blue " 务必与之前安装失败时使用的域名一致"
-    fi
     green " ================================================== "
 
     read configSSLDomain
