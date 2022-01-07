@@ -1544,7 +1544,65 @@ function editXrayRConfig(){
 
 
 
+function downgradeXray(){
+    echo
+    green " =================================================="
+    green "  准备开始降级Xray !"
+    green " =================================================="
+    echo
 
+    yellow " 请选择Xray降级到的版本, 默认1.5.0"
+    green " 1. 1.5.0"
+    green " 2. 1.4.5"
+    green " 3. 1.4.3"
+    green " 4. 1.4.2"
+    green " 5. 1.4.0"
+    green " 6. 1.3.1"
+    echo
+    read -p "请选择Xray版本? 直接回车默认选1, 请输入纯数字:" isXrayVersionInput
+    isXrayVersionInput=${isXrayVersionInput:-1}
+
+    downloadXrayVersion="1.5.0"
+    downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip"
+
+    if [[ $isXrayVersionInput == "2" ]]; then
+        downloadXrayVersion="1.4.5"
+
+    elif [[ $isXrayVersionInput == "3" ]]; then
+        downloadXrayVersion="1.4.3"
+
+    elif [[ $isXrayVersionInput == "4" ]]; then
+        downloadXrayVersion="1.4.2"
+
+    elif [[ $isXrayVersionInput == "5" ]]; then
+        downloadXrayVersion="1.4.0"
+
+    elif [[ $isXrayVersionInput == "6" ]]; then
+        downloadXrayVersion="1.3.1"
+
+    else
+        downloadXrayVersion="1.5.0"
+    fi
+
+    downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
+    xrayDownloadFilename="Xray-linux-64_${downloadXrayVersion}.zip"
+    xrayDownloadFolder="/root/xray_temp"
+    
+    mkdir -p ${xrayDownloadFolder}
+    wget -O ${xrayDownloadFolder}/${xrayDownloadFilename} ${downloadXrayUrl}
+    unzip -d ${xrayDownloadFolder} ${xrayDownloadFolder}/${xrayDownloadFilename}
+    mv -f ${xrayDownloadFolder}/xray /usr/local/bin
+    chmod +x /usr/local/bin/*
+    rm -rf ${xrayDownloadFolder}
+
+    if [[ -z $1 ]]; then
+        echo
+        systemctl restart xray.service
+        systemctl status xray.service
+        echo
+    fi
+
+}
 
 
 
@@ -1582,11 +1640,7 @@ function installAirUniverse(){
     (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart xray.service ") | sort - | uniq - | crontab -
     (crontab -l ; echo "32 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
 
-    mkdir -p /root/xray
-    wget -O /root/xray/xray150.zip https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip
-    unzip -d /root/xray /root/xray/xray150.zip
-    mv -f /root/xray/xray /usr/local/bin 
-    chmod +x /usr/local/bin/*
+    downgradeXray "norestart"
 
     if test -s ${configAirUniverseConfigFilePath}; then
 
@@ -2159,10 +2213,11 @@ EOF
     if [[ -z $1 ]]; then
         echo
         green " =================================================="
+        green " 重启 xray 和 air-universe 服务 "
         systemctl restart xray.service
         airu restart
         green " =================================================="
-
+        echo
     fi
 
 }
@@ -2592,6 +2647,7 @@ function start_menu(){
     green " 54. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
     green " 56. 配合WARP(Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
+    green " 57. 降级xray 到 1.5或1.4"
     echo 
     green " 71. 单独申请域名SSL证书"
     echo
@@ -2717,6 +2773,9 @@ function start_menu(){
         ;; 
         56 )
             replaceAirUniverseConfigWARP
+        ;; 
+        57 )
+            downgradeXray
         ;; 
         71 )
             getHTTPS
