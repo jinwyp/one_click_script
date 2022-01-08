@@ -1176,11 +1176,11 @@ function getHTTPSCertificate(){
             # https://github.com/m3ng9i/ran/issues/10
 
             ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_amd64.zip"
-            ranDownloadFileName="ran_linux_amd64.zip"
+            ranDownloadFileName="ran_linux_amd64"
             
-            if [[ "${osArchitecture}" == "arm"]]; then
+            if [[ "${osArchitecture}" == "arm" ]]; then
                 ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_arm64.zip"
-                ranDownloadFileName="ran_linux_arm64.zip"
+                ranDownloadFileName="ran_linux_arm64"
             fi
 
             mkdir -p ${configRanPath}
