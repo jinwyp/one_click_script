@@ -338,7 +338,7 @@ function promptContinueOpeartion(){
 	if [[ $isContinueInput == [Yy] ]]; then
 		echo ""
 	else 
-		exit
+		exit 1
 	fi
 }
 

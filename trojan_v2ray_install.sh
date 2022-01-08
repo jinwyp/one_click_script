@@ -172,6 +172,17 @@ function getLinuxOSRelease(){
 
 
 
+function promptContinueOpeartion(){
+	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
+	isContinueInput=${isContinueInput:-Y}
+
+	if [[ $isContinueInput == [Yy] ]]; then
+		echo ""
+	else 
+		exit 1
+	fi
+}
+
 osPort80=""
 osPort443=""
 osSELINUXCheck=""
@@ -186,23 +197,23 @@ function testLinuxPortUsage(){
     if [ -n "$osPort80" ]; then
         process80=`netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}'`
         red "==========================================================="
-        red "检测到80端口被占用，占用进程为：${process80}，本次安装结束"
+        red "检测到80端口被占用，占用进程为：${process80} "
         red "==========================================================="
-        exit 1
+        promptContinueOpeartion
     fi
 
     if [ -n "$osPort443" ]; then
         process443=`netstat -tlpn | awk -F '[: ]+' '$5=="443"{print $9}'`
         red "============================================================="
-        red "检测到443端口被占用，占用进程为：${process443}，本次安装结束"
+        red "检测到443端口被占用，占用进程为：${process443} "
         red "============================================================="
-        exit 1
+        promptContinueOpeartion
     fi
 
     osSELINUXCheck=$(grep SELINUX= /etc/selinux/config | grep -v "#")
     if [ "$osSELINUXCheck" == "SELINUX=enforcing" ]; then
         red "======================================================================="
-        red "检测到SELinux为开启强制模式状态，为防止申请证书失败，请先重启VPS后，再执行本脚本"
+        red "检测到SELinux为开启强制模式状态, 为防止申请证书失败 将关闭SELinux. 请先重启VPS后，再执行本脚本"
         red "======================================================================="
         read -p "是否现在重启? 请输入 [Y/n] :" osSELINUXCheckIsRebootInput
         [ -z "${osSELINUXCheckIsRebootInput}" ] && osSELINUXCheckIsRebootInput="y"
@@ -218,7 +229,7 @@ function testLinuxPortUsage(){
 
     if [ "$osSELINUXCheck" == "SELINUX=permissive" ]; then
         red "======================================================================="
-        red "检测到SELinux为宽容模式状态，为防止申请证书失败，请先重启VPS后，再执行本脚本"
+        red "检测到SELinux为宽容模式状态, 为防止申请证书失败, 将关闭SELinux. 请先重启VPS后，再执行本脚本"
         red "======================================================================="
         read -p "是否现在重启? 请输入 [Y/n] :" osSELINUXCheckIsRebootInput
         [ -z "${osSELINUXCheckIsRebootInput}" ] && osSELINUXCheckIsRebootInput="y"
@@ -1164,18 +1175,26 @@ function getHTTPSCertificate(){
         else
             # https://github.com/m3ng9i/ran/issues/10
 
+            ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_amd64.zip"
+            ranDownloadFileName="ran_linux_amd64.zip"
+            
+            if [[ "${osArchitecture}" == "arm"]]; then
+                ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_arm64.zip"
+                ranDownloadFileName="ran_linux_arm64.zip"
+            fi
+
             mkdir -p ${configRanPath}
             
-            if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
+            if [[ -f "${configRanPath}/${ranDownloadFileName}" ]]; then
                 echo
             else
-                downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
-                chmod +x ${configRanPath}/ran_linux_amd64
-            fi    
+                downloadAndUnzip "${ranDownloadUrl}" "${configRanPath}" "${ranDownloadFileName}" 
+                chmod +x "${configRanPath}/${ranDownloadFileName}"
+            fi
 
             echo
-            echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
-            nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
+            echo "nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
+            nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
             echo
             
             green "  开始申请证书, acme.sh 通过 http webroot mode 申请, 并使用 ran 作为临时的web服务器 "

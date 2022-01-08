@@ -174,6 +174,16 @@ function getLinuxOSRelease(){
 
 
 
+function promptContinueOpeartion(){
+	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
+	isContinueInput=${isContinueInput:-Y}
+
+	if [[ $isContinueInput == [Yy] ]]; then
+		echo ""
+	else 
+		exit 1
+	fi
+}
 
 osPort80=""
 osPort443=""
@@ -189,23 +199,23 @@ function testLinuxPortUsage(){
     if [ -n "$osPort80" ]; then
         process80=`netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}'`
         red "==========================================================="
-        red "检测到80端口被占用，占用进程为：${process80}，本次安装结束"
+        red "检测到80端口被占用，占用进程为：${process80} "
         red "==========================================================="
-        exit 1
+        promptContinueOpeartion
     fi
 
     if [ -n "$osPort443" ]; then
         process443=`netstat -tlpn | awk -F '[: ]+' '$5=="443"{print $9}'`
         red "============================================================="
-        red "检测到443端口被占用，占用进程为：${process443}，本次安装结束"
+        red "检测到443端口被占用，占用进程为：${process443} "
         red "============================================================="
-        exit 1
+        promptContinueOpeartion
     fi
 
     osSELINUXCheck=$(grep SELINUX= /etc/selinux/config | grep -v "#")
     if [ "$osSELINUXCheck" == "SELINUX=enforcing" ]; then
         red "======================================================================="
-        red "检测到SELinux为开启强制模式状态，为防止申请证书失败，请先重启VPS后，再执行本脚本"
+        red "检测到SELinux为开启强制模式状态, 为防止申请证书失败 将关闭SELinux. 请先重启VPS后，再执行本脚本"
         red "======================================================================="
         read -p "是否现在重启? 请输入 [Y/n] :" osSELINUXCheckIsRebootInput
         [ -z "${osSELINUXCheckIsRebootInput}" ] && osSELINUXCheckIsRebootInput="y"
@@ -221,7 +231,7 @@ function testLinuxPortUsage(){
 
     if [ "$osSELINUXCheck" == "SELINUX=permissive" ]; then
         red "======================================================================="
-        red "检测到SELinux为宽容模式状态，为防止申请证书失败，请先重启VPS后，再执行本脚本"
+        red "检测到SELinux为宽容模式状态, 为防止申请证书失败, 将关闭SELinux. 请先重启VPS后，再执行本脚本"
         red "======================================================================="
         read -p "是否现在重启? 请输入 [Y/n] :" osSELINUXCheckIsRebootInput
         [ -z "${osSELINUXCheckIsRebootInput}" ] && osSELINUXCheckIsRebootInput="y"
