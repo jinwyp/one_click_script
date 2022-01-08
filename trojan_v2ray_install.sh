@@ -5,15 +5,16 @@ export LC_ALL=C
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 
+
+sudoCmd=""
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
   sudoCmd="sudo"
-else
-  sudoCmd=""
 fi
 
+
 uninstall() {
-  ${sudoCmd} $(which rm) -rf $1
-  printf "File or Folder Deleted: %s\n" $1
+    ${sudoCmd} $(which rm) -rf $1
+    printf "File or Folder Deleted: %s\n" $1
 }
 
 
@@ -33,6 +34,8 @@ blue(){
 bold(){
     echo -e "\033[1m\033[01m$1\033[0m"
 }
+
+
 
 
 osCPU="intel"
@@ -64,11 +67,58 @@ function checkCPU(){
 	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
 	if [[ $osCPUText =~ "GenuineIntel" ]]; then
 		osCPU="intel"
-    else
+    elif [[ $osCPUText =~ "AMD" ]]; then
         osCPU="amd"
+    else
+        echo
     fi
 
 	# green " Status 状态显示--当前CPU是: $osCPU"
+}
+
+# 检测系统版本号
+getLinuxOSVersion(){
+    if [[ -s /etc/redhat-release ]]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/issue)
+    fi
+
+    # https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
+
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        source /etc/os-release
+        osInfo=$NAME
+        osReleaseVersionNo=$VERSION_ID
+
+        if [ -n $VERSION_CODENAME ]; then
+            osReleaseVersionCodeName=$VERSION_CODENAME
+        fi
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        osInfo=$(lsb_release -si)
+        osReleaseVersionNo=$(lsb_release -sr)
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        . /etc/lsb-release
+        osInfo=$DISTRIB_ID
+        
+        osReleaseVersionNo=$DISTRIB_RELEASE
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        osInfo=Debian
+        osReleaseVersion=$(cat /etc/debian_version)
+        osReleaseVersionNo=$(sed 's/\..*//' /etc/debian_version)
+    elif [ -f /etc/redhat-release ]; then
+        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        osInfo=$(uname -s)
+        osReleaseVersionNo=$(uname -r)
+    fi
+
+    osReleaseVersionNoShort=$(echo $osReleaseVersionNo | sed 's/\..*//')
 }
 
 # 检测系统发行版代号
@@ -119,50 +169,8 @@ function getLinuxOSRelease(){
     green " 系统信息: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
-# 检测系统版本号
-getLinuxOSVersion(){
-    if [[ -s /etc/redhat-release ]]; then
-        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
-    else
-        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/issue)
-    fi
 
-    # https://unix.stackexchange.com/questions/6345/how-can-i-get-distribution-name-and-version-number-in-a-simple-shell-script
 
-    if [ -f /etc/os-release ]; then
-        # freedesktop.org and systemd
-        source /etc/os-release
-        osInfo=$NAME
-        osReleaseVersionNo=$VERSION_ID
-
-        if [ -n $VERSION_CODENAME ]; then
-            osReleaseVersionCodeName=$VERSION_CODENAME
-        fi
-    elif type lsb_release >/dev/null 2>&1; then
-        # linuxbase.org
-        osInfo=$(lsb_release -si)
-        osReleaseVersionNo=$(lsb_release -sr)
-    elif [ -f /etc/lsb-release ]; then
-        # For some versions of Debian/Ubuntu without lsb_release command
-        . /etc/lsb-release
-        osInfo=$DISTRIB_ID
-        
-        osReleaseVersionNo=$DISTRIB_RELEASE
-    elif [ -f /etc/debian_version ]; then
-        # Older Debian/Ubuntu/etc.
-        osInfo=Debian
-        osReleaseVersion=$(cat /etc/debian_version)
-        osReleaseVersionNo=$(sed 's/\..*//' /etc/debian_version)
-    elif [ -f /etc/redhat-release ]; then
-        osReleaseVersion=$(grep -oE '[0-9.]+' /etc/redhat-release)
-    else
-        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
-        osInfo=$(uname -s)
-        osReleaseVersionNo=$(uname -r)
-    fi
-
-    osReleaseVersionNoShort=$(echo $osReleaseVersionNo | sed 's/\..*//')
-}
 
 osPort80=""
 osPort443=""
@@ -432,19 +440,11 @@ function setLinuxDateZone(){
 
 
 
-# 更新本脚本
-function upgradeScript(){
-    wget -Nq --no-check-certificate -O ./trojan_v2ray_install.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh"
-    green " 本脚本升级成功! "
-    chmod +x ./trojan_v2ray_install.sh
-    sleep 2s
-    exec "./trojan_v2ray_install.sh"
-}
+
 
 
 
 # 软件安装
-
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
@@ -468,6 +468,7 @@ function installSoftDownload(){
 		fi
 	fi 
 }
+
 
 function installPackage(){
     echo
@@ -668,6 +669,31 @@ function installSoftOhMyZsh(){
 
 
 
+
+
+
+
+
+# 更新本脚本
+function upgradeScript(){
+    wget -Nq --no-check-certificate -O ./trojan_v2ray_install.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh"
+    green " 本脚本升级成功! "
+    chmod +x ./trojan_v2ray_install.sh
+    sleep 2s
+    exec "./trojan_v2ray_install.sh"
+}
+
+function installWireguard(){
+    bash <(wget -qO- https://github.com/jinwyp/one_click_script/raw/master/install_kernel.sh)
+    # wget -N --no-check-certificate https://github.com/jinwyp/one_click_script/raw/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+}
+
+
+
+
+
+
+
 # 网络测速
 
 function vps_netflix(){
@@ -725,34 +751,26 @@ function vps_testrace(){
 }
 
 function vps_LemonBench(){
-    wget -O LemonBench.sh -N --no-check-certificate https://ilemonra.in/LemonBenchIntl && chmod +x LemonBench.sh && ./LemonBench.sh fast
+    wget -N --no-check-certificate -O LemonBench.sh https://ilemonra.in/LemonBenchIntl && chmod +x LemonBench.sh && ./LemonBench.sh fast
 }
 
 function vps_autoBestTrace(){
-    wget -O autoBestTrace.sh -N --no-check-certificate https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && ./autoBestTrace.sh
+    wget -N --no-check-certificate -O autoBestTrace.sh https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && ./autoBestTrace.sh
 }
 
 
 
 
 function installBBR(){
-    wget -O tcp_old.sh -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp_old.sh && ./tcp_old.sh
+    wget -N --no-check-certificate -O tcp_old.sh "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp_old.sh && ./tcp_old.sh
 }
 
 function installBBR2(){
-    
-    if [[ -f ./tcp.sh ]];  then
-        mv ./tcp.sh ./tcp_old.sh
-    fi    
     wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
 }
 
 
 
-function installWireguard(){
-    bash <(wget -qO- https://github.com/jinwyp/one_click_script/raw/master/install_kernel.sh)
-    # wget -N --no-check-certificate https://github.com/jinwyp/one_click_script/raw/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
-}
 
 
 function installBTPanel(){
@@ -1516,7 +1534,6 @@ function removeNginx(){
         if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
             rm -rf ${configWebsiteFatherPath}
             ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
-            # uninstall ${configSSLAcmeScriptPath}
             green "  Nginx 卸载完毕, SSL 证书文件已删除!"
             
         else

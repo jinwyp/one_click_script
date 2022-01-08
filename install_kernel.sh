@@ -44,16 +44,11 @@ export LC_ALL=C
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 
-if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-    sudoCmd="sudo"
-else
-    sudoCmd=""
-fi
 
-uninstall() {
-    ${sudoCmd} $(which rm) -rf $1
-    printf "File or Folder Deleted: %s\n" $1
-}
+sudoCmd=""
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+  sudoCmd="sudo"
+fi
 
 
 # fonts color
@@ -81,22 +76,44 @@ Font_color_suffix="\033[0m"
 
 
 
+
+
+osCPU="intel"
+osArchitecture="arm"
 osInfo=""
 osRelease=""
 osReleaseVersion=""
 osReleaseVersionNo=""
+osReleaseVersionNoShort=""
 osReleaseVersionCodeName="CodeName"
 osSystemPackage=""
 osSystemMdPath=""
 osSystemShell="bash"
 
-osKernelVersionFull=$(uname -r)
-osKernelVersionBackup=$(uname -r | awk -F "-" '{print $1}')
-osKernelVersionShort=$(uname -r | cut -d- -f1 | awk -F "." '{print $1"."$2}')
-osKernelBBRStatus=""
-systemBBRRunningStatus="no"
-systemBBRRunningStatusText=""
+function checkArchitecture(){
+	# https://stackoverflow.com/questions/48678152/how-to-detect-386-amd64-arm-or-arm64-os-architecture-via-shell-bash
 
+	case $(uname -m) in
+		i386)   osArchitecture="386" ;;
+		i686)   osArchitecture="386" ;;
+		x86_64) osArchitecture="amd64" ;;
+		arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+		* )     osArchitecture="arm" ;;
+	esac
+}
+
+function checkCPU(){
+	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
+	if [[ $osCPUText =~ "GenuineIntel" ]]; then
+		osCPU="intel"
+    elif [[ $osCPUText =~ "AMD" ]]; then
+        osCPU="amd"
+    else
+        echo
+    fi
+
+	# green " Status 状态显示--当前CPU是: $osCPU"
+}
 
 # 检测系统版本号
 getLinuxOSVersion(){
@@ -112,8 +129,8 @@ getLinuxOSVersion(){
         # freedesktop.org and systemd
         source /etc/os-release
         osInfo=$NAME
-        osReleaseVersionNo=$(echo $VERSION_ID | sed 's/\..*//')    
-        
+        osReleaseVersionNo=$VERSION_ID
+
         if [ -n $VERSION_CODENAME ]; then
             osReleaseVersionCodeName=$VERSION_CODENAME
         fi
@@ -139,6 +156,8 @@ getLinuxOSVersion(){
         osInfo=$(uname -s)
         osReleaseVersionNo=$(uname -r)
     fi
+
+    osReleaseVersionNoShort=$(echo $osReleaseVersionNo | sed 's/\..*//')
 }
 
 
@@ -182,6 +201,8 @@ function getLinuxOSRelease(){
     fi
 
     getLinuxOSVersion
+    checkArchitecture
+	checkCPU
     virt_check
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
@@ -241,6 +262,8 @@ virt_check(){
 		virtual="Dedicated母鸡"
 	fi
 }
+
+
 
 
 
@@ -366,6 +389,13 @@ versionCompareWithOp () {
     fi
 }
 
+
+osKernelVersionFull=$(uname -r)
+osKernelVersionBackup=$(uname -r | awk -F "-" '{print $1}')
+osKernelVersionShort=$(uname -r | cut -d- -f1 | awk -F "." '{print $1"."$2}')
+osKernelBBRStatus=""
+systemBBRRunningStatus="no"
+systemBBRRunningStatusText=""
 
 function listAvailableLinuxKernel(){
     echo
@@ -994,7 +1024,7 @@ function installCentosKernelFromRepo(){
     green "    开始通过 elrepo 源安装 linux 内核, 不支持Centos6 "
     green " =================================================="
 
-    if [ -n "${osReleaseVersionNo}" ]; then 
+    if [ -n "${osReleaseVersionNoShort}" ]; then 
     
         if [ "${linuxKernelToInstallVersion}" = "5.4" ]; then 
             elrepo_kernel_name="kernel-lt"
@@ -1012,7 +1042,7 @@ function installCentosKernelFromRepo(){
         
         linuxKernelToInstallVersionFull=${elrepo_kernel_version}
         
-        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+        if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
             # https://computingforgeeks.com/install-linux-kernel-5-on-centos-7/
 
             # https://elrepo.org/linux/kernel/
@@ -1021,7 +1051,7 @@ function installCentosKernelFromRepo(){
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm
    
-        elif [ "${osReleaseVersionNo}" -eq 8 ]; then
+        elif [ "${osReleaseVersionNoShort}" -eq 8 ]; then
             # https://elrepo.org/linux/kernel/el8/x86_64/RPMS/
             
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
@@ -1109,7 +1139,7 @@ function installCentosKernelManual(){
             elrepo_kernel_name="kernel-lt"
             elrepo_kernel_version=${elrepo_kernel_version_lt}
             elrepo_kernel_filename="elrepo."
-            ELREPODownloadUrl="https://elrepo.org/linux/kernel/el${osReleaseVersionNo}/x86_64/RPMS"
+            ELREPODownloadUrl="https://elrepo.org/linux/kernel/el${osReleaseVersionNoShort}/x86_64/RPMS"
 
             # https://elrepo.org/linux/kernel/el7/x86_64/RPMS/
             # https://elrepo.org/linux/kernel/el7/x86_64/RPMS/kernel-lt-5.4.105-1.el7.elrepo.x86_64.rpm
@@ -1120,7 +1150,7 @@ function installCentosKernelManual(){
             elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun510}
             elrepo_kernel_filename=""
-            ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNo}"
+            ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNoShort}"
 
             # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.23-1.el7.x86_64.rpm
             # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.37-1.el7.x86_64.rpm
@@ -1131,7 +1161,7 @@ function installCentosKernelManual(){
             elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun_latest}
             elrepo_kernel_filename=""
-            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
+            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNoShort}"       
 
             # https://fr1.teddyvps.com/kernel/el7/kernel-ml-5.12.14-1.el7.x86_64.rpm
 
@@ -1139,7 +1169,7 @@ function installCentosKernelManual(){
             elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml}
             elrepo_kernel_filename="elrepo."
-            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNo}"       
+            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNoShort}"       
 
             # https://fr1.teddyvps.com/kernel/el7/kernel-ml-5.13.0-1.el7.elrepo.x86_64.rpm
         fi
@@ -1153,7 +1183,7 @@ function installCentosKernelManual(){
         echo "+++++++++++ elrepo_kernel_version ${elrepo_kernel_version}"
         echo
 
-        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+        if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-${elrepo_kernel_version}-1.el7.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-devel-${elrepo_kernel_version}-1.el7.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-headers-${elrepo_kernel_version}-1.el7.${elrepo_kernel_filename}x86_64.rpm
@@ -1174,7 +1204,7 @@ function installCentosKernelManual(){
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo        
 
-        if [ "${osReleaseVersionNo}" -eq 8 ]; then
+        if [ "${osReleaseVersionNoShort}" -eq 8 ]; then
             rpm -ivh --force --nodeps ${elrepo_kernel_name}-core-${elrepo_kernel_version}-*.rpm
         fi
         
@@ -1207,7 +1237,7 @@ function installCentosKernelManual(){
         mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
         cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
-        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+        if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
             
             if [ "$kernelVersionFirstletter" = "5" ]; then 
                 # http://mirror.centos.org/altarch/7/kernel/x86_64/Packages/
@@ -1257,7 +1287,7 @@ function installCentosKernelManual(){
 
         linuxKernelToInstallVersionFull="4.14.129-bbrplus"
 
-        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+        if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
             mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
             cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
@@ -1296,7 +1326,7 @@ function installCentosKernelManual(){
         
 
 
-        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+        if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
 
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.15-bbrplus/CentOS-7_Required_kernel-bbrplus-5.14.15-1.bbrplus.el7.x86_64.rpm
 
@@ -1482,7 +1512,7 @@ updateGrubConfig(){
         green " =================================================="
         echo
 
-        if [[ ${osReleaseVersionNo} = "6" ]]; then
+        if [[ ${osReleaseVersionNoShort} = "6" ]]; then
             red " 不支持 Centos 6"
             exit 255
         else
@@ -1984,7 +2014,7 @@ function installWARPClient(){
         ${sudoCmd} rpm -e gpg-pubkey-835b8acb-*
         ${sudoCmd} rpm -e gpg-pubkey-8e5f9a5d-*
 
-        if [ "${osReleaseVersionNo}" -eq 7 ]; then
+        if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
             ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el7.rpm
             ${sudoCmd} rpm -ivh http://pkg.cloudflare.com/cloudflare-release-latest.el7.rpm
             # red "Cloudflare WARP Official client is not supported on Centos 7"
@@ -1998,7 +2028,7 @@ function installWARPClient(){
 
     if [[ ! -f "/bin/warp-cli" ]]; then
         green " =================================================="
-        red "  ${osInfo}${osReleaseVersionNo} ${osReleaseVersionCodeName} is not supported ! "
+        red "  ${osInfo}${osReleaseVersionNoShort} ${osReleaseVersionCodeName} is not supported ! "
         green " =================================================="
         exit
     fi
@@ -2151,14 +2181,14 @@ function installWireguard(){
 
             green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
             echo
-            if [ "${osReleaseVersionNo}" -eq 7 ]; then
+            if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
                 ${sudoCmd} yum install -y yum-plugin-elrepo
             fi
 
             ${sudoCmd} yum install -y wireguard-tools
         else 
             
-            if [ "${osReleaseVersionNo}" -eq 7 ]; then
+            if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
                 if [[ ${osKernelVersionBackup} == *"3.10."* ]]; then
                     green " 当前系统内核版本为原版Centos 7 ${osKernelVersionBackup} , 直接安装 kmod-wireguard "
                     ${sudoCmd} yum install -y yum-plugin-elrepo

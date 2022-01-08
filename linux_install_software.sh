@@ -1,8 +1,14 @@
 #!/bin/bash
 
 export LC_ALL=C
-export LANG=C
+export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
+
+
+sudoCmd=""
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+  sudoCmd="sudo"
+fi
 
 
 # fonts color
@@ -24,12 +30,11 @@ bold(){
 
 
 
-sudoCommand=""
 
 
-if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-  sudoCommand="sudo"
-fi
+
+
+
 
 
 
@@ -46,64 +51,29 @@ osSystemMdPath=""
 osSystemShell="bash"
 
 
+function checkArchitecture(){
+	# https://stackoverflow.com/questions/48678152/how-to-detect-386-amd64-arm-or-arm64-os-architecture-via-shell-bash
+
+	case $(uname -m) in
+		i386)   osArchitecture="386" ;;
+		i686)   osArchitecture="386" ;;
+		x86_64) osArchitecture="amd64" ;;
+		arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+		* )     osArchitecture="arm" ;;
+	esac
+}
+
 function checkCPU(){
 	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
 	if [[ $osCPUText =~ "GenuineIntel" ]]; then
 		osCPU="intel"
-    else
+    elif [[ $osCPUText =~ "AMD" ]]; then
         osCPU="amd"
+    else
+        echo
     fi
 
 	# green " Status 状态显示--当前CPU是: $osCPU"
-}
-
-
-
-# 检测系统发行版代号
-function getLinuxOSRelease(){
-    if [[ -f /etc/redhat-release ]]; then
-        osRelease="centos"
-        osSystemPackage="yum"
-        osSystemMdPath="/usr/lib/systemd/system/"
-        osReleaseVersionCodeName=""
-    elif cat /etc/issue | grep -Eqi "debian|raspbian"; then
-        osRelease="debian"
-        osSystemPackage="apt-get"
-        osSystemMdPath="/lib/systemd/system/"
-        osReleaseVersionCodeName="buster"
-    elif cat /etc/issue | grep -Eqi "ubuntu"; then
-        osRelease="ubuntu"
-        osSystemPackage="apt-get"
-        osSystemMdPath="/lib/systemd/system/"
-        osReleaseVersionCodeName="bionic"
-    elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
-        osRelease="centos"
-        osSystemPackage="yum"
-        osSystemMdPath="/usr/lib/systemd/system/"
-        osReleaseVersionCodeName=""
-    elif cat /proc/version | grep -Eqi "debian|raspbian"; then
-        osRelease="debian"
-        osSystemPackage="apt-get"
-        osSystemMdPath="/lib/systemd/system/"
-        osReleaseVersionCodeName="buster"
-    elif cat /proc/version | grep -Eqi "ubuntu"; then
-        osRelease="ubuntu"
-        osSystemPackage="apt-get"
-        osSystemMdPath="/lib/systemd/system/"
-        osReleaseVersionCodeName="bionic"
-    elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
-        osRelease="centos"
-        osSystemPackage="yum"
-        osSystemMdPath="/usr/lib/systemd/system/"
-        osReleaseVersionCodeName=""
-    fi
-
-    getLinuxOSVersion
-	checkCPU
-
-    [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
-
-    green " 系统信息: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
 # 检测系统版本号
@@ -150,6 +120,56 @@ getLinuxOSVersion(){
 
     osReleaseVersionNoShort=$(echo $osReleaseVersionNo | sed 's/\..*//')
 }
+
+# 检测系统发行版代号
+function getLinuxOSRelease(){
+    if [[ -f /etc/redhat-release ]]; then
+        osRelease="centos"
+        osSystemPackage="yum"
+        osSystemMdPath="/usr/lib/systemd/system/"
+        osReleaseVersionCodeName=""
+    elif cat /etc/issue | grep -Eqi "debian|raspbian"; then
+        osRelease="debian"
+        osSystemPackage="apt-get"
+        osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
+    elif cat /etc/issue | grep -Eqi "ubuntu"; then
+        osRelease="ubuntu"
+        osSystemPackage="apt-get"
+        osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
+    elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
+        osRelease="centos"
+        osSystemPackage="yum"
+        osSystemMdPath="/usr/lib/systemd/system/"
+        osReleaseVersionCodeName=""
+    elif cat /proc/version | grep -Eqi "debian|raspbian"; then
+        osRelease="debian"
+        osSystemPackage="apt-get"
+        osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="buster"
+    elif cat /proc/version | grep -Eqi "ubuntu"; then
+        osRelease="ubuntu"
+        osSystemPackage="apt-get"
+        osSystemMdPath="/lib/systemd/system/"
+        osReleaseVersionCodeName="bionic"
+    elif cat /proc/version | grep -Eqi "centos|red hat|redhat"; then
+        osRelease="centos"
+        osSystemPackage="yum"
+        osSystemMdPath="/usr/lib/systemd/system/"
+        osReleaseVersionCodeName=""
+    fi
+
+    getLinuxOSVersion
+    checkArchitecture
+	checkCPU
+    
+
+    [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
+
+    green " 系统信息: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
+}
+
 
 
 
@@ -367,6 +387,9 @@ function setLinuxDateZone(){
 }
 
 
+
+
+
 function DSMEditHosts(){
 	green " ================================================== "
 	green " 准备打开VI 编辑/etc/hosts"
@@ -398,25 +421,39 @@ function DSMEditHosts(){
 
 
 
+# 软件安装
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git unzip
+			${osSystemPackage} -y install wget git unzip
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 			${osSystemPackage} -y install cpu-checker
 		fi
 
+		if ! dpkg -l | grep -qw curl; then
+			${osSystemPackage} -y install curl git unzip
+			
+			${osSystemPackage} -y install cpu-checker
+		fi
+
 	elif [[ "${osRelease}" == "centos" ]]; then
-		if ! rpm -qa | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git unzip
+        if ! rpm -qa | grep -qw wget; then
+		    ${osSystemPackage} -y install wget curl git unzip
+        elif ! rpm -qa | grep -qw git; then
+		    ${osSystemPackage} -y install wget curl git unzip
 		fi
 	fi 
 }
 
 
-
 function installPackage(){
+    echo
+    green " =================================================="
+    yellow " 开始安装软件"
+    green " =================================================="
+    echo
+
     if [ "$osRelease" == "centos" ]; then
        
         # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
@@ -427,12 +464,13 @@ name=nginx repo
 baseurl=https://nginx.org/packages/centos/$osReleaseVersionNoShort/\$basearch/
 gpgcheck=0
 enabled=1
+sslverify=0
 
 EOF
         if ! rpm -qa | grep -qw iperf3; then
 			${sudoCmd} ${osSystemPackage} install -y epel-release
 
-            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y curl wget git unzip zip tar bind-utils
             ${osSystemPackage} install -y xz jq redhat-lsb-core 
             ${osSystemPackage} install -y iputils
             ${osSystemPackage} install -y iperf3
@@ -478,7 +516,7 @@ EOF
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
         # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
-        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF 
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
 deb [arch=amd64] http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 EOF
@@ -547,21 +585,14 @@ EOF
 
 
 
-
-
-# 安装 BBR 加速网络软件
-function installBBR(){
-    wget -O tcp_old.sh -N --no-check-certificate "https://raw.githubusercontent.com/chiakge/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp_old.sh && ./tcp_old.sh
+# 更新本脚本
+function upgradeScript(){
+    wget -Nq --no-check-certificate -O ./linux_install_software.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh"
+    green " 本脚本升级成功! "
+    chmod +x ./linux_install_software.sh
+    sleep 2s
+    exec "./linux_install_software.sh"
 }
-
-function installBBR2(){
-    
-    if [[ -f ./tcp.sh ]];  then
-        mv ./tcp.sh ./tcp_old.sh
-    fi    
-    wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
-}
-
 
 function installWireguard(){
     bash <(wget -qO- https://github.com/jinwyp/one_click_script/raw/master/install_kernel.sh)
@@ -571,10 +602,17 @@ function installWireguard(){
 
 
 
+
+
+
+
+
+
+
+
 function toolboxSkybox(){
     wget -O skybox.sh https://raw.githubusercontent.com/BlueSkyXN/SKY-BOX/main/box.sh && chmod +x skybox.sh  && ./skybox.sh
 }
-
 
 function toolboxJcnf(){
     wget -O jcnfbox.sh https://raw.githubusercontent.com/Netflixxp/jcnf-box/main/jcnfbox.sh && chmod +x jcnfbox.sh && ./jcnfbox.sh
@@ -693,14 +731,14 @@ function installNodejs(){
     if [ "$osRelease" == "centos" ] ; then
 
         if [ "$osReleaseVersion" == "8" ]; then
-            ${sudoCommand} dnf module list nodejs
-            ${sudoCommand} dnf module enable nodejs:14
-            ${sudoCommand} dnf install nodejs
+            ${sudoCmd} dnf module list nodejs
+            ${sudoCmd} dnf module enable nodejs:14
+            ${sudoCmd} dnf install nodejs
         fi
 
         if [ "$osReleaseVersion" == "7" ]; then
             curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
-            ${sudoCommand} yum install -y nodejs
+            ${sudoCmd} yum install -y nodejs
         fi
 
     else 
@@ -784,13 +822,13 @@ function installDocker(){
         green " Downloading  ${dockerComposeUrl}"
         echo
 
-        ${sudoCommand} wget -O /usr/local/bin/docker-compose ${dockerComposeUrl}
-        ${sudoCommand} chmod a+x /usr/local/bin/docker-compose
+        ${sudoCmd} wget -O /usr/local/bin/docker-compose ${dockerComposeUrl}
+        ${sudoCmd} chmod a+x /usr/local/bin/docker-compose
 
         rm -f `which dc` 
         rm -f "/usr/bin/docker-compose"
-        ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/dc
-        ${sudoCommand} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        ${sudoCmd} ln -s /usr/local/bin/docker-compose /usr/bin/dc
+        ${sudoCmd} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         
     fi
 
@@ -2547,15 +2585,6 @@ function getHTTPS(){
 
 
 
-# 更新本脚本
-function upgradeScript(){
-    wget -Nq --no-check-certificate -O ./linux_install_software.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh"
-    green " 本脚本升级成功! "
-    chmod +x ./linux_install_software.sh
-    sleep 2s
-    exec "./linux_install_software.sh"
-}
-
 
 
 
@@ -2662,12 +2691,6 @@ function start_menu(){
         1 )
             installWireguard
         ;;    
-        2 )
-            installBBR
-        ;;
-        3 )
-            installBBR2
-        ;;
         5 )
             editLinuxLoginWithPublicKey
         ;;
