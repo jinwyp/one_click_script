@@ -1067,6 +1067,7 @@ function installCentosKernelFromRepo(){
         removeCentosKernelMulti
         listAvailableLinuxKernel
         echo
+        green " =================================================="
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo
         ${sudoCmd} yum -y --enablerepo=elrepo-kernel install ${elrepo_kernel_name}
@@ -1201,6 +1202,7 @@ function installCentosKernelManual(){
 
         removeCentosKernelMulti
         echo
+        green " =================================================="
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo        
 
@@ -1276,6 +1278,7 @@ function installCentosKernelManual(){
 
         removeCentosKernelMulti
         echo
+        green " =================================================="
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo        
         rpm -ivh --force --nodeps ${altarch_kernel_name}-core-${altarch_kernel_version}*
@@ -1301,6 +1304,7 @@ function installCentosKernelManual(){
 
             removeCentosKernelMulti
             echo
+            green " =================================================="
             green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
             echo            
             rpm -ivh --force --nodeps kernel-${linuxKernelToInstallVersionFull}.rpm
@@ -1340,6 +1344,7 @@ function installCentosKernelManual(){
 
             removeCentosKernelMulti
             echo
+            green " =================================================="
             green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
             echo
             rpm -ivh --force --nodeps CentOS-7_Required_kernel-bbrplus-${bbrplusKernelVersion}-1.bbrplus.el7.x86_64.rpm
@@ -1375,6 +1380,7 @@ function installCentosKernelManual(){
 
             removeCentosKernelMulti
             echo
+            green " =================================================="
             green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
             echo                
             rpm -ivh --force --nodeps CentOS-8_Required_kernel-bbrplus-core-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
@@ -1636,6 +1642,7 @@ function installDebianUbuntuKernel(){
             listAvailableLinuxKernel "xanmod"
 
             echo
+            green " =================================================="
             green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
             echo
 
@@ -1789,6 +1796,7 @@ function installDebianUbuntuKernel(){
 
         removeDebianKernelMulti
         echo
+        green " =================================================="
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo
         ${sudoCmd} dpkg -i *.deb 
