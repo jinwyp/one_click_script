@@ -38,7 +38,7 @@ bold(){
 
 
 
-osCPU="intel"
+osCPU=""
 osArchitecture="arm"
 osInfo=""
 osRelease=""
@@ -59,6 +59,7 @@ function checkArchitecture(){
 		i686)   osArchitecture="386" ;;
 		x86_64) osArchitecture="amd64" ;;
 		arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+		aarch64)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
 		* )     osArchitecture="arm" ;;
 	esac
 }
@@ -1632,8 +1633,21 @@ function downgradeXray(){
         downloadXrayVersion="1.5.0"
     fi
 
+    # https://github.com/XTLS/Xray-core/releases/download/v1.5.2/Xray-linux-arm32-v6.zip
+
     downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
     xrayDownloadFilename="Xray-linux-64_${downloadXrayVersion}.zip"
+
+    if [[ "${osArchitecture}" == "arm64" ]]; then
+        downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-arm64-v8a.zip"
+        xrayDownloadFilename="Xray-linux-arm64-v8a_${downloadXrayVersion}.zip"
+    fi
+
+    if [[ "${osArchitecture}" == "arm" ]]; then
+        downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-arm32-v6.zip"
+        xrayDownloadFilename="Xray-linux-arm32-v6_${downloadXrayVersion}.zip"
+    fi
+
     xrayDownloadFolder="/root/xray_temp"
     
     mkdir -p ${xrayDownloadFolder}

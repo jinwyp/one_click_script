@@ -78,7 +78,7 @@ Font_color_suffix="\033[0m"
 
 
 
-osCPU="intel"
+osCPU=""
 osArchitecture="arm"
 osInfo=""
 osRelease=""
@@ -98,6 +98,7 @@ function checkArchitecture(){
 		i686)   osArchitecture="386" ;;
 		x86_64) osArchitecture="amd64" ;;
 		arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+		aarch64)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
 		* )     osArchitecture="arm" ;;
 	esac
 }

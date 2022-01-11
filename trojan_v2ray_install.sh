@@ -38,7 +38,7 @@ bold(){
 
 
 
-osCPU="intel"
+osCPU=""
 osArchitecture="arm"
 osInfo=""
 osRelease=""
@@ -59,9 +59,11 @@ function checkArchitecture(){
 		i686)   osArchitecture="386" ;;
 		x86_64) osArchitecture="amd64" ;;
 		arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+		aarch64)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
 		* )     osArchitecture="arm" ;;
 	esac
 }
+
 
 function checkCPU(){
 	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
@@ -1236,10 +1238,11 @@ function getHTTPSCertificateWithAcme(){
             ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_amd64.zip"
             ranDownloadFileName="ran_linux_amd64"
             
-            if [[ "${osArchitecture}" == "arm" ]]; then
+            if [[ "${osArchitecture}" == "arm64" || "${osArchitecture}" == "arm" ]]; then
                 ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_arm64.zip"
                 ranDownloadFileName="ran_linux_arm64"
             fi
+
 
             mkdir -p ${configRanPath}
             
@@ -1764,6 +1767,11 @@ function downloadTrojanBin(){
             tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan"
         fi    
         # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
+        if [[ ${osArchitecture} == "arm" || ${osArchitecture} == "arm64" ]] ; then
+            red "Trojan not support arm on linux! "
+            exit
+        fi
+
         downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojan}"
     else
         if [ -z $1 ]; then
@@ -1772,7 +1780,7 @@ function downloadTrojanBin(){
             tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan-go"
         fi 
 
-        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.5/trojan-go-linux-amd64.zip
+        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.6/trojan-go-linux-amd64.zip
         if [[ ${osArchitecture} == "arm" ]] ; then
             downloadFilenameTrojanGo="trojan-go-linux-arm.zip"
         fi
@@ -2477,6 +2485,8 @@ function downloadV2rayXrayBin(){
     if [ "$isXray" = "no" ] ; then
         # https://github.com/v2fly/v2ray-core/releases/download/v4.41.1/v2ray-linux-64.zip
         # https://github.com/v2fly/v2ray-core/releases/download/v4.41.1/v2ray-linux-arm32-v6.zip
+        # https://github.com/v2fly/v2ray-core/releases/download/v4.44.0/v2ray-linux-arm64-v8a.zip
+        
         if [[ ${osArchitecture} == "arm" ]] ; then
             downloadFilenameV2ray="v2ray-linux-arm32-v6.zip"
         fi
@@ -2488,7 +2498,7 @@ function downloadV2rayXrayBin(){
 
     else
         # https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip
-
+        # https://github.com/XTLS/Xray-core/releases/download/v1.5.2/Xray-linux-arm32-v6.zip
         if [[ ${osArchitecture} == "arm" ]] ; then
             downloadFilenameXray="Xray-linux-arm32-v6.zip"
         fi
