@@ -1118,7 +1118,7 @@ function installCentosKernelManual(){
         if [ "${kernelVersionFirstletter}" = "5" ]; then 
             linuxKernelByUser="elrepo"
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.14" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.16" ]]; then 
                 linuxKernelByUserTeddysun="Teddysun"
             fi
         else
@@ -2956,15 +2956,15 @@ function start_menu(){
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
-    green " 31. 安装 最新版本内核 5.15, 通过elrepo源安装"
+    green " 31. 安装 最新版本内核 5.16, 通过elrepo源安装"
     green " 32. 安装 LTS内核 5.4 LTS, 通过elrepo源安装"
     green " 33. 安装 内核 4.14 LTS, 从 altarch网站 下载安装"
     green " 34. 安装 内核 4.19 LTS, 从 altarch网站 下载安装"
     green " 35. 安装 内核 5.4 LTS, 从 elrepo网站 下载安装"
     echo
     green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
-    green " 37. 安装 内核 5.14, Teddysun 编译"
-    green " 38. 安装 内核 5.15, 下载安装. (安装最新版内核 可能会高于5.15) "
+    green " 37. 安装 内核 5.15, Teddysun 编译"
+    green " 38. 安装 内核 5.16, 下载安装. (安装最新版内核 可能会高于5.15) "
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
@@ -2972,7 +2972,7 @@ function start_menu(){
         echo
         fi
 
-    green " 42. 安装 最新版本内核 5.14, 通过 Ubuntu kernel mainline 安装"
+    green " 42. 安装 最新版本内核 5.15, 通过 Ubuntu kernel mainline 安装"
     green " 43. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 44. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 45. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -3055,7 +3055,7 @@ function start_menu(){
            vps_netflix_jin
         ;;
         31 )
-            linuxKernelToInstallVersion="5.15"
+            linuxKernelToInstallVersion="5.16"
             isInstallFromRepo="yes"
             installKernel
         ;;
@@ -3081,11 +3081,11 @@ function start_menu(){
             installKernel
         ;;
         37 )
-            linuxKernelToInstallVersion="5.14"
+            linuxKernelToInstallVersion="5.15"
             installKernel
         ;; 
         38 )
-            linuxKernelToInstallVersion="5.15"
+            linuxKernelToInstallVersion="5.16"
             installKernel
         ;;
         41 )
@@ -3094,7 +3094,7 @@ function start_menu(){
             installKernel
         ;;
         42 )
-            linuxKernelToInstallVersion="5.14.11"
+            linuxKernelToInstallVersion="5.15.14"
             installKernel
         ;;
         43 ) 
