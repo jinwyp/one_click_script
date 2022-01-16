@@ -1607,6 +1607,7 @@ function downgradeXray(){
     green " 4. 1.4.2"
     green " 5. 1.4.0"
     green " 6. 1.3.1"
+    green " 9. 不降级 使用最新版本"
     echo
     read -p "请选择Xray版本? 直接回车默认选1, 请输入纯数字:" isXrayVersionInput
     isXrayVersionInput=${isXrayVersionInput:-1}
@@ -1614,56 +1615,68 @@ function downgradeXray(){
     downloadXrayVersion="1.5.0"
     downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip"
 
-    if [[ $isXrayVersionInput == "2" ]]; then
+    if [[ "${isXrayVersionInput}" == "2" ]]; then
         downloadXrayVersion="1.4.5"
 
-    elif [[ $isXrayVersionInput == "3" ]]; then
+    elif [[ "${isXrayVersionInput}" == "3" ]]; then
         downloadXrayVersion="1.4.3"
 
-    elif [[ $isXrayVersionInput == "4" ]]; then
+    elif [[ "${isXrayVersionInput}" == "4" ]]; then
         downloadXrayVersion="1.4.2"
 
-    elif [[ $isXrayVersionInput == "5" ]]; then
+    elif [[ "${isXrayVersionInput}" == "5" ]]; then
         downloadXrayVersion="1.4.0"
 
-    elif [[ $isXrayVersionInput == "6" ]]; then
+    elif [[ "${isXrayVersionInput}" == "6" ]]; then
         downloadXrayVersion="1.3.1"
+
+    elif [[ "${isXrayVersionInput}" == "9" ]]; then
+        echo
 
     else
         downloadXrayVersion="1.5.0"
     fi
 
-    # https://github.com/XTLS/Xray-core/releases/download/v1.5.2/Xray-linux-arm32-v6.zip
-
-    downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
-    xrayDownloadFilename="Xray-linux-64_${downloadXrayVersion}.zip"
-
-    if [[ "${osArchitecture}" == "arm64" ]]; then
-        downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-arm64-v8a.zip"
-        xrayDownloadFilename="Xray-linux-arm64-v8a_${downloadXrayVersion}.zip"
-    fi
-
-    if [[ "${osArchitecture}" == "arm" ]]; then
-        downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-arm32-v6.zip"
-        xrayDownloadFilename="Xray-linux-arm32-v6_${downloadXrayVersion}.zip"
-    fi
-
-    xrayDownloadFolder="/root/xray_temp"
-    
-    mkdir -p ${xrayDownloadFolder}
-    wget -O ${xrayDownloadFolder}/${xrayDownloadFilename} ${downloadXrayUrl}
-    unzip -d ${xrayDownloadFolder} ${xrayDownloadFolder}/${xrayDownloadFilename}
-    mv -f ${xrayDownloadFolder}/xray /usr/local/bin
-    chmod +x /usr/local/bin/*
-    rm -rf ${xrayDownloadFolder}
-
-    if [[ -z $1 ]]; then
+    if [[ "${isXrayVersionInput}" == "9" ]]; then
         echo
-        systemctl restart xray.service
-        systemctl status xray.service
+        green " =================================================="
+        green "  已选择不降级 使用最新版本 Xray"
+        green " =================================================="
         echo
-    fi
+    else
 
+
+        # https://github.com/XTLS/Xray-core/releases/download/v1.5.2/Xray-linux-arm32-v6.zip
+
+        downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
+        xrayDownloadFilename="Xray-linux-64_${downloadXrayVersion}.zip"
+
+        if [[ "${osArchitecture}" == "arm64" ]]; then
+            downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-arm64-v8a.zip"
+            xrayDownloadFilename="Xray-linux-arm64-v8a_${downloadXrayVersion}.zip"
+        fi
+
+        if [[ "${osArchitecture}" == "arm" ]]; then
+            downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-arm32-v6.zip"
+            xrayDownloadFilename="Xray-linux-arm32-v6_${downloadXrayVersion}.zip"
+        fi
+
+        xrayDownloadFolder="/root/xray_temp"
+        
+        mkdir -p ${xrayDownloadFolder}
+        wget -O ${xrayDownloadFolder}/${xrayDownloadFilename} ${downloadXrayUrl}
+        unzip -d ${xrayDownloadFolder} ${xrayDownloadFolder}/${xrayDownloadFilename}
+        mv -f ${xrayDownloadFolder}/xray /usr/local/bin
+        chmod +x /usr/local/bin/*
+        rm -rf ${xrayDownloadFolder}
+
+        if [[ -z $1 ]]; then
+            echo
+            systemctl restart xray.service
+            systemctl status xray.service
+            echo
+        fi
+    fi
 }
 
 
