@@ -1039,7 +1039,8 @@ function stopServiceV2ray(){
 
 function compareRealIpWithLocalIp(){
     echo
-    green " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
+    green " 是否检测域名指向的IP正确 直接回车默认检测"
+    red " 如果域名指向的IP不是本机IP, 或已开启CDN不方便关闭 或只有IPv6的VPS 可以选否不检测"
     read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
     isDomainValidInput=${isDomainValidInput:-Y}
 
@@ -1461,16 +1462,21 @@ EOM
 EOM
 
     elif [[ "${configInstallNginxMode}" == "sni" ]]; then
-        inputV2rayStreamSettings
+        nginxConfigStreamFakeWebsiteDomainInput=""
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        nginxConfigStreamOwnWebsiteInput=""
+        nginxConfigStreamOwnWebsiteMapInput=""
+
+        if [[ "${isNginxSNIModeInput}" == "4" || "${isNginxSNIModeInput}" == "5" || "${isNginxSNIModeInput}" == "6" ]]; then
+
+            read -r -d '' nginxConfigStreamOwnWebsiteInput << EOM
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
-        server_name  $configSSLDomain;
+        listen 8000 ssl http2;
+        listen [::]:8000 http2;
+        server_name  $configNginxSNIDomainWebsite;
 
-        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
-        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_certificate       ${configNginxSNIDomainWebsiteCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configNginxSNIDomainWebsiteCertPath}/$configSSLCertKeyFilename;
         ssl_protocols         TLSv1.2 TLSv1.3;
         ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
 
@@ -1483,32 +1489,98 @@ EOM
         root $configWebsitePath;
         index index.php index.html index.htm;
 
-        location /$configV2rayWebSocketPath {
-            proxy_pass http://127.0.0.1:$configV2rayPort;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$http_host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        }
-
-        location /$configV2rayGRPCServiceName {
-            grpc_pass grpc://127.0.0.1:$configV2rayGRPCPort;
-            grpc_connect_timeout 60s;
-            grpc_read_timeout 720m;
-            grpc_send_timeout 720m;
-            grpc_set_header X-Real-IP \$remote_addr;
-            grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        }
     }
 
     server {
         listen 80;
         listen [::]:80;
-        server_name  $configSSLDomain;
-        return 301 https://$configSSLDomain\$request_uri;
+        server_name  $configNginxSNIDomainWebsite;
+        return 301 https://$configNginxSNIDomainWebsite\$request_uri;
     }
+EOM 
+
+            read -r -d '' nginxConfigStreamOwnWebsiteMapInput << EOM
+        ${configNginxSNIDomainWebsite} web;
+EOM
+        fi
+
+
+        nginxConfigStreamTrojanMapInput=""
+        nginxConfigStreamTrojanUpstreamInput=""
+
+        if [[ "${isNginxSNIModeInput}" == "1" || "${isNginxSNIModeInput}" == "2" || "${isNginxSNIModeInput}" == "4" || "${isNginxSNIModeInput}" == "5" ]]; then
+            
+            nginxConfigStreamFakeWebsiteDomainInput="${configNginxSNIDomainTrojan}"
+
+            read -r -d '' nginxConfigStreamTrojanMapInput << EOM
+        ${configNginxSNIDomainTrojan} trojan;
+EOM
+
+            read -r -d '' nginxConfigStreamTrojanUpstreamInput << EOM
+    upstream trojan {
+        server 127.0.0.1:$configV2rayTrojanPort;
+    }
+EOM
+        fi
+
+
+        nginxConfigStreamV2rayMapInput=""
+        nginxConfigStreamV2rayUpstreamInput=""
+
+        if [[ "${isNginxSNIModeInput}" == "1" || "${isNginxSNIModeInput}" == "3" || "${isNginxSNIModeInput}" == "4" || "${isNginxSNIModeInput}" == "6" ]]; then
+
+            nginxConfigStreamFakeWebsiteDomainInput="${nginxConfigStreamFakeWebsiteDomainInput} ${configNginxSNIDomainV2ray}"
+
+            read -r -d '' nginxConfigStreamV2rayMapInput << EOM
+        ${configNginxSNIDomainV2ray} v2ray;
+EOM
+
+            read -r -d '' nginxConfigStreamV2rayUpstreamInput << EOM
+    upstream v2ray {
+        server 127.0.0.1:$configV2rayPort;
+    }
+EOM
+        fi
+
+
+        read -r -d '' nginxConfigServerHttpInput << EOM
+    server {
+        listen       80;
+        server_name  $nginxConfigStreamFakeWebsiteDomainInput;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+    }
+
+    ${nginxConfigStreamOwnWebsiteInput}
+
+EOM
+
+
+        read -r -d '' nginxConfigStreamConfigInput << EOM
+stream {
+    map \$ssl_preread_server_name \$filtered_sni_name {
+        ${nginxConfigStreamOwnWebsiteMapInput}
+        ${nginxConfigStreamTrojanMapInput}
+        ${nginxConfigStreamV2rayMapInput}
+    }
+    
+    ${nginxConfigStreamTrojanUpstreamInput}
+
+    ${nginxConfigStreamV2rayUpstreamInput}
+
+    upstream web {
+        server 127.0.0.1:8000;
+    }
+
+    server {
+        listen 443;
+        listen [::]:443;
+        resolver 8.8.8.8;
+        ssl_preread on;
+        proxy_pass \$filtered_sni_name;
+    }
+}
 
 EOM
 
@@ -1551,6 +1623,8 @@ EOM
 
 
         cat > "${nginxConfigPath}" <<-EOF
+load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
+
 user  root;
 worker_processes  1;
 error_log  /var/log/nginx/error.log warn;
@@ -1558,6 +1632,11 @@ pid        /var/run/nginx.pid;
 events {
     worker_connections  1024;
 }
+
+
+${nginxConfigStreamConfigInput}
+
+
 http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
@@ -1574,10 +1653,13 @@ http {
     gzip  on;
 
 
-    $nginxConfigServerHttpInput
+    ${nginxConfigServerHttpInput}
 
 }
+
+
 EOF
+
 
 
 
@@ -1741,6 +1823,89 @@ function removeNginx(){
 
 
 
+
+
+
+
+
+
+configNginxSNIDomainWebsite=""
+configNginxSNIDomainV2ray=""
+configNginxSNIDomainTrojan=""
+
+configSSLCertPath="${HOME}/website/cert"
+configNginxSNIDomainTrojanCertPath="${HOME}/website/cert/nginxsni/trojan"
+configNginxSNIDomainV2rayCertPath="${HOME}/website/cert/nginxsni/v2ray"
+configNginxSNIDomainWebsiteCertPath="${HOME}/website/cert/nginxsni/web"
+
+function checkNginxSNIDomain(){
+
+    if compareRealIpWithLocalIp "$2" ; then
+
+        if [ "$1" = "trojan" ]; then
+            configNginxSNIDomainTrojan=$2
+            configSSLCertPath="${configNginxSNIDomainTrojanCertPath}"
+
+        elif [ "$1" = "v2ray" ]; then
+            configNginxSNIDomainV2ray=$2
+            configSSLCertPath="${configNginxSNIDomainV2rayCertPath}"
+
+        elif [ "$1" = "website" ]; then
+            configNginxSNIDomainWebsite=$2
+            configSSLCertPath="${configNginxSNIDomainWebsiteCertPath}"
+        fi
+        
+        configSSLDomain="$2"
+        mkdir -p ${configSSLCertPath}
+
+        echo
+        green " =================================================="
+        green " 是否申请证书? 默认直接回车为申请证书, 如第二次安装或已有证书 可以选否"
+        green " 如果已经有SSL证书文件 请放到下面路径"
+        red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+        red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
+        echo
+
+        read -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]:" isDomainSSLRequestInput
+        isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
+
+        if [[ $isDomainSSLRequestInput == [Yy] ]]; then
+            getHTTPSCertificateWithAcme 
+        else
+            green " =================================================="
+            green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
+            green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+            green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
+            green " =================================================="
+        fi
+    else
+        inputNginxSNIDomain $1
+    fi
+
+}
+
+function inputNginxSNIDomain(){
+    echo
+    green " ================================================== "
+
+    if [ "$1" = "trojan" ]; then
+        yellow " 请输入解析到本VPS的域名 用于给Trojan使用, 例如 www.xxx.com: (此步骤请关闭CDN后安装)"
+        read -p "请输入解析到本VPS的域名:" configNginxSNIDomainDefault
+        
+    elif [ "$1" = "v2ray" ]; then
+        yellow " 请输入解析到本VPS的域名 用于给V2ray使用, 例如 www.xxx.com: (此步骤请关闭CDN后安装)"
+        read -p "请输入解析到本VPS的域名:" configNginxSNIDomainDefault
+        
+    elif [ "$1" = "website" ]; then
+        yellow " 请输入解析到本VPS的域名 用于给现有网站使用, 例如 www.xxx.com: (此步骤请关闭CDN后安装)"
+        read -p "请输入解析到本VPS的域名:" configNginxSNIDomainDefault
+
+    fi
+
+    checkNginxSNIDomain $1 ${configNginxSNIDomainDefault}
+    
+}
+
 function installTrojanV2rayWithNginx(){
 
     stopServiceNginx
@@ -1758,6 +1923,69 @@ function installTrojanV2rayWithNginx(){
             installV2ray
             exit
         fi
+
+    elif [ "$1" = "nginxSNI_trojan_v2ray" ]; then
+        green " ================================================== "
+        green " 请选择 Nginx SNI + Trojan + V2ray 的安装模式, 默认为1"
+        green " 1. Nginx + Trojan + V2ray + 伪装网站"
+        green " 2. Nginx + Trojan + 伪装网站"
+        green " 3. Nginx + V2ray + 伪装网站"
+        green " 4. Nginx + Trojan + V2ray + 已有网站共存"
+        green " 5. Nginx + Trojan + 已有网站共存"
+        green " 6. Nginx + V2ray + 已有网站共存"
+
+
+        read -p "请选择 Nginx SNI 的安装模式 直接回车默认选1, 请输入纯数字:" isNginxSNIModeInput
+        isNginxSNIModeInput=${isNginxSNIModeInput:-1}
+
+        if [[ "${isNginxSNIModeInput}" == "1" ]]; then
+            inputNginxSNIDomain "trojan"
+            inputNginxSNIDomain "v2ray"
+            
+
+            installWebServerNginx
+            installTrojanServer
+            installV2ray
+
+        elif [[ "${isNginxSNIModeInput}" == "2" ]]; then
+            inputNginxSNIDomain "trojan"
+
+            installWebServerNginx
+            installTrojanServer
+
+        elif [[ "${isNginxSNIModeInput}" == "3" ]]; then
+            inputNginxSNIDomain "v2ray"
+
+            installWebServerNginx
+            installV2ray
+
+        elif [[ "${isNginxSNIModeInput}" == "4" ]]; then
+            inputNginxSNIDomain "trojan"
+            inputNginxSNIDomain "v2ray"
+            inputNginxSNIDomain "website"
+
+            installWebServerNginx
+            installTrojanServer
+            installV2ray
+
+        elif [[ "${isNginxSNIModeInput}" == "5" ]]; then
+            inputNginxSNIDomain "trojan"
+            inputNginxSNIDomain "website"
+
+            installWebServerNginx
+            installTrojanServer
+
+        elif [[ "${isNginxSNIModeInput}" == "6" ]]; then
+            inputNginxSNIDomain "v2ray"
+            inputNginxSNIDomain "website"
+
+            installWebServerNginx
+            installV2ray
+            
+        fi
+
+
+        exit
     fi
 
 
@@ -1974,6 +2202,11 @@ function installTrojanServer(){
 
         inputV2rayServerPort "textMainTrojanPort"
         configV2rayTrojanPort=${isTrojanUserPortInput}         
+    fi
+
+    if [[ "$configV2rayWorkingMode" == "sni" ]] ; then
+        configSSLCertPath="${configNginxSNIDomainTrojanCertPath}"
+        configSSLDomain=${configNginxSNIDomainTrojan}    
     fi
 
     mkdir -p ${configTrojanBasePath}
@@ -2952,7 +3185,7 @@ function installV2ray(){
     echo
 
 
-    if [[ ( $configV2rayWorkingMode == "trojan" ) || ( $configV2rayWorkingMode == "vlessTCPVmessWS" ) || ( $configV2rayWorkingMode == "vlessTCPWS" ) || ( $configV2rayWorkingMode == "vlessTCPWSgRPC" ) || ( $configV2rayWorkingMode == "vlessTCPWSTrojan" ) ]]; then
+    if [[ ( $configV2rayWorkingMode == "trojan" ) || ( $configV2rayWorkingMode == "vlessTCPVmessWS" ) || ( $configV2rayWorkingMode == "vlessTCPWS" ) || ( $configV2rayWorkingMode == "vlessTCPWSgRPC" ) || ( $configV2rayWorkingMode == "vlessTCPWSTrojan" ) || ( $configV2rayWorkingMode == "sni" ) ]]; then
         echo
         green " 是否使用XTLS代替TLS加密, XTLS是Xray特有的加密方式, 速度更快, 默认使用TLS加密"
         green " 由于V2ray不支持XTLS, 如果选择XTLS加密将使用Xray内核提供服务"
@@ -2996,15 +3229,7 @@ function installV2ray(){
             configV2rayPortShowInfo=${isV2rayUserPortInput} 
 
         else
-            echo
-            read -p "是否使用VLESS协议? 直接回车默认为VMess协议, 请输入[y/N]:" isV2rayUseVLessInput
-            isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
-
-            if [[ $isV2rayUseVLessInput == [Yy] ]]; then
-                configV2rayProtocol="vless"
-            else
-                configV2rayProtocol="vmess"
-            fi
+            configV2rayProtocol="vless"
 
             configV2rayPortShowInfo=443
             configV2rayPortGRPCShowInfo=443
@@ -3041,7 +3266,10 @@ function installV2ray(){
         fi
     fi
 
-
+    if [[ "$configV2rayWorkingMode" == "sni" ]] ; then
+        configSSLCertPath="${configNginxSNIDomainV2rayCertPath}"
+        configSSLDomain=${configNginxSNIDomainV2ray}
+    fi
 
     
     # 增加任意门
@@ -4412,7 +4640,7 @@ EOM
 EOM
 
 
-    elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" ]]; then
+    elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" || "$configV2rayWorkingMode" == "sni" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
@@ -5091,7 +5319,7 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 
 EOF
 
-    elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" ]]; then
+    elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" || "$configV2rayWorkingMode" == "sni" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN
@@ -6061,7 +6289,7 @@ function start_menu(){
     echo
     green " 21. 同时安装 v2ray或xray 和 trojan或trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
     green " 22. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go (VLess/Vmess-WS-TLS)+Trojan, 支持CDN, trojan或torjan-go运行在443端口"  
-    #green " 23. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go, 通过 nginx SNI 分流, 支持CDN, 支持与现有网站共存, nginx 运行在443端口 "
+    green " 23. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go, 通过 nginx SNI 分流, 支持CDN, 支持与现有网站共存, nginx 运行在443端口 "
     red " 24. 卸载 trojan, v2ray或xray 和 nginx"
     echo
     green " 25. 查看已安装的配置和用户密码等信息"
@@ -6155,7 +6383,7 @@ function start_menu(){
         23 )
             configInstallNginxMode="sni"
             configV2rayWorkingMode="sni"
-            installTrojanV2rayWithNginx "trojan_nginx_v2ray"
+            installTrojanV2rayWithNginx "nginxSNI_trojan_v2ray"
         ;;
         24 )
             removeV2ray

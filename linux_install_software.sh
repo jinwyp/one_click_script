@@ -2675,9 +2675,7 @@ function start_menu(){
     fi
 
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2022-1-2 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
-    red " *请不要在任何生产环境使用此脚本 请不要有其他程序占用80和443端口"
-    red " *若是已安装trojan 或第二次使用脚本，请先执行卸载trojan"
+    green " Linux 常用工具 一键安装脚本 | 2022-1-16 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
