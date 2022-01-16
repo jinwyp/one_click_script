@@ -733,6 +733,7 @@ function vps_netflix_jin(){
 function vps_netflixgo(){
     wget -qN --no-check-certificate -O netflixGo https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixGo && ./netflixGo -method full
     echo
+    echo
     wget -qN --no-check-certificate -O disneyplusGo https://github.com/sjlleo/VerifyDisneyPlus/releases/download/1.01/dp_1.01_linux_amd64 && chmod +x ./disneyplusGo && ./disneyplusGo
 }
 
@@ -885,7 +886,7 @@ downloadFilenameTrojanWeb="trojan-linux-amd64"
 
 isTrojanMultiPassword="no"
 promptInfoTrojanName=""
-isTrojanGo="no"
+isTrojanGo="yes"
 isTrojanGoSupportWebsocket="false"
 configTrojanGoWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configTrojanPasswordPrefixInput="jin"
@@ -902,9 +903,7 @@ configTrojanBaseVersion=${versionTrojan}
 configTrojanWebNginxPath=$(cat /dev/urandom | head -1 | md5sum | head -c 5)
 configTrojanWebPort="$(($RANDOM + 10000))"
 
-
-isInstallNginx="true"
-isNginxWithSSL="no"
+configInstallNginxMode=""
 nginxConfigPath="/etc/nginx/nginx.conf"
 nginxAccessLogFilePath="${HOME}/nginx-access.log"
 nginxErrorLogFilePath="${HOME}/nginx-error.log"
@@ -930,8 +929,8 @@ configV2rayPath="${HOME}/v2ray"
 configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
-configV2rayVlessMode=""
-configV2rayWSorGrpc="ws"
+configV2rayWorkingMode=""
+configV2rayStreamSetting=""
 
 
 configReadme=${HOME}/readme_trojan_v2ray.txt
@@ -1030,19 +1029,7 @@ function stopServiceV2ray(){
     fi
 }
 
-function isTrojanGoInstall(){
-    if [ "$isTrojanGo" = "yes" ] ; then
-        getTrojanAndV2rayVersion "trojan-go"
-        configTrojanBaseVersion=${versionTrojanGo}
-        configTrojanBasePath="${configTrojanGoPath}"
-        promptInfoTrojanName="-go"
-    else
-        getTrojanAndV2rayVersion "trojan"
-        configTrojanBaseVersion=${versionTrojan}
-        configTrojanBasePath="${configTrojanPath}"
-        promptInfoTrojanName=""
-    fi
-}
+
 
 
 
@@ -1063,7 +1050,7 @@ function compareRealIpWithLocalIp(){
             configNetworkLocalIp=`curl v4.ident.me`
 
             green " ================================================== "
-            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为  ${configNetworkLocalIp} "
+            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp} "
 
             echo
             if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
@@ -1365,9 +1352,11 @@ function getHTTPSCertificateStep1(){
 
 function installWebServerNginx(){
 
+    echo
     green " ================================================== "
     yellow "     开始安装 Web服务器 nginx !"
     green " ================================================== "
+    echo
 
     if test -s ${nginxConfigPath}; then
         green " ================================================== "
@@ -1378,35 +1367,17 @@ function installWebServerNginx(){
 
     stopServiceV2ray
     
-    ${osSystemPackage} install -y nginx
     ${osSystemPackage} install -y nginx-mod-stream
+    ${osSystemPackage} install -y nginx
     ${sudoCmd} systemctl enable nginx.service
     ${sudoCmd} systemctl stop nginx.service
 
-    if [[ -z $1 ]] ; then
-        cat > "${nginxConfigPath}" <<-EOF
-user  root;
-worker_processes  1;
-error_log  /var/log/nginx/error.log warn;
-pid        /var/run/nginx.pid;
-events {
-    worker_connections  1024;
-}
-http {
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
-    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
-                      '"\$request" \$status \$body_bytes_sent  '
-                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
-    access_log  $nginxAccessLogFilePath  main;
-    error_log $nginxErrorLogFilePath;
 
-    sendfile        on;
-    #tcp_nopush     on;
-    keepalive_timeout  120;
-    client_max_body_size 20m;
-    gzip  on;
 
+    nginxConfigServerHttpInput=""
+
+    if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
+        read -r -d '' nginxConfigServerHttpInput << EOM
     server {
         listen       80;
         server_name  $configSSLDomain;
@@ -1423,86 +1394,23 @@ http {
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
+
+        location /$configV2rayGRPCServiceName {
+            grpc_pass grpc://127.0.0.1:$configV2rayGRPCPort;
+            grpc_connect_timeout 60s;
+            grpc_read_timeout 720m;
+            grpc_send_timeout 720m;
+            grpc_set_header X-Real-IP \$remote_addr;
+            grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }  
     }
-}
-EOF
 
-    elif [[ $1 == "trojan-web" ]] ; then
+EOM
 
-        cat > "${nginxConfigPath}" <<-EOF
-user  root;
-worker_processes  1;
-error_log  /var/log/nginx/error.log warn;
-pid        /var/run/nginx.pid;
-events {
-    worker_connections  1024;
-}
-http {
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
-    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
-                      '"\$request" \$status \$body_bytes_sent  '
-                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
-    access_log  $nginxAccessLogFilePath  main;
-    error_log $nginxErrorLogFilePath;
+    elif [[ "${configInstallNginxMode}" == "v2raySSL" ]]; then
+        inputV2rayStreamSettings
 
-    sendfile        on;
-    #tcp_nopush     on;
-    keepalive_timeout  120;
-    client_max_body_size 20m;
-    #gzip on;
-
-    server {
-        listen       80;
-        server_name  $configSSLDomain;
-        root $configWebsitePath;
-        index index.php index.html index.htm;
-
-        location /$configTrojanWebNginxPath {
-            proxy_pass http://127.0.0.1:$configTrojanWebPort/;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Host \$http_host;
-        }
-
-        location ~* ^/(static|common|auth|trojan)/ {
-            proxy_pass  http://127.0.0.1:$configTrojanWebPort;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$http_host;
-        }
-
-        # http redirect to https
-        if ( \$remote_addr != 127.0.0.1 ){
-            rewrite ^/(.*)$ https://$configSSLDomain/\$1 redirect;
-        }
-    }
-}
-EOF
-    else
-        cat > "${nginxConfigPath}" <<-EOF
-user  root;
-worker_processes  1;
-error_log  /var/log/nginx/error.log warn;
-pid        /var/run/nginx.pid;
-events {
-    worker_connections  1024;
-}
-http {
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
-    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
-                      '"\$request" \$status \$body_bytes_sent  '
-                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
-    access_log  $nginxAccessLogFilePath  main;
-    error_log $nginxErrorLogFilePath;
-
-    sendfile        on;
-    #tcp_nopush     on;
-    keepalive_timeout  120;
-    client_max_body_size 20m;
-    gzip  on;
-
+        read -r -d '' nginxConfigServerHttpInput << EOM
     server {
         listen 443 ssl http2;
         listen [::]:443 http2;
@@ -1548,9 +1456,75 @@ http {
         server_name  $configSSLDomain;
         return 301 https://$configSSLDomain\$request_uri;
     }
+
+EOM
+
+    elif [[ "${configInstallNginxMode}" == "trojanWeb" ]]; then
+
+        read -r -d '' nginxConfigServerHttpInput << EOM
+    server {
+        listen       80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location /$configTrojanWebNginxPath {
+            proxy_pass http://127.0.0.1:$configTrojanWebPort/;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Host \$http_host;
+        }
+
+        location ~* ^/(static|common|auth|trojan)/ {
+            proxy_pass  http://127.0.0.1:$configTrojanWebPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+        }
+
+        # http redirect to https
+        if ( \$remote_addr != 127.0.0.1 ){
+            rewrite ^/(.*)$ https://$configSSLDomain/\$1 redirect;
+        }
+    }
+
+EOM
+
+    else
+
+        echo
+
+    fi
+
+
+        cat > "${nginxConfigPath}" <<-EOF
+user  root;
+worker_processes  1;
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+events {
+    worker_connections  1024;
+}
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
+                      '"\$request" \$status \$body_bytes_sent  '
+                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
+    access_log  $nginxAccessLogFilePath  main;
+    error_log $nginxErrorLogFilePath;
+
+    sendfile        on;
+    #tcp_nopush     on;
+    keepalive_timeout  120;
+    client_max_body_size 20m;
+    gzip  on;
+
+
+    $nginxConfigServerHttpInput
+
 }
 EOF
-    fi
 
 
 
@@ -1560,9 +1534,13 @@ EOF
 
     downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/website2.zip" "${configWebsitePath}" "website2.zip"
 
-    wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/trojan-mac.zip"
-    wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/v2ray-windows.zip" 
-    wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/v2ray-mac.zip"
+
+    if [ "${configInstallNginxMode}" != "trojanWeb" ] ; then
+        wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/trojan-mac.zip"
+        wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/v2ray-windows.zip" 
+        wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/v2ray-mac.zip"
+    fi
+
 
     # downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/trojan_client_all.zip" "${configWebsiteDownloadPath}" "trojan_client_all.zip"
     # downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/trojan-qt5.zip" "${configWebsiteDownloadPath}" "trojan-qt5.zip"
@@ -1576,12 +1554,12 @@ EOF
     green "       Web服务器 nginx 安装成功!!"
     green "    伪装站点为 http://${configSSLDomain}"
 
-	if [[ $1 == "trojan-web" ]] ; then
+	if [[ "${configInstallNginxMode}" == "trojanWeb" ]] ; then
 	    yellow "    Trojan-web ${versionTrojanWeb} 可视化管理面板地址  http://${configSSLDomain}/${configTrojanWebNginxPath} "
 	    green "    Trojan-web 可视化管理面板 可执行文件路径 ${configTrojanWebPath}/trojan-web"
+        green "    Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service"
 	    green "    Trojan 服务器端可执行文件路径 /usr/bin/trojan/trojan"
 	    green "    Trojan 服务器端配置路径 /usr/local/etc/trojan/config.json "
-	    green "    Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service"
 	    green "    Trojan 停止命令: systemctl stop trojan.service  启动命令: systemctl start trojan.service  重启命令: systemctl restart trojan.service"
 	fi
 
@@ -1613,11 +1591,20 @@ nginx 查看运行状态命令: systemctl status nginx.service
 
 EOF
 
-	if [[ $1 == "trojan-web" ]] ; then
+	if [[ "${configInstallNginxMode}" == "trojanWeb" ]] ; then
         cat >> ${configReadme} <<-EOF
 
-安装的Trojan-web ${versionTrojanWeb} 可视化管理面板,访问地址  ${configSSLDomain}/${configTrojanWebNginxPath}
-Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service
+安装的Trojan-web ${versionTrojanWeb} 可视化管理面板 
+访问地址  http://${configSSLDomain}/${configTrojanWebNginxPath}
+Trojan-web 停止命令: systemctl stop trojan-web.service  
+Trojan-web 启动命令: systemctl start trojan-web.service  
+Trojan-web 重启命令: systemctl restart trojan-web.service
+
+Trojan 服务器端配置路径 /usr/local/etc/trojan/config.json
+Trojan 停止命令: systemctl stop trojan.service
+Trojan 启动命令: systemctl start trojan.service
+Trojan 重启命令: systemctl restart trojan.service
+Trojan 查看运行状态命令: systemctl status trojan.service
 
 EOF
 	fi
@@ -1626,57 +1613,66 @@ EOF
 
 function removeNginx(){
 
-    if [[ -f "${nginxConfigPath}" ]]; then
-
-        ${sudoCmd} systemctl stop nginx.service
-        ${sudoCmd} systemctl disable nginx.service
-
-        echo
-        green " ================================================== "
-        red " 准备卸载已安装的nginx"
-        green " ================================================== "
-        echo
-
-        if [ "$osRelease" == "centos" ]; then
-            yum remove -y nginx
-        else
-            apt autoremove -y --purge nginx nginx-common nginx-core
-            apt-get remove --purge nginx nginx-full nginx-common nginx-core
-        fi
-
-
-        rm -f ${nginxAccessLogFilePath}
-        rm -f ${nginxErrorLogFilePath}
-
-        rm -f ${configReadme}
-        rm -rf "/etc/nginx"
-        
-        rm -rf ${configDownloadTempPath}
-
-        read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
-        isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
-
-        
-        if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
-            rm -rf ${configWebsiteFatherPath}
-            ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
-            
-            echo
-            green " ================================================== "
-            green "  Nginx 卸载完毕, SSL 证书文件已删除!"
-            
-        else
-            rm -rf ${configWebsitePath}
-            echo
-            green " ================================================== "
-            green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
-        fi
-
-        green " ================================================== "
-    else
-        red " 系统没有安装 nginx, 退出卸载"
-    fi
     echo
+    read -p "是否确认卸载Nginx? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNginxServerInput
+    isRemoveNginxServerInput=${isRemoveNginxServerInput:-Y}
+
+    if [[ "${isRemoveNginxServerInput}" == [Yy] ]]; then
+
+
+        echo
+        if [[ -f "${nginxConfigPath}" ]]; then
+            green " ================================================== "
+            red " 准备卸载已安装的nginx"
+            green " ================================================== "
+            echo
+
+            ${sudoCmd} systemctl stop nginx.service
+            ${sudoCmd} systemctl disable nginx.service
+
+            if [ "$osRelease" == "centos" ]; then
+                yum remove -y nginx-mod-stream
+                yum remove -y nginx
+            else
+                apt autoremove -y --purge nginx nginx-common nginx-core
+                apt-get remove --purge nginx nginx-full nginx-common nginx-core
+            fi
+
+
+            rm -f ${nginxAccessLogFilePath}
+            rm -f ${nginxErrorLogFilePath}
+
+            rm -f ${configReadme}
+            rm -rf "/etc/nginx"
+            
+            rm -rf ${configDownloadTempPath}
+
+            read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
+            isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
+
+            
+            if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
+                rm -rf ${configWebsiteFatherPath}
+                ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+                
+                echo
+                green " ================================================== "
+                green "  Nginx 卸载完毕, SSL 证书文件已删除!"
+                
+            else
+                rm -rf ${configWebsitePath}
+                echo
+                green " ================================================== "
+                green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
+            fi
+
+            green " ================================================== "
+        else
+            red " 系统没有安装 nginx, 退出卸载"
+        fi
+        echo
+
+    fi    
 }
 
 
@@ -1697,6 +1693,20 @@ function installTrojanV2rayWithNginx(){
     testLinuxPortUsage
     installPackage
 
+    echo
+    if [ "$1" = "v2ray" ]; then
+        read -p "是否不申请域名的证书 直接使用本VPS的IP安装? 默认直接回车为不申请证书,请输入[Y/n]:" isDomainIPRequestInput
+        isDomainIPRequestInput=${isDomainIPRequestInput:-Y}
+
+        if [[ $isDomainIPRequestInput == [Yy] ]]; then
+            echo
+            read -p "请输入本VPS的IP 或 解析到本VPS的域名:" configSSLDomain
+            installV2ray
+            exit
+        fi
+    fi
+
+
     getHTTPSCertificateStep1
 
     echo
@@ -1709,26 +1719,38 @@ function installTrojanV2rayWithNginx(){
         green " ================================================== "
         echo
 
-        if [ "$isNginxWithSSL" = "no" ] ; then
+        if [ "$1" == "trojan_nginx" ]; then
             installWebServerNginx
-        else
+            installTrojanServer
 
-            if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
-                inputV2rayGRPCPath
-            else
-                inputV2rayWSPath
+        elif [ "$1" = "trojan" ]; then
+            installTrojanServer
+
+        elif [ "$1" = "nginx_v2ray" ]; then
+            installWebServerNginx
+            installV2ray
+
+        elif [ "$1" = "v2ray_nginxOptional" ]; then
+            echo
+            green " 是否安装 Nginx 用于提供伪装网站, 如果已有网站或搭配宝塔面板请选择N不安装"
+            read -p "是否确安装Nginx伪装网站? 直接回车默认安装, 请输入[Y/n]:" isInstallNginxServerInput
+            isInstallNginxServerInput=${isInstallNginxServerInput:-Y}
+
+            if [[ "${isInstallNginxServerInput}" == [Yy] ]]; then
+                installWebServerNginx
             fi
+            installV2ray
 
-            installWebServerNginx "v2ray"
-        fi
+        elif [ "$1" = "v2ray" ]; then
+            installV2ray
 
-        if [ -z $1 ]; then
-            installTrojanServer
-        elif [ $1 = "both" ]; then
+        elif [ "$1" = "trojan_nginx_v2ray" ]; then
+            installWebServerNginx
             installTrojanServer
             installV2ray
+
         else
-            installV2ray
+            echo
         fi
     else
         red " ================================================== "
@@ -1760,11 +1782,12 @@ function installTrojanV2rayWithNginx(){
 
 function downloadTrojanBin(){
 
-    if [ "$isTrojanGo" = "no" ] ; then
+    if [ "${isTrojanGo}" = "no" ] ; then
         if [ -z $1 ]; then
             tempDownloadTrojanPath="${configTrojanPath}"
         else
             tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan"
+            mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
         fi    
         # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
         if [[ ${osArchitecture} == "arm" || ${osArchitecture} == "arm64" ]] ; then
@@ -1778,6 +1801,7 @@ function downloadTrojanBin(){
             tempDownloadTrojanPath="${configTrojanGoPath}"
         else
             tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan-go"
+            mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
         fi 
 
         # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.6/trojan-go-linux-amd64.zip
@@ -1788,8 +1812,47 @@ function downloadTrojanBin(){
             downloadFilenameTrojanGo="trojan-go-linux-armv8.zip"
         fi
         downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojanGo}"
+    fi 
+}
+
+function checkTrojanGoInstall(){
+    if [ -f "${configTrojanPath}/trojan" ] ; then
+        configTrojanBasePath="${configTrojanPath}"
+        promptInfoTrojanName=""
+        isTrojanGo="no"
+    fi
+
+    if [ -f "${configTrojanGoPath}/trojan-go" ] ; then
+        configTrojanBasePath="${configTrojanGoPath}"
+        promptInfoTrojanName="-go"
+        isTrojanGo="yes"
+    fi
+
+    if [ -n "$1" ] ; then
+        if [[ -f "${configTrojanBasePath}/trojan${promptInfoTrojanName}" ]]; then
+            green " =================================================="
+            green "  已安装过 Trojan${promptInfoTrojanName} , 退出安装 !"
+            green " =================================================="
+            exit
+        fi
+    fi
+
+}
+
+function getTrojanGoInstallInfo(){
+    if [ "${isTrojanGo}" = "yes" ] ; then
+        getTrojanAndV2rayVersion "trojan-go"
+        configTrojanBaseVersion=${versionTrojanGo}
+        configTrojanBasePath="${configTrojanGoPath}"
+        promptInfoTrojanName="-go"
+    else
+        getTrojanAndV2rayVersion "trojan"
+        configTrojanBaseVersion=${versionTrojan}
+        configTrojanBasePath="${configTrojanPath}"
+        promptInfoTrojanName=""
     fi
 }
+
 
 function installTrojanServer(){
 
@@ -1804,26 +1867,51 @@ function installTrojanServer(){
     trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
 
-    isTrojanGoInstall
 
-    if [[ -f "${configTrojanBasePath}/trojan${promptInfoTrojanName}" ]]; then
+
+    checkTrojanGoInstall "exitInfo"
+
+    if [ "${isTrojanGoSupportWebsocket}" = "true" ] ; then
+        isTrojanGo="yes"
+    else
+        echo
         green " =================================================="
-        green "  已安装过 Trojan${promptInfoTrojanName} , 退出安装 !"
-        green " =================================================="
-        exit
+        green " 请选择安装 trojan-go 还是 原版trojan, 选Y为安装trojan-go, 选N为安装原版trojan"
+        read -p "请选择安装trojan-go 还是 原版trojan? 直接回车默认为trojan-go, 请输入[Y/n]:" isInstallTrojanTypeInput
+        isInstallTrojanTypeInput=${isInstallTrojanTypeInput:-Y}
+
+        if [[ "${isInstallTrojanTypeInput}" == [Yy] ]]; then
+            isTrojanGo="yes"
+
+            echo
+            green " 请选择是否开启 trojan-go 的 Websocket 用于CDN中转, 注意原版trojan客户端不支持 Websocket"
+            read -p "请选择是否开启 Websocket? 直接回车默认开启, 请输入[Y/n]:" isTrojanGoWebsocketInput
+            isTrojanGoWebsocketInput=${isTrojanGoWebsocketInput:-Y}
+
+            if [[ "${isTrojanGoWebsocketInput}" == [Yy] ]]; then
+                isTrojanGoSupportWebsocket="true"
+            else
+                isTrojanGoSupportWebsocket="false"
+            fi
+
+        else
+            isTrojanGo="no"
+        fi
+
     fi
 
+    getTrojanGoInstallInfo
 
     green " =================================================="
     green " 开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
-    yellow " 请输入trojan${promptInfoTrojanName}密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
+    yellow " 请输入 trojan${promptInfoTrojanName} 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     green " =================================================="
 
     read configTrojanPasswordPrefixInput
     configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-jin}
 
 
-    if [ "$configV2rayVlessMode" != "trojan" ] ; then
+    if [ "$configV2rayWorkingMode" != "trojan" ] ; then
         configV2rayTrojanPort=443
 
         inputV2rayServerPort "textMainTrojanPort"
@@ -1989,6 +2077,9 @@ EOM
 
 
 
+
+
+
     if [ "$isTrojanGo" = "no" ] ; then
 
         # 增加trojan 服务器端配置
@@ -1996,7 +2087,7 @@ EOM
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
-    "local_port": $configV2rayTrojanPort,
+    "local_port": ${configV2rayTrojanPort},
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
@@ -2066,7 +2157,7 @@ EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
-    "local_port": $configV2rayTrojanPort,
+    "local_port": ${configV2rayTrojanPort},
     "remote_addr": "127.0.0.1",
     "remote_port": 80,
     "password": [
@@ -2079,37 +2170,15 @@ EOF
         "verify_hostname": true,
         "cert": "${configSSLCertPath}/$configSSLCertFullchainFilename",
         "key": "${configSSLCertPath}/$configSSLCertKeyFilename",
-        "key_password": "",
-        "curves": "",
-        "cipher": "",        
-	    "prefer_server_cipher": false,
         "sni": "${configSSLDomain}",
-        "alpn": [
-            "http/1.1"
-        ],
-        "reuse_session": true,
-        "session_ticket": true,
-        "plain_http_response": "",
         "fallback_addr": "127.0.0.1",
-        "fallback_port": 80,    
-        "fingerprint": "firefox"
-    },
-    "tcp": {
-        "no_delay": true,
-        "keep_alive": true
+        "fallback_port": 80, 
+        "fingerprint": "chrome"
     },
     "websocket": {
         "enabled": ${isTrojanGoSupportWebsocket},
         "path": "/${configTrojanGoWebSocketPath}",
         "host": "${configSSLDomain}"
-    },
-    "mysql": {
-        "enabled": false,
-        "server_addr": "127.0.0.1",
-        "server_port": 3306,
-        "database": "trojan",
-        "username": "trojan",
-        "password": ""
     }
 }
 EOF
@@ -2140,7 +2209,7 @@ EOF
     ${sudoCmd} systemctl enable trojan${promptInfoTrojanName}.service
 
 
-    if [ "$configV2rayVlessMode" != "trojan" ] ; then
+    if [ "$configV2rayWorkingMode" != "trojan" ] ; then
         
     
     # 下载并制作 trojan windows 客户端的命令行启动文件
@@ -2214,7 +2283,7 @@ EOF
 	green "======================================================================"
 	green "    Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !"
 
-    if [[ ${isInstallNginx} == "true" ]]; then
+    if [[ ${configInstallNginxMode} == "noSSL" ]]; then
         green "    伪装站点为 https://${configSSLDomain}"
 	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
     fi
@@ -2306,18 +2375,17 @@ EOF
     yellow "  iOS 安装小火箭遇到问题 教程 https://github.com/shadowrocketHelp/help/ "
     green "======================================================================"
 	green "教程与其他资源:"
-	green "访问 https://www.v2rayssr.com/trojan-1.html ‎ 下载 浏览器插件 客户端 及教程"
-	green "客户端汇总 https://tlanyan.me/trojan-clients-download ‎ 下载 trojan客户端"
-    green "访问 https://westworldss.com/portal/page/download ‎ 下载 客户端 及教程"
+	green "访问 https://www.v2rayssr.com/trojan-1.html 下载 浏览器插件 客户端 及教程"
+    green "访问 https://westworldss.com/portal/page/download 下载 客户端 及教程"
 	green "======================================================================"
 	green "其他 Windows 客户端:"
-	green "https://github.com/TheWanderingCoel/Trojan-Qt5/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://dl.trojan-cdn.com/trojan (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/Fndroid/clash_for_windows_pkg/releases"
 	green "======================================================================"
 	green "其他 Mac 客户端:"
-	green "https://github.com/TheWanderingCoel/Trojan-Qt5/releases (exe为Win客户端, dmg为Mac客户端)"
+	green "https://dl.trojan-cdn.com/trojan (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/JimLee1996/TrojanX/releases (exe为Win客户端, dmg为Mac客户端)"
@@ -2368,79 +2436,21 @@ https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${t
 EOF
 }
 
-
-function removeTrojan(){
-
-    if [ -f "${configTrojanPath}/trojan" ] ; then
-        configTrojanBasePath="${configTrojanPath}"
-        promptInfoTrojanName=""
-    fi
-
-    if [ -f "${configTrojanGoPath}/trojan-go" ] ; then
-        configTrojanBasePath="${configTrojanGoPath}"
-        promptInfoTrojanName="-go"
-    fi
-
-    if [[ -f "${configTrojanPath}/trojan" || -f "${configTrojanGoPath}/trojan-go" ]]; then
-
-        ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
-        ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
-
-        echo
-        green " ================================================== "
-        red " 准备卸载已安装的trojan${promptInfoTrojanName}"
-        green " ================================================== "
-        echo
-
-        rm -rf ${configTrojanBasePath}
-        rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
-        rm -f ${configTrojanLogFile}
-        rm -f ${configTrojanGoLogFile}
-
-        rm -f ${configReadme}
-
-        crontab -r
-
-        echo
-        green " ================================================== "
-        green "  trojan${promptInfoTrojanName} 卸载完毕 !"
-        green "  crontab 定时任务 删除完毕 !"
-        green " ================================================== "
-        
-    else
-        red " 系统没有安装 trojan${promptInfoTrojanName}, 退出卸载"
-    fi
-    echo
-}
-
-
 function upgradeTrojan(){
 
-    if [[ -f "${configTrojanPath}/trojan" || -f "${configTrojanGoPath}/trojan-go" ]]; then
-        if [ -f "${configTrojanGoPath}/trojan-go" ] ; then
-            isTrojanGo="yes"
-        else
-            isTrojanGo="no"
-        fi
+    checkTrojanGoInstall
 
-        isTrojanGoInstall
+    if [[ -f "${configTrojanPath}/trojan" || -f "${configTrojanGoPath}/trojan-go" ]]; then
+
+        getTrojanGoInstallInfo
 
         green " ================================================== "
         green "     开始升级 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion}"
         green " ================================================== "
 
         ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
-
         mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
-
         downloadTrojanBin "upgrade"
-
-        if [ "$isTrojanGo" = "no" ] ; then
-            mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
-        else
-            mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
-        fi
-
         ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
 
         green " ================================================== "
@@ -2450,9 +2460,56 @@ function upgradeTrojan(){
     else
         red " 系统没有安装 trojan${promptInfoTrojanName}, 退出卸载"
     fi
-    echo
-
 }
+
+function removeTrojan(){
+
+    echo
+    read -p "是否确认卸载 trojan 或 trojan-go? 直接回车默认卸载, 请输入[Y/n]:" isRemoveTrojanServerInput
+    isRemoveTrojanServerInput=${isRemoveTrojanServerInput:-Y}
+
+    if [[ "${isRemoveTrojanServerInput}" == [Yy] ]]; then
+        
+
+        echo
+        checkTrojanGoInstall
+
+        if [[ -f "${configTrojanPath}/trojan" || -f "${configTrojanGoPath}/trojan-go" ]]; then
+            echo
+            green " ================================================== "
+            red " 准备卸载已安装的trojan${promptInfoTrojanName}"
+            green " ================================================== "
+            echo
+
+            ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
+            ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
+
+            rm -rf ${configTrojanBasePath}
+            rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
+            rm -f ${configTrojanLogFile}
+            rm -f ${configTrojanGoLogFile}
+
+            rm -f ${configReadme}
+
+            crontab -l | grep -v "trojan${promptInfoTrojanName}"  | crontab -
+
+            echo
+            green " ================================================== "
+            green "  trojan${promptInfoTrojanName} 卸载完毕 !"
+            green "  crontab 定时任务 删除完毕 !"
+            green " ================================================== "
+            
+        else
+            red " 系统没有安装 trojan${promptInfoTrojanName}, 退出卸载"
+        fi
+
+    fi
+}
+
+
+
+
+
 
 
 
@@ -2513,12 +2570,113 @@ function downloadV2rayXrayBin(){
 
 
 
+function inputV2rayStreamSettings(){
+    echo
+    green " =================================================="
+    yellow " 请选择 StreamSettings 底层传输协议, 默认为3 Websocket"
+    echo
+    green " 1. TCP "
+    green " 2. KCP "
+    green " 3. WebSocket 支持CDN"
+    green " 4. HTTP/2 (注意Nginx不支持HTTP/2的转发)"
+    green " 5. QUIC "
+    green " 6. gRPC 支持CDN"
+    green " 7. WebSocket + gRPC 支持CDN"
+    echo
+    read -p "请选择底层传输协议? 直接回车默认选3 Websocket, 请输入纯数字:" isV2rayStreamSettingInput
+    isV2rayStreamSettingInput=${isV2rayStreamSettingInput:-1}
 
+    if [[ $isV2rayStreamSettingInput == 1 ]]; then
+        configV2rayStreamSetting="tcp"
+
+    elif [[ $isV2rayStreamSettingInput == 2 ]]; then
+        configV2rayStreamSetting="kcp"
+        inputV2rayKCPSeedPassword
+
+    elif [[ $isV2rayStreamSettingInput == 4 ]]; then
+        configV2rayStreamSetting="h2"
+        inputV2rayWSPath "h2"
+    elif [[ $isV2rayStreamSettingInput == 5 ]]; then
+        configV2rayStreamSetting="quic"
+        inputV2rayKCPSeedPassword "quic"
+
+    elif [[ $isV2rayStreamSettingInput == 6 ]]; then
+        configV2rayStreamSetting="grpc"
+
+    elif [[ $isV2rayStreamSettingInput == 7 ]]; then
+        configV2rayStreamSetting="wsgrpc"
+
+    else
+        configV2rayStreamSetting="ws"
+        inputV2rayWSPath
+    fi
+
+
+    if [[ "${configInstallNginxMode}" == "v2raySSL" ]]; then
+
+         if [[ $configV2rayStreamSetting == "grpc" ]]; then
+            inputV2rayGRPCPath
+
+        elif [[ $configV2rayStreamSetting == "wsgrpc" ]]; then
+            inputV2rayWSPath
+            inputV2rayGRPCPath
+        fi
+
+    else
+
+        if [[ $configV2rayStreamSetting == "grpc" ]]; then
+            inputV2rayServerPort "textMainGRPCPort"
+
+            configV2rayGRPCPort=${isV2rayUserPortGRPCInput}   
+            configV2rayPortGRPCShowInfo=${isV2rayUserPortGRPCInput}   
+
+            inputV2rayGRPCPath
+
+        elif [[ $configV2rayStreamSetting == "wsgrpc" ]]; then
+            inputV2rayWSPath
+
+            inputV2rayServerPort "textMainGRPCPort"
+
+            configV2rayGRPCPort=${isV2rayUserPortGRPCInput}   
+            configV2rayPortGRPCShowInfo=${isV2rayUserPortGRPCInput}   
+
+            inputV2rayGRPCPath
+        fi
+
+    fi
+
+
+}
+
+function inputV2rayKCPSeedPassword(){ 
+    echo
+    configV2rayKCPSeedPassword=$(cat /dev/urandom | head -1 | md5sum | head -c 4)
+
+    configV2rayKCPQuicText="KCP的Seed 混淆密码"
+    if [[ $1 == "quic" ]]; then
+        configV2rayKCPQuicText="QUIC 的key密钥"
+    fi 
+
+    read -p "是否自定义${promptInfoXrayName}的 ${configV2rayKCPQuicText}? 直接回车默认创建随机密码, 请输入自定义密码:" isV2rayUserKCPSeedInput
+    isV2rayUserKCPSeedInput=${isV2rayUserKCPSeedInput:-${configV2rayKCPSeedPassword}}
+
+    if [[ -z $isV2rayUserKCPSeedInput ]]; then
+        echo
+    else
+        configV2rayKCPSeedPassword=${isV2rayUserKCPSeedInput}
+    fi
+}
 
 function inputV2rayWSPath(){ 
+    echo
     configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 
-    read -p "是否自定义${promptInfoXrayName}的WS的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
+    configV2rayWSH2Text="WS"
+    if [[ $1 == "h2" ]]; then
+        configV2rayWSH2Text="HTTP2"
+    fi 
+
+    read -p "是否自定义${promptInfoXrayName}的 ${configV2rayWSH2Text}的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
     isV2rayUserWSPathInput=${isV2rayUserWSPathInput:-${configV2rayWebSocketPath}}
 
     if [[ -z $isV2rayUserWSPathInput ]]; then
@@ -2529,6 +2687,7 @@ function inputV2rayWSPath(){
 }
 
 function inputV2rayGRPCPath(){ 
+    echo
     configV2rayGRPCServiceName=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 
     read -p "是否自定义${promptInfoXrayName}的 gRPC 的serviceName ? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserGRPCPathInput
@@ -2545,7 +2704,8 @@ function inputV2rayGRPCPath(){
 function inputV2rayServerPort(){  
     echo
 	if [[ $1 == "textMainPort" ]]; then
-        green " 如果要支持cloudflare的CDN, 需要输入 cloudflare支持的端口 例如 443 8443 2053 端口才可以"
+        green " 是否自定义${promptInfoXrayName}的端口号? 如要支持cloudflare的CDN, 需要使用cloudflare支持的HTTPS端口号 例如 443 8443 2053 2083 2087 2096 端口"
+        green " 具体请看cloudflare官方文档 https://developers.cloudflare.com/fundamentals/get-started/network-ports"
         read -p "是否自定义${promptInfoXrayName}的端口号? 直接回车默认为${configV2rayPortShowInfo}, 请输入自定义端口号[1-65535]:" isV2rayUserPortInput
         isV2rayUserPortInput=${isV2rayUserPortInput:-${configV2rayPortShowInfo}}
 		checkPortInUse "${isV2rayUserPortInput}" $1 
@@ -2569,7 +2729,6 @@ function inputV2rayServerPort(){
 
     if [[ $1 == "textMainTrojanPort" ]]; then
         green "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
-        red "不建议用户自定义端口, 建议使用443端口, 除非你需要使用非443端口并明白使用非443端口的安全性!"
         read -p "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
         isTrojanUserPortInput=${isTrojanUserPortInput:-${configV2rayTrojanPort}}
 		checkPortInUse "${isTrojanUserPortInput}" $1 
@@ -2597,7 +2756,6 @@ function checkPortInUse(){
 
 
 function inputUnlockV2rayServerInfo(){
-            echo
             echo
             yellow " 请选择可解锁流媒体的V2ray或Xray服务器的协议 "
             green " 1. VLess + TCP + TLS"
@@ -2706,6 +2864,7 @@ EOM
         
 }
 
+
 function installV2ray(){
 
     v2rayPassword1=$(cat /proc/sys/kernel/random/uuid)
@@ -2733,24 +2892,40 @@ function installV2ray(){
     echo
 
 
-    if [[ ( $configV2rayVlessMode == "trojan" ) || ( $configV2rayVlessMode == "vlessxtlsws" ) || ( $configV2rayVlessMode == "vlessxtlstrojan" ) ]] ; then
-        promptInfoXrayName="xray"
-        isXray="yes"
-    else
-        read -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayInput
-        isV2rayOrXrayInput=${isV2rayOrXrayInput:-n}
+    if [[ ( $configV2rayWorkingMode == "trojan" ) || ( $configV2rayWorkingMode == "vlessTCPVmessWS" ) || ( $configV2rayWorkingMode == "vlessTCPWS" ) || ( $configV2rayWorkingMode == "vlessTCPWSgRPC" ) || ( $configV2rayWorkingMode == "vlessTCPWSTrojan" ) ]]; then
+        echo
+        green " 是否使用XTLS代替TLS加密, XTLS是Xray特有的加密方式, 速度更快, 默认使用TLS加密"
+        green " 由于V2ray不支持XTLS, 如果选择XTLS加密将使用Xray内核提供服务"
+        read -p "是否使用XTLS? 直接回车默认为TLS加密, 请输入[y/N]:" isXrayXTLSInput
+        isXrayXTLSInput=${isXrayXTLSInput:-n}
 
-        if [[ $isV2rayOrXrayInput == [Yy] ]]; then
+        if [[ $isXrayXTLSInput == [Yy] ]]; then
+            promptInfoXrayName="xray"
+            isXray="yes"
+            configV2rayIsTlsShowInfo="xtls"
+        fi
+    else
+        read -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayCoreInput
+        isV2rayOrXrayCoreInput=${isV2rayOrXrayCoreInput:-n}
+
+        if [[ $isV2rayOrXrayCoreInput == [Yy] ]]; then
             promptInfoXrayName="xray"
             isXray="yes"
         fi
     fi
 
 
-    if [[ -n "$configV2rayVlessMode" ]]; then
-         configV2rayProtocol="vless"
-    else 
+    if [[ -n "${configV2rayWorkingMode}" ]]; then
+        configV2rayProtocol="vless"
 
+        configV2rayPort=443
+        configV2rayPortShowInfo=$configV2rayPort
+
+        inputV2rayServerPort "textMainPort"
+        configV2rayPort=${isV2rayUserPortInput}   
+        configV2rayPortShowInfo=${isV2rayUserPortInput}  
+
+    else 
         echo
         read -p "是否使用VLESS协议? 直接回车默认为VMess协议, 请输入[y/N]:" isV2rayUseVLessInput
         isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
@@ -2761,7 +2936,77 @@ function installV2ray(){
             configV2rayProtocol="vmess"
         fi
 
+        
+        if [[ ${configInstallNginxMode} == "v2raySSL" ]]; then
+            configV2rayPortShowInfo=443
+            configV2rayPortGRPCShowInfo=443
+
+        else
+            configV2rayIsTlsShowInfo="none"
+
+            configV2rayPort="$(($RANDOM + 10000))"
+            configV2rayPortShowInfo=$configV2rayPort
+
+            inputV2rayServerPort "textMainPort"
+            configV2rayPort=${isV2rayUserPortInput}   
+            configV2rayPortShowInfo=${isV2rayUserPortInput}  
+
+            inputV2rayStreamSettings
+
+        fi
     fi
+
+
+
+    
+    # 增加任意门
+    if [[ ${configInstallNginxMode} == "v2raySSL" ]]; then
+        echo
+    else
+
+        inputV2rayServerPort "textAdditionalPort"
+
+        if [[ $isV2rayAdditionalPortInput == "999999" ]]; then
+            v2rayConfigAdditionalPortInput=""
+        else
+            read -r -d '' v2rayConfigAdditionalPortInput << EOM
+        ,
+        {
+            "listen": "0.0.0.0",
+            "port": ${isV2rayAdditionalPortInput}, 
+            "protocol": "dokodemo-door",
+            "settings": {
+                "address": "127.0.0.1",
+                "port": ${configV2rayPort},
+                "network": "tcp, udp",
+                "followRedirect": false 
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": ["http", "tls", "quic"]
+            }
+        }     
+
+EOM
+        fi
+    fi
+
+
+
+    echo
+    read -p "是否自定义${promptInfoXrayName}的密码? 直接回车默认创建随机密码, 请输入自定义UUID密码:" isV2rayUserPassordInput
+    isV2rayUserPassordInput=${isV2rayUserPassordInput:-''}
+
+    if [ -z "${isV2rayUserPassordInput}" ]; then
+        isV2rayUserPassordInput=""
+    else
+        v2rayPassword1=${isV2rayUserPassordInput}
+    fi
+
+
+
+
+
 
 
 
@@ -2817,6 +3062,7 @@ EOM
     echo
     green " =================================================="
     yellow " 是否使用 Cloudflare WARP 解锁 流媒体 Netflix 等网站"
+    echo
     green " 1. 不使用解锁"
     green " 2. 使用 WARP Sock5 代理解锁 推荐使用"
     green " 3. 使用 WARP IPv6 解锁"
@@ -2926,7 +3172,7 @@ EOM
 
 
 
-    echo
+
     echo
     yellow " 某大佬提供了可以解锁Netflix新加坡区的V2ray服务器, 不保证一直可用"
     read -p "是否通过神秘力量解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
@@ -2980,7 +3226,7 @@ EOM
 
 
 
-    echo
+
     echo
     green " =================================================="
     yellow " 请选择 避免弹出 Google reCAPTCHA 人机验证的方式"
@@ -3001,6 +3247,7 @@ EOM
             V2rayUnlockVideoSiteRuleText="${V2rayUnlockVideoSiteRuleText:1}"
         fi
 
+        # 修复一个都不解锁的bug 都选1的bug
         if [[ "${isV2rayUnlockGoogleInput}" == "1" ]]; then
             V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
             V2rayUnlockVideoSiteRuleText="\"test.com\""
@@ -3073,91 +3320,57 @@ EOM
     fi
 
 
-
-
-	echo				
-    echo
-    read -p "是否自定义${promptInfoXrayName}的密码? 直接回车默认创建随机密码, 请输入自定义UUID密码:" isV2rayUserPassordInput
-    isV2rayUserPassordInput=${isV2rayUserPassordInput:-''}
-
-    if [[ -z $isV2rayUserPassordInput ]]; then
-        isV2rayUserPassordInput=""
-    else
-        v2rayPassword1=${isV2rayUserPassordInput}
-    fi
-
-
-
-    # 增加自定义端口号
-    if [[ ${isInstallNginx} == "true" ]]; then
-        configV2rayPortShowInfo=443
-        configV2rayPortGRPCShowInfo=443
-        
-        if [[ $configV2rayVlessMode == "vlessxtlstrojan" ]]; then
-            configV2rayPort=443
-        fi
-    else
-        configV2rayPort="$(($RANDOM + 10000))"
-        
-        if [[ -n "$configV2rayVlessMode" ]]; then
-            configV2rayPort=443
-        fi
-        configV2rayPortShowInfo=$configV2rayPort
-
-        inputV2rayServerPort "textMainPort"
-
-        configV2rayPort=${isV2rayUserPortInput}   
-        configV2rayPortShowInfo=${isV2rayUserPortInput}   
-
-
-        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) ]]; then
-            inputV2rayServerPort "textMainGRPCPort"
-
-            configV2rayGRPCPort=${isV2rayUserPortGRPCInput}   
-            configV2rayPortGRPCShowInfo=${isV2rayUserPortGRPCInput}   
-        fi
-
-
-        echo
-        if [[ ( $configV2rayWSorGrpc == "grpc" ) || ( $configV2rayWSorGrpc == "wsgrpc" ) || ( $configV2rayVlessMode == "vlessgrpc" ) ]]; then
-            inputV2rayGRPCPath
-        else
-            inputV2rayWSPath
-        fi
-
-
-
-
-        
-        
-        inputV2rayServerPort "textAdditionalPort"
-
-        if [[ $isV2rayAdditionalPortInput == "999999" ]]; then
-            v2rayConfigAdditionalPortInput=""
-        else
-            read -r -d '' v2rayConfigAdditionalPortInput << EOM
-        ,
+    read -r -d '' v2rayConfigOutboundInput << EOM
+    
+    "outbounds": [
         {
-            "listen": "0.0.0.0",
-            "port": ${isV2rayAdditionalPortInput}, 
-            "protocol": "dokodemo-door",
+            "tag":"IPv4_out",
+            "protocol": "freedom",
             "settings": {
-                "address": "127.0.0.1",
-                "port": ${configV2rayPort},
-                "network": "tcp, udp",
-                "followRedirect": false 
-            },
-            "sniffing": {
-            "enabled": true,
-            "destOverride": ["http", "tls"]
+                "domainStrategy": "${V2rayDNSUnlockText}"
             }
-        }     
+        },        
+        {
+            "tag": "blocked",
+            "protocol": "blackhole",
+            "settings": {}
+        },
+
+        ${v2rayConfigOutboundV2rayServerInput}
+        ${v2rayConfigOutboundV2rayGoNetflixServerInput}
+        {
+            "tag":"IPv6_out",
+            "protocol": "freedom",
+            "settings": {
+                "domainStrategy": "UseIPv6" 
+            }
+        },
+        {
+            "tag": "WARP_out",
+            "protocol": "socks",
+            "settings": {
+                "servers": [
+                    {
+                        "address": "${unlockWARPServerIpInput}",
+                        "port": ${unlockWARPServerPortInput}
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp"
+            }
+        }
+    ]
 
 EOM
 
-        fi
 
-    fi
+
+
+
+
+
+
 
 
 
@@ -3182,8 +3395,6 @@ EOM
     rm -rf ${configV2rayPath}/*
 
     downloadV2rayXrayBin
-
-
 
 
     # 增加 v2ray 服务器端配置
@@ -3629,6 +3840,41 @@ EOM
 EOM
     fi
 
+    if [[ "${configV2rayIsTlsShowInfo}" == "xtls"  ]]; then
+    read -r -d '' v2rayConfigUserpasswordInput << EOM
+                    {
+                        "id": "${v2rayPassword1}", "flow": "xtls-rprx-direct", "level": 0, "email": "password11@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword2}", "flow": "xtls-rprx-direct", "level": 0, "email": "password12@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword3}", "flow": "xtls-rprx-direct", "level": 0, "email": "password13@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword4}", "flow": "xtls-rprx-direct", "level": 0, "email": "password14@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword5}", "flow": "xtls-rprx-direct", "level": 0, "email": "password15@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword6}", "flow": "xtls-rprx-direct", "level": 0, "email": "password16@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword7}", "flow": "xtls-rprx-direct", "level": 0, "email": "password17@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword8}", "flow": "xtls-rprx-direct", "level": 0, "email": "password18@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword9}", "flow": "xtls-rprx-direct", "level": 0, "email": "password19@gmail.com"
+                    },
+                    {
+                        "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com"
+                    }
+EOM
+
+    else
     read -r -d '' v2rayConfigUserpasswordInput << EOM
                     {
                         "id": "${v2rayPassword1}", "level": 0, "email": "password11@gmail.com"
@@ -3662,247 +3908,52 @@ EOM
                     }
 EOM
 
-    read -r -d '' v2rayConfigUserpasswordDirectInput << EOM
-                    {
-                        "id": "${v2rayPassword1}", "flow": "xtls-rprx-direct", "level": 0, "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}", "flow": "xtls-rprx-direct", "level": 0, "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}", "flow": "xtls-rprx-direct", "level": 0, "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}", "flow": "xtls-rprx-direct", "level": 0, "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}", "flow": "xtls-rprx-direct", "level": 0, "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}", "flow": "xtls-rprx-direct", "level": 0, "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}", "flow": "xtls-rprx-direct", "level": 0, "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}", "flow": "xtls-rprx-direct", "level": 0, "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}", "flow": "xtls-rprx-direct", "level": 0, "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com"
-                    }
-EOM
-
-
-
-        read -r -d '' v2rayConfigOutboundInput << EOM
-    ${v2rayConfigRouteInput}
-
-    "outbounds": [
-        {
-            "tag":"IPv4_out",
-            "protocol": "freedom",
-            "settings": {
-                "domainStrategy": "${V2rayDNSUnlockText}"
-            }
-        },        
-        {
-            "tag": "blocked",
-            "protocol": "blackhole",
-            "settings": {}
-        },
-
-        ${v2rayConfigOutboundV2rayServerInput}
-        ${v2rayConfigOutboundV2rayGoNetflixServerInput}
-        {
-            "tag":"IPv6_out",
-            "protocol": "freedom",
-            "settings": {
-                "domainStrategy": "UseIPv6" 
-            }
-        },
-        {
-            "tag": "WARP_out",
-            "protocol": "socks",
-            "settings": {
-                "servers": [
-                    {
-                        "address": "${unlockWARPServerIpInput}",
-                        "port": ${unlockWARPServerPortInput}
-                    }
-                ]
-            },
-            "streamSettings": {
-                "network": "tcp"
-            }
-        }
-
-    ]
-
-EOM
-
-
-
-    read -r -d '' v2rayConfigLogInput << EOM
-    "log" : {
-        "access": "${configV2rayAccessLogFilePath}",
-        "error": "${configV2rayErrorLogFilePath}",
-        "loglevel": "warning"
-    },
-    ${v2rayConfigDNSInput}
-EOM
-
-
-
-    if [[ -z "$configV2rayVlessMode" ]]; then
-
-        if [[ "$configV2rayWSorGrpc" == "grpc" ]]; then
-            cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
-    "inbounds": [
-        {
-            "port": ${configV2rayGRPCPort},
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    ${v2rayConfigUserpasswordInput}
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "grpc",
-                "grpcSettings": {
-                    "serviceName": "${configV2rayGRPCServiceName}" 
-                }
-            }
-        }
-        ${v2rayConfigAdditionalPortInput}
-    ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
-        elif [[ "$configV2rayWSorGrpc" == "wsgrpc" ]]; then
-            cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
-    "inbounds": [
-        {
-            "port": ${configV2rayPort},
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    ${v2rayConfigUserpasswordInput}
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "ws",
-                "wsSettings": {
-                    "path": "/${configV2rayWebSocketPath}"
-                }
-            }
-        },
-        {
-            "port": ${configV2rayGRPCPort},
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    ${v2rayConfigUserpasswordInput}
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "grpc",
-                "grpcSettings": {
-                    "serviceName": "${configV2rayGRPCServiceName}" 
-                }
-            }
-        }
-        ${v2rayConfigAdditionalPortInput}
-    ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
-
-        else
-            cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
-    "inbounds": [
-        {
-            "port": ${configV2rayPort},
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    ${v2rayConfigUserpasswordInput}
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "ws",
-                "wsSettings": {
-                    "path": "/${configV2rayWebSocketPath}"
-                }
-            }
-        }
-        ${v2rayConfigAdditionalPortInput}
-    ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
-
-        fi
-
     fi
 
 
-    if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
-        cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
+
+
+
+
+
+
+
+
+    v2rayConfigInboundInput=""
+
+
+    if [[ "$configV2rayStreamSetting" == "grpc" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
         {
-            "port": ${configV2rayPort},
+            "port": ${configV2rayGRPCPort},
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
                     ${v2rayConfigUserpasswordInput}
                 ],
-                "decryption": "none",
-                "fallbacks": [
-                    {
-                        "dest": 80
-                    },
-                    {
-                        "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayVmesWSPort},
-                        "xver": 1
-                    }
-                ]
+                "decryption": "none"
             },
             "streamSettings": {
-                "network": "tcp",
-                "security": "tls",
-                "tlsSettings": {
-                    "alpn": [
-                        "http/1.1"
-                    ],
-                    "certificates": [
-                        {
-                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
-                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
-                        }
-                    ]
+                "network": "grpc",
+                "security": "none",
+                "grpcSettings": {
+                    "serviceName": "${configV2rayGRPCServiceName}" 
                 }
             }
-        },
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
+    elif [[ "$configV2rayStreamSetting" == "ws" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
         {
-            "port": ${configV2rayVmesWSPort},
-            "listen": "127.0.0.1",
-            "protocol": "vless",
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
                     ${v2rayConfigUserpasswordInput}
@@ -3913,23 +3964,17 @@ EOF
                 "network": "ws",
                 "security": "none",
                 "wsSettings": {
-                    "acceptProxyProtocol": true,
-                    "path": "/${configV2rayWebSocketPath}" 
+                    "path": "/${configV2rayWebSocketPath}"
                 }
             }
         }
         ${v2rayConfigAdditionalPortInput}
     ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
-    fi
+EOM
 
+    elif [[ "$configV2rayStreamSetting" == "wsgrpc" ]]; then
 
-    if [[ "$configV2rayVlessMode" == "vlessgrpc" ]]; then
-        cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
+        read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -3938,46 +3983,156 @@ EOF
                 "clients": [
                     ${v2rayConfigUserpasswordInput}
                 ],
-                "decryption": "none",
-                "fallbacks": [
-                    {
-                        "dest": 80
-                    }
-                ]
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "path": "/${configV2rayWebSocketPath}"
+                }
+            }
+        },
+        {
+            "port": ${configV2rayGRPCPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
             },
             "streamSettings": {
                 "network": "grpc",
-                "security": "tls",
-                "tlsSettings": {
-                    "alpn": [
-                        "h2", 
-                        "http/1.1"
-                    ],
-                    "certificates": [
-                        {
-                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
-                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
-                        }
-                    ]
-                },
+                "security": "none",
                 "grpcSettings": {
-                    "serviceName": "${configV2rayGRPCServiceName}"
+                    "serviceName": "${configV2rayGRPCServiceName}" 
                 }
             }
         }
         ${v2rayConfigAdditionalPortInput}
     ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
+EOM    
+
+    elif [[ "$configV2rayStreamSetting" == "tcp" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "none",
+                "tcpSettings": {
+                    "acceptProxyProtocol": false,
+                    "header": {
+                        "type": "none"
+                    }
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
+    elif [[ "$configV2rayStreamSetting" == "kcp" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "kcp",
+                "security": "none",
+                "kcpSettings": {
+                    "seed": "${configV2rayKCPSeedPassword}"
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
+    elif [[ "$configV2rayStreamSetting" == "h2" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "h2",
+                "security": "none",
+                "httpSettings": {
+                    "path": "/${configV2rayWebSocketPath}"
+                }            
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
+    elif [[ "$configV2rayStreamSetting" == "quic" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "quic",
+                "security": "none",
+                "quicSettings": {
+                    "security": "aes-128-gcm",
+                    "key": "${configV2rayKCPSeedPassword}",
+                    "header": {
+                        "type": "none"
+                    }
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
     fi
 
 
 
-    if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
-        cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
+
+
+
+
+
+    if [[ "$configV2rayWorkingMode" == "vlessTCPVmessWS" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -4005,8 +4160,8 @@ EOF
             },
             "streamSettings": {
                 "network": "tcp",
-                "security": "tls",
-                "tlsSettings": {
+                "security": "${configV2rayIsTlsShowInfo}",
+                "${configV2rayIsTlsShowInfo}Settings": {
                     "alpn": [
                         "http/1.1"
                     ],
@@ -4063,24 +4218,209 @@ EOF
         }
         ${v2rayConfigAdditionalPortInput}
     ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
-    fi
+EOM 
 
+    elif [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
 
-
-    if [[  $configV2rayVlessMode == "vlessxtlstrojan" ]]; then
-            cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
+        read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
         {
             "port": ${configV2rayPort},
             "protocol": "${configV2rayProtocol}",
             "settings": {
                 "clients": [
-                    ${v2rayConfigUserpasswordDirectInput}
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "security": "tls",
+                "tlsSettings": {
+                    "alpn": [
+                        "h2", 
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
+                        }
+                    ]
+                },
+                "grpcSettings": {
+                    "serviceName": "${configV2rayGRPCServiceName}"
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
+
+    elif [[ $configV2rayWorkingMode == "vlessTCPWS" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    },
+                    {
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayVmesWSPort},
+                        "xver": 1
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "${configV2rayIsTlsShowInfo}",
+                "${configV2rayIsTlsShowInfo}Settings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "port": ${configV2rayVmesWSPort},
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "acceptProxyProtocol": true,
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
+
+    elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    },
+                    {
+                        "path": "/${configV2rayWebSocketPath}",
+                        "dest": ${configV2rayVmesWSPort},
+                        "xver": 1
+                    },
+                    {
+                        "path": "/${configV2rayGRPCServiceName}",
+                        "dest": ${configV2rayGRPCPort},
+                        "xver": 1
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "${configV2rayIsTlsShowInfo}",
+                "${configV2rayIsTlsShowInfo}Settings": {
+                    "alpn": [
+                        "http/1.1"
+                    ],
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "port": ${configV2rayVmesWSPort},
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "acceptProxyProtocol": true,
+                    "path": "/${configV2rayWebSocketPath}" 
+                }
+            }
+        },
+        {
+            "port": ${configV2rayGRPCPort},
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "security": "none",
+                "grpcSettings": {
+                    "serviceName": "${configV2rayGRPCServiceName}"
+                }
+            }
+        }
+        ${v2rayConfigAdditionalPortInput}
+    ],
+EOM
+
+
+    elif [[  $configV2rayWorkingMode == "vlessTCPWSTrojan" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
                 ],
                 "decryption": "none",
                 "fallbacks": [
@@ -4097,8 +4437,8 @@ EOF
             },
             "streamSettings": {
                 "network": "tcp",
-                "security": "xtls",
-                "xtlsSettings": {
+                "security": "${configV2rayIsTlsShowInfo}",
+                "${configV2rayIsTlsShowInfo}Settings": {
                     "alpn": [
                         "http/1.1"
                     ],
@@ -4154,95 +4494,20 @@ EOF
         }
         ${v2rayConfigAdditionalPortInput}
     ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
-    fi
+EOM
 
 
-    if [[  $configV2rayVlessMode == "vlessxtlsws" ]]; then
-            cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
+
+
+    elif [[ $configV2rayWorkingMode == "trojan" ]]; then
+read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
         {
             "port": ${configV2rayPort},
             "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    ${v2rayConfigUserpasswordDirectInput}
-                ],
-                "decryption": "none",
-                "fallbacks": [
-                    {
-                        "dest": 80
-                    },
-                    {
-                        "path": "/${configV2rayWebSocketPath}",
-                        "dest": ${configV2rayVmesWSPort},
-                        "xver": 1
-                    }
-                ]
-            },
-            "streamSettings": {
-                "network": "tcp",
-                "security": "xtls",
-                "xtlsSettings": {
-                    "alpn": [
-                        "http/1.1"
-                    ],
-                    "certificates": [
-                        {
-                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
-                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "port": ${configV2rayVmesWSPort},
-            "listen": "127.0.0.1",
-            "protocol": "vless",
             "settings": {
                 "clients": [
                     ${v2rayConfigUserpasswordInput}
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "ws",
-                "security": "none",
-                "wsSettings": {
-                    "acceptProxyProtocol": true,
-                    "path": "/${configV2rayWebSocketPath}" 
-                }
-            }
-        }
-        ${v2rayConfigAdditionalPortInput}
-    ],
-    ${v2rayConfigOutboundInput}
-}
-EOF
-    fi
-
-
-
-
-
-
-    if [[ $configV2rayVlessMode == "trojan" ]]; then
-
-            cat > ${configV2rayPath}/config.json <<-EOF
-{
-    ${v2rayConfigLogInput}
-    "inbounds": [
-        {
-            "port": ${configV2rayPort},
-            "protocol": "${configV2rayProtocol}",
-            "settings": {
-                "clients": [
-                    ${v2rayConfigUserpasswordDirectInput}
                 ],
                 "decryption": "none",
                 "fallbacks": [
@@ -4264,8 +4529,8 @@ EOF
             },
             "streamSettings": {
                 "network": "tcp",
-                "security": "xtls",
-                "xtlsSettings": {
+                "security": "${configV2rayIsTlsShowInfo}",
+                "${configV2rayIsTlsShowInfo}Settings": {
                     "alpn": [
                         "http/1.1"
                     ],
@@ -4299,11 +4564,37 @@ EOF
         }
         ${v2rayConfigAdditionalPortInput}
     ],
+EOM
+
+
+
+    fi
+
+    cat > ${configV2rayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configV2rayAccessLogFilePath}",
+        "error": "${configV2rayErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    ${v2rayConfigDNSInput}
+    ${v2rayConfigInboundInput}
+    ${v2rayConfigRouteInput}
     ${v2rayConfigOutboundInput}
 }
 EOF
 
-    fi
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4366,13 +4657,7 @@ EOF
 
 
 
-    # 增加客户端配置说明
-    if [[ ${isInstallNginx} != "true" ]]; then
-        if [[ -z "$configV2rayVlessMode" ]]; then
-                        
-            configV2rayIsTlsShowInfo="none"
-        fi
-    fi
+
 
 
     # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
@@ -4405,8 +4690,94 @@ EOF
 
 
 
+    if [[ "$configV2rayStreamSetting" == "tcp" ]]; then
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall}客户端配置参数 =============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: tcp,
+    底层传输协议:${configV2rayIsTlsShowInfo},
+    别名:自己起个任意名称
+}
 
-    if [[ "$configV2rayWSorGrpc" == "grpc" ]]; then
+导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=tcp&host=${configSSLDomain}&headerType=none#${configSSLDomain}+TCP%E5%8D%8F%E8%AE%AE
+
+EOF
+
+    elif [[ "$configV2rayStreamSetting" == "kcp" ]]; then
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall}客户端配置参数 =============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: kcp,
+    底层传输协议:${configV2rayIsTlsShowInfo},
+    seed 混淆密码: "${configV2rayKCPSeedPassword}",
+    别名:自己起个任意名称
+}
+
+
+导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=kcp&seed=${configV2rayKCPSeedPassword}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+KCP%E5%8D%8F%E8%AE%AE
+
+EOF
+
+    elif [[ "$configV2rayStreamSetting" == "h2" ]]; then
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall}客户端配置参数 =============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: h2,
+    底层传输协议:${configV2rayIsTlsShowInfo},
+    path路径:/${configV2rayWebSocketPath},
+    别名:自己起个任意名称
+}
+
+
+导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=h2&path=%2f${configV2rayWebSocketPath}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+HTTP2%E5%8D%8F%E8%AE%AE
+
+EOF
+
+    elif [[ "$configV2rayStreamSetting" == "quic" ]]; then
+        cat > ${configV2rayPath}/clientConfig.json <<-EOF
+=========== ${promptInfoXrayInstall}客户端配置参数 =============
+{
+    协议: ${configV2rayProtocol},
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPortShowInfo},
+    uuid: ${v2rayPassword1},
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
+    加密方式: aes-128-gcm,  // 如果是Vless协议则为none
+    传输协议: quic,
+    底层传输协议:${configV2rayIsTlsShowInfo},
+    key 加密时所用的密钥: "${configV2rayKCPSeedPassword}",
+    别名:自己起个任意名称
+}
+
+
+导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
+${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=quic&key=${configV2rayKCPSeedPassword}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+QUIC%E5%8D%8F%E8%AE%AE
+
+EOF
+
+
+    elif [[ "$configV2rayStreamSetting" == "grpc" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -4414,7 +4785,7 @@ EOF
     地址: ${configSSLDomain},
     端口: ${configV2rayPortGRPCShowInfo},
     uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: gRPC,
     gRPC serviceName: ${configV2rayGRPCServiceName},
@@ -4422,12 +4793,12 @@ EOF
     别名:自己起个任意名称
 }
 
-导入链接 Vless (grpc导入链接可能不正常, 导入后可能需要手动修改):
+导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
 ${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortGRPCShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
 
 EOF
 
-    elif [[ "$configV2rayWSorGrpc" == "wsgrpc" ]]; then
+    elif [[ "$configV2rayStreamSetting" == "wsgrpc" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall} 客户端配置参数 =============
 {
@@ -4435,7 +4806,7 @@ EOF
     地址: ${configSSLDomain},
     端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
@@ -4456,7 +4827,7 @@ vmess://${base64VmessLink2}
     地址: ${configSSLDomain},
     端口: ${configV2rayPortGRPCShowInfo},
     uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: gRPC,
     gRPC serviceName: ${configV2rayGRPCServiceName},
@@ -4469,7 +4840,7 @@ ${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortGRP
 
 EOF
 
-    else
+    elif [[ "$configV2rayStreamSetting" == "ws" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -4477,7 +4848,7 @@ EOF
     地址: ${configSSLDomain},
     端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
-    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
@@ -4499,7 +4870,7 @@ EOF
 
 
 
-    if [[ "$configV2rayVlessMode" == "vmessws" ]]; then
+    if [[ "$configV2rayWorkingMode" == "vlessTLSVmessWS" ]]; then
 
         base64VmessLink=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/'${configV2rayWebSocketPath}'","net":"ws","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
         base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
@@ -4578,7 +4949,7 @@ EOF
 
 
 
-    if [[ "$configV2rayVlessMode" == "vlessws" ]]; then
+    if [[ "$configV2rayWorkingMode" == "vlessTLSWSgRPC" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 只安装v2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx
@@ -4625,7 +4996,7 @@ EOF
 
 
 
-    if [[ "$configV2rayVlessMode" == "vlessgrpc" ]]; then
+    if [[ "$configV2rayWorkingMode" == "vlessgrpc" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 只安装v2ray VLess运行在443端口 (VLess-gRPC-TLS) 支持CDN, 不安装nginx
@@ -4656,7 +5027,7 @@ EOF
 
 
 
-    if [[ "$configV2rayVlessMode" == "vlessxtlsws" ]] || [[ "$configV2rayVlessMode" == "trojan" ]]; then
+    if [[ "$configV2rayWorkingMode" == "vlessXTLSWSgRPC" ]] || [[ "$configV2rayWorkingMode" == "trojan" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
@@ -4700,7 +5071,7 @@ EOF
 
 
 
-    if [[ "$configV2rayVlessMode" == "vlessxtlstrojan" ]]; then
+    if [[ "$configV2rayWorkingMode" == "vlessXTLSWSTrojan" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
@@ -4778,7 +5149,7 @@ EOF
     green "======================================================================"
     green "    ${promptInfoXrayInstall} Version: ${promptInfoXrayVersion} 安装成功 !"
 
-    if [[ ${isInstallNginx} == "true" ]]; then
+    if [[ -n ${configInstallNginxMode} ]]; then
         green "    伪装站点为 https://${configSSLDomain}!"
 	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
     fi
@@ -4859,47 +5230,57 @@ EOF
 
     cat "${configV2rayPath}/clientConfig.json" >> ${configReadme}
 }
-    
 
 function removeV2ray(){
 
-    if [[ -f "${configV2rayPath}/xray" || -f "${configV2rayPath}/v2ray" ]]; then
-
-        if [ -f "${configV2rayPath}/xray" ]; then
-            promptInfoXrayName="xray"
-            isXray="yes"
-        fi
-
-        if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service " ]; then
-            promptInfoXrayNameServiceName="-jin"
-        else
-            promptInfoXrayNameServiceName=""
-        fi
-
-        echo
-        green " ================================================== "
-        red " 准备卸载已安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName} "
-        green " ================================================== "
-        echo
-
-        ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-        ${sudoCmd} systemctl disable ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-
-
-        rm -rf ${configV2rayPath}
-        rm -f ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
-        rm -f ${configV2rayAccessLogFilePath}
-        rm -f ${configV2rayErrorLogFilePath}
-
-        echo
-        green " ================================================== "
-        green "  ${promptInfoXrayName}${promptInfoXrayNameServiceName} 卸载完毕 !"
-        green " ================================================== "
-        
-    else
-        red " 系统没有安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName}, 退出卸载"
-    fi
     echo
+    read -p "是否确认卸载 V2ray 或 Xray? 直接回车默认卸载, 请输入[Y/n]:" isRemoveV2rayServerInput
+    isRemoveV2rayServerInput=${isRemoveV2rayServerInput:-Y}
+
+    if [[ "${isRemoveV2rayServerInput}" == [Yy] ]]; then
+
+
+        if [[ -f "${configV2rayPath}/xray" || -f "${configV2rayPath}/v2ray" ]]; then
+
+            if [ -f "${configV2rayPath}/xray" ]; then
+                promptInfoXrayName="xray"
+                isXray="yes"
+            fi
+
+            if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service " ]; then
+                promptInfoXrayNameServiceName="-jin"
+            else
+                promptInfoXrayNameServiceName=""
+            fi
+
+            echo
+            green " ================================================== "
+            red " 准备卸载已安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName} "
+            green " ================================================== "
+            echo
+
+            ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+            ${sudoCmd} systemctl disable ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+
+
+            rm -rf ${configV2rayPath}
+            rm -f ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+            rm -f ${configV2rayAccessLogFilePath}
+            rm -f ${configV2rayErrorLogFilePath}
+
+            crontab -l | grep -v "${promptInfoXrayName}${promptInfoXrayNameServiceName}" | crontab -
+
+            echo
+            green " ================================================== "
+            green "  ${promptInfoXrayName}${promptInfoXrayNameServiceName} 卸载完毕 !"
+            green " ================================================== "
+            
+        else
+            red " 系统没有安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName}, 退出卸载"
+        fi
+        echo
+
+    fi
 
 }
 
@@ -5007,7 +5388,9 @@ function upgradeV2ray(){
 
 
 function downloadTrojanWebBin(){
-
+    # https://github.com/Jrohy/trojan/releases/download/v2.12.2/trojan-linux-amd64
+    # https://github.com/Jrohy/trojan/releases/download/v2.12.2/trojan-linux-arm64
+    
     if [[ ${osArchitecture} == "arm" || ${osArchitecture} == "arm64" ]] ; then
         downloadFilenameTrojanWeb="trojan-linux-arm64"
     fi
@@ -5018,8 +5401,6 @@ function downloadTrojanWebBin(){
         wget -O ${configDownloadTempPath}/upgrade/trojan-web/trojan-web "https://github.com/Jrohy/trojan/releases/download/v${versionTrojanWeb}/${downloadFilenameTrojanWeb}"
     fi
 }
-
-
 
 function installTrojanWeb(){
     # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh
@@ -5047,7 +5428,6 @@ function installTrojanWeb(){
         green "    开始安装 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
         green " =================================================="
 
-        # https://github.com/Jrohy/trojan/releases/download/v2.10.4/trojan-linux-amd64
         mkdir -p ${configTrojanWebPath}
         downloadTrojanWebBin
         chmod +x ${configTrojanWebPath}/trojan-web
@@ -5094,7 +5474,7 @@ EOF
 
         ${configTrojanWebPath}/trojan-web
 
-        installWebServerNginx "trojan-web"
+        installWebServerNginx
 
         # 命令补全环境变量
         echo "export PATH=$PATH:${configTrojanWebPath}" >> ${HOME}/.${osSystemShell}rc
@@ -5107,6 +5487,28 @@ EOF
     fi
 }
 
+function upgradeTrojanWeb(){
+    getTrojanAndV2rayVersion "trojan-web"
+    green " =================================================="
+    green "    开始升级 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
+    green " =================================================="
+
+    ${sudoCmd} systemctl stop trojan-web.service
+
+    mkdir -p ${configDownloadTempPath}/upgrade/trojan-web
+    downloadTrojanWebBin "upgrade"
+    
+    mv -f ${configDownloadTempPath}/upgrade/trojan-web/trojan-web ${configTrojanWebPath}
+    chmod +x ${configTrojanWebPath}/trojan-web
+
+    ${sudoCmd} systemctl start trojan-web.service
+    ${sudoCmd} systemctl restart trojan.service
+
+
+    green " ================================================== "
+    green "     升级成功 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
+    green " ================================================== "
+}
 
 function removeTrojanWeb(){
     # wget -O trojan-web_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Jrohy/trojan/master/install.sh" && chmod +x trojan-web_install.sh && ./trojan-web_install.sh --remove
@@ -5148,36 +5550,14 @@ function removeTrojanWeb(){
     sed -i '/trojan/d' ${HOME}/.${osSystemShell}rc
     # source ${HOME}/.${osSystemShell}rc
 
-    crontab -r
+    crontab -l | grep -v "trojan-web"  | crontab -
 
     green " ================================================== "
     green "  Trojan-web 卸载完毕 !"
     green " ================================================== "
 }
 
-function upgradeTrojanWeb(){
-    getTrojanAndV2rayVersion "trojan-web"
-    green " =================================================="
-    green "    开始升级 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
-    green " =================================================="
-
-    ${sudoCmd} systemctl stop trojan-web.service
-
-    mkdir -p ${configDownloadTempPath}/upgrade/trojan-web
-    downloadTrojanWebBin "upgrade"
-    
-    mv -f ${configDownloadTempPath}/upgrade/trojan-web/trojan-web ${configTrojanWebPath}
-    chmod +x ${configTrojanWebPath}/trojan-web
-
-    ${sudoCmd} systemctl start trojan-web.service
-    ${sudoCmd} systemctl restart trojan.service
-
-
-    green " ================================================== "
-    green "     升级成功 Trojan-web 可视化管理面板: ${versionTrojanWeb} !"
-    green " ================================================== "
-}
-function runTrojanWebSSL(){
+function runTrojanWebGetSSL(){
     ${sudoCmd} systemctl stop trojan-web.service
     ${sudoCmd} systemctl stop nginx.service
     ${sudoCmd} systemctl stop trojan.service
@@ -5186,7 +5566,8 @@ function runTrojanWebSSL(){
     ${sudoCmd} systemctl start nginx.service
     ${sudoCmd} systemctl restart trojan.service
 }
-function runTrojanWebLog(){
+
+function runTrojanWebCommand(){
     ${configTrojanWebPath}/trojan-web
 }
 
@@ -5306,49 +5687,6 @@ function upgradeV2rayUI(){
 
 
 
-function getHTTPSNoNgix(){
-    
-    isInstallNginx="false"
-    installPackage
-
-    getHTTPSCertificateStep1
-
-    echo
-    if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
-        green " =================================================="
-        green " 已检测到域名 ${configSSLDomain} 的证书文件 获取成功!"
-        green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
-        green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
-        green " =================================================="
-
-        if [[ $1 == "trojan" ]] ; then
-            installTrojanServer
-
-        elif [[ $1 == "v2ray" ]] ; then
-            installV2ray
-
-        elif [[ $1 == "both" ]] ; then
-            installV2ray
-            installTrojanServer
-        else
-            echo
-        fi        
-
-    else
-        red " ================================================== "
-        red " https证书没有申请成功，安装失败!"
-        red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
-        red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
-        red " 重启VPS, 重新执行脚本, 可重新选择该项再次申请证书 ! "
-        red " ================================================== "
-        exit
-    fi
-
-
-
-}
-
-
 
 
 
@@ -5402,29 +5740,6 @@ function startMenuOther(){
     red " 10. 升级 或 卸载 X-UI"
     echo
     red " 安装上面3个可视化管理面板 之前不能用本脚本或其他脚本安装过trojan或v2ray! 3个管理面板也无法同时安装"
-
-    green " =================================================="
-    green " 11. 单独申请域名SSL证书"
-    green " 12. 只安装trojan 运行在443端口, 不安装nginx, 请确保443端口没有被nginx占用"
-    green " 13. 只安装trojan-go 运行在443端口, 不支持CDN, 不开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"
-    green " 14. 只安装trojan-go 运行在443端口, 支持CDN, 开启websocket, 不安装nginx. 请确保80端口有监听,否则trojan-go无法启动"    
-    echo
-    green " 15. 只安装V2ray或Xray (VLess或VMess协议) 开启websocket, 支持CDN, (VLess/VMess + WS) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
-    green " 16. 只安装V2ray或Xray (VLess或VMess协议) 开启grpc, 支持cloudflare的CDN需要指定443端口, (VLess/VMess + grpc) 不安装nginx,无TLS加密,方便与现有网站或宝塔面板集成"
-    echo
-    green " 17. 只安装V2ray VLess运行在443端口 (VLess-gRPC-TLS) 支持CDN, 不安装nginx"
-    green " 18. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN, 不安装nginx"
-    green " 19. 只安装V2ray VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS) 支持CDN, 不安装nginx"
-    echo
-    green " 21. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) 支持CDN, 不安装nginx" 
-    green " 22. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan, 支持VLess的CDN, 不安装nginx"    
-    green " 23. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN, 不安装nginx"   
-    green " 24. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + trojan-go, 支持VLess的CDN和trojan-go的CDN, 不安装nginx"   
-    green " 25. 只安装Xray VLess运行在443端口 (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持VLess的CDN, 不安装nginx"    
-
-    red " 27. 卸载 trojan"    
-    red " 28. 卸载 trojan-go"   
-    red " 29. 卸载 v2ray或Xray"   
     green " =================================================="
     red " 以下是 VPS 测网速工具, 脚本测速会消耗大量 VPS 流量，请悉知！"
     green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）推荐使用 "
@@ -5451,16 +5766,17 @@ function startMenuOther(){
     case "$menuNumberInput" in
         1 )
             setLinuxDateZone
+            configInstallNginxMode="trojanWeb"
             installTrojanWeb
         ;;
         2 )
             upgradeTrojanWeb
         ;;
         3 )
-            runTrojanWebSSL
+            runTrojanWebGetSSL
         ;;
         4 )
-            runTrojanWebLog
+            runTrojanWebCommand
         ;;
         5 )
             removeNginx
@@ -5482,77 +5798,7 @@ function startMenuOther(){
         ;;
         10 )
             removeXUI
-        ;;          
-        11 )
-            getHTTPSNoNgix
-        ;;
-        12 )
-            getHTTPSNoNgix "trojan"
-        ;;
-        13 )
-            isTrojanGo="yes"
-            getHTTPSNoNgix "trojan"
-        ;;
-        14 )
-            isTrojanGo="yes"
-            isTrojanGoSupportWebsocket="true"
-            getHTTPSNoNgix "trojan"
-        ;;
-        15 )
-            configV2rayWSorGrpc="ws"
-            getHTTPSNoNgix "v2ray"
-        ;;
-        16 )
-            configV2rayWSorGrpc="grpc"
-            getHTTPSNoNgix "v2ray"
-        ;;
-        17 )
-            configV2rayVlessMode="vlessgrpc"
-            getHTTPSNoNgix "v2ray"
-        ;;
-        18 )
-            configV2rayVlessMode="vlessws"
-            getHTTPSNoNgix "v2ray"
-        ;;
-        19 )
-            configV2rayVlessMode="vmessws"
-            getHTTPSNoNgix "v2ray"
-        ;;
-
-        21 )
-            configV2rayVlessMode="vlessxtlsws"
-            getHTTPSNoNgix "v2ray"
-        ;;
-        22 )
-            configV2rayVlessMode="trojan"
-            getHTTPSNoNgix "both"
-        ;;
-        23 )
-            configV2rayVlessMode="trojan"
-            isTrojanGo="yes"
-            getHTTPSNoNgix "both"
-        ;;
-        24 )
-            configV2rayVlessMode="trojan"
-            isTrojanGo="yes"
-            isTrojanGoSupportWebsocket="true"
-            getHTTPSNoNgix "both"
-        ;;
-        25 )
-            configV2rayVlessMode="vlessxtlstrojan"
-            getHTTPSNoNgix "v2ray"
-        ;;
-        27 )
-            removeTrojan
-        ;;
-        28 )
-            isTrojanGo="yes"
-            removeTrojan
-        ;;
-        29 )
-            removeV2ray
-        ;;
-                                                     
+        ;;                                        
         41 )
             vps_superspeed
         ;;
@@ -5654,34 +5900,30 @@ function start_menu(){
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
-    green " 2. 安装 trojan 和 nginx 不支持CDN, trojan 运行在443端口"
-    green " 3. 升级 trojan 到最新版本"
-    red " 4. 卸载 trojan 与 nginx"
+    green " 2. 安装 trojan 或 trojan-go 和 nginx, 不支持CDN, trojan 或 trojan-go 运行在443端口"
+    green " 3. 安装 trojan-go 和 nginx, 支持CDN 开启websocket, trojan-go 运行在443端口"
+    green " 4. 只安装 trojan 或 trojan-go 运行在443或自定义端口, 不安装nginx, 方便与现有网站或宝塔面板集成"
+    green " 5. 升级 trojan 或 trojan-go 到最新版本"
+    red " 6. 卸载 trojan 或 trojan-go 和 nginx"
     echo
-    green " 5. 安装 trojan-go 和 nginx 不支持CDN, 不开启websocket (兼容trojan客户端), trojan-go 运行在443端口"
-    green " 6. 安装 trojan-go 和 nginx 支持CDN 开启websocket (兼容trojan客户端但不兼容websocket), trojan-go 运行在443端口"
-    green " 7. 升级 trojan-go 到最新版本"
-    red " 8. 卸载 trojan-go 与 nginx"
+    green " 11. 安装 v2ray或xray 和 nginx ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), 支持CDN, nginx 运行在443端口"
+    green " 12. 只安装 v2ray或xray ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), 无TLS加密, 方便与现有网站或宝塔面板集成"
     echo
-    green " 11. 安装 v2ray或xray 和 nginx, 支持 websocket tls1.3, 支持CDN, nginx 运行在443端口"
-    green " 12. 安装 v2ray或xray 和 nginx, 支持 gRPC http2, 支持CDN, nginx 运行在443端口"
-    green " 13. 安装 v2ray或xray 和 nginx, 支持 websocket + gRPC http2, 支持CDN, nginx 运行在443端口"
-    green " 14. 安装 xray 和 nginx, (VLess-TCP-XTLS direct) + (VLess-WS-TLS) + xray自带的trojan, 支持CDN, xray 运行在443端口"  
-    green " 15. 升级 v2ray或xray 到最新版本"
-    red " 16. 卸载v2ray或xray 和 nginx"
+    green " 13. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VMess-TCP-TLS)+(VMess-WS-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
+    green " 14. 安装 v2ray或xray (VLess-gRPC-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
+    green " 15. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
+    green " 16. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+(VLess-gRPC-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口" 
+    green " 17. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+xray自带的trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
+    green " 18. 升级 v2ray或xray 到最新版本"
+    red " 19. 卸载 v2ray或xray 和 nginx"
     echo
-    green " 21. 同时安装 trojan + v2ray或xray 和 nginx, 不支持CDN, trojan 运行在443端口"
-    green " 22. 升级 v2ray或xray 和 trojan 到最新版本"
-    red " 23. 卸载 trojan, v2ray或xray 和 nginx"
+    green " 21. 同时安装 trojan + v2ray或xray 和 nginx SNI 分流, 支持CDN, 支持与现有网站共存 nginx 运行在443端口 "
+    red " 22. 卸载 trojan + v2ray或xray 和 nginx"
     echo
-    green " 24. 同时安装 trojan-go + v2ray或xray 和 nginx, trojan-go不支持CDN, v2ray或xray 支持CDN, trojan-go 运行在443端口"
-    green " 25. 同时安装 trojan-go + v2ray或xray 和 nginx, trojan-go 和 v2ray 都支持CDN, trojan-go 运行在443端口"
-    green " 26. 升级 v2ray或xray 和 trojan-go 到最新版本"
-    red " 27. 卸载 trojan-go, v2ray或xray 和 nginx"
+    green " 25. 查看已安装的配置和用户密码等信息"
+    green " 26. 单独申请域名SSL证书"
     echo
-    green " 28. 查看已安装的配置和用户密码等信息"
-    green " 29. 子菜单 安装 trojan 和 v2ray 可视化管理面板, 测网速工具, Netflix 测试工具, 安装宝塔面板等"
-    green " 30. 不安装nginx, 只安装trojan或v2ray或xray, 可选安装SSL证书, 方便与现有网站或宝塔面板集成"
+    green " 30. 子菜单 安装 trojan 和 v2ray 可视化管理面板, 测网速工具, Netflix 测试工具, 安装宝塔面板等"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 32. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
@@ -5697,93 +5939,85 @@ function start_menu(){
             installWireguard
         ;;
         2 )
-            installTrojanV2rayWithNginx
+            configInstallNginxMode="noSSL"
+            installTrojanV2rayWithNginx "trojan_nginx"
         ;;
         3 )
-            upgradeTrojan
+            configInstallNginxMode="noSSL"
+            isTrojanGoSupportWebsocket="true"
+            installTrojanV2rayWithNginx "trojan_nginx"
         ;;
         4 )
-            removeNginx
-            removeTrojan
+            installTrojanV2rayWithNginx "trojan"
         ;;
         5 )
-            isTrojanGo="yes"
-            installTrojanV2rayWithNginx
-        ;;
-        6 )
-            isTrojanGo="yes"
-            isTrojanGoSupportWebsocket="true"
-            installTrojanV2rayWithNginx
-        ;;
-        7 )
-            isTrojanGo="yes"
             upgradeTrojan
         ;;
-        8 )
-            isTrojanGo="yes"
-            removeNginx
+        6 )
             removeTrojan
+            removeNginx
         ;;
         11 )
-            isNginxWithSSL="yes"
-            installTrojanV2rayWithNginx "v2ray"
+            configInstallNginxMode="v2raySSL"
+            configV2rayWorkingMode=""
+            installTrojanV2rayWithNginx "nginx_v2ray"
         ;;
         12 )
-            isNginxWithSSL="yes"
-            configV2rayWSorGrpc="grpc"
+            configInstallNginxMode=""
+            configV2rayWorkingMode=""
             installTrojanV2rayWithNginx "v2ray"
         ;;
         13 )
-            isNginxWithSSL="yes"
-            configV2rayWSorGrpc="wsgrpc"
-            installTrojanV2rayWithNginx "v2ray"
+            configInstallNginxMode="noSSL"
+            configV2rayWorkingMode="vlessTCPVmessWS"
+            installTrojanV2rayWithNginx "v2ray_nginxOptional"
         ;;
         14 )
-            configV2rayVlessMode="vlessxtlstrojan"
-            installTrojanV2rayWithNginx "v2ray"
-        ;;        
+            configInstallNginxMode="noSSL"
+            configV2rayWorkingMode="vlessgRPC"
+            installTrojanV2rayWithNginx "v2ray_nginxOptional"
+        ;;
         15 )
-            upgradeV2ray
+            configInstallNginxMode="noSSL"
+            configV2rayWorkingMode="vlessTCPWS"
+            installTrojanV2rayWithNginx "v2ray_nginxOptional"
         ;;
         16 )
-            removeNginx
+            configInstallNginxMode="noSSL"
+            configV2rayWorkingMode="vlessTCPWSgRPC"
+            installTrojanV2rayWithNginx "v2ray_nginxOptional"
+        ;;
+        17 )
+            configInstallNginxMode="noSSL"
+            configV2rayWorkingMode="vlessTCPWSTrojan"
+            installTrojanV2rayWithNginx "v2ray_nginxOptional"
+        ;; 
+        18)
+            upgradeV2ray
+        ;;
+        19 )
             removeV2ray
+            removeNginx
         ;;
         21 )
-            installTrojanV2rayWithNginx "both"
+            configInstallNginxMode="sni"
+            installTrojanV2rayWithNginx "trojan_nginx_v2ray"
         ;;
         22 )
-            upgradeTrojan
-            upgradeV2ray
+            removeV2ray
+            removeTrojan
+            removeNginx
         ;;
         23 )
             removeNginx
-            removeTrojan
-            removeV2ray
         ;;
-        24 )
-            isTrojanGo="yes"
-            installTrojanV2rayWithNginx "both"
-        ;;
+
         25 )
-            isTrojanGo="yes"
-            isTrojanGoSupportWebsocket="true"
-            installTrojanV2rayWithNginx "both"
-        ;;
-        26 )
-            isTrojanGo="yes"
-            upgradeTrojan
-            upgradeV2ray
-        ;;
-        27 )
-            isTrojanGo="yes"
-            removeNginx
-            removeTrojan
-            removeV2ray
-        ;;
-        28 )
             cat "${configReadme}"
         ;;        
+        26 )
+            installTrojanV2rayWithNginx
+        ;;
         31 )
             setLinuxDateZone
             installPackage

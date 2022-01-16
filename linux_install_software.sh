@@ -1659,7 +1659,13 @@ function downgradeXray(){
 
     if [[ -z $1 ]]; then
         echo
-        systemctl restart xray.service
+        configSSLCertPath="/usr/local/share/au"
+        
+        airu stop
+        systemctl stop xray.service
+        chmod ugoa+rw ${configSSLCertPath}/*
+        systemctl start xray.service
+        airu start
         systemctl status xray.service
         echo
     fi
@@ -1754,6 +1760,7 @@ EOM
             
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
+            chmod ugoa+rw ${configSSLCertPath}/*
 
             echo
             green " =================================================="
