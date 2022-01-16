@@ -1201,6 +1201,7 @@ function installCentosKernelManual(){
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-libs-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
         fi
 
+
         removeCentosKernelMulti
         echo
         green " =================================================="

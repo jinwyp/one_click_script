@@ -1645,7 +1645,6 @@ function downgradeXray(){
         echo
     else
 
-
         # https://github.com/XTLS/Xray-core/releases/download/v1.5.2/Xray-linux-arm32-v6.zip
 
         downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
@@ -1660,19 +1659,7 @@ function downgradeXray(){
             downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-arm32-v6.zip"
             xrayDownloadFilename="Xray-linux-arm32-v6_${downloadXrayVersion}.zip"
         fi
-        
-    if [[ -z $1 ]]; then
-        echo
-        configSSLCertPath="/usr/local/share/au"
-        
-        airu stop
-        systemctl stop xray.service
-        chmod ugoa+rw ${configSSLCertPath}/*
-        systemctl start xray.service
-        airu start
-        systemctl status xray.service
-        echo
-    fi
+
 
         xrayDownloadFolder="/root/xray_temp"
         
@@ -1685,7 +1672,13 @@ function downgradeXray(){
 
         if [[ -z $1 ]]; then
             echo
-            systemctl restart xray.service
+            configSSLCertPath="/usr/local/share/au"
+            
+            airu stop
+            systemctl stop xray.service
+            chmod ugoa+rw ${configSSLCertPath}/*
+            systemctl start xray.service
+            airu start
             systemctl status xray.service
             echo
         fi
