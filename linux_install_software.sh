@@ -1600,14 +1600,14 @@ function downgradeXray(){
     green " =================================================="
     echo
 
-    yellow " 请选择Xray降级到的版本, 默认1.5.0"
-    green " 1. 1.5.0"
-    green " 2. 1.4.5"
-    green " 3. 1.4.3"
-    green " 4. 1.4.2"
-    green " 5. 1.4.0"
-    green " 6. 1.3.1"
-    green " 9. 不降级 使用最新版本"
+    yellow " 请选择Xray降级到的版本, 默认不降级"
+    green " 1. 不降级 使用最新版本"
+    green " 2. 1.5.0"
+    green " 3. 1.4.5"
+    green " 4. 1.4.3"
+    green " 5. 1.4.2"
+    green " 6. 1.4.0"
+    green " 7. 1.3.1"
     echo
     read -p "请选择Xray版本? 直接回车默认选1, 请输入纯数字:" isXrayVersionInput
     isXrayVersionInput=${isXrayVersionInput:-1}
@@ -1616,28 +1616,28 @@ function downgradeXray(){
     downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip"
 
     if [[ "${isXrayVersionInput}" == "2" ]]; then
-        downloadXrayVersion="1.4.5"
+        downloadXrayVersion="1.5.0"
 
     elif [[ "${isXrayVersionInput}" == "3" ]]; then
-        downloadXrayVersion="1.4.3"
+        downloadXrayVersion="1.4.5"
 
     elif [[ "${isXrayVersionInput}" == "4" ]]; then
-        downloadXrayVersion="1.4.2"
+        downloadXrayVersion="1.4.3"
 
     elif [[ "${isXrayVersionInput}" == "5" ]]; then
-        downloadXrayVersion="1.4.0"
+        downloadXrayVersion="1.4.2"
 
     elif [[ "${isXrayVersionInput}" == "6" ]]; then
+        downloadXrayVersion="1.4.0"
+
+    elif [[ "${isXrayVersionInput}" == "7" ]]; then
         downloadXrayVersion="1.3.1"
 
-    elif [[ "${isXrayVersionInput}" == "9" ]]; then
-        echo
-
     else
-        downloadXrayVersion="1.5.0"
+        echo
     fi
 
-    if [[ "${isXrayVersionInput}" == "9" ]]; then
+    if [[ "${isXrayVersionInput}" == "1" ]]; then
         echo
         green " =================================================="
         green "  已选择不降级 使用最新版本 Xray"
