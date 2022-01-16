@@ -2945,7 +2945,7 @@ function start_menu(){
     green " 7. 重启 Wireguard "    
     green " 8. 查看 WARP Sock5 代理运行状态"
     green " 9. 重启 WARP Sock5"    
-    yellow " 10. 查看 WireGuard 和 WARP 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"
+    green " 10. 查看 WireGuard 和 WARP Sock5 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"
     echo
     green " 11. 安装官方 Cloudflare WARP Client 启动SOCKS5代理, 用于解锁 Netflix 限制"
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf ${versionWgcf}, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
