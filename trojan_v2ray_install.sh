@@ -1373,6 +1373,15 @@ function installWebServerNginx(){
     ${sudoCmd} systemctl enable nginx.service
     ${sudoCmd} systemctl stop nginx.service
 
+    # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
+    # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
+    
+    mkdir /etc/systemd/system/nginx.service.d
+    printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+    
+    ${sudoCmd} systemctl daemon-reload
+    ${sudoCmd} systemctl restart nginx 
+
 
 
     nginxConfigServerHttpInput=""
@@ -1463,9 +1472,18 @@ EOM
 EOM
 
     elif [[ "${configInstallNginxMode}" == "sni" ]]; then
+
+        if [ "$osRelease" == "centos" ]; then
         read -r -d '' nginxConfigNginxModuleInput << EOM
 load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
 EOM
+        else
+        read -r -d '' nginxConfigNginxModuleInput << EOM
+load_module /usr/lib/nginx/modules/ngx_stream_module.so;
+EOM
+        fi
+
+
 
         nginxConfigStreamFakeWebsiteDomainInput=""
 
