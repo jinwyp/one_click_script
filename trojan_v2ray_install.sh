@@ -1377,6 +1377,7 @@ function installWebServerNginx(){
 
     nginxConfigServerHttpInput=""
     nginxConfigStreamConfigInput=""
+    nginxConfigNginxModuleInput=""
 
     if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
         read -r -d '' nginxConfigServerHttpInput << EOM
@@ -1462,6 +1463,10 @@ EOM
 EOM
 
     elif [[ "${configInstallNginxMode}" == "sni" ]]; then
+        read -r -d '' nginxConfigNginxModuleInput << EOM
+load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
+EOM
+
         nginxConfigStreamFakeWebsiteDomainInput=""
 
         nginxConfigStreamOwnWebsiteInput=""
@@ -1623,7 +1628,8 @@ EOM
 
 
         cat > "${nginxConfigPath}" <<-EOF
-load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
+
+${nginxConfigNginxModuleInput}
 
 user  root;
 worker_processes  1;
