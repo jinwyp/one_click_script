@@ -1251,7 +1251,7 @@ function getHTTPSCertificateWithAcme(){
             ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
 
             sleep 4
-            ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
+            ps -C ${ranDownloadFileName} -o pid= | xargs -I {} kill {}
         fi
 
     else
