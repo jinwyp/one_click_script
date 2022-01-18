@@ -1047,14 +1047,24 @@ function compareRealIpWithLocalIp(){
     if [[ $isDomainValidInput == [Yy] ]]; then
         if [ -n $1 ]; then
             configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-            # configNetworkLocalIp=`curl ipv4.icanhazip.com`
-            configNetworkLocalIp=`curl v4.ident.me`
+            # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
+            configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
+            configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
+            #configNetworkLocalIp3="$(curl https://ipv4.icanhazip.com/)"
+            #configNetworkLocalIp4="$(curl https://v4.ident.me/)"
+            #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
+            #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
+            
+
+            #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
+            #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
+
 
             green " ================================================== "
-            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp} "
+            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
 
             echo
-            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
+            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp1} || ${configNetworkRealIp} == ${configNetworkLocalIp2} ]] ; then
 
                 green " 域名解析的IP正常!"
                 green " ================================================== "
@@ -2890,7 +2900,7 @@ function downloadV2rayXrayBin(){
 function inputV2rayStreamSettings(){
     echo
     green " =================================================="
-    yellow " 请选择 StreamSettings 底层传输协议, 默认为3 Websocket"
+    yellow " 请选择 V2ray或Xray的 StreamSettings 底层传输协议, 默认为3 Websocket"
     echo
     green " 1. TCP "
     green " 2. KCP "
@@ -2901,7 +2911,7 @@ function inputV2rayStreamSettings(){
     green " 7. WebSocket + gRPC 支持CDN"
     echo
     read -p "请选择底层传输协议? 直接回车默认选3 Websocket, 请输入纯数字:" isV2rayStreamSettingInput
-    isV2rayStreamSettingInput=${isV2rayStreamSettingInput:-1}
+    isV2rayStreamSettingInput=${isV2rayStreamSettingInput:-3}
 
     if [[ $isV2rayStreamSettingInput == 1 ]]; then
         configV2rayStreamSetting="tcp"
@@ -3259,7 +3269,7 @@ function installV2ray(){
             configV2rayPortGRPCShowInfo=443
         fi
 
-    else 
+    else
         echo
         read -p "是否使用VLESS协议? 直接回车默认为VMess协议, 请输入[y/N]:" isV2rayUseVLessInput
         isV2rayUseVLessInput=${isV2rayUseVLessInput:-n}
@@ -3300,7 +3310,7 @@ function installV2ray(){
     if [[ ${configInstallNginxMode} == "v2raySSL" ]]; then
         echo
     else
-
+        
         inputV2rayServerPort "textAdditionalPort"
 
         if [[ $isV2rayAdditionalPortInput == "999999" ]]; then
@@ -3323,8 +3333,8 @@ function installV2ray(){
                 "destOverride": ["http", "tls", "quic"]
             }
         }     
-
 EOM
+
         fi
     fi
 
@@ -3658,7 +3668,6 @@ EOM
 
 
     read -r -d '' v2rayConfigOutboundInput << EOM
-    
     "outbounds": [
         {
             "tag":"IPv4_out",
@@ -4259,10 +4268,10 @@ EOM
 
     v2rayConfigInboundInput=""
 
-
-    if [[ "$configV2rayStreamSetting" == "grpc" ]]; then
+    if [[ "${configV2rayStreamSetting}" == "grpc" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
+
     "inbounds": [
         {
             "port": ${configV2rayGRPCPort},
@@ -4283,11 +4292,13 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
+
 EOM
 
-    elif [[ "$configV2rayStreamSetting" == "ws" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "ws" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
+
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -4308,11 +4319,14 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
+
 EOM
 
-    elif [[ "$configV2rayStreamSetting" == "wsgrpc" ]]; then
+
+    elif [[ "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
+
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -4350,11 +4364,13 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
-EOM    
 
-    elif [[ "$configV2rayStreamSetting" == "tcp" ]]; then
+EOM
+
+    elif [[ "${configV2rayStreamSetting}" == "tcp" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
+
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -4378,11 +4394,14 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
+
 EOM
 
-    elif [[ "$configV2rayStreamSetting" == "kcp" ]]; then
+
+    elif [[ "${configV2rayStreamSetting}" == "kcp" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
+
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -4403,11 +4422,13 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
+
 EOM
 
-    elif [[ "$configV2rayStreamSetting" == "h2" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "h2" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
+
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -4428,11 +4449,13 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
+
 EOM
 
-    elif [[ "$configV2rayStreamSetting" == "quic" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "quic" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
+
     "inbounds": [
         {
             "port": ${configV2rayPort},
@@ -4457,11 +4480,10 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
+
 EOM
 
     fi
-
-
 
 
 
@@ -4836,7 +4858,6 @@ EOM
 
 
 
-
     elif [[ $configV2rayWorkingMode == "trojan" ]]; then
 read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
@@ -4903,9 +4924,9 @@ read -r -d '' v2rayConfigInboundInput << EOM
     ],
 EOM
 
-
-
     fi
+
+
 
     cat > ${configV2rayPath}/config.json <<-EOF
 {
