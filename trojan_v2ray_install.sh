@@ -930,6 +930,7 @@ configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
 configV2rayProtocol="vmess"
 configV2rayWorkingMode=""
+configV2rayWorkingNotChangeMode=""
 configV2rayStreamSetting=""
 
 
@@ -1399,6 +1400,10 @@ function installWebServerNginx(){
     nginxConfigNginxModuleInput=""
 
     if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
+        if [[ ${configV2rayWorkingNotChangeMode} == "true" ]]; then
+            inputV2rayStreamSettings
+        fi
+
         read -r -d '' nginxConfigServerHttpInput << EOM
     server {
         listen       80;
@@ -2939,7 +2944,7 @@ function inputV2rayStreamSettings(){
     fi
 
 
-    if [[ "${configInstallNginxMode}" == "v2raySSL" ]]; then
+    if [[ "${configInstallNginxMode}" == "v2raySSL" || ${configV2rayWorkingNotChangeMode} == "true" ]]; then
 
          if [[ $configV2rayStreamSetting == "grpc" ]]; then
             inputV2rayGRPCPath
@@ -3286,16 +3291,23 @@ function installV2ray(){
             configV2rayPortGRPCShowInfo=443
 
         else
-            configV2rayIsTlsShowInfo="none"
+            if [[ ${configV2rayWorkingNotChangeMode} == "true" ]]; then
+                configV2rayPortShowInfo=443
+                configV2rayPortGRPCShowInfo=443
 
-            configV2rayPort="$(($RANDOM + 10000))"
-            configV2rayPortShowInfo=$configV2rayPort
+            else
+                configV2rayIsTlsShowInfo="none"
 
-            inputV2rayServerPort "textMainPort"
-            configV2rayPort=${isV2rayUserPortInput}   
-            configV2rayPortShowInfo=${isV2rayUserPortInput}  
+                configV2rayPort="$(($RANDOM + 10000))"
+                configV2rayPortShowInfo=$configV2rayPort
 
-            inputV2rayStreamSettings
+                inputV2rayServerPort "textMainPort"
+                configV2rayPort=${isV2rayUserPortInput}   
+                configV2rayPortShowInfo=${isV2rayUserPortInput}  
+
+                inputV2rayStreamSettings
+            fi
+
 
         fi
     fi
@@ -4484,6 +4496,9 @@ EOM
 EOM
 
     fi
+
+
+
 
 
 
@@ -6423,6 +6438,7 @@ function start_menu(){
         22 )
             configInstallNginxMode="noSSL"
             configV2rayWorkingMode=""
+            configV2rayWorkingNotChangeMode="true"
             installTrojanV2rayWithNginx "trojan_nginx_v2ray"
         ;;
         23 )
