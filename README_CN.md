@@ -223,8 +223,4 @@ addEventListener(
 [CloudflareScanner]: https://github.com/Spedoske/CloudflareScanner/releases/tag/1.1.2
 [CloudflareSpeedTest]: https://github.com/XIU2/CloudflareSpeedTest/releases/tag/v1.4.9
 
-[Linux 内核一键安装脚本](/KERNEL_CN.md)
-
-
-
 
