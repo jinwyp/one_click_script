@@ -1251,7 +1251,7 @@ function getHTTPSCertificateWithAcme(){
             ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
 
             sleep 4
-            ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
+            ps -C ${ranDownloadFileName} -o pid= | xargs -I {} kill {}
         fi
 
     else
@@ -1373,10 +1373,20 @@ function installWebServerNginx(){
     ${sudoCmd} systemctl enable nginx.service
     ${sudoCmd} systemctl stop nginx.service
 
+    # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
+    # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
+    
+    mkdir /etc/systemd/system/nginx.service.d
+    printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+    
+    ${sudoCmd} systemctl daemon-reload
+    ${sudoCmd} systemctl restart nginx 
+
 
 
     nginxConfigServerHttpInput=""
     nginxConfigStreamConfigInput=""
+    nginxConfigNginxModuleInput=""
 
     if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
         read -r -d '' nginxConfigServerHttpInput << EOM
@@ -1462,6 +1472,19 @@ EOM
 EOM
 
     elif [[ "${configInstallNginxMode}" == "sni" ]]; then
+
+        if [ "$osRelease" == "centos" ]; then
+        read -r -d '' nginxConfigNginxModuleInput << EOM
+load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
+EOM
+        else
+        read -r -d '' nginxConfigNginxModuleInput << EOM
+load_module /usr/lib/nginx/modules/ngx_stream_module.so;
+EOM
+        fi
+
+
+
         nginxConfigStreamFakeWebsiteDomainInput=""
 
         nginxConfigStreamOwnWebsiteInput=""
@@ -1623,7 +1646,8 @@ EOM
 
 
         cat > "${nginxConfigPath}" <<-EOF
-load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
+
+${nginxConfigNginxModuleInput}
 
 user  root;
 worker_processes  1;

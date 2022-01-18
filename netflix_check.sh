@@ -358,6 +358,8 @@ function startNetflixTest(){
     echo
     green " =================================================="
     green " Netflix 非自制剧解锁 检测脚本 By JinWYP"
+    red " 本脚本无法检测出使用 V2ray 服务器端路由规则解锁Netflix"
+    red " 需要在 V2ray 客户端上运行本脚本才可以检测成功"
     green " =================================================="
     echo
 
