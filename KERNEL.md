@@ -1,4 +1,4 @@
-# Easy install latest or LTS Linux kernel and enable BBR or BBR plus (ultimate script for all condition)
+# Easy install latest or LTS linux kernel and enable BBR or BBR plus
 
 
 ## Table of Contents
