@@ -1391,7 +1391,7 @@ function installWebServerNginx(){
     printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
     
     ${sudoCmd} systemctl daemon-reload
-    ${sudoCmd} systemctl restart nginx 
+    
 
 
 
