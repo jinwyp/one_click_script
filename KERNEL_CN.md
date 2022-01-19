@@ -9,10 +9,10 @@
 * [Netflix 非自制剧检测脚本 支持IPv6和 WARP Sock5 代理检测](#netflix-check)
 
 ## 功能说明 Features 
-1. Easily switch Linux kernel for all versions, including latest kernel, 5.16, 5.10 LTS, 5.4 LTS, 4.19 LTS, 4.14 LTS  
-2. Easily enable BBR or BBR plus congestion control algorithm with FQ or CAKE. 
-3. Support Debian9+, Ubuntu 16+, and CentOS 7+ (AlmaLinux / Rocky Linux) operation systems
-4. Install wireguard and Cloudflare WARP client to avoid Google reCAPTCHA and unlock Netflix ip geo-restriction
+1. 安装各个版本的 Linux 内核 包括最新的5.16内核 和 所有LTS内核. 例如 5.10 LTS, 5.4 LTS, 4.19 LTS, 4.14 LTS  
+2. 开启 BBR / BBR Plus / BBR2 网络加速, 切换 FQ / FQ-Codel / FQ-PIE / CAKE 队列调度算法. 
+3. 支持 Debian9+, Ubuntu 16+, CentOS 7+ (AlmaLinux / Rocky Linux)
+4. 安装 wireguard 和 Cloudflare WARP sock5 client 用于解锁 Netflix 和避免弹出Google人机验证
  
 
 ## Installation 安装方法  
@@ -50,7 +50,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 1. CentOS / AlmaLinux / Rocky Linux 系统安装新版 linux 内核. 运行脚本后 请选择31 安装官方源最新版5.16内核 或选择35 安装 LTS 5.10 内核 推荐安装 LTS 5.10. 根据提示需要重启2次 完成内核安装。
 2. Debian / Ubuntu 系统安装新版 linux 内核. 运行脚本后 Debian 请选择41 安装 LTS 5.10 内核, Ubuntu 请选择45 安装 LTS 5.10 内核. 根据提示需要重启2次 完成内核安装。
 3. 开启 BBR 网络加速. 完成上面更换新内核后, 重新运行脚本后 选择2 然后根据提示选择 BBR 加速, 推荐使用BBR + Cake 组合算法.
-4. 安装BBR Plus 内核并开启 BBR Plus. 运行脚本后 选择61 安装原版4.14。129版本 BBR Plus 内核. 或选择66 安装5.10 LTS BBR Plus内核. 安装完成重启2次后, 重新运行脚本后 选择3 根据提示开始 BBR Plus. 
+4. 安装BBR Plus 内核并开启 BBR Plus. 运行脚本后 选择61 安装原版4.14.129版本 BBR Plus 内核, 或选择66 安装5.10 LTS BBR Plus内核. 安装完成重启2次后, 重新运行脚本后 选择3 根据提示开始 BBR Plus. 
 5. 注意安装过程中 如果弹出大框的英文提示(下面有示例图) "安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS.
 
 ![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
@@ -78,6 +78,13 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
+```
+
+
+####  通过 curl 命令安装 via curl to install script
+
+```bash
+curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
 ```
 
 

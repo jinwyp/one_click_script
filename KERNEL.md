@@ -1,206 +1,98 @@
 # Easy install latest or LTS Linux kernel and enable BBR or BBR plus (ultimate script for all condition)
 
 
-## 目录 Table of Contents
+## Table of Contents
 
-* [安装 Linux 最新版内核或 LTS 内核, 安装支持 BBR Plus 内核](#kernel)
-* [开启BBR 或 BBR plus 网络加速](#kernel)
-* [安装 wireguard 和 Cloudflare WARP, 解锁 Netflix 区域限制 和 避免弹出Google人机验证](#Wireguard)
+* [Install linux latest and LTS kernel. Install BBR Plus kernel](#kernel)
+* [Enable BBR or BBR plus or BBR2 congestion control algorithm with FQ or CAKE](#kernel)
+* [Install wireguard and Cloudflare WARP. Unlock Netflix ip geo-restriction. Avoid Google reCAPTCHA human verification](#Wireguard)
 
 
-## 功能说明 Features 
+## Features 
 1. Easily switch Linux kernel for all versions, including latest kernel, 5.16, 5.10 LTS, 5.4 LTS, 4.19 LTS, 4.14 LTS  
-2. Easily enable BBR or BBR plus congestion control algorithm with FQ or CAKE. 
+2. Easily enable BBR or BBR plus congestion control algorithm with FQ / FQ-Codel / FQ-PIE / CAKE. 
 3. Support Debian9+, Ubuntu 16+ and CentOS 7+ operation systems
 4. Install wireguard and Cloudflare WARP client to avoid Google reCAPTCHA and unlock Netflix ip geo-restriction
  
 
 
 
+## Installation
 
-## Installation 安装方法  
-
-#### Usage 脚本使用方法
-```bash
-bash <(curl -Lso- https://git.io/oneclick)
-```
-
-
-####  通过 curl 命令安装  via curl to install script
-
-```bash
-curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
-```
-
-#### 通过 wget 命令安装 via wget to install script
-
-```bash
-wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
-```
-
-
-
-![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
-
-![功能列表2](https://github.com/jinwyp/one_click_script/blob/master/docs/readme2.png?raw=true)
-
-![功能列表3](https://github.com/jinwyp/one_click_script/blob/master/docs/readme3.png?raw=true)
-
-
-
-## Installation Linux kernel Wireguard 
-
-#### Usage 脚本使用方法
+#### via bash
 ```bash
 bash <(curl -Lso- https://git.io/kernel.sh)
 ```
+#### via curl to install script
 
-#### 通过 wget 命令安装 Linux 内核 和 Wireguard  via wget to install script
+```bash
+curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+```
+
+
+#### via wget to install script
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
 ```
 
 
-## Netflix-Check
-#### Netflix 非自制剧解锁 检测脚本 全网最准确检测脚本 支持IPv6 和 Cloudflare WARP Sock5 代理检测
 
-#### 通过 wget 命令安装 via wget to install script
+![功能列表3](https://github.com/jinwyp/one_click_script/blob/master/docs/readme3.png?raw=true)
+
+
+
+
+## Usage 
+
+### kernel
+### Install latest or LTS linux kernel and enable BBR or BBR Plus
+
+1. On CentOS / AlmaLinux / Rocky Linux, run script then choose 31 to install latest 5.16 kernel or choose 35 to install LTS 5.10 kernel (recommended). It will reboot twice duiring the whole installation.
+2. On Debian run script then choose 41 to install LTS 5.10 kernel, on Ubuntu please choose 45 to install LTS 5.10 kernel. It will reboot twice duiring the whole installation.
+3. After finished new kernel installation, rerun the script and choose 2 to enable BBR congestion control algorithm with Cake(recommended) or FQ. 
+4. To enable BBR Plus. run script then choose 61 to install BBR Plus 4.14.129 kernel , or choose 66 to install BBR Plus 5.10 LTS kernel. It will reboot twice duiring the whole installation.  After finished new kernel installation, rerun the script then choose 3 to enable BBR Plus. 
+5. Duiring the the whole installation when show the big warning screen(see below pics), please choose "NO" to continue installation. Do not abort kernel removal. 
+
+![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
+![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
+![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
+
+6. To install XanMod kernel and enable BBR2 on Debian or Ubuntu. Run script then choose 51 to install XanMod LTS 5.10 kernel, after reboot and finish kernel installation, rerun the script then choose 2 to enable BBR2 congestion control algorithm.
+
+
+### Wireguard
+### Unlock Netflix(Youtube/Hulu/HBO Now/Disney+) region restriction and avoid Google reCAPTCHA human verification
+
+1. Unlock with Cloudflare WARP sock5 proxy. Run script then choose 11 to install Cloudflare WARP linux client sock5 proxy, After finish installation, rerun script then choose 21 to test whether Netflix is unlock or not through the WARP sock5 proxy.
+2. Unlock with Cloudflare WARP IPv6. Run script then choose 12 to install Wireguard and Cloudflare WARP.  After finish installation, The VPS will enable IPv6. As default the VPS is to use IPv4 to access the network. Rerun script then choose 21 to test whether Netflix is unlock or not through the IPv6.
+3. To unlock Netflix and other stream website. Using the [script](/README.md) in the same repo to install v2ray. During the v2ray installation follow the instruction and select different v2ray routing rules (IPv6 or WARP sock5 or DNS or other unlocked v2ray server) to unlock netflix. 
+4. To avoid Google reCAPTCHA human verification. Using the [script](/README.md) in the same repo to install v2ray. During the v2ray installation follow the instruction and select different v2ray routing rules (IPv6 or WARP sock5 or other unlocked v2ray server) to avoid Google reCAPTCHA. Recommended to use IPv6 to avoid Google reCAPTCHA.
+
+
+
+
+## Netflix-Check
+### Netflix non-self produced drama test script for regions. Support test with IPv6 and Cloudflare WARP Sock5 proxy
+
+#### via wget to install script
 
 ```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
 ```
 
 
-## 使用说明 Usage 
-
-### 安装命令行方式 启动 trojan 或 v2ray
-
-1. 该步骤可省略. 如果是使用google cloud 谷歌云服务器，默认无法使用root账号登陆， 可以选择32 开启root用户登录. 建议使用root用户运行该脚本. 安装bbr plus 需要root权限, 默认认为使用root执行, 非root用户请手动添加sudo执行 ```sudo ./tcp.sh ```和 ```sudo ./trojan_v2ray_install.sh ``` 脚本. （注意 证书申请也需要用root用户而不建议用sudo  [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo)  ).
-2. 安装 BBR plus (或 BBR) 网络加速. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后 再选择36 安装5.10内核 或 选择61或其他 安装原版 BBRplus 4.14,129 版内核 , 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
-3. 使用 BBR 或 BBRplus版 网络加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择2 使用BBR 或选择2 使用BBRplus 加速. 
-4. 该步骤可省略. 选择31, 安装 oh-my-zsh. 这样以后登录有命令提示, 方便新手操作. 安装完成后请退出VPS, 命令为```exit```.  重新登录VPS后继续下面操作. 
-5. 安装 trojan 或 v2ray. 根据提示 重新运行脚本 ```./trojan_v2ray_install.sh ```  选2 安装trojan, 或选5 安装trojan-go, 或选11或14 安装v2ray, 或选21 同时安装trojan和v2ray， 或选24 同时安装trojan-go和v2ray.  强烈建议：如果VPS线路速度可以保证，不需要CDN，强烈建议选11或14 只安装xray 或只安装5 trojan-go (trojan-go速度已经很快了). 需要CDN可以选11只安装V2ray.  协议安装的越多安全性越低,而且也不会提高速度,适合自己的软件装一种最好. 完全没有必要使用多合一的脚本同时安装多个协议
-
-6. 第一步安装 BBR plus 时出现的提示 "是否终止删除内核" 请选择 "NO". 就是要卸载掉目前的内核. 
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
-
-
-### 安装管理面板 Install web admin panel
-
-1. 在没有安装任何 trojan 和 v2ray 的新机器上(即没有执行过第5步, 执行过可以选择卸载), 选择29 进入子菜单安装 trojan 或 v2ray 可视化管理面板。(如果之前通过其他脚本安装过,再安装可视化管理面板则极易产生问题)
-2. 选择29后 然后再选择1 安装trojan-web可视化管理面板(建议使用centos7系统).根据提示输入域名后, 继续根据提示再选择1.Let's Encrypt 证书, 申请证书成功后. 继续根据提示再选择1.安装docker版mysql(mariadb). ariadb启动成功后,继续根据提示输入第一个trojan用户的账号密码,回车后出现"欢迎使用trojan管理程序" 需要不输入数字直接按回车,这样继续安装nginx直到完成. nginx安装成功会显示可视化管理面板网址,请保存下来. 如果没有显示管理面板网址则表明安装失败. 
-3. 选择29后 然后再选择6 安装v2ray-ui可视化管理面板. 安装成功后可以再次运行本脚本选择29后在选择11申请域名SSL证书. 然后再可视化管理面板新建添加vless账号或trojan账号, 填入证书文件路径 即可同时支持trojan和v2ray.
-
-### 高级用法 Advanced Usage 与现有网站共存
-
-1. 如果机器上已经有nginx或已有网站服务, 或是与宝塔面板共同使用, 可以运行脚本后选择30, 然后单独安装不带有nginx的版本。 选择30后再选15, 则V2ray运行在非80和443端口(端口可自定义), 同时没有加密, 然后在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径转发到V2ray 端口, 起到加密作用。
-2. 选择30后 再选择12-14 安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由trojan或trojan-go提供。
-3. 选择30后, 再选择13或14后仅安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
-4. 选择30后 再选择16-24 安装V2ray或Xray, 这样让V2ray或Xray 的 Vless协议服务于443 https端口(端口可自定义), 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。https ssl加密由V2ray或Xray 的 Vless协议提供。 推荐选择20的 Xray的Xtls-direct 模式速度最快
-5. 选择30后 再选择15-24 安装V2ray或Xray,都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便不支持443端口的中转机中转给目标主机.
-6. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置
-
-
-### Netflix Unlock 解锁Netflix 等其他流媒体网站的区域限制 和 避免弹出Google人机验证
-
-1. 运行脚本后选择1 进入linux 内核安装菜单, 根据提示安装 linux 内核 5.10或5.14 都可以.
-2. 更换内核重启后, 选择1 进入linux 内核安装菜单, 选择2 使用BBR加速 和 Cake算法 优化VPS参数后 重启
-3. 重启后, 选择1, 再选择6 安装 Wireguard 和 cloudflare WARP. 
-4. 确认Wireguard启动成功后, 运行脚本后选择14 或 11 或其他选项 安装v2ray或xray, 安装过程中根据提示 选择netflix 和 google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
-5. 本脚本集合了所有解锁 Netflix 网站的方法, 目前有 1 使用DNS解锁, 2 使用IPv6解锁, 3 使用WARP sock5 代理解锁, 4 使用转发到可解锁的V2ray或Xray服务器解锁
-6. 目前网上搭建解锁反代服务器是使用 sniproxy + dns的方式, 本脚本稍后推出 nginx stream + dns, nginx + xray, nginx + v2ray, nginx + sock5, 非常灵活的各种方式搭建解锁反代服务器, 以便达到一台VPS可以同时做网站+提供解锁+v2ray+trojan的目的
-
-
-
-## 注意事项与常见问题 FAQ 
-
-1. 免费域名可以使用 [freenom](https://www.freenom.com/zh/index.html?lang=zh). 注册freenom时需要使用美国IP,否则无法通过注册邮件验证. 请自行搜索教程.
-2. 使用脚本安装时请先关闭CDN, cloudflare.com 中DNS设置页面, 二级域名设置为DNS only 为关闭CDN. 安装v2ray或trojan-go完毕后 可以开启CDN 设置为Proxied 即可. trojan目前不支持CDN, trojan-go 默认安装设置为不支持CDN,可以在安装过程中选择支持CDN.
-
-![注意 cloudflare CDN](https://github.com/jinwyp/one_click_script/blob/master/docs/cloudflare1.jpg?raw=true)
-
-3. 如果使用v2ray 或 xray的 gRPC 通过cloudflare 转发, 需要在cloudflare 域名 "设置"中 => "网络" 菜单里面 允许gRPC，cloudflare Network => gRPC 
-
-![注意 cloudflare CDN gRPC](https://github.com/jinwyp/one_click_script/blob/master/docs/grpc.png?raw=true)
-
-4. 以下是Cloudflare CDN 的worker 加速脚本, 请把域名替换成自己的vps的域名. 然后在Cloudflare新建worker 添加即可. 可以通过下面3个工具任选其一, [CFIP][better-cloudflare-ip], [CloudflareScanner], [CloudflareSpeedTest],  在你自己的客户端机器上运行, 找出距离你最快的 cloudflare 的CDN IP, 在v2ray或trojan-go支持CDN的配置中填入该IP即可.
-```
-addEventListener(
-    "fetch", event => {
-        let url = new URL(event.request.url);
-        url.hostname = "yourdomain.xxx.xx";
-        url.protocol = "https";
-        let request = new Request(url, event.request);
-        event.respondWith(
-            fetch(request)
-        )
-    }
-)
-```
-
-## 关于Let's Encrypt证书
-本脚本使用的acme.sh来申请的Let's Encrypt免费证书。三个月需要续期，本脚本通过cron自动完成续期的，无需用户操作。但Let's Encrypt 申请证书有一些限制，如下：
-
-Let's Encrypt证书申请频率的限制
-
-1. 同一个主域名一周之内只能申请50个证书
-2. 每个账号下每个域名每小时申请验证失败的次数为5次
-3. 每周只能创建5个重复的证书，即使是通过不同的账号进行创建
-4. 每个账号同一个IP地址每3小时最多可以创建10个证书
-5. 每个多域名（SAN） SSL证书（不是通配符域名证书）最多只能包含100个子域
-6. 更新证书没有次数的限制，但是更新证书会受到上述重复证书的限制
-7. 如果提示证书申请失败，可以尝试更换域名再试（添加或换不同的二级域名，也算是新域名）
-8. 同一IP地址，在短时间内过于频繁的申请证书，也会被限制，此时更换域名也无法申请成功，只能等待一段时间，或者在安装过程中选择使用 BuyPass.com 来申请.
-
-
-## 特别感谢 Special Thanks
-
-1. 脚本感谢 https://github.com/sprov065/v2-ui 
-2. 脚本感谢 https://github.com/Jrohy/trojan 
-3. 脚本感谢 https://github.com/v2fly/v2ray-core
-4. 脚本感谢 https://github.com/XTLS/Xray-core
-5. 脚本感谢 https://github.com/trojan-gfw/trojan
-6. 脚本感谢 https://github.com/p4gefau1t/trojan-go
-7. 脚本感谢 https://github.com/ylx2016/Linux-NetSpeed
-8. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
-9. 脚本感谢 JCNF的博客 https://ybfl.xyz/111.html
-
-
-
-## Installation Xrayr
-## 安装其他 Linux 软件 和 V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键脚本
-
-#### via curl 安装命令 
+####  via curl to install script
 
 ```bash
-curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh && chmod +x ./linux_install_software.sh && ./linux_install_software.sh
-
+curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
 ```
 
-#### via wget 安装命令 
-
-```bash
-wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh && chmod +x ./linux_install_software.sh && ./linux_install_software.sh
-
-```
-
-![功能列表4](https://github.com/jinwyp/one_click_script/blob/master/docs/v2board1.png?raw=true)
 
 
+## FAQ 
 
-## Stargazers over time
-[![Stargazers over time](https://starchart.cc/jinwyp/one_click_script.svg)](https://starchart.cc/jinwyp/one_click_script)
-
-
-
-[better-cloudflare-ip]: https://github.com/badafans/better-cloudflare-ip/releases
-[CFIP]: https://github.com/BlueSkyXN/CFIP/releases
-[CloudflareScanner]: https://github.com/Spedoske/CloudflareScanner/releases/tag/1.1.2
-[CloudflareSpeedTest]: https://github.com/XIU2/CloudflareSpeedTest/releases/tag/v1.4.9
-
+1. Netflix non-self produced drama test script can't test through v2ray routing rule. The VPS is already unlocked but the result of the test could not show the right unlocked answer. You can use the test script on the V2ray client computer which connected the unlocked netflix V2ray server to get the right unlocked result.  The Netflix non-self produced drama test shell script can be running on Mac and linux. On Windows you can use Ubuntu (windows linux sub-system) to run the test script.
 
 
 

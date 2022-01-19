@@ -34,7 +34,7 @@
 
 ## Installation
 
-#### Usage
+#### via bash
 ```bash
 bash <(curl -Lso- https://git.io/oneclick)
 ```
@@ -97,7 +97,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ### Prepare work of new VPS
 
-1. There are several work to do to secure your VPS when you set up a new VPS. It's optional but recommend. 
+1. There are several work to do to secure your VPS when you set up a new VPS. It's optional but recommended. 
 2. Configuring an SSH login without password. Run script then choose 26. Input your public key and save the authorized_keys file
 3. Change the SSH Default Port. Run script then choose 33. Customize your SSH login port. The default SSH port is 22, Modify the port number you want.
 5. Enable root accout login. Some VPS can't login with root as default. Run script then choose 32 to enable root accout login.
