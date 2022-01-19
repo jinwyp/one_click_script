@@ -39,7 +39,7 @@ bash <(curl -Lso- https://git.io/oneclick)
 ```
 
 
-####  通过 curl 命令安装  via curl to install script
+#### 通过 curl 命令安装  via curl to install script
 
 ```bash
 curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
@@ -103,20 +103,11 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 2. 运行脚本后 选择35 填入你自己的公钥, 这样就可以不需要每次输入SSH密码登录VPS, 提高安全性. 还可以继续手动修改配置文件 /etc/ssh/sshd_config 关闭SSH使用密码登录,使其只能使用密钥登录VPS
 3. 运行脚本后 选择33 修改SSH端口号, 一般默认SSH端口号是22, 强烈建议改成其他的端口号, 提高安全性. 默认22端口极易被扫描和攻击.
 4. 运行脚本后 选择34 修改时区为北京时间, 因为V2ray的Vmess的协议需要对服务器和客户端时间一致, 建议把VPS服务器改成北京时间.
-5. 有一些VPS例如Google Cloud 默认没有开启root账号登录, 运行脚本后 选择31 可以开启root账号登录. 建议使用root用户运行该脚本.
+5. 有一些VPS例如Google Cloud 默认没有开启root账号登录, 运行脚本后 选择32 可以开启root账号登录. 建议使用root用户运行该脚本.
 6. 运行脚本后 选择31 安装 Oh-my-zsh 等软件, 这些软件会简化你的后续操作, 并带有提示. 安装完成后请退出VPS, 命令为```exit```. 重新登录VPS后继续后续操作. 
 
 ### 安装新版Linux 内核 和 BBR 内核
 1. 运行脚本后 选择1 安装 Linux 内核和开启BBR+Cake, 具体请参考[Linux 内核一键安装脚本](/KERNEL_CN.md)
-2. 运行脚本后 选择1 安装 BBR plus (或 BBR) 网络加速. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后 再选择36 安装5.10内核 或 选择61或其他 安装原版 BBRplus 4.14,129 版内核 , 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
-3. 使用 BBR 或 BBRplus版 网络加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择2 使用BBR 或选择2 使用BBRplus 加速. 
-
-6. 第一步安装 BBR plus 时出现的提示 "是否终止删除内核" 请选择 "NO". 就是要卸载掉目前的内核. 
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
-
-
 
 
 ### 安装命令行方式 启动 trojan 或 v2ray
@@ -164,12 +155,14 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ### Netflix Unlock 解锁Netflix 等其他流媒体网站的区域限制 和 避免弹出Google人机验证
 
-1. 运行脚本后选择1 进入Linux 内核安装菜单, 根据提示安装 linux 内核 5.10或5.14 都可以.
+1. 运行脚本后选择1 进入Linux 内核安装菜单, 根据提示安装 linux 内核 5.10或5.16, 具体请参考[Linux 内核一键安装脚本](/KERNEL_CN.md).
 2. 更换内核重启后, 选择1 进入linux 内核安装菜单, 选择2 使用BBR加速 和 Cake算法 优化VPS参数后 重启
-3. 重启后, 选择1, 再选择6 安装 Wireguard 和 cloudflare WARP. 
-4. 确认 Wireguard 启动成功后, 运行脚本后 安装v2ray或xray, 安装过程中根据提示 选择netflix 和 google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
+3. 重启后, 选择1, 再选择11或12 安装 Wireguard 和 Cloudflare WARP. 具体请参考[Linux 内核一键安装脚本](/KERNEL_CN.md) 
+4. 确认 Wireguard 和 Cloudflare WARP 启动成功后, 运行脚本后 安装v2ray或xray, 安装过程中根据提示 选择 Netflix 和 Google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
 5. 本脚本集合了所有解锁 Netflix 网站的方法, 目前有 1 使用DNS解锁, 2 使用IPv6解锁, 3 使用WARP sock5 代理解锁, 4 使用转发到可解锁的V2ray或Xray服务器解锁, 5 神秘方法解锁
 6. 目前网上搭建解锁反代服务器是使用 sniproxy + dns的方式, 本脚本稍后推出 nginx stream + dns, nginx + xray, nginx + v2ray, nginx + sock5, 非常灵活的各种方式搭建解锁反代服务器, 以便达到一台VPS可以同时做网站+提供解锁+v2ray+trojan的目的
+7. Netflix 检测解锁脚本无法测试 使用V2ray路由规则的解锁. 就是说使用本脚本安装过v2ray已经解锁了Netflix, 但用检测解锁脚本检测的结果还是会显示没有解锁, 就是无法测出已解锁Netflix. 可以把检测脚本运行在 V2ray客户端机器上, 则能检测成功解锁. Netflix 检测解锁脚本只能运行在Mac或linux 平台. Windows平台可以使用linux ubuntu 子系统来运行 Netflix 检测解锁脚本.
+
 
 
 

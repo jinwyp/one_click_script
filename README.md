@@ -74,24 +74,21 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 ## acme
-### Get a SSL certificate for website
+### Get SSL certificate for domain
 
-1. 本脚本可以用来单独给网站申请免费的SSL证书, 选择26 即可. 申请SSL证书过程中请关闭域名的CDN功能, 保证域名已经成功解析到VPS真实IP.
-2. 申请SSL证书过程中如果不方便关闭CDN, 或者纯IPv6主机 可以选择不检测IP解析是否正确, 从而跳过检测IP继续申请证书.
-3. 本脚本使用的 acme.sh 来申请的免费证书. 可以选择 Let's Encrypt, BuyPass.com, ZeroSSL.com 提供商.  Let's Encrypt 申请证书有一些限制, 如果频繁申请证书出现无法申请的情况请选择其他证书提供商如 BuyPass.com
-4. 三个月之后需要续期，本脚本通过cron任务自动完成续期，无需用户操作.
+1. Run script then choose 26 to request SSL certificate for any domains. It's better to disable CDN of your domain duiring the SSL certificate application process. Make sure the domain is resolved to the real VPS ip.
+2. Duiring the SSL certificate application process, if you can't disable CDN or the VPS only have IPv6, you can skip the IP check process to continue your following SSL certificate request.
+3. The script is using acme.sh to get SSL certificate. There are three providers: Let's Encrypt, BuyPass.com, ZeroSSL.com. When you request too many times in one day and reach the limit of Let's Encrypt, you can switch other providers such as BuyPass.com.
+4. Normally SSL certificate need renew in three month，The script will autorenew the certificate with Cronjob by acme.sh .
 
-#####  Let's Encrypt 申请证书有一些限制, 具体限制如下：
 
-1. 同一个主域名一周之内只能申请50个证书
-2. 每个账号下每个域名每小时申请验证失败的次数为5次
-3. 每周只能创建5个重复的证书，即使是通过不同的账号进行创建
-4. 每个账号同一个IP地址每3小时最多可以创建10个证书
-5. 每个多域名（SAN） SSL证书（不是通配符域名证书）最多只能包含100个子域
-6. 更新证书没有次数的限制，但是更新证书会受到上述重复证书的限制
-7. 如果提示证书申请失败，可以尝试更换域名再试（添加或换不同的二级域名，也算是新域名）
-8. 同一IP地址，在短时间内过于频繁的申请证书，也会被限制，此时更换域名也无法申请成功，只能等待一段时间，或者在安装过程中选择使用 BuyPass.com 来申请.
+#####  [The Rate Limits rule of Let's Encrypt](https://letsencrypt.org/docs/rate-limits/)
 
+1. The main limit is Certificates per Registered Domain (50 per week)
+2. You can create a maximum of 300 New Orders per account per 3 hours
+3. You can create a maximum of 10 Accounts per IP Address per 3 hours. You can create a maximum of 500 Accounts per IP Range within an IPv6 /48 per 3 hours
+4. You can combine multiple hostnames into a single certificate, up to a limit of 100 Names per Certificate
+5. You can have a maximum of 300 Pending Authorizations on your account
 
 
 
@@ -100,27 +97,19 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ### Prepare work of new VPS
 
-1. 一台新的VPS开通后,建议做以下事情(非必须)
-2. 运行脚本后 选择35 填入你自己的公钥, 这样就可以不需要每次输入SSH密码登录VPS, 提高安全性. 还可以继续手动修改配置文件 /etc/ssh/sshd_config 关闭SSH使用密码登录,使其只能使用密钥登录VPS
-3. 运行脚本后 选择33 修改SSH端口号, 一般默认SSH端口号是22, 强烈建议改成其他的端口号, 提高安全性. 默认22端口极易被扫描和攻击.
-4. 运行脚本后 选择34 修改时区为北京时间, 因为V2ray的Vmess的协议需要对服务器和客户端时间一致, 建议把VPS服务器改成北京时间.
-5. 有一些VPS例如Google Cloud 默认没有开启root账号登录, 运行脚本后 选择31 可以开启root账号登录. 建议使用root用户运行该脚本.
-6. 运行脚本后 选择31 安装 Oh-my-zsh 等软件, 这些软件会简化你的后续操作, 并带有提示. 安装完成后请退出VPS, 命令为```exit```. 重新登录VPS后继续后续操作. 
+1. There are several work to do to secure your VPS when you set up a new VPS. It's optional but recommend. 
+2. Configuring an SSH login without password. Run script then choose 26. Input your public key and save the authorized_keys file
+3. Change the SSH Default Port. Run script then choose 33. Customize your SSH login port. The default SSH port is 22, Modify the port number you want.
+5. Enable root accout login. Some VPS can't login with root as default. Run script then choose 32 to enable root accout login.
+6. Run script then choose 31 to install sofrware including Oh-my-zsh, zsh-autosuggestions, Micro editors. After finish installation, exit VPS and relogin SSH to use ZSH. 
 
 ### Install latest or LTS Linux kernel and enable BBR or BBR plus 
-1. 运行脚本后 选择1 安装 Linux 内核和开启BBR+Cake, 具体请参考[Linux 内核一键安装脚本](/KERNEL_CN.md)
-2. 运行脚本后 选择1 安装 BBR plus (或 BBR) 网络加速. 运行脚本 ```./trojan_v2ray_install.sh ``` 选择1 然后 再选择36 安装5.10内核 或 选择61或其他 安装原版 BBRplus 4.14,129 版内核 , 注意安装过程中会弹出大框的英文提示(下面有示例图)"安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS
-3. 使用 BBR 或 BBRplus版 网络加速. 重新登录VPS后, 重新运行脚本 ```./trojan_v2ray_install.sh ```  选择1 然后 选择2 使用BBR 或选择2 使用BBRplus 加速. 
-
-6. 第一步安装 BBR plus 时出现的提示 "是否终止删除内核" 请选择 "NO". 就是要卸载掉目前的内核. 
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
+1. To install latest or LTS Linux kernel. Run script then choose 1. And enter the sub menu to install Linux kernel and enable BBR+Cake. Check out more details for [LTS Linux kernel switcher script](/KERNEL.md)
 
 
 
 
-### Install commandline trojan or v2ray
+### Install command line trojan or v2ray
 
 1. 建议使用root用户运行该脚本. 安装bbr plus 内核 需要root权限, 默认认为使用root执行本脚本, 非root用户请手动添加sudo执行 ```sudo ./trojan_v2ray_install.sh ``` 脚本. 注意 证书申请也需要用root用户而不建议用sudo运行 [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo).
 
@@ -141,7 +130,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 9. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置.
 
 
-### Advanced Usage Working with exist website or web server
+### Advanced Tutorials - Work with existing website or web server
 
 1. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择12  只安装V2ray或Xray, 运行在非80和443端口(端口可自定义), 注意: 选择12 安装V2ray或Xray 此时没有加密, 需要在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径path 转发到V2ray 端口, 起到tls加密作用.
 
@@ -154,7 +143,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
-### Install Web UI panel for trojan and v2ray
+### Install Web UI admin panel for trojan and v2ray
 
 1. 在没有安装任何 trojan 和 v2ray 的新机器上(如使用本脚本安装过可执行卸载操作), 选择30 进入子菜单安装 trojan 或 v2ray 可视化管理面板。(如果之前通过其他脚本安装过,再安装可视化管理面板则极易产生问题, 请先卸载其他脚本程序在安装)
 
@@ -223,5 +212,3 @@ addEventListener(
 [CFIP]: https://github.com/BlueSkyXN/CFIP/releases
 [CloudflareScanner]: https://github.com/Spedoske/CloudflareScanner/releases/tag/1.1.2
 [CloudflareSpeedTest]: https://github.com/XIU2/CloudflareSpeedTest/releases/tag/v1.4.9
-
-

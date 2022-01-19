@@ -1,42 +1,22 @@
-# Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
+# Easy install latest or LTS Linux kernel and enable BBR or BBR plus (ultimate script for all condition)
 
 
 ## 目录 Table of Contents
 
-* [Trojan 和 V2ray xray 一键安装脚本](#installation-安装方法)
-* [安装 最新版和LTS Linux 内核, BBR 和 BBR Plus 内核](#installation-linux-kernel-wireguard)
-* [安装 wireguard 和 Cloudflare WARP, 解锁 Netflix 区域限制 和 避免弹出Google人机验证](#installation-linux-kernel-wireguard)
-* [Netflix 非自制剧检测脚本 支持IPv6和 WARP Sock5 代理检测](#netflix-check)
-* [V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键安装脚本](#installation-xrayr)
-* [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
-* [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
-* [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
+* [安装 Linux 最新版内核或 LTS 内核, 安装支持 BBR Plus 内核](#kernel)
+* [开启BBR 或 BBR plus 网络加速](#kernel)
+* [安装 wireguard 和 Cloudflare WARP, 解锁 Netflix 区域限制 和 避免弹出Google人机验证](#Wireguard)
 
 
 ## 功能说明 Features 
+1. Easily switch Linux kernel for all versions, including latest kernel, 5.16, 5.10 LTS, 5.4 LTS, 4.19 LTS, 4.14 LTS  
+2. Easily enable BBR or BBR plus congestion control algorithm with FQ or CAKE. 
+3. Support Debian9+, Ubuntu 16+ and CentOS 7+ operation systems
+4. Install wireguard and Cloudflare WARP client to avoid Google reCAPTCHA and unlock Netflix ip geo-restriction
+ 
 
-1. 支持 trojan，trojan-go 和 v2ray, xray 的安装 升级 卸载. 卸载后不留任何痕迹, 方便重复安装.
-2. 支持 trojan 或 trojan-go 与 v2ray 共存, nginx全面支持TLS1.3 保证安全性, 支持SNI分流
-3. 可以仅安装 trojan 或 v2ray, 可以不安装nginx. 方便与宝塔面板或现有网站共存.
-4. 支持 v2ray 和 xray 自定义端口, 密码和WS的Path, 支持监听额外端口 方便中转机中转. 
-5. 支持 v2ray 和 xray 新的vless协议, 支持v2ray作为前端 监听443端口 同时转发trojan 和 websocket. 
-6. 支持 trojan-go websocket 模式, 可以选择是否支持CDN (websocket)
-7. 默认会创建10个以上用户账号, 还能创建指定前缀的密码, 方便用户使用.
-8. trojan 和 v2ray 可视化管理面板安装. 
-9. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix Youtube 等流媒体网站限制问题, 同时v2ray支持相应的配置
-10. 一键安装wireguard, 解决避免弹出Google人机验证和 Netflix Youtube 等流媒体网站限制问题, 同时v2ray支持相应的配置
-11. 支持 一键安装 v2board 面板的服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 
-12. 本脚本没有偷跑服务器流量的网页或其他屏蔽bt流量的等限制. 默认网页仅为bootstarp最简单的模板
-13. 本脚本所使用端口除443和80外都是随机生成, 保证安全性, 而其他脚本写死固定端口容易被检测
-14. 本脚本不推荐安装多种v2ray的多种协议共存, 协议越多安全性越低, 而且也不会提高速度, 强烈不建议使用其他脚本同时安装多个协议
 
-## Features English 
-1. Install V2Ray or Xray using VLESS or VMess, support all condition: VLESS+TCP+TLS / VLESS+Websocket+TLS(CDN) / VMess+TCP+TLS / VMess+Websocket+TLS(CDN)  
-2. Using Trojan or Nginx or v2ray-core / Xray-core as frontend listening port 443
-3. Install trojan or trojan-go and V2Ray or Xray on the same server to support all protocol.
-4. Support Debian9+, Ubuntu 16+ and CentOS 7+ operation systems
-5. install wireguard and wgcf to avoid Google reCAPTCHA and unlock Netflix ip geo-restriction
-6. Easily switch Linux kernel version, 5.11, 5.10 LTS, 5.4 LTS, 4.19 LTS, 4.14 LTS  
+
 
 ## Installation 安装方法  
 
