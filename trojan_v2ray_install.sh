@@ -3547,9 +3547,33 @@ EOM
 
 
 
+
+
+
+
+
+
+    echo
+    echo
+    isV2rayUnlockWarpModeInput="1"
+    V2rayDNSUnlockText="AsIs"
+    V2rayUnlockVideoSiteOutboundTagText=""
+    unlockWARPServerIpInput="127.0.0.1"
+    unlockWARPServerPortInput="40000"
+    green " =================================================="
+    yellow " 是否要解锁 Netflix HBO Disney+ 等流媒体网站"
+    read -p "是否要解锁流媒体网站? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockStreamWebsiteInput
+    isV2rayUnlockStreamWebsiteInput=${isV2rayUnlockStreamWebsiteInput:-n}
+
+    if [[ $isV2rayUnlockStreamWebsiteInput == [Yy] ]]; then
+
+
+
+
+
     echo
     green " =================================================="
-    yellow " 是否使用 DNS 解锁流媒体 Netflix HBO Disney 等流媒体网站"
+    yellow " 是否使用 DNS 解锁 Netflix HBO Disney+ 等流媒体网站"
     green " 如需解锁请填入 解锁 Netflix 的DNS服务器的IP地址, 例如 8.8.8.8"
     read -p "是否使用DNS解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
@@ -3598,7 +3622,7 @@ EOM
     echo
     echo
     green " =================================================="
-    yellow " 是否使用 Cloudflare WARP 解锁 流媒体 Netflix 等网站"
+    yellow " 是否使用 Cloudflare WARP 解锁 Netflix 等流媒体网站"
     echo
     green " 1. 不使用解锁"
     green " 2. 使用 WARP Sock5 代理解锁 推荐使用"
@@ -3764,6 +3788,14 @@ EOM
 
 
 
+
+
+
+    fi
+
+
+
+
     echo
     green " =================================================="
     yellow " 请选择 避免弹出 Google reCAPTCHA 人机验证的方式"
@@ -3776,7 +3808,7 @@ EOM
     read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
     isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
 
-    if [[ $isV2rayUnlockWarpModeInput == $isV2rayUnlockGoogleInput ]]; then
+    if [[ "${isV2rayUnlockWarpModeInput}" == "${isV2rayUnlockGoogleInput}" ]]; then
         V2rayUnlockVideoSiteRuleText+=", \"geosite:google\" "
         V2rayUnlockVideoSiteRuleTextFirstChar="${V2rayUnlockVideoSiteRuleText:0:1}"
 
@@ -3785,10 +3817,10 @@ EOM
         fi
 
         # 修复一个都不解锁的bug 都选1的bug
-        if [[ "${isV2rayUnlockGoogleInput}" == "1" ]]; then
+        if [[ -z "${V2rayUnlockVideoSiteOutboundTagText}" ]]; then
             V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
             V2rayUnlockVideoSiteRuleText="\"test.com\""
-        fi 
+        fi
 
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
@@ -3832,6 +3864,12 @@ EOM
             V2rayUnlockGoogleOutboundTagText="IPv4_out"
         fi
 
+        # 修复一个都不解锁的bug 都选1的bug
+        if [[ -z "${V2rayUnlockVideoSiteOutboundTagText}" ]]; then
+            V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
+            V2rayUnlockVideoSiteRuleText="\"test.com\""
+        fi
+        
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
         "rules": [
