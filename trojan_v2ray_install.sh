@@ -928,6 +928,11 @@ configV2rayTrojanPort="$(($RANDOM + 10000))"
 configV2rayPath="${HOME}/v2ray"
 configV2rayAccessLogFilePath="${HOME}/v2ray-access.log"
 configV2rayErrorLogFilePath="${HOME}/v2ray-error.log"
+configV2rayVmessImportLinkFile1Path="${configV2rayPath}/vmess_link1.json"
+configV2rayVmessImportLinkFile2Path="${configV2rayPath}/vmess_link2.json"
+configV2rayVlessImportLinkFile1Path="${configV2rayPath}/vless_link1.json"
+configV2rayVlessImportLinkFile2Path="${configV2rayPath}/vless_link2.json"
+
 configV2rayProtocol="vmess"
 configV2rayWorkingMode=""
 configV2rayWorkingNotChangeMode=""
@@ -1387,7 +1392,7 @@ function installWebServerNginx(){
     # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
     # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
     
-    mkdir /etc/systemd/system/nginx.service.d
+    mkdir -p /etc/systemd/system/nginx.service.d
     printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
     
     ${sudoCmd} systemctl daemon-reload
@@ -2864,6 +2869,10 @@ function removeTrojan(){
 
 
 
+
+
+
+
 function downloadV2rayXrayBin(){
     if [ -z $1 ]; then
         tempDownloadV2rayPath="${configV2rayPath}"
@@ -2898,7 +2907,6 @@ function downloadV2rayXrayBin(){
         downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${tempDownloadV2rayPath}" "${downloadFilenameXray}"
     fi
 }
-
 
 
 
@@ -2946,17 +2954,17 @@ function inputV2rayStreamSettings(){
 
     if [[ "${configInstallNginxMode}" == "v2raySSL" || ${configV2rayWorkingNotChangeMode} == "true" ]]; then
 
-         if [[ $configV2rayStreamSetting == "grpc" ]]; then
+         if [[ "${configV2rayStreamSetting}" == "grpc" ]]; then
             inputV2rayGRPCPath
 
-        elif [[ $configV2rayStreamSetting == "wsgrpc" ]]; then
+        elif [[ "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
             inputV2rayWSPath
             inputV2rayGRPCPath
         fi
 
     else
 
-        if [[ $configV2rayStreamSetting == "grpc" ]]; then
+        if [[ "${configV2rayStreamSetting}" == "grpc" ]]; then
             inputV2rayServerPort "textMainGRPCPort"
 
             configV2rayGRPCPort=${isV2rayUserPortGRPCInput}   
@@ -2964,7 +2972,7 @@ function inputV2rayStreamSettings(){
 
             inputV2rayGRPCPath
 
-        elif [[ $configV2rayStreamSetting == "wsgrpc" ]]; then
+        elif [[ "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
             inputV2rayWSPath
 
             inputV2rayServerPort "textMainGRPCPort"
@@ -2976,8 +2984,6 @@ function inputV2rayStreamSettings(){
         fi
 
     fi
-
-
 }
 
 function inputV2rayKCPSeedPassword(){ 
@@ -2998,6 +3004,7 @@ function inputV2rayKCPSeedPassword(){
         configV2rayKCPSeedPassword=${isV2rayUserKCPSeedInput}
     fi
 }
+
 
 function inputV2rayWSPath(){ 
     echo
@@ -3085,6 +3092,176 @@ function checkPortInUse(){
         inputV2rayServerPort $2 
     fi
 }
+
+
+v2rayVmessLinkQR1=""
+v2rayVmessLinkQR2=""
+v2rayVlessLinkQR1=""
+v2rayVlessLinkQR2=""
+v2rayPassword1UrlEncoded=""
+
+function rawUrlEncode() {
+    # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
+
+
+    local string="${1}"
+    local strlen=${#string}
+    local encoded=""
+    local pos c o
+
+    for (( pos=0 ; pos<strlen ; pos++ )); do
+        c=${string:$pos:1}
+        case "$c" in
+            [-_.~a-zA-Z0-9] ) o="${c}" ;;
+            * )               printf -v o '%%%02x' "'$c"
+        esac
+        encoded+="${o}"
+    done
+    echo
+    green "== URL Encoded: ${encoded}"    # You can either set a return variable (FASTER) 
+    v2rayPassword1UrlEncoded="${encoded}"   #+or echo the result (EASIER)... or both... :p
+}
+
+function generateVmessImportLink(){
+    # https://github.com/2dust/v2rayN/wiki/%E5%88%86%E4%BA%AB%E9%93%BE%E6%8E%A5%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E(ver-2)
+
+    configV2rayVmessLinkConfigTls="tls"
+    if [[ "${configV2rayIsTlsShowInfo}" == "none" ]]; then
+        configV2rayVmessLinkConfigTls=""
+    fi
+
+    configV2rayVmessLinkStreamSetting1="${configV2rayStreamSetting}"
+    configV2rayVmessLinkStreamSetting2=""
+    if [[ "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
+        configV2rayVmessLinkStreamSetting1="ws"
+        configV2rayVmessLinkStreamSetting2="grpc"
+    fi
+
+    if [[ "${configV2rayWorkingMode}" == "vlessTCPVmessWS" ]]; then
+        configV2rayVmessLinkStreamSetting1="ws"
+        configV2rayVmessLinkStreamSetting2="tcp"
+
+        configV2rayVmessLinkConfigPath="${configV2rayWebSocketPath}"
+        configV2rayVmessLinkConfigPath2="tcp${configV2rayWebSocketPath}" 
+
+        configV2rayVmessLinkConfigTls="tls"      
+    fi
+
+
+
+    configV2rayVmessLinkConfigHost="${configSSLDomain}"
+    if [[ "${configV2rayStreamSetting}" == "quic" ]]; then
+        configV2rayVmessLinkConfigHost="none"
+    fi
+
+    configV2rayVmessLinkConfigPath=""
+    configV2rayVmessLinkConfigPath2=""
+    if [[ "${configV2rayStreamSetting}" == "kcp" || "${configV2rayStreamSetting}" == "quic" ]]; then
+        configV2rayVmessLinkConfigPath="${configV2rayKCPSeedPassword}"
+
+    elif [[ "${configV2rayStreamSetting}" == "h2" || "${configV2rayStreamSetting}" == "ws" ]]; then
+        configV2rayVmessLinkConfigPath="${configV2rayWebSocketPath}"
+
+    elif [[ "${configV2rayStreamSetting}" == "grpc" ]]; then
+        configV2rayVmessLinkConfigPath="${configV2rayGRPCServiceName}"
+
+    elif [[ "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
+        configV2rayVmessLinkConfigPath="${configV2rayWebSocketPath}"
+        configV2rayVmessLinkConfigPath2="${configV2rayGRPCServiceName}"
+    fi
+
+    cat > ${configV2rayVmessImportLinkFile1Path} <<-EOF
+{
+    "v": "2",
+    "ps": "${configSSLDomain}_${configV2rayProtocol}_${configV2rayVmessLinkStreamSetting1}",
+    "add": "${configSSLDomain}",
+    "port": "${configV2rayPortShowInfo}",
+    "id": "${v2rayPassword1}",
+    "aid": "0",
+    "net": "${configV2rayVmessLinkStreamSetting1}",
+    "type": "none",
+    "host": "${configV2rayVmessLinkConfigHost}",
+    "path": "${configV2rayVmessLinkConfigPath}",
+    "tls": "${configV2rayVmessLinkConfigTls}",
+    "sni": "${configSSLDomain}"
+}
+
+EOF
+
+    cat > ${configV2rayVmessImportLinkFile2Path} <<-EOF
+{
+    "v": "2",
+    "ps": "${configSSLDomain}_${configV2rayProtocol}_${configV2rayVmessLinkStreamSetting2}",
+    "add": "${configSSLDomain}",
+    "port": "${configV2rayPortShowInfo}",
+    "id": "${v2rayPassword1}",
+    "aid": "0",
+    "net": "${configV2rayVmessLinkStreamSetting2}",
+    "type": "none",
+    "host": "${configV2rayVmessLinkConfigHost}",
+    "path": "${configV2rayVmessLinkConfigPath2}",
+    "tls": "${configV2rayVmessLinkConfigTls}",
+    "sni": "${configSSLDomain}"
+}
+
+EOF
+
+    v2rayVmessLinkQR1="vmess://$(cat ${configV2rayVmessImportLinkFile1Path} | base64 -w 0)"
+    v2rayVmessLinkQR2="vmess://$(cat ${configV2rayVmessImportLinkFile2Path} | base64 -w 0)"
+}
+
+function generateVLessImportLink(){
+    # https://github.com/XTLS/Xray-core/discussions/716
+
+
+    generateVmessImportLink
+    rawUrlEncode "${v2rayPassword1}"
+
+    if [[ "${configV2rayStreamSetting}" == "" ]]; then
+
+        configV2rayVlessXtlsFlow="tls"
+        if [[ "${configV2rayIsTlsShowInfo}" == "xtls" ]]; then
+            configV2rayVlessXtlsFlow="xtls&flow=xtls-rprx-direct"
+        fi
+
+        if [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
+            cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayVlessXtlsFlow}&type=grpc&host=${configSSLDomain}&serviceName=%2f${configV2rayGRPCServiceName}#${configSSLDomain}+gRPC_protocol
+EOF
+        else
+            cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayVlessXtlsFlow}&type=tcp&host=${configSSLDomain}#${configSSLDomain}+TCP_protocol
+EOF
+
+            cat > ${configV2rayVlessImportLinkFile2Path} <<-EOF
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+WebSocket_protocol
+EOF
+        fi
+
+        v2rayVlessLinkQR1="$(cat ${configV2rayVlessImportLinkFile1Path})"
+        v2rayVlessLinkQR2="$(cat ${configV2rayVlessImportLinkFile2Path})"
+    else
+
+	    if [[ "${configV2rayProtocol}" == "vless" ]]; then
+
+            cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting1}&host=${configSSLDomain}&path=%2f${configV2rayVmessLinkConfigPath}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=%2f${configV2rayVmessLinkConfigPath}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting1}_protocol
+EOF
+            cat > ${configV2rayVlessImportLinkFile2Path} <<-EOF
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting2}&host=${configSSLDomain}&path=%2f${configV2rayVmessLinkConfigPath2}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=%2f${configV2rayVmessLinkConfigPath2}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting1}_protocol
+EOF
+
+            v2rayVlessLinkQR1="$(cat ${configV2rayVlessImportLinkFile1Path})"
+            v2rayVlessLinkQR2="$(cat ${configV2rayVlessImportLinkFile2Path})"
+	    fi
+
+    fi
+
+
+
+}
+
+
 
 
 function inputUnlockV2rayServerInfo(){
@@ -3193,8 +3370,9 @@ EOM
             }
         },
 EOM
-        
 }
+
+
 
 
 function installV2ray(){
@@ -5033,37 +5211,11 @@ EOF
 
 
 
-    # https://stackoverflow.com/questions/296536/how-to-urlencode-data-for-curl-command
-
-    rawurlencode() {
-        local string="${1}"
-        local strlen=${#string}
-        local encoded=""
-        local pos c o
-
-        for (( pos=0 ; pos<strlen ; pos++ )); do
-            c=${string:$pos:1}
-            case "$c" in
-                [-_.~a-zA-Z0-9] ) o="${c}" ;;
-                * )               printf -v o '%%%02x' "'$c"
-            esac
-            encoded+="${o}"
-        done
-        echo
-        green "URL Encoded: ${encoded}"    # You can either set a return variable (FASTER) 
-        v2rayPassUrl="${encoded}"   #+or echo the result (EASIER)... or both... :p
-    }
-
-    rawurlencode "${v2rayPassword1}"
-
-    base64VmessLink=$(echo -n '{"port":"'${configV2rayPortShowInfo}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/'${configV2rayWebSocketPath}'","net":"ws","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
-    base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
 
 
+    generateVLessImportLink
 
-
-
-    if [[ "$configV2rayStreamSetting" == "tcp" ]]; then
+    if [[ "${configV2rayStreamSetting}" == "tcp" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -5074,16 +5226,19 @@ EOF
     额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: tcp,
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=tcp&host=${configSSLDomain}&headerType=none#${configSSLDomain}+TCP%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
 
 EOF
 
-    elif [[ "$configV2rayStreamSetting" == "kcp" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "kcp" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -5094,17 +5249,21 @@ EOF
     额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: kcp,
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     seed 混淆密码: "${configV2rayKCPSeedPassword}",
     别名:自己起个任意名称
 }
 
-导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=kcp&seed=${configV2rayKCPSeedPassword}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+KCP%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
 
 EOF
 
-    elif [[ "$configV2rayStreamSetting" == "h2" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "h2" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -5115,17 +5274,20 @@ EOF
     额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: h2,
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     path路径:/${configV2rayWebSocketPath},
     别名:自己起个任意名称
 }
 
-导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=h2&path=%2f${configV2rayWebSocketPath}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+HTTP2%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
 
 EOF
 
-    elif [[ "$configV2rayStreamSetting" == "quic" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "quic" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -5136,18 +5298,22 @@ EOF
     额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: quic,
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
+    Quic security: none,
     key 加密时所用的密钥: "${configV2rayKCPSeedPassword}",
     别名:自己起个任意名称
 }
 
-导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=quic&key=${configV2rayKCPSeedPassword}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+QUIC%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
 
 EOF
 
 
-    elif [[ "$configV2rayStreamSetting" == "grpc" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "grpc" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -5159,16 +5325,19 @@ EOF
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: gRPC,
     gRPC serviceName: ${configV2rayGRPCServiceName},
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接 Vless (导入链接可能不正常, 导入后可能需要手动修改):
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortGRPCShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
 
 EOF
 
-    elif [[ "$configV2rayStreamSetting" == "wsgrpc" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall} 客户端配置参数 =============
 {
@@ -5180,15 +5349,16 @@ EOF
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接 Vless:
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=ws&path=%2f${configV2rayWebSocketPath}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
 
-导入链接 Vmess:
-vmess://${base64VmessLink2}
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
 
 =========== ${promptInfoXrayInstall} gRPC 客户端配置参数 =============
 {
@@ -5200,16 +5370,19 @@ vmess://${base64VmessLink2}
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: gRPC,
     gRPC serviceName: ${configV2rayGRPCServiceName},
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接 Vless (grpc导入链接可能不正常, 导入后可能需要手动修改):
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortGRPCShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR2}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR2}
 
 EOF
 
-    elif [[ "$configV2rayStreamSetting" == "ws" ]]; then
+    elif [[ "${configV2rayStreamSetting}" == "ws" ]]; then
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 =========== ${promptInfoXrayInstall}客户端配置参数 =============
 {
@@ -5221,15 +5394,15 @@ EOF
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
-    底层传输协议:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接 Vless:
-${configV2rayProtocol}://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=ws&path=%2f${configV2rayWebSocketPath}&host=${configSSLDomain}&headerType=none#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
 
-导入链接 Vmess:
-vmess://${base64VmessLink2}
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
 
 EOF
 
@@ -5240,13 +5413,6 @@ EOF
 
 
     if [[ "$configV2rayWorkingMode" == "vlessTCPVmessWS" ]]; then
-
-        base64VmessLink=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/'${configV2rayWebSocketPath}'","net":"ws","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
-        base64VmessLink2=$(echo ${base64VmessLink} | sed 's/ //g')
-
-        base64VmessLinkTCP=$(echo -n '{"port":"'${configV2rayPort}'","ps":'${configSSLDomain}',"tls":"tls","id":'"${v2rayPassword1}"',"aid":"1","v":"2","host":"'${configSSLDomain}'","type":"none","path":"/tcp'${configV2rayWebSocketPath}'","net":"tcp","add":"'${configSSLDomain}'","allowInsecure":0,"method":"none","peer":"'${configSSLDomain}'"}' | sed 's#/#\\\/#g' | base64)
-        base64VmessLinkTCP2=$(echo ${base64VmessLinkTCP} | sed 's/ //g')
-
 
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 
@@ -5262,12 +5428,13 @@ VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支�
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
     websocket路径:无,
-    底层传输:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=tcp&host=${configSSLDomain}&headerType=none#${configSSLDomain}+tcp%E5%8D%8F%E8%AE%AE
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
 
 =========== ${promptInfoXrayInstall}客户端 VMess-WS-TLS 配置参数 支持CDN =============
 {
@@ -5283,11 +5450,12 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
     别名:自己起个任意名称
 }
 
-导入链接 Vmess:
-vmess://${base64VmessLink2}
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR1}
 
 导入链接新版:
-vmess://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+vmess://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+
 
 =========== ${promptInfoXrayInstall}客户端 VMess-TCP-TLS 配置参数 支持CDN =============
 {
@@ -5303,11 +5471,11 @@ vmess://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=auto&se
     别名:自己起个任意名称
 }
 
-导入链接 Vmess:
-vmess://${base64VmessLinkTCP2}
+导入链接 Vmess Base64 格式:
+${v2rayVmessLinkQR2}
 
 导入链接新版:
-vmess://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=tcp&host=${configSSLDomain}&path=%2ftcp${configV2rayWebSocketPath}#${configSSLDomain}+tcp%E5%8D%8F%E8%AE%AE
+vmess://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=tcp&host=${configSSLDomain}&path=%2ftcp${configV2rayWebSocketPath}#${configSSLDomain}+tcp_protocol
 
 EOF
 
@@ -5327,12 +5495,12 @@ EOF
     加密方式: none,  
     传输协议: gRPC,
     gRPC serviceName: ${configV2rayGRPCServiceName},
-    底层传输:tls,     
+    底层传输协议: tls,
     别名:自己起个任意名称
 }
 
-导入链接 Vless (grpc导入链接可能不正常, 导入后可能需要手动修改):
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
 
 EOF
 
@@ -5352,12 +5520,13 @@ VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN
     加密方式: none, 
     传输协议: tcp ,
     websocket路径:无,
-    底层传输:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=tcp&host=${configSSLDomain}&headerType=none#${configSSLDomain}+tcp%E5%8D%8F%E8%AE%AE
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
 
 =========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
@@ -5374,15 +5543,15 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
     别名:自己起个任意名称
 }
 
-导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+导入链接 Vless 格式:
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
 
 EOF
 
     elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" || "$configV2rayWorkingMode" == "sni" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN
+VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) + (VLess-gRPC-TLS)支持CDN
 
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
@@ -5395,12 +5564,13 @@ VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN
     加密方式: none, 
     传输协议: tcp ,
     websocket路径:无,
-    底层传输:${configV2rayIsTlsShowInfo},
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=tcp&host=${configSSLDomain}&headerType=none#${configSSLDomain}+tcp%E5%8D%8F%E8%AE%AE
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
 
 =========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
@@ -5417,8 +5587,9 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
     别名:自己起个任意名称
 }
 
-导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+导入链接 Vless 格式:
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+
 
 =========== ${promptInfoXrayInstall}客户端 VLess-gRPC-TLS 配置参数 支持CDN =============
 {
@@ -5435,8 +5606,8 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
     别名:自己起个任意名称
 }
 
-导入链接 Vless (grpc导入链接可能不正常, 导入后可能需要手动修改):
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC%E5%8D%8F%E8%AE%AE
+导入链接 Vless 格式:
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC_protocol
 
 EOF
 
@@ -5453,12 +5624,13 @@ EOF
     加密方式: none,  
     传输协议: tcp ,
     websocket路径:无,
-    底层传输协议:xtls, 
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=xtls&type=tcp&host=${configSSLDomain}&headerType=none&flow=xtls-rprx-direct#${configSSLDomain}
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
 
 =========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
@@ -5476,7 +5648,7 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 }
 
 导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
 
 
 =========== Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayPort
@@ -5515,12 +5687,13 @@ EOF
     加密方式: none,  
     传输协议: tcp ,
     websocket路径:无,
-    底层传输协议:xtls, 
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
-导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=xtls&type=tcp&host=${configSSLDomain}&headerType=none&flow=xtls-rprx-direct#${configSSLDomain}
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
 
 =========== ${promptInfoXrayInstall}客户端 VLess-WS-TLS 配置参数 支持CDN =============
 {
@@ -5538,7 +5711,7 @@ vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&se
 }
 
 导入链接:
-vless://${v2rayPassUrl}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws%E5%8D%8F%E8%AE%AE
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
 
 
 =========== Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
