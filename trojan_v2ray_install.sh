@@ -5882,7 +5882,7 @@ function removeV2ray(){
                 isXray="yes"
             fi
 
-            if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service " ]; then
+            if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service" ]; then
                 promptInfoXrayNameServiceName="-jin"
             else
                 promptInfoXrayNameServiceName=""

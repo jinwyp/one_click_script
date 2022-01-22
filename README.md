@@ -95,7 +95,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ## How to use
 
 
-### Prepare work of new VPS
+### Preparatory work for setting up a new VPS
 
 1. There are several work to do to secure your VPS when you set up a new VPS. It's optional but recommended. 
 2. Configuring an SSH login without password. Run script then choose 26. Input your public key and save the authorized_keys file

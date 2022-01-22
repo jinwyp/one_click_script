@@ -1596,10 +1596,71 @@ function editXrayRConfig(){
 function downgradeXray(){
     echo
     green " =================================================="
-    green "  准备开始降级Xray !"
+    green "  准备降级 Xray 和 Air-Universe !"
     green " =================================================="
     echo
 
+
+    yellow " 请选择 Air-Universe 降级到的版本, 默认不降级"
+    red " 注意 Air-Universe 最新版不支持 Xray 1.5.0或更老版本"
+    red " 如需要使用Xray 1.5.0或更老版本的Xray, 请选择 Air-Universe 1.0.0或 0.9.2"
+    green " 1. 不降级 使用最新版本"
+    green " 2. 1.0.0"
+    green " 3. 0.9.2"
+    echo
+    read -p "请选择Air-Universe版本? 直接回车默认选1, 请输入纯数字:" isAirUniverseVersionInput
+    isAirUniverseVersionInput=${isAirUniverseVersionInput:-1}
+
+    downloadAirUniverseVersion="1.0.2"
+    downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v1.0.2/Air-Universe-linux-64.zip"
+
+    if [[ "${isAirUniverseVersionInput}" == "2" ]]; then
+        downloadAirUniverseVersion="1.0.0"
+    elif [[ "${isAirUniverseVersionInput}" == "3" ]]; then
+        downloadAirUniverseVersion="0.9.2"
+    else
+        echo
+    fi
+
+    if [[ "${isAirUniverseVersionInput}" == "1" ]]; then
+        echo
+        green " =================================================="
+        green "  已选择不降级 使用最新版本 Air-Universe"
+        green " =================================================="
+        echo
+    else
+        # https://github.com/crossfw/Air-Universe/releases/download/v1.0.2/Air-Universe-linux-arm32-v6.zip
+        # https://github.com/crossfw/Air-Universe/releases/download/v1.0.2/Air-Universe-linux-arm64-v8a.zip
+
+        downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v${downloadAirUniverseVersion}/Air-Universe-linux-64.zip"
+        airUniverseDownloadFilename="Air-Universe-linux-64_${downloadAirUniverseVersion}.zip"
+
+        if [[ "${osArchitecture}" == "arm64" ]]; then
+            downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v${downloadAirUniverseVersion}/Air-Universe-linux-arm64-v8a.zip"
+            airUniverseDownloadFilename="Air-Universe-linux-arm64-v8a_${downloadAirUniverseVersion}.zip"
+        fi
+
+        if [[ "${osArchitecture}" == "arm" ]]; then
+            downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v${downloadAirUniverseVersion}/Air-Universe-linux-arm32-v6.zip"
+            airUniverseDownloadFilename="Air-Universe-linux-arm32-v6_${downloadAirUniverseVersion}.zip"
+        fi
+
+
+        airUniverseDownloadFolder="/root/airuniverse_temp"
+        mkdir -p ${airUniverseDownloadFolder}
+
+        wget -O ${airUniverseDownloadFolder}/${airUniverseDownloadFilename} ${downloadAirUniverseUrl}
+        unzip -d ${airUniverseDownloadFolder} ${airUniverseDownloadFolder}/${airUniverseDownloadFilename}
+        mv -f ${airUniverseDownloadFolder}/Air-Universe /usr/local/bin/au
+        chmod +x /usr/local/bin/*
+
+        rm -rf ${airUniverseDownloadFolder}
+
+    fi
+
+
+
+    echo
     yellow " 请选择Xray降级到的版本, 默认不降级"
     green " 1. 不降级 使用最新版本"
     green " 2. 1.5.0"
@@ -1662,27 +1723,30 @@ function downgradeXray(){
 
 
         xrayDownloadFolder="/root/xray_temp"
-        
         mkdir -p ${xrayDownloadFolder}
+
         wget -O ${xrayDownloadFolder}/${xrayDownloadFilename} ${downloadXrayUrl}
         unzip -d ${xrayDownloadFolder} ${xrayDownloadFolder}/${xrayDownloadFilename}
         mv -f ${xrayDownloadFolder}/xray /usr/local/bin
         chmod +x /usr/local/bin/*
         rm -rf ${xrayDownloadFolder}
 
-        if [[ -z $1 ]]; then
-            echo
-            configSSLCertPath="/usr/local/share/au"
-            
-            airu stop
-            systemctl stop xray.service
-            chmod ugoa+rw ${configSSLCertPath}/*
-            systemctl start xray.service
-            airu start
-            systemctl status xray.service
-            echo
-        fi
     fi
+
+    if [[ -z $1 ]]; then
+        echo
+        configSSLCertPath="/usr/local/share/au"
+        
+        airu stop
+        systemctl stop xray.service
+
+        chmod ugoa+rw ${configSSLCertPath}/*
+        
+        systemctl start xray.service
+        airu start
+        systemctl status xray.service
+        echo
+    fi    
 }
 
 
@@ -1780,6 +1844,8 @@ EOM
             systemctl restart xray.service
             airu restart
             echo
+            echo
+            green " =================================================="
             green " Air-Universe 安装成功 !"
             green " =================================================="
             
