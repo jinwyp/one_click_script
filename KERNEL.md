@@ -1,5 +1,6 @@
 # Easy install latest or LTS linux kernel and enable BBR or BBR plus
 
+## [中文文档](/KERNEL_CN.md)
 
 ## Table of Contents
 

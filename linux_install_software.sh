@@ -2150,7 +2150,7 @@ EOM
 
     v2rayConfigRouteGoNetflixInput=""
     v2rayConfigOutboundV2rayGoNetflixServerInput=""
-    if [[ $isV2rayUnlockGoNetflixInput == [Nn] ]]; then
+    if [[ "${isV2rayUnlockGoNetflixInput}" == [Nn] ]]; then
         echo
     else
         removeString="\"geosite:netflix\", "
@@ -2217,6 +2217,12 @@ EOM
             V2rayUnlockVideoSiteRuleText="${V2rayUnlockVideoSiteRuleText:1}"
         fi
 
+        # 修复一个都不解锁的bug 都选1的bug
+        if [[ -z "${V2rayUnlockVideoSiteOutboundTagText}" ]]; then
+            V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
+            V2rayUnlockVideoSiteRuleText="\"test.com\""
+        fi
+
         read -r -d '' xrayConfigRuleInput << EOM
             {
                 "type": "field",
@@ -2247,6 +2253,12 @@ EOM
             inputUnlockV2rayServerInfo
         else
             V2rayUnlockGoogleOutboundTagText="IPv4_out"
+        fi
+
+        # 修复一个都不解锁的bug 都选1的bug
+        if [[ -z "${V2rayUnlockVideoSiteOutboundTagText}" ]]; then
+            V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
+            V2rayUnlockVideoSiteRuleText="\"test.com\""
         fi
 
         read -r -d '' xrayConfigRuleInput << EOM
@@ -2342,7 +2354,7 @@ EOM
 
     # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
 
-    if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
+    if [[ "${isV2rayUnlockWarpModeInput}" == "1" && "${isV2rayUnlockGoogleInput}" == "1"  && "${isV2rayUnlockGoNetflixInput}" == [Nn]  ]]; then
         echo
     else
         sed -i '/outbounds/,/^&/d' ${configAirUniverseXrayConfigFilePath}
@@ -2574,32 +2586,43 @@ function getHTTPSCertificate(){
 }
 
 
+
 function compareRealIpWithLocalIp(){
     echo
     echo
-    green " 是否检测域名指向的IP正确 (默认检测，如果域名指向的IP不是本机器IP则无法继续. 如果已开启CDN不方便关闭可以选择否)"
-    read -p "是否检测域名指向的IP正确? 请输入[Y/n]?" isDomainValidInput
+    green " 是否检测域名指向的IP正确 直接回车默认检测"
+    red " 如果域名指向的IP不是本机IP, 或已开启CDN不方便关闭 或只有IPv6的VPS 可以选否不检测"
+    read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
     isDomainValidInput=${isDomainValidInput:-Y}
 
     if [[ $isDomainValidInput == [Yy] ]]; then
         if [ -n $1 ]; then
             configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-            # configNetworkLocalIp=`curl ipv4.icanhazip.com`
-            configNetworkLocalIp=`curl v4.ident.me`
+            # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
+            configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
+            configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
+            #configNetworkLocalIp3="$(curl https://ipv4.icanhazip.com/)"
+            #configNetworkLocalIp4="$(curl https://v4.ident.me/)"
+            #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
+            #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
+            
+
+            #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
+            #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
+
 
             green " ================================================== "
-            green "     域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp}. "
-            green " ================================================== "
+            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
 
-            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp} ]] ; then
-                green " ================================================== "
-                green "     域名解析的IP正常!"
+            echo
+            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp1} || ${configNetworkRealIp} == ${configNetworkLocalIp2} ]] ; then
+
+                green " 域名解析的IP正常!"
                 green " ================================================== "
                 true
             else
-                green " ================================================== "
-                red "     域名解析地址与本VPS IP地址不一致!"
-                red "     本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
+                red " 域名解析地址与本VPS的IP地址不一致!"
+                red " 本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
                 green " ================================================== "
                 false
             fi

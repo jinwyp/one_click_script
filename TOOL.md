@@ -1,5 +1,8 @@
 # Linux toolkit Easily install V2Ray-Poseidon, Soga, XrayR, Air-Universe shell script for V2board panel
 
+
+## [中文文档](/TOOL_CN.md)
+
 ## Features 
 
 1. Configuring an SSH login without password. Change the SSH Default Port. Secure your VPS.
