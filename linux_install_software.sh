@@ -2807,7 +2807,7 @@ function start_menu(){
     green " 54. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
     green " 56. 配合WARP(Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
-    green " 57. 降级xray 到 1.5或1.4"
+    green " 57. 降级 Air-Universe 到 0.9.2, 降级 Xray 到 1.5或1.4"
     echo 
     green " 71. 单独申请域名SSL证书"
     echo
