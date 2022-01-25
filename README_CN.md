@@ -135,11 +135,12 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 1. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择12  只安装V2ray或Xray, 运行在非80和443端口(端口可自定义), 注意: 选择12 安装V2ray或Xray 此时没有加密, 需要在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径path 转发到V2ray 端口, 起到tls加密作用.
 
-2. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择4 只安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由 trojan或trojan-go提供服务.
+2. 运行脚本 选择13-17 安装V2ray或Xray, 过程中可以选择不安装nginx, 这样让V2ray或Xray的 Vless协议服务于443 https端口(端口可自定义), 可与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由V2ray或Xray的 Vless协议提供.
 
-3. 注意 运行脚本后选择4 并选择安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
+3. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择4 只安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由 trojan或trojan-go提供服务.
 
-4. 运行脚本 选择13-17 安装V2ray或Xray, 过程中可以选择不安装nginx, 这样让V2ray或Xray的 Vless协议服务于443 https端口(端口可自定义), 可与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由V2ray或Xray的 Vless协议提供.
+4. 注意 运行脚本后选择4 并选择安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
+
 
 
 

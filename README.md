@@ -111,66 +111,61 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ### Install command line trojan or v2ray
 
-1. 建议使用root用户运行该脚本. 安装bbr plus 内核 需要root权限, 默认认为使用root执行本脚本, 非root用户请手动添加sudo执行 ```sudo ./trojan_v2ray_install.sh ``` 脚本. 注意 证书申请也需要用root用户而不建议用sudo运行 [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo).
+1. Firstly, prefer run this script with root user. Because linux kernel installation need root privileges. And to get SSL with acme.sh also need root privileges. [acme.sh instruction](https://github.com/acmesh-official/acme.sh/wiki/sudo).
 
-2. 安装 trojan 重新运行脚本 命令为 ```./trojan_v2ray_install.sh ```  选2 安装trojan 或 安装trojan-go 支持原版trojan客户端, 或3 安装 trojan-go 支持Websocket, 注意原版trojan客户端不支持websocket, 使用原版trojan客户端只能连接 trojan-go的原版tcp协议, 无法支持websocket 使用CDN. 需要使用trojan-go的客户端才可以支持websocket 支持CDN.
+2. How to install trojan. Run script ```./trojan_v2ray_install.sh ```. Choose 2 to install trojan or trojan-go with no websockt. Choose 3 to install trojan-go with websocket support CDN. 
 
-3. 安装 v2ray 重新运行脚本 选择11 安装 v2ray或xray 并且nginx 提供443端口的tls服务, 推荐使用本模式. 然后安装v2ray协议可以选择websocket或gRPC 等协议 通过设置 path来区分v2ray流量, 并且支持CDN. 如果选择TCP或HTTP2或QUIC 协议则无法使用CDN中转流量. Cloudflare 虽然支持HTTP2或QUIC协议, 但却无法使用其CDN中转, [具体信息可以看](https://github.com/v2ray/v2ray-core/issues/1769). QUIC(HTTP3)协议由于使用了UDP, 在某些运营商会被禁止或被限制端口或QoS降速, 所以使用QUIC可能无法达到提速的预期目的. 选择KCP协议降低延迟,如果打游戏可以尝试该协议.
+3. How to install V2ray. Run script ```./trojan_v2ray_install.sh ```. Choose 11 to install V2ray or Xray with Nginx. Nginx listen 443 port and serve TLS service. During the installation, you can choose websocket or gRPC to support CDN.  Choose TCP or HTTP2 or QUIC protocal will not supprot CDN. 
 
-4. 安装 v2ray 重新运行脚本 选择13-17 安装 v2ray或xray 使用Vless协议提供443端口的tls服务, 而且安装过程中如果选XTLS代替TLS加密 将会明显提高速度. 安装完毕后会提供多种协议可以同时使用. 使用WS-TLS 或 gRPC+TLS协议可以使用CDN中转加速. 使用TCP-XTLS则为直连速度最快协议. 安装V2ray或Xray, 都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便用于不支持443端口的中转机中转给目标主机.
+4. How to install V2ray using Vless. Run script ```./trojan_v2ray_install.sh ```. Choose 13-17 to install V2ray or Xray. Vless listen 443 port and serve TLS service. Nginx is optional during the installation for fake website service. Also you can choose XTLS instead of TLS to improve network speed.
 
-5. 同时安装 trojan 和 v2ray 选择21 使用Vless提供443端口的tls服务, 而trojan或trojan-go运行在非443的其他端口上.
+5. Run script ```./trojan_v2ray_install.sh ```. Choose 21 to install both V2ray and trojan on same VPS. Vless listen 443 port and serve TLS service.
 
-6. 同时安装 trojan 和 v2ray 选择22 使用trojan或trojan-go 提供443端口的tls服务, trojan把非trojan流量转发到nginx, nginx在通过path路径转发流量到v2ray.
+6. Run script ```./trojan_v2ray_install.sh ```. Choose 22 to install both V2ray and trojan/trojan-go on same VPS. trojan/trojan-go listen 443 port and serve TLS service.
 
-7. 同时安装 trojan 和 v2ray 选择23 通过nginx SNI 提供443端口服务, 最少需要提供2个域名分别给trojan, v2ray单独使用, 并且可以与现有网站共存(需要再提供第3个域名给网站使用), 通过不同域名区分不同的HTTPS加密流量. 
+7. Run script ```./trojan_v2ray_install.sh ```. Choose 23 to install both V2ray and trojan/trojan-go on same VPS. Nginx SNI listen 443 port. You need at least 2 domain for trojan and v2ray. Nginx SNI distinguishes v2ray or trojan traffic by different domain name.
 
-8. 建议: 如果VPS线路速度可以保证，不需要CDN，建议17 安装xray + XTLS 速度最快, 或选2或3 安装 trojan-go. 如果需要CDN 可以选11 安装V2ray和Nginx. 不建议使用本脚本或其他脚本同时安装多个协议, 协议安装的越多安全性越低, 而且也不会提高速度, 适合自己的协议装一种最好. 
-
-9. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置.
 
 
 ### Advanced Tutorials - Work with existing website or web server
 
-1. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择12  只安装V2ray或Xray, 运行在非80和443端口(端口可自定义), 注意: 选择12 安装V2ray或Xray 此时没有加密, 需要在宝塔面板或nginx自行修改配置, 让nginx服务于443 https端口, 根据指定的url路径path 转发到V2ray 端口, 起到tls加密作用.
+1. If you already have a website or other web server, you can choose 12 to install V2ray or Xray only running at non 80 and 443 port with no TLS. You need modify nginx config manually to serve TLS and redirect v2ray traffic by url or path for V2ray websocket.
 
-2. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择4 只安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由 trojan或trojan-go提供服务.
+2. If you already have a website or other web server, you can choose 13-17 to install V2ray or Xray. Duiring the installation, you can choose not to install nginx. Vless serve 443 port with TLS. You need modify nginx config manually to serve the website at 80 port. V2ray or Xray will fallback non V2ray traffic to 80 port.
 
-3. 注意 运行脚本后选择4 并选择安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
-
-4. 运行脚本 选择13-17 安装V2ray或Xray, 过程中可以选择不安装nginx, 这样让V2ray或Xray的 Vless协议服务于443 https端口(端口可自定义), 可与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由V2ray或Xray的 Vless协议提供.
+3. If you already have a website or other web server, you can choose 4 to install trojan or trojan-go only running at non 443 port with TLS. You need modify nginx config manually to serve the website at 80 port. trojan or trojan-go will fallback non trojan traffic to 80 port. Pay attention that if you choose to install trojan-go, nginx must already serve at 80 port which is trojan-go fallback port. Otherwise trojan-go will stop and not running if 80 port is not served by web HTTP server.   [trojan-go document](https://p4gefau1t.github.io/trojan-go/basic/config/) 
 
 
 
 
 ### Install Web UI admin panel for trojan and v2ray
 
-1. 在没有安装任何 trojan 和 v2ray 的新机器上(如使用本脚本安装过可执行卸载操作), 选择30 进入子菜单安装 trojan 或 v2ray 可视化管理面板。(如果之前通过其他脚本安装过,再安装可视化管理面板则极易产生问题, 请先卸载其他脚本程序在安装)
+1. On a new VPS without v2ray or trojan installed. Run script ```./trojan_v2ray_install.sh ```. Choose 30 to enter sub menu. Then choose 1 to install trojan UI admin panel. 
 
-2. 选择30后 然后再选择1 安装trojan-web可视化管理面板 和 nginx. 根据提示输入域名后, 继续根据提示再选择1.Let's Encrypt 证书, 申请证书成功后. 继续根据提示再选择1.安装docker版mysql(mariadb). ariadb启动成功后,继续根据提示输入第一个trojan用户的账号密码,回车后出现"欢迎使用trojan管理程序" 需要不输入数字直接按回车,这样继续安装nginx直到完成. nginx安装成功会显示可视化管理面板网址,请保存下来. 如果没有显示管理面板网址则表明安装失败. 
-
-3. 选择30后 然后再选择6或9 安装v2ray-ui可视化管理面板. 安装成功后可以再次运行本脚本, 选择26申请域名SSL证书. 然后再可视化管理面板新建添加vless账号或trojan账号, 填入证书文件路径 即可同时支持trojan和v2ray.
+2. On a new VPS without v2ray or trojan installed. Run script ```./trojan_v2ray_install.sh ```. Choose 30 to enter sub menu. Then choose 6 or 9 to install V2ray or Xray UI admin panel.  After sinish the installation. Run script and choose 26 to request SSL certificate. Then input the certificate file path on the UI admin panel config.
 
 
-### Netflix Unlock 解锁Netflix 等其他流媒体网站的区域限制 和 避免弹出Google人机验证
 
-1. 运行脚本后选择1 进入Linux 内核安装菜单, 根据提示安装 linux 内核 5.10或5.14 都可以.
-2. 更换内核重启后, 选择1 进入linux 内核安装菜单, 选择2 使用BBR加速 和 Cake算法 优化VPS参数后 重启
-3. 重启后, 选择1, 再选择6 安装 Wireguard 和 cloudflare WARP. 
-4. 确认 Wireguard 启动成功后, 运行脚本后 安装v2ray或xray, 安装过程中根据提示 选择netflix 和 google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
-5. 本脚本集合了所有解锁 Netflix 网站的方法, 目前有 1 使用DNS解锁, 2 使用IPv6解锁, 3 使用WARP sock5 代理解锁, 4 使用转发到可解锁的V2ray或Xray服务器解锁, 5 神秘方法解锁
-6. 目前网上搭建解锁反代服务器是使用 sniproxy + dns的方式, 本脚本稍后推出 nginx stream + dns, nginx + xray, nginx + v2ray, nginx + sock5, 非常灵活的各种方式搭建解锁反代服务器, 以便达到一台VPS可以同时做网站+提供解锁+v2ray+trojan的目的
+### Unlock Region restriction for Netflix or Disney+ or other video streaming site 
+### Avoid showing Google CAPTCHA Human verification
+
+1. Run script ```./trojan_v2ray_install.sh ```. Choose 1 to enter sub menu to install linux kernel. Prefer to install linux kernel 5.10 LTS. [More Details](/KERNEL.md)
+2. Run script ```./trojan_v2ray_install.sh ```. Choose 1 to enter sub menu. Then choose 2 to enable BBR and Cake. This will import VPS network speed. 
+3. After reboot, rerun script ```./trojan_v2ray_install.sh ```. Choose 1 to enter sub menu. Then choose 11 or 12 to Wireguard or cloudflare WARP linux client sock5 proxy. 
+4. After finish Wireguard installation, rerun script ```./trojan_v2ray_install.sh ```. Choose 11-17 to v2ray xray。 Duiring the installation, you can  follow the instruction to unlock netflix region restriction and avoid showing Google CAPTCHA Human verification.
+
 
 
 
 ## FAQ 
 
-1. 免费域名可以使用 [freenom](https://www.freenom.com/zh/index.html?lang=zh). 注册freenom时需要使用美国IP,否则无法通过注册邮件验证. 请自行搜索教程.
-2. 使用脚本安装时请先关闭CDN, cloudflare.com 中DNS设置页面, 二级域名设置为DNS only 为关闭CDN. 安装v2ray或trojan-go完毕后 可以开启CDN 设置为Proxied 即可. trojan目前不支持CDN, trojan-go 默认安装设置为不支持CDN,可以在安装过程中选择支持CDN.
+1. You can use [freenom](https://www.freenom.com/zh/index.html?lang=zh) for free domain name.
+
+2. Please disable your CDN acceleration duiring the installation. Such as cloudflare.com. After finish v2ray or trojan-go installation. you can enable CDN acceleration. trojan not support CDN acceleration. 
 
 ![注意 cloudflare CDN](https://github.com/jinwyp/one_click_script/blob/master/docs/cloudflare1.jpg?raw=true)
 
-3. 如果使用v2ray 或 xray的 gRPC 通过cloudflare 转发, 需要在cloudflare 域名 "设置"中 => "网络" 菜单里面 允许gRPC，cloudflare Network => gRPC 
+3. Using v2ray or xray gRPC protocal for CDN acceleration, you need do some settings at cloudflare.com.  Click the "Network" on the leftside menu. Then enable gRPC on the right page. "Network => gRPC" 
 
 ![注意 cloudflare CDN gRPC](https://github.com/jinwyp/one_click_script/blob/master/docs/grpc.png?raw=true)
 
