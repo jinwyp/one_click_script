@@ -2045,7 +2045,7 @@ function installWARPClient(){
 
     echo 
     echo
-    read -p "是否生成随机的WARP Sock5 端口号? 直接回车默认 40000 不生成随机端口号, 请输入[y/N]:" isWarpPortInput
+    read -p "是否生成随机的WARP SOCKS5 端口号? 直接回车默认 40000 不生成随机端口号, 请输入[y/N]:" isWarpPortInput
     isWarpPortInput=${isWarpPortInput:-n}
 
     if [[ $isWarpPortInput == [Nn] ]]; then
@@ -2088,7 +2088,7 @@ function installWARPClient(){
     echo
     green " ================================================== "
     green "  Cloudflare 官方 WARP Client 安装成功 !"
-    green "  WARP Sock5 端口号 ${configWarpPort} "
+    green "  WARP SOCKS5 端口号 ${configWarpPort} "
     echo
     green "  WARP 停止命令: warp-cli disconnect , 停止Always-On命令: warp-cli disable-always-on "
     green "  WARP 启动命令: warp-cli connect , 开启Always-On命令(保持一直连接WARP): warp-cli enable-always-on "
@@ -2560,6 +2560,7 @@ function removeWireguard(){
 
         cp -f ${configWireGuardDNSBackupFilePath} /etc/resolv.conf
 
+        sleep 2
         modprobe -r wireguard
 
         green " ================================================== "
@@ -2647,13 +2648,13 @@ function checkWarpClientStatus(){
         sleep 3s
         case ${isWarpClientMode} in
         on)
-            green " 状态显示-- WARP Sock5 代理已启动成功, 端口号 ${configWarpPort} ! "
+            green " 状态显示-- WARP SOCKS5 代理已启动成功, 端口号 ${configWarpPort} ! "
             ;;
         plus)
-            green " 状态显示-- WARP+ Sock5 代理已启动成功, 端口号 ${configWarpPort} ! "
+            green " 状态显示-- WARP+ SOCKS5 代理已启动成功, 端口号 ${configWarpPort} ! "
             ;;
         *)
-            green " 状态显示-- WARP Sock5 代理启动${Red_font_prefix}失败${Green_font_prefix}! "
+            green " 状态显示-- WARP SOCKS5 代理启动${Red_font_prefix}失败${Green_font_prefix}! "
             ;;
         esac
         
@@ -2687,7 +2688,7 @@ function startWARP(){
     echo
     echo "warp-cli enable-always-on"
     warp-cli enable-always-on
-    green " WARP Sock5 代理 已启动 !"
+    green " WARP SOCKS5 代理 已启动 !"
 }
 function stopWARP(){
     echo
@@ -2699,7 +2700,7 @@ function stopWARP(){
     echo
     echo "systemctl stop warp-svc"
     systemctl stop warp-svc
-    green " WARP Sock5 代理 已停止 !"
+    green " WARP SOCKS5 代理 已停止 !"
 }
 function restartWARP(){
     echo
@@ -2721,7 +2722,7 @@ function restartWARP(){
     echo "warp-cli enable-always-on"
     warp-cli enable-always-on
     echo
-    green " WARP Sock5 代理 已重启 !"
+    green " WARP SOCKS5 代理 已重启 !"
     echo
 }
 
@@ -2731,7 +2732,7 @@ function checkWireguard(){
     echo
     green " 1. 查看当前系统内核版本, 检查是否因为装了多个版本内核导致 Wireguard 启动失败"
     echo
-    green " 2. 查看 Wireguard 和 WARP Sock5 代理运行状态"
+    green " 2. 查看 Wireguard 和 WARP SOCKS5 代理运行状态"
     echo
     green " 3. 查看 Wireguard 运行日志, 如果 Wireguard 启动失败 请用此项查找问题"
     green " 4. 启动 Wireguard "
@@ -2741,15 +2742,15 @@ function checkWireguard(){
     green " 8. 查看 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
     green " 9. 用VI 编辑 Wireguard 配置文件 ${configWireGuardConfigFilePath} "
     echo
-    green " 11. 查看 WARP Sock5 运行日志, 如果 WARP 启动失败 请用此项查找问题"  
-    green " 12. 启动 WARP Sock5 代理"
-    green " 13. 停止 WARP Sock5 代理"
-    green " 14. 重启 WARP Sock5 代理"
+    green " 11. 查看 WARP SOCKS5 运行日志, 如果 WARP 启动失败 请用此项查找问题"  
+    green " 12. 启动 WARP SOCKS5 代理"
+    green " 13. 停止 WARP SOCKS5 代理"
+    green " 14. 重启 WARP SOCKS5 代理"
     echo
-    green " 15. 查看 WARP Sock5 运行状态 warp-cli status"    
-    green " 16. 查看 WARP Sock5 连接信息 warp-cli warp-stats"    
-    green " 17. 查看 WARP Sock5 设置信息 warp-cli settings"    
-    green " 18. 查看 WARP Sock5 账户信息 warp-cli account"      
+    green " 15. 查看 WARP SOCKS5 运行状态 warp-cli status"    
+    green " 16. 查看 WARP SOCKS5 连接信息 warp-cli warp-stats"    
+    green " 17. 查看 WARP SOCKS5 设置信息 warp-cli settings"    
+    green " 18. 查看 WARP SOCKS5 账户信息 warp-cli account"      
     
     green " =================================================="
     green " 0. 退出脚本"
@@ -2918,8 +2919,9 @@ function start_menu(){
     fi
     showLinuxKernelInfoNoDisplay
 
+    if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2022-1-16 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2022-1-27 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -2943,9 +2945,9 @@ function start_menu(){
     echo
     green " 6. 查看 Wireguard 运行状态"
     green " 7. 重启 Wireguard "    
-    green " 8. 查看 WARP Sock5 代理运行状态"
-    green " 9. 重启 WARP Sock5"    
-    green " 10. 查看 WireGuard 和 WARP Sock5 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"
+    green " 8. 查看 WARP SOCKS5 代理运行状态"
+    green " 9. 重启 WARP SOCKS5"    
+    green " 10. 查看 WireGuard 和 WARP SOCKS5 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"
     echo
     green " 11. 安装官方 Cloudflare WARP Client 启动SOCKS5代理, 用于解锁 Netflix 限制"
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf ${versionWgcf}, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
@@ -2953,7 +2955,7 @@ function start_menu(){
     red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client"
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 16. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
-    green " 21. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP sock5 测试 强烈推荐使用 "
+    green " 21. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -2993,10 +2995,92 @@ function start_menu(){
     green " 67. 安装 BBR Plus 内核 5.14, UJX6N 编译"   
  
     echo
-    green " =================================================="
     green " 0. 退出脚本"
+
+
+    else
+
+    green " =================================================="
+    green " Linux kernel install script | 2022-1-27 | By jinwyp | OS support：centos7+ / debian10+ / ubuntu16.04+"
+    green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
+    red " * Please use this script with caution in production environment. Backup your data first! Upgrading kernel will cause VPS unable to boot sometimes."
+    green " =================================================="
+    if [[ -z ${osKernelBBRStatus} ]]; then
+        echo -e " Current Kernel: ${osKernelVersionBackup} (${virtual})   ${Red_font_prefix}Not install BBR / BBR Plus ${Font_color_suffix} , Please install kernel which is higher than 4.9"
+    else
+        if [ ${systemBBRRunningStatus} = "no" ]; then
+            echo -e " Current Kernel: ${osKernelVersionBackup} (${virtual})   ${Green_font_prefix}installed ${osKernelBBRStatus}${Font_color_suffix} kernel, ${Red_font_prefix}${systemBBRRunningStatusText}${Font_color_suffix} "
+        else
+            echo -e " Current Kernel: ${osKernelVersionBackup} (${virtual})   ${Green_font_prefix}installed ${osKernelBBRStatus}${Font_color_suffix} kernel, ${Green_font_prefix}${systemBBRRunningStatusText}${Font_color_suffix} "
+        fi
+    fi  
+    echo -e " Congestion Control Algorithm: ${Green_font_prefix}${net_congestion_control}${Font_color_suffix}    ECN: ${Green_font_prefix}${systemECNStatusText}${Font_color_suffix}   Network Queue Algorithm: ${Green_font_prefix}${net_qdisc}${Font_color_suffix} "
+
     echo
-    read -p "请输入数字:" menuNumberInput
+    green " 1. Show current linux kernel version, check supoort BBR / BBR2 / BBR Plus or not"
+    green " 2. enable bbr / bbr2 acceleration, (bbr2 require XanMod kernel)"
+    green " 3. enable bbr plus acceleration"
+    green " 4. Optimize system network configuration"
+    red " 5. Remove system network optimization configuration"
+    echo
+    green " 6. Show Wireguard working status"
+    green " 7. restart Wireguard "    
+    green " 8. Show WARP SOCKS5 proxy working status"
+    green " 9. restart WARP SOCKS5 proxy"    
+    green " 10. Show WireGuard and WARP SOCKS5 working status, error log, etc."
+    echo
+    green " 11. Install official Cloudflare WARP linux client SOCKS5 proxy, in order to unlock Netflix geo restriction "
+    green " 12. Install WireGuard and Cloudflare WARP tool Wgcf ${versionWgcf}, enable IPv4 or IPv6, avoid Google reCAPTCHA"
+    green " 13. Install official Cloudflare WARP linux client, WireGuard and WARP toll Wgcf, not recommended "
+    red " 14. Remove WireGuard 和 Cloudflare WARP linux client"
+    green " 15. Switch WireGuard using IPv6 or IPv4 for your VPS"
+    green " 16. Set VPS using IPv4 or IPv6 firstly to access network"
+    green " 21. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
+    echo
+
+    if [[ "${osRelease}" == "centos" ]]; then
+    green " 31. Install latest linux kernel, 5.16, from elrepo yum repository"
+    green " 32. Install LTS linux kernel, 5.4 LTS, from elrepo yum repository"
+    green " 33. Install linux kernel 4.14 LTS, download and install from altarch website"
+    green " 34. Install linux kernel 4.19 LTS, download and install from altarch website"
+    green " 35. Install linux kernel 5.4 LTS, download and install from elrepo website"
+    echo
+    green " 36. Install linux kernel 5.10 LTS, compile by Teddysun. Recommended"
+    green " 37. Install linux kernel 5.15, compile by Teddysun."
+    green " 38. Install linux kernel 5.16, download and install (will install latest kernel, maybe higher than 5.16) "
+
+    else
+        if [[ "${osRelease}" == "debian" ]]; then
+        green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
+        echo
+        fi
+
+    green " 42. Install latest linux kernel 5.15, download and install from Ubuntu kernel mainline"
+    green " 43. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
+    green " 44. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
+    green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
+    echo
+    green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
+    green " 52. Install XanMod kernel 5.14, from XanMod repository source "   
+
+    fi
+
+    echo
+    green " 61. Install BBR Plus kernel 4.14.129 LTS, compile by cx9208 from original dog250 source code. Recommended"
+    green " 62. Install BBR Plus kernel 4.9 LTS, compile by UJX6N"
+    green " 63. Install BBR Plus kernel 4.14 LTS, compile by UJX6N"
+    green " 64. Install BBR Plus kernel 4.19 LTS, compile by UJX6N"
+    green " 65. Install BBR Plus kernel 5.4 LTS, compile by UJX6N"
+    green " 66. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
+    green " 67. Install BBR Plus kernel 5.14, compile by UJX6N"   
+ 
+    echo
+    green " 0. exit"
+
+    fi
+
+    echo
+    read -p "Please input number:" menuNumberInput
     case "$menuNumberInput" in
         1 )
             showLinuxKernelInfo
@@ -3174,4 +3258,55 @@ function start_menu(){
 }
 
 
-start_menu "first"
+
+function setLanguage(){
+    echo
+    green " =================================================="
+    green " Please choose your language"
+    green " 1. 中文"
+    green " 2. English"  
+    echo
+    read -p "Please input your language:" languageInput
+    
+    case "${languageInput}" in
+        1 )
+            echo "cn" > ${configLanguageFilePath}
+            showMenu
+        ;;
+        2 )
+            echo "en" > ${configLanguageFilePath}
+            showMenu
+        ;;
+        * )
+            red " Please input the correct number !"
+            setLanguage
+        ;;
+    esac
+
+}
+
+configLanguageFilePath="${HOME}/language_setting_v2ray_trojan.md"
+configLanguage="cn"
+
+function showMenu(){
+
+    if [ -f "${configLanguageFilePath}" ]; then
+        configLanguage=$(cat ${configLanguageFilePath})
+
+        case "${configLanguage}" in
+        cn )
+            start_menu "first"
+        ;;
+        en )
+            start_menu "first"
+        ;;
+        * )
+            setLanguage
+        ;;
+        esac
+    else
+        setLanguage
+    fi
+}
+
+showMenu

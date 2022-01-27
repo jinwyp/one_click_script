@@ -6439,7 +6439,7 @@ function startMenuOther(){
     green " 47. autoBestTrace Traceroute test） (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     echo
     green " =================================================="
-    green " 51. Netflix region and non-self produced drama unlock test, support WARP sock5 and IPv6"
+    green " 51. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
     green " 52. Netflix region and non-self produced drama unlock test by sjlleo using go language."
     green " 53. Netflix region and non-self produced drama unlock test by CoiaPrant"
     green " 54. Netflix, Disney, Hulu etc unlock test by by lmc999"
@@ -6591,7 +6591,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-1-16| By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-1-27 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -6675,7 +6675,7 @@ function start_menu(){
 
 
     echo
-    read -p "请输入数字:" menuNumberInput
+    read -p "Please input number:" menuNumberInput
     case "$menuNumberInput" in
         1 )
             installWireguard

@@ -168,7 +168,7 @@ function getLinuxOSRelease(){
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
-    green " 系统信息: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
+    green " OS info: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
 
@@ -1770,22 +1770,28 @@ function installAirUniverse(){
     green " =================================================="
     echo
     
-    testLinuxPortUsage
+    if [ -z "$1" ]; then
+        testLinuxPortUsage
 
-    # bash -c "$(curl -L https://github.com/crossfw/Xray-install/raw/main/install-release.sh)" @ install  
-    # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/install.sh)
-    
-    # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh)
-    wget -O /root/airu_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh" 
-    chmod +x /root/airu_install.sh 
-    cp -f /root/airu_install.sh /usr/bin/airu
-    
-    /root/airu_install.sh install 
+        # bash -c "$(curl -L https://github.com/crossfw/Xray-install/raw/main/install-release.sh)" @ install  
+        # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/install.sh)
+        
+        # bash <(curl -Ls https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh)
+        wget -O /root/airu_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/crossfw/Air-Universe-install/master/AirU.sh" 
+        chmod +x /root/airu_install.sh 
+        cp -f /root/airu_install.sh /usr/bin/airu
+        
+        /root/airu_install.sh install 
 
-    (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart xray.service ") | sort - | uniq - | crontab -
-    (crontab -l ; echo "32 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
+        (crontab -l ; echo "30 4 * * 0,1,2,3,4,5,6 systemctl restart xray.service ") | sort - | uniq - | crontab -
+        (crontab -l ; echo "32 4 * * 0,1,2,3,4,5,6 /usr/bin/airu restart ") | sort - | uniq - | crontab -
 
-    downgradeXray "norestart"
+        downgradeXray "norestart"
+    else
+        echo
+    fi
+
+
 
     if test -s ${configAirUniverseConfigFilePath}; then
 
@@ -2763,8 +2769,9 @@ function start_menu(){
         installSoftDownload
     fi
 
+    if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2022-1-16 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2022-1-27 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -2808,6 +2815,7 @@ function start_menu(){
     green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
     green " 56. 配合WARP(Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
     green " 57. 降级 Air-Universe 到 0.9.2, 降级 Xray 到 1.5或1.4"
+    green " 58. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     echo 
     green " 71. 单独申请域名SSL证书"
     echo
@@ -2816,8 +2824,68 @@ function start_menu(){
     echo
     green " 88. 升级脚本"
     green " 0. 退出脚本"
+
+    else
+    green " =================================================="
+    green " Linux tools installation script | 2022-1-27 | By jinwyp | OS support：centos7+ / debian9+ / ubuntu16.04+"
+    green " =================================================="
+    green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
-    read -p "请输入数字:" menuNumberInput
+    green " 5. Using VI open authorized_keys file, enter your public key. Then save file. In order to login VPS without Password"
+    green " 6. Modify SSH login port number. Secure your VPS"
+    green " 7. Set timezone to Beijing time"
+    green " 8. Using VI open /etc/hosts file"
+    
+    echo
+    green " 11. Install Vim Nano Micro editor"
+    green " 12. Install Nodejs and PM2"
+    green " 13. Install Docker and Docker Compose"
+    red " 14. Remove Docker and Docker Compose"
+    green " 15. Set Docker Hub Registry"
+    green " 16. Install Portainer "
+
+    echo
+    green " 21. Install V2Ray-Poseidon server side"
+    red " 22. Remove V2Ray-Poseidon"
+    green " 23. Stop, restart, show log, manage V2Ray-Poseidon"
+    echo
+    green " 25. Using VI open V2Ray-Poseidon config file v2ray-poseidon/config.json (direct command line running mode)"
+    green " 26. Using VI open V2Ray-Poseidon Docker WS-TLS Mode config file v2ray-poseidon/docker/v2board/ws-tls/config.json (Docker mode)"
+    green " 27. Using VI open V2Ray-Poseidon Docker WS-TLS Mode Docker Compose config file v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml (Docker mode)"
+    
+    echo
+    green " 31. Install Soga server side "
+    green " 32. Stop, restart, show log, manage Soga server side "
+    green " 33. Using VI open Soga config file ${configSogaConfigFilePath}"
+    
+    echo
+    green " 41. Install XrayR server side "
+    green " 42. Stop, restart, show log, manage XrayR server side "
+    green " 43. Using VI open XrayR config file ${configXrayRConfigFilePath}"
+
+    echo
+    green " 51. Install Air-Universe server side "
+    red " 52. Remove Air-Universe"
+    green " 53. Stop, restart, show log, manage Air-Universe server side "
+    green " 54. Using VI open Air-Universe config file ${configAirUniverseConfigFilePath}"
+    green " 55. Using VI open Air-Universe Xray config file ${configAirUniverseXrayConfigFilePath}"
+    green " 56. Using WARP(Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
+    green " 57. Downgrade Air-Universe to 0.9.2, downgrade Xray to 1.5 / 1.4"
+    green " 58. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
+    echo 
+    green " 71. Get a free SSL certificate for domain name only"
+    echo
+    green " 81. toolset by BlueSkyXN "
+    green " 82. toolset by jcnf "
+    echo
+    green " 88. upgrade this script to latest version"
+    green " 0. exit"
+
+    fi
+
+
+    echo
+    read -p "Please input number:" menuNumberInput
     case "$menuNumberInput" in
         1 )
             installWireguard
@@ -2930,7 +2998,10 @@ function start_menu(){
         ;; 
         57 )
             downgradeXray
-        ;; 
+        ;;
+        58 )
+            installAirUniverse "ssl"
+        ;;        
         71 )
             getHTTPS
         ;;     
@@ -2958,5 +3029,57 @@ function start_menu(){
 
 
 
-start_menu "first"
 
+
+
+function setLanguage(){
+    echo
+    green " =================================================="
+    green " Please choose your language"
+    green " 1. 中文"
+    green " 2. English"  
+    echo
+    read -p "Please input your language:" languageInput
+    
+    case "${languageInput}" in
+        1 )
+            echo "cn" > ${configLanguageFilePath}
+            showMenu
+        ;;
+        2 )
+            echo "en" > ${configLanguageFilePath}
+            showMenu
+        ;;
+        * )
+            red " Please input the correct number !"
+            setLanguage
+        ;;
+    esac
+
+}
+
+configLanguageFilePath="${HOME}/language_setting_v2ray_trojan.md"
+configLanguage="cn"
+
+function showMenu(){
+
+    if [ -f "${configLanguageFilePath}" ]; then
+        configLanguage=$(cat ${configLanguageFilePath})
+
+        case "${configLanguage}" in
+        cn )
+            start_menu "first"
+        ;;
+        en )
+            start_menu "first"
+        ;;
+        * )
+            setLanguage
+        ;;
+        esac
+    else
+        setLanguage
+    fi
+}
+
+showMenu
