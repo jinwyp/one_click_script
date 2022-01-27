@@ -168,7 +168,7 @@ function getLinuxOSRelease(){
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
-    green " 系统信息: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
+    green " OS info: ${osInfo}, ${osRelease}, ${osReleaseVersion}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osCPU} CPU ${osArchitecture}, ${osSystemShell}, ${osSystemPackage}, ${osSystemMdPath}"
 }
 
 
@@ -6364,6 +6364,9 @@ function upgradeV2rayUI(){
 
 function startMenuOther(){
     clear
+
+    if [[ ${configLanguage} == "cn" ]] ; then
+    
     green " =================================================="
     red " 安装下面3个可视化管理面板 之前不能用本脚本或其他脚本安装过trojan或v2ray! "
     red " 如果已安装过 trojan 或 v2ray 请先卸载或重做干净系统! 3个管理面板无法同时安装"
@@ -6402,7 +6405,56 @@ function startMenuOther(){
     green " 63. 安装 宝塔面板纯净版 by hostcli.com"
     echo
     green " 99. 返回上级菜单"
-    green " 0. 退出脚本"
+    green " 0. 退出脚本"    
+
+    else
+
+    
+    green " =================================================="
+    red " Install 3 UI admin panel below require clean VPS system. Can't install if your installed trojan or v2ray "
+    red " Pls remove trojan or v2ray first. Prefer clean system to install. "
+    red " Trojan and v2ray UI admin panel cannot install at the same time."
+    echo
+    green " 1. install trojan-web (trojan/trojan-go UI admin panel) with nginx"
+    green " 2. upgrade trojan-web to latest version"
+    green " 3. redo to request SSL certificate if you got problem with SSL"
+    green " 4. Show log and config, manage users, etc."
+    red " 5. remove trojan-web and nginx"
+    echo
+    green " 6. install  V2-UI admin panel, support trojan protocal"
+    green " 7. upgrade V2-UI to latest version"
+    red " 8. remove V2-UI"
+    echo
+    green " 9. install X-UI admin panel, support trojan protocal"
+    red " 10. upgrade or remove X-UI"
+    echo
+    green " =================================================="
+    red " VPS speedtest tools. Pay attention that speed tests will consume lots of traffic."
+    green " 41. superspeed. ( China telecom / China unicom / China mobile node speed test ) "
+    green " 42. yet-another-bench-script ( CPU IO Memory Network speed test)"
+    green " 43. Bench by teddysun"
+	green " 44. LemonBench ( CPU IO Memory Network Traceroute test） "
+    green " 45. ZBench "
+    green " 46. testrace by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
+    green " 47. autoBestTrace Traceroute test） (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
+    echo
+    green " =================================================="
+    green " 51. Netflix region and non-self produced drama unlock test, support WARP sock5 and IPv6"
+    green " 52. Netflix region and non-self produced drama unlock test by sjlleo using go language."
+    green " 53. Netflix region and non-self produced drama unlock test by CoiaPrant"
+    green " 54. Netflix, Disney, Hulu etc unlock test by by lmc999"
+    echo
+    green " 61. install official bt panel (aa panel)"
+    green " 62. install modified bt panel (aa panel) by fenhao.me"
+    green " 63. install modified bt panel (aa panel) by hostcli.com"
+    echo
+    green " 99. Go to main menu"
+    green " 0. exit"
+
+
+    fi
+
+
     echo
     read -p "请输入数字:" menuNumberInput
     case "$menuNumberInput" in
@@ -6536,6 +6588,8 @@ function start_menu(){
         installSoftDownload
     fi
 
+    if [[ ${configLanguage} == "cn" ]] ; then
+
     green " ===================================================================================================="
     green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-1-16| By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
@@ -6574,6 +6628,52 @@ function start_menu(){
     green " 35. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
     green " 88. 升级脚本"
     green " 0. 退出脚本"
+
+    else
+
+
+    green " ===================================================================================================="
+    green " Trojan Trojan-go V2ray Xray Installation | 2022-1-27 | By jinwyp | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " ===================================================================================================="
+    green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
+    echo
+    green " 2. Install trojan/trojan-go with nginx, not support CDN acceleration, trojan/trojan-go running at 443 port serve TLS"
+    green " 3. Install trojan-go with nginx, enable websocket, support CDN acceleration, trojan-go running at 443 port serve TLS"
+    green " 4. Install trojan/trojan-go only, trojan/trojan-go running at 443(can customize port) serve TLS. Easy integration with existing website"
+    green " 5. Upgrade trojan/trojan-go to latest version"
+    red " 6. Remove trojan/trojan-go and nginx"
+    echo
+    green " 11. Install v2ray/xray with nginx, ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), support CDN acceleration, nginx running at 443 port serve TLS"
+    green " 12. Install v2ray/xray only. ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), no TLS encryption. Easy integration with existing website"
+    echo
+    green " 13. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VMess-TCP-TLS)+(VMess-WS-TLS), support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 14. Install v2ray/xray (VLess-gRPC-TLS) support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 15. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS) support CDN, nginx is optional, VLess running at 443 port serve TLS"
+
+    green " 17. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+(xray's trojan), support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 18. Upgrade v2ray/xray to latest version"
+    red " 19. Remove v2ray/xray and nginx"
+    echo
+    green " 21. Install both v2ray/xray and trojan/trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 22. Install both v2ray/xray and trojan/trojan-go with nginx, (VLess/Vmess-WS-TLS)+Trojan, support CDN, trojan/torjan-go running at 443 port serve TLS"
+    green " 23. Install both v2ray/xray and trojan/trojan-go with nginx. Using nginx SNI distinguish traffic by different domain name, support CDN. Easy integration with existing website. nginx SNI running at 443 port"
+    red " 24.  Remove trojan/trojan-go, v2ray/xray and nginx"
+    echo
+    green " 25. Show info and password for installed trojan and v2ray"
+    green " 26. Get a free SSL certificate for domain name"
+    green " 30. Submenu. install trojan and v2ray UI admin panel, VPS speedtest tools, Netflix unlock tools. Miscellaneous tools"
+    green " =================================================="
+    green " 31. Install Oh My Zsh and zsh-autosuggestions plugin, Micro editor"
+    green " 32. Enable root user login SSH, Some VPS disable root login as default, use this option to enable"
+    green " 33. Modify SSH login port number. Secure your VPS"
+    green " 34. Set timezone to Beijing time"
+    green " 35. Using VI open authorized_keys file, enter your public key. Then save file. In order to login VPS without Password"
+    green " 88. upgrade this script to latest version"
+    green " 0. exit"
+
+    fi
+
+
     echo
     read -p "请输入数字:" menuNumberInput
     case "$menuNumberInput" in
@@ -6746,5 +6846,58 @@ function start_menu(){
     esac
 }
 
-start_menu "first"
 
+
+
+
+function setLanguage(){
+    echo
+    green " =================================================="
+    green " Please choose your language"
+    green " 1. 中文"
+    green " 2. English"  
+    echo
+    read -p "Please input your language:" languageInput
+    
+    case "${languageInput}" in
+        1 )
+            echo "cn" > ${configLanguageFilePath}
+            showMenu
+        ;;
+        2 )
+            echo "en" > ${configLanguageFilePath}
+            showMenu
+        ;;
+        * )
+            red " Please input the correct number !"
+            setLanguage
+        ;;
+    esac
+
+}
+
+configLanguageFilePath="${HOME}/language_setting_v2ray_trojan.md"
+configLanguage="cn"
+
+function showMenu(){
+
+    if [ -f "${configLanguageFilePath}" ]; then
+        configLanguage=$(cat ${configLanguageFilePath})
+
+        case "${configLanguage}" in
+        cn )
+            start_menu "first"
+        ;;
+        en )
+            start_menu "first"
+        ;;
+        * )
+            setLanguage
+        ;;
+        esac
+    else
+        setLanguage
+    fi
+}
+
+showMenu
