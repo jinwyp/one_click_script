@@ -6411,8 +6411,8 @@ function startMenuOther(){
 
     
     green " =================================================="
-    red " Install 3 UI admin panel below require clean VPS system. Can't install if your installed trojan or v2ray "
-    red " Pls remove trojan or v2ray first. Prefer clean system to install. "
+    red " Install 3 UI admin panel below require clean VPS system. Cannot install if VPS already installed trojan or v2ray "
+    red " Pls remove trojan or v2ray if installed. Prefer using clean system to install UI admin panel. "
     red " Trojan and v2ray UI admin panel cannot install at the same time."
     echo
     green " 1. install trojan-web (trojan/trojan-go UI admin panel) with nginx"
@@ -6436,7 +6436,7 @@ function startMenuOther(){
 	green " 44. LemonBench ( CPU IO Memory Network Traceroute test） "
     green " 45. ZBench "
     green " 46. testrace by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
-    green " 47. autoBestTrace Traceroute test） (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
+    green " 47. autoBestTrace (Traceroute test 广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     echo
     green " =================================================="
     green " 51. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
@@ -6448,7 +6448,7 @@ function startMenuOther(){
     green " 62. install modified bt panel (aa panel) by fenhao.me"
     green " 63. install modified bt panel (aa panel) by hostcli.com"
     echo
-    green " 99. Go to main menu"
+    green " 99. Back to main menu"
     green " 0. exit"
 
 
@@ -6456,7 +6456,7 @@ function startMenuOther(){
 
 
     echo
-    read -p "请输入数字:" menuNumberInput
+    read -p "Please input number:" menuNumberInput
     case "$menuNumberInput" in
         1 )
             setLinuxDateZone
@@ -6626,6 +6626,7 @@ function start_menu(){
     green " 33. 修改SSH 登陆端口号"
     green " 34. 设置时区为北京时间"
     green " 35. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
+    echo
     green " 88. 升级脚本"
     green " 0. 退出脚本"
 
@@ -6668,6 +6669,7 @@ function start_menu(){
     green " 33. Modify SSH login port number. Secure your VPS"
     green " 34. Set timezone to Beijing time"
     green " 35. Using VI open authorized_keys file, enter your public key. Then save file. In order to login VPS without Password"
+    echo
     green " 88. upgrade this script to latest version"
     green " 0. exit"
 

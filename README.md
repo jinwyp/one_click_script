@@ -54,11 +54,11 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
-![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme.png?raw=true)
+![功能列表](https://github.com/jinwyp/one_click_script/blob/master/docs/readme_en.png?raw=true)
 
-![功能列表2](https://github.com/jinwyp/one_click_script/blob/master/docs/readme2.png?raw=true)
+![功能列表2](https://github.com/jinwyp/one_click_script/blob/master/docs/readme2_en.png?raw=true)
 
-![功能列表3](https://github.com/jinwyp/one_click_script/blob/master/docs/readme3.png?raw=true)
+![功能列表3](https://github.com/jinwyp/one_click_script/blob/master/docs/readme3_en.png?raw=true)
 
 
 
@@ -186,15 +186,14 @@ addEventListener(
 
 ## Special Thanks
 
-1. 脚本感谢 https://github.com/sprov065/v2-ui 
-2. 脚本感谢 https://github.com/Jrohy/trojan 
-3. 脚本感谢 https://github.com/v2fly/v2ray-core
-4. 脚本感谢 https://github.com/XTLS/Xray-core
-5. 脚本感谢 https://github.com/trojan-gfw/trojan
-6. 脚本感谢 https://github.com/p4gefau1t/trojan-go
-7. 脚本感谢 https://github.com/ylx2016/Linux-NetSpeed
-8. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
-9. 脚本感谢 JCNF的博客 https://ybfl.xyz/111.html
+1. https://github.com/sprov065/v2-ui 
+2. https://github.com/Jrohy/trojan 
+3. https://github.com/v2fly/v2ray-core
+4. https://github.com/XTLS/Xray-core
+5. https://github.com/trojan-gfw/trojan
+6. https://github.com/p4gefau1t/trojan-go
+7. https://github.com/ylx2016/Linux-NetSpeed
+
 
 
 

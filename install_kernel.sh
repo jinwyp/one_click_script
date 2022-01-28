@@ -2923,7 +2923,7 @@ function start_menu(){
     green " =================================================="
     green " Linux 内核 一键安装脚本 | 2022-1-27 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
-    red " *在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
+    red " 在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
     if [[ -z ${osKernelBBRStatus} ]]; then
         echo -e " 当前系统内核: ${osKernelVersionBackup} (${virtual})   ${Red_font_prefix}未安装 BBR 或 BBR Plus ${Font_color_suffix} 加速内核, 请先安装4.9以上内核 "
@@ -3003,7 +3003,7 @@ function start_menu(){
     green " =================================================="
     green " Linux kernel install script | 2022-1-27 | By jinwyp | OS support：centos7+ / debian10+ / ubuntu16.04+"
     green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
-    red " * Please use this script with caution in production environment. Backup your data first! Upgrading kernel will cause VPS unable to boot sometimes."
+    red " Please use this script with caution in production. Backup your data first! Upgrade linux kernel will cause VPS unable to boot sometimes."
     green " =================================================="
     if [[ -z ${osKernelBBRStatus} ]]; then
         echo -e " Current Kernel: ${osKernelVersionBackup} (${virtual})   ${Red_font_prefix}Not install BBR / BBR Plus ${Font_color_suffix} , Please install kernel which is higher than 4.9"
