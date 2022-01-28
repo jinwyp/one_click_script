@@ -12,6 +12,7 @@
 * [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
 * [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
+* [如何使用GO语言开发的软件](/howtousego.md)
 
 
 ## 功能说明 Features 
