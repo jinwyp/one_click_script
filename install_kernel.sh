@@ -823,13 +823,18 @@ net.ipv6.conf.all.forwarding = 1
 
 EOF
 
-
 }
 
 
 
 
-
+function Enable_IPv6_Support() {
+    if [[ $(sysctl -a | grep 'disable_ipv6.*=.*1') || $(cat /etc/sysctl.{conf,d/*} | grep 'disable_ipv6.*=.*1') ]]; then
+        sed -i '/disable_ipv6/d' /etc/sysctl.{conf,d/*}
+        echo 'net.ipv6.conf.all.disable_ipv6 = 0' >/etc/sysctl.d/ipv6.conf
+        sysctl -w net.ipv6.conf.all.disable_ipv6=0
+    fi
+}
 
 
 
@@ -1979,7 +1984,7 @@ function getGithubLatestReleaseVersion(){
 
 # https://unix.stackexchange.com/questions/8656/usr-bin-vs-usr-local-bin-on-linux
 
-versionWgcf="2.2.10"
+versionWgcf="2.2.11"
 downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
 configWgcfBinPath="/usr/local/bin"
 configWgcfConfigFolderPath="${HOME}/wireguard"
