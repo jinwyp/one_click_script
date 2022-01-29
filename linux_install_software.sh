@@ -2745,6 +2745,145 @@ function getHTTPS(){
 
 
 
+netflixMitmToolDownloadFolder="${HOME}/netflix_mitm_tool"
+netflixMitmToolDownloadFilename="mitm-vip-unlocker-x86_64-linux-musl.zip"
+netflixMitmToolUrl="https://github.com/jinwyp/one_click_script/raw/master/download/mitm-vip-unlocker-x86_64-linux-musl.zip"
+configNetflixMitmPort="34567"
+configNetflixMitmToken="-t token123"
+
+function shareNetflixAccount(){
+    echo
+    green " ================================================== "
+    yellow " 准备安装Netflix账号共享 服务器端程序"
+    red " 请务必用于私人用途 不要公开分享"
+    red " 所安装的服务器 需要已原生解锁Netflix"
+    green " ================================================== "
+
+
+
+    echo
+    read -p "是否生成随机的 端口号? 直接回车默认 34567 不生成随机端口号, 请输入[y/N]:" isNetflixMimePortInput
+    isNetflixMimePortInput=${isNetflixMimePortInput:-n}
+
+    if [[ $isNetflixMimePortInput == [Nn] ]]; then
+        echo
+    else
+        configNetflixMitmPort="$(($RANDOM + 10000))"
+    fi
+
+    echo
+    read -p "是否生成随机的管理员token密码? 直接回车默认 token123 不生成随机token, 请输入[y/N]:" isNetflixMimeTokenInput
+    isNetflixMitmTokenInput=${isNetflixMitmTokenInput:-n}
+
+    if [[ $isNetflixMitmTokenInput == [Nn] ]]; then
+        echo
+    else
+        configNetflixMitmToken=""
+    fi
+
+
+    mkdir -p ${netflixMitmToolDownloadFolder}
+    cd ${netflixMitmToolDownloadFolder}
+
+    wget -P ${netflixMitmToolDownloadFolder} ${netflixMitmToolUrl}
+    unzip -d ${netflixMitmToolDownloadFolder} ${netflixMitmToolDownloadFolder}/${netflixMitmToolDownloadFilename}
+    chmod +x ./mitm-vip-unlocker
+    ./mitm-vip-unlocker genca
+
+
+    cat > ${osSystemMdPath}netflix_mitm.service <<-EOF
+[Unit]
+Description=mitm-vip-unlocker
+After=network.target
+
+[Service]
+Type=simple
+PIDFile=${netflixMitmToolDownloadFolder}/mitm-vip-unlocker.pid
+ExecStart=${netflixMitmToolDownloadFolder}//mitm-vip-unlocker run -b 0.0.0.0:${configNetflixMitmPort} ${configNetflixMitmToken}
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=on-failure
+RestartSec=10
+RestartPreventExitStatus=23
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    ${sudoCmd} chmod +x ${osSystemMdPath}netflix_mitm.service
+    ${sudoCmd} systemctl daemon-reload
+    ${sudoCmd} systemctl start netflix_mitm.service
+    #${sudoCmd} systemctl enable netflix_mitm.service
+
+cat > ${netflixMitmToolDownloadFolder}/netflix_mitm_readme <<-EOF
+用于给浏览器插件使用的管理员admin 的 token 为: ${configNetflixMitmToken}
+
+服务器运行的端口号为: ${configNetflixMitmPort}
+
+
+后续操作具体步骤如下:
+
+1. 证书文件已生成, 默认在目录的 ${netflixMitmToolDownloadFolder}/ca/cert.crt 文件夹下, 请把cert.crt下载到本地
+2. 在你自己的客户端机器上,安装好证书cert.crt 然后开启 http 代理, 代理服务器地址为:你的ip:${configNetflixMitmPort}
+
+chrome 可以用 SwitchyOmega 插件作为 http代理 https://github.com/FelisCatus/SwitchyOmega 
+
+3. 第一次使用需要上传的已登录Netflix账号的 cookie, 具体方法如下
+使用Netflix账号登录Netflix官网. 然后安装 EditThisCookie 这个浏览器插件. 添加一个key为admin, value 值为 ${configNetflixMitmToken} 
+
+一切已经完成, 其他设备就可以安装证书cert.crt, 使用http代理填入你的ip:${configNetflixMitmPort}, 就可以不需要账号看奈菲了
+
+EOF
+
+	green " ================================================== "
+	green " Netflix账号共享 服务器端程序 安装成功 !"
+	green " 服务器运行的端口号为: ${configNetflixMitmPort}"
+	green " 用于给浏览器插件使用的管理员admin的token为: ${configNetflixMitmToken}"
+
+    green " 后续操作具体步骤如下:"
+    green " 1. 证书文件已生成, 默认在当前目录的ca文件夹下, 请把cert.crt下载到本地"
+    green " 2. 在你自己的客户端机器上,安装好证书cert.crt 然后开启 http 代理, 代理服务器地址为:你的ip:${configNetflixMitmPort} "
+    green " chrome 可以用 SwitchyOmega 插件作为 http代理 https://github.com/FelisCatus/SwitchyOmega "
+    green " 3. 第一次使用需要上传的已登录Netflix账号的 cookie, 具体方法如下"
+    green " 使用Netflix账号登录Netflix官网. 然后安装 EditThisCookie 这个浏览器插件. 添加一个key为admin, value 值为 ${configNetflixMitmToken} "
+    echo
+    green " 一切已经完成, 其他设备就可以安装证书cert.crt, 使用http代理填入你的ip:${configNetflixMitmPort}, 就可以不需要账号看奈菲了"
+    green " ================================================== "
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3005,7 +3144,9 @@ function start_menu(){
         71 )
             getHTTPS
         ;;     
-       
+        77 )
+            shareNetflixAccount
+        ;;  
         81 )
             toolboxSkybox
         ;;                        
