@@ -2829,10 +2829,23 @@ cat > ${netflixMitmToolDownloadFolder}/netflix_mitm_readme <<-EOF
 
 chrome 可以用 SwitchyOmega 插件作为 http代理 https://github.com/FelisCatus/SwitchyOmega 
 
+新建一个情景例如名字叫奈飞代理 输入代理http服务器 你的ip 端口 ${configNetflixMitmPort}   
+ 
+然后在自动切换 菜单里面 添加奈飞的几个域名 选择走奈飞代理这个情景 就可以了
+
+netflix.com
+netflix.net
+nflxext.com
+nflximg.net
+nflxso.net
+nflxvideo.net
+
+
 3. 第一次使用需要上传的已登录Netflix账号的 cookie, 具体方法如下
 使用Netflix账号登录Netflix官网. 然后安装 EditThisCookie 这个浏览器插件. 添加一个key为admin, value 值为 ${configNetflixMitmToken} 
 
 一切已经完成, 其他设备就可以安装证书cert.crt, 使用http代理填入你的ip:${configNetflixMitmPort}, 就可以不需要账号看奈菲了
+
 
 EOF
 
