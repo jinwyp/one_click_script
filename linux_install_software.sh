@@ -2751,15 +2751,16 @@ netflixMitmToolUrl="https://github.com/jinwyp/one_click_script/raw/master/downlo
 configNetflixMitmPort="34567"
 configNetflixMitmToken="-t token123"
 
-function shareNetflixAccount(){
+function installShareNetflixAccount(){
     echo
     green " ================================================== "
     yellow " 准备安装Netflix账号共享 服务器端程序"
-    red " 请务必用于私人用途 不要公开分享"
-    red " 所安装的服务器 需要已原生解锁Netflix"
+    yellow " 提供共享服务需要有一个Netflix账号 "
+    yellow " 所安装的服务器 需要已原生解锁Netflix"
+    red " 请务必用于私人用途 不要公开分享. Netflix也限制了同时在线人数"
     green " ================================================== "
 
-
+    promptContinueOpeartion 
 
     echo
     read -p "是否生成随机的 端口号? 直接回车默认 34567 不生成随机端口号, 请输入[y/N]:" isNetflixMimePortInput
@@ -2798,8 +2799,9 @@ After=network.target
 
 [Service]
 Type=simple
+WorkingDirectory=${netflixMitmToolDownloadFolder}
 PIDFile=${netflixMitmToolDownloadFolder}/mitm-vip-unlocker.pid
-ExecStart=${netflixMitmToolDownloadFolder}//mitm-vip-unlocker run -b 0.0.0.0:${configNetflixMitmPort} ${configNetflixMitmToken}
+ExecStart=${netflixMitmToolDownloadFolder}/mitm-vip-unlocker run -b 0.0.0.0:${configNetflixMitmPort} ${configNetflixMitmToken}
 ExecReload=/bin/kill -HUP \$MAINPID
 Restart=on-failure
 RestartSec=10
@@ -2836,15 +2838,22 @@ EOF
 
 	green " ================================================== "
 	green " Netflix账号共享 服务器端程序 安装成功 !"
+    green " 重启命令: systemctl restart netflix_mitm.service"
+	green " 查看运行状态命令:  systemctl status netflix_mitm.service "
+	green " 查看日志命令: journalctl -n 40 -u netflix_mitm.service "
+    echo
 	green " 服务器运行的端口号为: ${configNetflixMitmPort}"
 	green " 用于给浏览器插件使用的管理员admin的token为: ${configNetflixMitmToken}"
-
+	green " 使用配置信息也可以查看 ${netflixMitmToolDownloadFolder}/netflix_mitm_readme "
+    echo
     green " 后续操作具体步骤如下:"
     green " 1. 证书文件已生成, 默认在当前目录的ca文件夹下, 请把cert.crt下载到本地"
     green " 2. 在你自己的客户端机器上,安装好证书cert.crt 然后开启 http 代理, 代理服务器地址为:你的ip:${configNetflixMitmPort} "
     green " chrome 可以用 SwitchyOmega 插件作为 http代理 https://github.com/FelisCatus/SwitchyOmega "
+    echo
     green " 3. 第一次使用需要上传的已登录Netflix账号的 cookie, 具体方法如下"
     green " 使用Netflix账号登录Netflix官网. 然后安装 EditThisCookie 这个浏览器插件. 添加一个key为admin, value 值为 ${configNetflixMitmToken} "
+    green " EditThisCookie 浏览器插件 https://chrome.google.com/webstore/detail/editthiscookie/fngmhnnpilhplaeedifhccceomclgfbg"
     echo
     green " 一切已经完成, 其他设备就可以安装证书cert.crt, 使用http代理填入你的ip:${configNetflixMitmPort}, 就可以不需要账号看奈菲了"
     green " ================================================== "
@@ -2853,8 +2862,30 @@ EOF
 
 
 
+function removeShareNetflixAccount(){
+    if [[ -f "${netflixMitmToolDownloadFolder}/mitm-vip-unlocker" ]]; then
+        echo
+        green " ================================================== "
+        red " 准备卸载已安装的 Netflix账号共享服务器端程序 mitm-vip-unlocker"
+        green " ================================================== "
+        echo
 
+        ${sudoCmd} systemctl stop netflix_mitm.service
+        ${sudoCmd} systemctl disable netflix_mitm.service
+        ${sudoCmd} systemctl daemon-reload
 
+        rm -rf ${netflixMitmToolDownloadFolder}
+        rm -f ${osSystemMdPath}netflix_mitm.service
+
+        echo
+        green " ================================================== "
+        green "  Netflix账号共享服务器端程序 mitm-vip-unlocker 卸载完毕 !"
+        green " ================================================== "
+        
+    else
+        red " 系统没有安装 Netflix账号共享服务器端程序 mitm-vip-unlocker, 退出卸载"
+    fi
+}
 
 
 
@@ -2957,6 +2988,8 @@ function start_menu(){
     green " 58. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     echo 
     green " 71. 单独申请域名SSL证书"
+    green " 72. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
+    green " 73. 卸载共享Netflix账号服务器端"
     echo
     green " 81. 工具脚本合集 by BlueSkyXN "
     green " 82. 工具脚本合集 by jcnf "
@@ -3144,9 +3177,12 @@ function start_menu(){
         71 )
             getHTTPS
         ;;     
-        77 )
-            shareNetflixAccount
-        ;;  
+        72 )
+            installShareNetflixAccount
+        ;;
+        73 )
+            removeShareNetflixAccount
+        ;;          
         81 )
             toolboxSkybox
         ;;                        
