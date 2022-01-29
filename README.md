@@ -1,6 +1,9 @@
 # Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
 
-## [中文文档](/README_CN.md)
+## [中文文档](/README_CN.md) 
+
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fjinwyp%2Fone_click_script&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+
 ## Table of Contents
 
 * [Install Trojan/Trojan-go and V2ray/Xray shell script](#installation)
