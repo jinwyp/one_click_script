@@ -1402,8 +1402,14 @@ function installWebServerNginx(){
     fi
 
     stopServiceV2ray
-    
-    ${osSystemPackage} install -y nginx-mod-stream
+
+
+    if [ "$osRelease" == "centos" ]; then
+        ${osSystemPackage} install -y nginx-mod-stream
+    else
+        #${osSystemPackage} install -y libnginx-mod-stream
+    fi
+
     ${osSystemPackage} install -y nginx
     ${sudoCmd} systemctl enable nginx.service
     ${sudoCmd} systemctl stop nginx.service
@@ -3420,19 +3426,19 @@ function installV2ray(){
     green " =================================================="    
     echo
 
-
     if [[ ( $configV2rayWorkingMode == "trojan" ) || ( $configV2rayWorkingMode == "vlessTCPVmessWS" ) || ( $configV2rayWorkingMode == "vlessTCPWS" ) || ( $configV2rayWorkingMode == "vlessTCPWSgRPC" ) || ( $configV2rayWorkingMode == "vlessTCPWSTrojan" ) || ( $configV2rayWorkingMode == "sni" ) ]]; then
         echo
         green " 是否使用XTLS代替TLS加密, XTLS是Xray特有的加密方式, 速度更快, 默认使用TLS加密"
         green " 由于V2ray不支持XTLS, 如果选择XTLS加密将使用Xray内核提供服务"
         read -p "是否使用XTLS? 直接回车默认为TLS加密, 请输入[y/N]:" isXrayXTLSInput
         isXrayXTLSInput=${isXrayXTLSInput:-n}
-
+        
         if [[ $isXrayXTLSInput == [Yy] ]]; then
             promptInfoXrayName="xray"
             isXray="yes"
             configV2rayIsTlsShowInfo="xtls"
         else
+            echo
             read -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayCoreInput
             isV2rayOrXrayCoreInput=${isV2rayOrXrayCoreInput:-n}
 
