@@ -2152,7 +2152,6 @@ function installWireguard(){
         green " =================================================="
         green " 开始安装 WireGuard "
         green " =================================================="
-        echo
 	else 
         green " 建议请先用本脚本安装 linux kernel 5.6 以上的内核 !"
 		exit
@@ -2162,29 +2161,30 @@ function installWireguard(){
     echo
     
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
-            ${sudoCmd} apt-get update
-            ${sudoCmd} apt install -y openresolv
-            # ${sudoCmd} apt install -y resolvconf
-            ${sudoCmd} apt install -y net-tools iproute2 dnsutils
+        ${sudoCmd} apt --fix-broken install -y
+        ${sudoCmd} apt-get update
+        ${sudoCmd} apt install -y openresolv
+        # ${sudoCmd} apt install -y resolvconf
+        ${sudoCmd} apt install -y net-tools iproute2 dnsutils
+        echo
+        if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
+            green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
             echo
-            if [[ ${isKernelBuildInWireGuardModule} == "yes" ]]; then
-                green " 当前系统内核版本高于5.6, 直接安装 wireguard-tools "
-                echo
-                ${sudoCmd} apt install -y wireguard-tools 
-            else
-                # 安装 wireguard-dkms 后 ubuntu 20 系统 会同时安装 5.4.0-71   内核
-                green " 当前系统内核版本低于5.6,  直接安装 wireguard wireguard"
-                echo
-                ${sudoCmd} apt install -y wireguard
-                # ${sudoCmd} apt install -y wireguard-tools 
-            fi
+            ${sudoCmd} apt install -y wireguard-tools 
+        else
+            # 安装 wireguard-dkms 后 ubuntu 20 系统 会同时安装 5.4.0-71   内核
+            green " 当前系统内核版本低于5.6,  直接安装 wireguard wireguard"
+            echo
+            ${sudoCmd} apt install -y wireguard
+            # ${sudoCmd} apt install -y wireguard-tools 
+        fi
 
-            # if [[ ! -L "/usr/local/bin/resolvconf" ]]; then
-            #     ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
-            # fi
-            
-            ${sudoCmd} systemctl enable systemd-resolved.service
-            ${sudoCmd} systemctl start systemd-resolved.service
+        # if [[ ! -L "/usr/local/bin/resolvconf" ]]; then
+        #     ln -s /usr/bin/resolvectl /usr/local/bin/resolvconf
+        # fi
+        
+        ${sudoCmd} systemctl enable systemd-resolved.service
+        ${sudoCmd} systemctl start systemd-resolved.service
 
     elif [[ "${osRelease}" == "centos" ]]; then
         ${sudoCmd} yum install -y epel-release elrepo-release 
@@ -2980,7 +2980,7 @@ function start_menu(){
         echo
         fi
 
-    green " 42. 安装 最新版本内核 5.15, 通过 Ubuntu kernel mainline 安装"
+    green " 42. 安装 最新版本内核 5.16, 通过 Ubuntu kernel mainline 安装"
     green " 43. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 44. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 45. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -3060,7 +3060,7 @@ function start_menu(){
         echo
         fi
 
-    green " 42. Install latest linux kernel 5.15, download and install from Ubuntu kernel mainline"
+    green " 42. Install latest linux kernel 5.16, download and install from Ubuntu kernel mainline"
     green " 43. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
     green " 44. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
     green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
@@ -3184,7 +3184,7 @@ function start_menu(){
             installKernel
         ;;
         42 )
-            linuxKernelToInstallVersion="5.15.14"
+            linuxKernelToInstallVersion="5.16.7"
             installKernel
         ;;
         43 ) 
