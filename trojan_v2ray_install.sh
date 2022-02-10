@@ -517,9 +517,28 @@ EOF
 
         # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
         if  [[ ${osReleaseVersionNoShort} == "8" ]]; then
+
             ${sudoCmd} yum module -y reset nginx
             ${sudoCmd} yum module -y enable nginx:1.18
             ${sudoCmd} yum module list nginx
+
+            if  [[ ${osReleaseVersion} == "8.1.1911" ]]; then
+
+                cd /etc/yum.repos.d/
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+                yum update -y
+
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+                ${sudoCmd} dnf install centos-release-stream -y
+                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
+                ${sudoCmd} dnf distro-sync -y
+
+
+            fi
+        
         fi
 
     elif [ "$osRelease" == "ubuntu" ]; then
@@ -6613,7 +6632,7 @@ function start_menu(){
     red " 19. 卸载 v2ray或xray 和 nginx"
     echo
     green " 21. 同时安装 v2ray或xray 和 trojan或trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
-    green " 22. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go (VLess/Vmess-WS-TLS)+Trojan, 支持CDN, trojan或torjan-go运行在443端口"  
+    green " 22. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go (VLess/Vmess-WS-TLS)+Trojan, 支持CDN, trojan或trojan-go运行在443端口"  
     green " 23. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go, 通过 nginx SNI 分流, 支持CDN, 支持与现有网站共存, nginx 运行在443端口 "
     red " 24. 卸载 trojan, v2ray或xray 和 nginx"
     echo
@@ -6656,7 +6675,7 @@ function start_menu(){
     red " 19. Remove v2ray/xray and nginx"
     echo
     green " 21. Install both v2ray/xray and trojan/trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, support CDN, nginx is optional, VLess running at 443 port serve TLS"
-    green " 22. Install both v2ray/xray and trojan/trojan-go with nginx, (VLess/Vmess-WS-TLS)+Trojan, support CDN, trojan/torjan-go running at 443 port serve TLS"
+    green " 22. Install both v2ray/xray and trojan/trojan-go with nginx, (VLess/Vmess-WS-TLS)+Trojan, support CDN, trojan/trojan-go running at 443 port serve TLS"
     green " 23. Install both v2ray/xray and trojan/trojan-go with nginx. Using nginx SNI distinguish traffic by different domain name, support CDN. Easy integration with existing website. nginx SNI running at 443 port"
     red " 24.  Remove trojan/trojan-go, v2ray/xray and nginx"
     echo
