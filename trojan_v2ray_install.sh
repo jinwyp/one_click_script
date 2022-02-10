@@ -1524,7 +1524,7 @@ load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
 EOM
         else
         read -r -d '' nginxConfigNginxModuleInput << EOM
-load_module /usr/lib/nginx/modules/ngx_stream_module.so;
+# load_module /usr/lib/nginx/modules/ngx_stream_module.so;
 EOM
         fi
 
