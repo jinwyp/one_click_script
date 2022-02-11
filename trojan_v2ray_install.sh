@@ -1407,7 +1407,7 @@ function installWebServerNginx(){
     if [ "$osRelease" == "centos" ]; then
         ${osSystemPackage} install -y nginx-mod-stream
     else
-        #${osSystemPackage} install -y libnginx-mod-stream
+        ${osSystemPackage} install -y libnginx-mod-stream
     fi
 
     ${osSystemPackage} install -y nginx
