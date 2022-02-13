@@ -721,7 +721,7 @@ function removeOptimizingSystemConfig(){
 	sed -i '/net.ipv4.tcp_timestamps/d' /etc/sysctl.conf
 	sed -i '/net.ipv4.tcp_max_orphans/d' /etc/sysctl.conf
 
-	sed -i '/net.ipv4.ip_forward/d' /etc/sysctl.conf
+	# sed -i '/net.ipv4.ip_forward/d' /etc/sysctl.conf
 
 
     sed -i '/1000000/d' /etc/security/limits.conf
@@ -778,7 +778,7 @@ net.ipv4.tcp_timestamps = 0
 net.ipv4.tcp_max_orphans = 32768
 
 # forward ipv4
-net.ipv4.ip_forward = 1
+#net.ipv4.ip_forward = 1
 
 
 EOF
