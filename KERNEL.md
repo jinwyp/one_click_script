@@ -2,6 +2,11 @@
 
 ## [中文文档](/KERNEL_CN.md)
 
+
+## Sponsors
+Thanks for support this project. Check on [patreon](https://www.patreon.com/linuxkernel)
+
+
 ## Table of Contents
 
 * [Install linux latest and LTS kernel. Install BBR Plus kernel](#kernel)
