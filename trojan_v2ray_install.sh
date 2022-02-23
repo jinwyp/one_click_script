@@ -3545,7 +3545,7 @@ function installV2ray(){
             },
             "sniffing": {
                 "enabled": true,
-                "destOverride": ["http", "tls", "quic"]
+                "destOverride": ["http", "tls"]
             }
         }     
 EOM
