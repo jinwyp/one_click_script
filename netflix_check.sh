@@ -35,6 +35,8 @@ configWARPPortFilePath="${HOME}/wireguard/warp-port"
 configWARPPortLocalServerPort="40000"
 warpPortInput="${1:-40000}"
 
+isAutoRefreshWarp=""
+
 function testWARPEnabled(){
 
     if [[ -f "${configWARPPortFilePath}" ]]; then
@@ -207,6 +209,13 @@ function testNetflixOneMethod(){
 
         if [[ "$result1" == *"page-404"* ]] && [[ "$result2" == *"page-404"* ]] && [[ "$result3" == *"page-404"* ]] && [[ "$result4" == *"page-404"* ]] && [[ "$result5" == *"page-404"* ]] && [[ "$result6" == *"page-404"* ]]; then
             yellow " 本机 $2 仅解锁 Netflix 自制剧, 无法播放非自制剧. 区域: ${netflixRegion}"
+            
+            if [[ $2 == "IPv4 CloudFlare WARP Refresh" ]]; then
+                echo
+                green " 重启Warp 用于刷新能解锁IP $2"
+                warp_restart
+                autoRefreshWarpIP
+            fi
             return
         fi
 
@@ -222,8 +231,46 @@ function testNetflixOneMethod(){
 
 
 
+function warp_restart(){
+    if [ -f /etc/wireguard/wgcf.conf ]; then
+        systemctl restart wg-quick@wgcf
+        sleep 2 
+    fi
+
+    if [ -f /usr/bin/warp-cli ]; then
+        warp-cli --accept-tos delete 
+        warp-cli --accept-tos register 
+
+        sleep 2
+    fi
+
+}
 
 
+function autoRefreshWarpIPStart(){
+
+    if [[  "$isAutoRefreshWarp" == "true" ]]; then
+        testWARPEnabled
+        autoRefreshWarpIP
+    fi
+
+}
+
+function autoRefreshWarpIP(){
+
+    if [[  "$isAutoRefreshWarp" == "true" ]]; then
+        echo
+        curlCommand="curl --connect-timeout 10 -sL"
+        curlInfo="IPv4 CloudFlare WARP Refresh"
+
+        bold " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Netflix 情况"
+        curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
+
+        testNetflixOneMethod "${curlCommand}" "${curlInfo}"
+        
+    fi
+
+}
 
 
 
@@ -338,11 +385,7 @@ function testYoutubeOneMethod(){
         red " 要进行的测试 Url为空! "
     fi
 
-
 }
-
-
-
 
 
 
@@ -353,8 +396,6 @@ function testYoutubeOneMethod(){
 
 function startNetflixTest(){
 
-    testIPV6Enabled
-
     echo
     green " =================================================="
     green " Netflix 非自制剧解锁 检测脚本 By JinWYP"
@@ -363,18 +404,28 @@ function startNetflixTest(){
     green " =================================================="
     echo
 
-    testNetflixAll "ipv4"
-    testNetflixAll "ipv4warp"
-    testNetflixAll "ipv6"
+    if [[ -n "$1" ]]; then
+        isAutoRefreshWarp="true"
+        autoRefreshWarpIPStart
 
-    green " ===== Youtube Premium 准备开始检测 ====="
+    else
 
-    testYoutubeAll "ipv4"
-    testYoutubeAll "ipv4warp"
-    testYoutubeAll "ipv6"
+        testIPV6Enabled
+
+        testNetflixAll "ipv4"
+        testNetflixAll "ipv6"
+        testNetflixAll "ipv4warp"
+
+        green " ===== Youtube Premium 准备开始检测 ====="
+
+        testYoutubeAll "ipv4"
+        testYoutubeAll "ipv6"
+        testYoutubeAll "ipv4warp"
+
+    fi    
 }
 
 
 
-startNetflixTest
+startNetflixTest "$1"
 
