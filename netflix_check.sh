@@ -45,8 +45,12 @@ function testWARPEnabled(){
         echo
     fi
 
-    read -p "请输入WARP Sock5 端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" warpPortInput
-    warpPortInput=${warpPortInput:-$configWARPPortLocalServerPort}
+    if [[  "$isAutoRefreshWarp" == "true" ]]; then
+        warpPortInput="${configWARPPortLocalServerPort}"
+    else
+        read -p "请输入WARP Sock5 端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" warpPortInput
+        warpPortInput=${warpPortInput:-$configWARPPortLocalServerPort}
+    fi
     echo
 
 }
@@ -212,8 +216,10 @@ function testNetflixOneMethod(){
             
             if [[ $2 == "IPv4 CloudFlare WARP Refresh" ]]; then
                 echo
-                green " 重启Warp 用于刷新能解锁IP $2"
+                green " 重启Warp 用于刷新能解锁IP, $2"
                 warp_restart
+                sleep 2
+                
                 autoRefreshWarpIP
             fi
             return
@@ -234,19 +240,25 @@ function testNetflixOneMethod(){
 function warp_restart(){
     if [ -f /etc/wireguard/wgcf.conf ]; then
         systemctl restart wg-quick@wgcf
-        sleep 2 
-    fi
-
-    if [ -f /usr/bin/warp-cli ]; then
-        warp-cli --accept-tos delete 
-        warp-cli --accept-tos register 
-
         sleep 2
     fi
 
+    if [ -f /usr/bin/warp-cli ]; then
+        # systemctl restart warp-svc
+        # sleep 3
+        warp-cli --accept-tos delete 
+        sleep 2
+        warp-cli --accept-tos register 
+        sleep 2
+        warp-cli --accept-tos connect
+        sleep 2
+
+    fi
+    green " 已经完成 重启Warp "
 }
 
 
+counter=1
 function autoRefreshWarpIPStart(){
 
     if [[  "$isAutoRefreshWarp" == "true" ]]; then
@@ -257,8 +269,13 @@ function autoRefreshWarpIPStart(){
 }
 
 function autoRefreshWarpIP(){
+    # https://stackoverflow.com/questions/13638670/adding-counter-in-shell-script
 
     if [[  "$isAutoRefreshWarp" == "true" ]]; then
+
+        echo 
+        time=$(date "+%Y-%m-%d %H:%M:%S")
+        green " $time 开始自动刷新 WARP IP, 默认尝试20次 此次为第${counter}次"
         echo
         curlCommand="curl --connect-timeout 10 -sL"
         curlInfo="IPv4 CloudFlare WARP Refresh"
@@ -266,8 +283,13 @@ function autoRefreshWarpIP(){
         bold " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Netflix 情况"
         curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
 
-        testNetflixOneMethod "${curlCommand}" "${curlInfo}"
-        
+        if [[ "$counter" -gt 20 ]]; then
+            exit 1
+        else
+            counter=$((counter+1))
+            testNetflixOneMethod "${curlCommand}" "${curlInfo}"
+        fi
+        echo
     fi
 
 }

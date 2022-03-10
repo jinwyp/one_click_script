@@ -1943,6 +1943,37 @@ function vps_netflix_jin(){
 }
 
 
+function vps_netflix_jin_auto(){
+    # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
+    cd ${HOME}
+	wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./nf.sh 
+    
+    echo
+    green " =================================================="
+    green " 通过Cron定时任务 每天自动检测Netflix是否解锁非自制剧"
+    green " 如果检测到Netflix没有解锁 会自动刷新 WARP IP, 默认尝试刷新20次"
+    green " 刷新日志 log 在 /root/warp_refresh.log"
+    green " Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
+    green " =================================================="
+    echo
+    (crontab -l ; echo "10 5 * * 0,1,2,3,4,5,6 /root/nf.sh auto >> /root/warp_refresh.log ") | sort - | uniq - | crontab -
+    echo
+
+    ./nf.sh auto
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2961,6 +2992,7 @@ function start_menu(){
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 16. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
     green " 21. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
+    green " 22. 自动刷新WARP IP 检测支持 Netflix 非自制剧解锁 "
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3041,6 +3073,7 @@ function start_menu(){
     green " 15. Switch WireGuard using IPv6 or IPv4 for your VPS"
     green " 16. Set VPS using IPv4 or IPv6 firstly to access network"
     green " 21. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
+    green " 22. Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3143,6 +3176,9 @@ function start_menu(){
         ;;
         21 )
            vps_netflix_jin
+        ;;
+        22 )
+           vps_netflix_jin_auto
         ;;
         31 )
             linuxKernelToInstallVersion="5.16"
