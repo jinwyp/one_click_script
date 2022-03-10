@@ -281,7 +281,13 @@ function autoRefreshWarpIP(){
         curlInfo="IPv4 CloudFlare WARP Refresh"
 
         bold " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Netflix 情况"
-        curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
+
+        if [ -f /usr/bin/warp-cli ]; then
+            curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
+        else
+            curlCommand="${curlCommand} -6"
+        fi
+        
 
         if [[ "$counter" -gt 20 ]]; then
             exit 1
