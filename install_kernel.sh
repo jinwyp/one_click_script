@@ -3232,7 +3232,7 @@ function start_menu(){
             installKernel
         ;;
         45 )
-            linuxKernelToInstallVersion="5.10.72"
+            linuxKernelToInstallVersion="5.10.75"
             installKernel
         ;;
         51 )
