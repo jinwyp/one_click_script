@@ -3220,7 +3220,7 @@ function start_menu(){
             installKernel
         ;;
         42 )
-            linuxKernelToInstallVersion="5.16.7"
+            linuxKernelToInstallVersion="5.16.14"
             installKernel
         ;;
         43 ) 
@@ -3232,7 +3232,7 @@ function start_menu(){
             installKernel
         ;;
         45 )
-            linuxKernelToInstallVersion="5.10.75"
+            linuxKernelToInstallVersion="5.10.105"
             installKernel
         ;;
         51 )

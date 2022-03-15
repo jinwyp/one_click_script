@@ -490,6 +490,10 @@ function installPackage(){
     green " =================================================="
     echo
 
+    
+    sed -i '1s/^/nameserver 1.1.1.1 \n/' /etc/resolv.conf
+
+
     if [ "$osRelease" == "centos" ]; then
        
         # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm

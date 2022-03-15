@@ -49,7 +49,7 @@
 
 
 
-#### 区分是命令行程序还是带有UI的GUI界面软件
+### 区分是命令行程序还是带有UI的GUI界面软件
 
 1. 上面是命令行方式运行的程序核心文件. 对于普通用户来说命令行方式需要手动修改配置文件很不方便. 所以对普通用户来说肯定需要找对应的UI带界面的程序,这样使用起来才方便. UI带界面的程序与原来的命令行程序都是不同项目不同人开发的. 所以有的界面集成了核心命令程序, 有的没有集成核心命令行程序只是一个界面需要自己手动下载命令行与UI界面程序放到一起.
 
@@ -72,7 +72,7 @@
 
 8. 不同平台下都有不同的UI界面程序, 有的集成了核心命令行程序有的没有集成, 所以要学会到官方github网站上下载最新版程序. Windows 平台: v2rayN / Qv2ray / WinXray.  Android 平台: v2rayNG / Kitsunebi.  iOS 平台(只能通过apple store 购买获得): Shadowrocket / Quantumult / Quantumult X. OpenWrt 路由器平台: PassWall / Hello World / ShadowSocksR Plus+
 
-#### 本身不是某个软件的UI界面程序 例如 Clash 与  Quantumult X
+### 本身不是某个软件的UI界面程序 例如 Clash 与  Quantumult X
 
 1. [Clash](https://github.com/Dreamacro/clash) 本身并不是v2ray的UI界面程序. Clash本身自己是个独立的代理平台软件,主要用来提供SOCKS5/HTTP代理. 而随后支持V2ray的Vmess协议, 同时还支持 Shadowsocks, Snell, Trojan等其他协议.
 
@@ -80,5 +80,5 @@
 
 
 
-#### 关于 TLS 加密与各种协议的介绍和具体使用方法 敬请期待
+### 关于 TLS 加密与各种协议的介绍和具体使用方法 敬请期待
 
