@@ -491,7 +491,7 @@ function installPackage(){
     echo
 
     
-    sed -i '1s/^/nameserver 1.1.1.1 \n/' /etc/resolv.conf
+    # sed -i '1s/^/nameserver 1.1.1.1 \n/' /etc/resolv.conf
 
 
     if [ "$osRelease" == "centos" ]; then
@@ -3896,7 +3896,7 @@ EOM
         # 修复一个都不解锁的bug 都选1的bug
         if [[ -z "${V2rayUnlockVideoSiteOutboundTagText}" ]]; then
             V2rayUnlockVideoSiteOutboundTagText="IPv6_out"
-            V2rayUnlockVideoSiteRuleText="\"test.com\""
+            V2rayUnlockVideoSiteRuleText="\"xxxxx.com\""
         fi
         
         read -r -d '' v2rayConfigRouteInput << EOM
@@ -3938,9 +3938,6 @@ EOM
             "protocol": "blackhole",
             "settings": {}
         },
-
-        ${v2rayConfigOutboundV2rayServerInput}
-        ${v2rayConfigOutboundV2rayGoNetflixServerInput}
         {
             "tag":"IPv6_out",
             "protocol": "freedom",
@@ -3948,6 +3945,10 @@ EOM
                 "domainStrategy": "UseIPv6" 
             }
         },
+        
+        ${v2rayConfigOutboundV2rayServerInput}
+        ${v2rayConfigOutboundV2rayGoNetflixServerInput}
+
         {
             "tag": "WARP_out",
             "protocol": "socks",
@@ -4838,7 +4839,8 @@ EOM
         }
         ${v2rayConfigAdditionalPortInput}
     ],
-EOM 
+EOM
+
 
     elif [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
 
