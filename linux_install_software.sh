@@ -1997,7 +1997,7 @@ function replaceAirUniverseConfigWARP(){
     V2rayDNSUnlockText="AsIs"
     v2rayConfigDNSInput=""
 
-    if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
+    if [[ "${isV2rayUnlockDNSInput}" == [Nn] ]]; then
         V2rayDNSUnlockText="AsIs"
     else
         V2rayDNSUnlockText="UseIP"
@@ -2292,7 +2292,7 @@ EOM
             "settings": {
                 "domainStrategy": "${V2rayDNSUnlockText}"
             }
-        },        
+        },
         {
             "tag": "blackhole",
             "protocol": "blackhole",
@@ -2361,14 +2361,28 @@ EOM
     # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
 
     if [[ "${isV2rayUnlockWarpModeInput}" == "1" && "${isV2rayUnlockGoogleInput}" == "1"  && "${isV2rayUnlockGoNetflixInput}" == [Nn]  ]]; then
-        echo
+        if [[ "${isV2rayUnlockDNSInput}" == [Nn] ]]; then
+            echo
+        else
+            TEST="${v2rayConfigDNSInput//\\/\\\\}"
+            TEST="${TEST//\//\\/}"
+            TEST="${TEST//&/\\&}"
+            TEST="${TEST//$'\n'/\\n}"
+
+            sed -i "/outbounds/i \    ${TEST}" ${configAirUniverseXrayConfigFilePath}
+
+        fi
     else
         sed -i '/outbounds/,/^&/d' ${configAirUniverseXrayConfigFilePath}
         cat >> ${configAirUniverseXrayConfigFilePath} <<-EOF
 
   ${xrayConfigProxyInput}
+
 EOF
     fi
+
+
+
 
 
     configSSLCertPath="/usr/local/share/au"

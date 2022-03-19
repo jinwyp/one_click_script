@@ -3610,7 +3610,7 @@ EOM
     V2rayDNSUnlockText="AsIs"
     v2rayConfigDNSInput=""
 
-    if [[ $isV2rayUnlockDNSInput == [Nn] ]]; then
+    if [[ "${isV2rayUnlockDNSInput}" == [Nn] ]]; then
         V2rayDNSUnlockText="AsIs"
     else
         V2rayDNSUnlockText="UseIP"
