@@ -805,13 +805,29 @@ function installDocker(){
         green " =================================================="
     
     else
-        # curl -fsSL https://get.docker.com -o get-docker.sh  
-        curl -sSL https://get.daocloud.io/docker -o get-docker.sh  
-        chmod +x ./get-docker.sh
-        sh get-docker.sh
+
+        if [[ "${osInfo}" == "AlmaLinux" ]]; then
+            # https://linuxconfig.org/install-docker-on-almalinux
+            ${sudoCmd} dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+            ${sudoCmd} dnf remove -y podman buildah 
+            ${sudoCmd} dnf install -y docker-ce docker-ce-cli containerd.io
+
+            
+        else
+            # curl -fsSL https://get.docker.com -o get-docker.sh  
+            curl -sSL https://get.daocloud.io/docker -o get-docker.sh  
+            chmod +x ./get-docker.sh
+            sh get-docker.sh
+
+        fi
         
-        systemctl start docker
-        systemctl enable docker.service
+
+        ${sudoCmd} systemctl start docker.service
+        ${sudoCmd} systemctl enable docker.service
+        
+        echo
+        docker version
+        echo
     fi
 
 
