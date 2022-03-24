@@ -474,9 +474,45 @@ function installSoftDownload(){
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
+            
         if ! rpm -qa | grep -qw wget; then
 		    ${osSystemPackage} -y install wget curl git unzip
+
+            if  [[ ${osReleaseVersion} == "8.1.1911" ]]; then
+
+                # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+
+                cd /etc/yum.repos.d/
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+                yum update -y
+
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+                ${sudoCmd} dnf install centos-release-stream -y
+                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
+                ${sudoCmd} dnf distro-sync -y
+            fi
+
         elif ! rpm -qa | grep -qw git; then
+            if  [[ ${osReleaseVersion} == "8.1.1911" ]]; then
+
+                # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+
+                cd /etc/yum.repos.d/
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+                yum update -y
+
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+                ${sudoCmd} dnf install centos-release-stream -y
+                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
+                ${sudoCmd} dnf distro-sync -y
+            fi
+            
 		    ${osSystemPackage} -y install wget curl git unzip
 		fi
 	fi 
@@ -525,24 +561,6 @@ EOF
             ${sudoCmd} yum module -y reset nginx
             ${sudoCmd} yum module -y enable nginx:1.18
             ${sudoCmd} yum module list nginx
-
-            if  [[ ${osReleaseVersion} == "8.1.1911" ]]; then
-
-                cd /etc/yum.repos.d/
-                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-                yum update -y
-
-                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
-                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
-
-                ${sudoCmd} dnf install centos-release-stream -y
-                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
-                ${sudoCmd} dnf distro-sync -y
-
-
-            fi
-        
         fi
 
     elif [ "$osRelease" == "ubuntu" ]; then

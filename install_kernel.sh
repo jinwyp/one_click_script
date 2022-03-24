@@ -3004,7 +3004,7 @@ function start_menu(){
     echo
     green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
     green " 37. 安装 内核 5.15, Teddysun 编译"
-    green " 38. 安装 内核 5.16, 下载安装. (安装最新版内核 可能会高于5.15) "
+    green " 38. 安装 内核 5.16, 下载安装. (安装最新版内核 可能会高于5.16) "
 
     else
         if [[ "${osRelease}" == "debian" ]]; then

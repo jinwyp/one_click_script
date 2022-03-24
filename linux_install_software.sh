@@ -821,7 +821,6 @@ function installDocker(){
 
         fi
         
-
         ${sudoCmd} systemctl start docker.service
         ${sudoCmd} systemctl enable docker.service
         
