@@ -493,7 +493,7 @@ EOF
         # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
         if  [[ ${osReleaseVersionNoShort} == "8" ]]; then
             ${sudoCmd} yum module -y reset nginx
-            ${sudoCmd} yum module -y enable nginx:1.18
+            ${sudoCmd} yum module -y enable nginx:1.20
             ${sudoCmd} yum module list nginx
         fi
 
