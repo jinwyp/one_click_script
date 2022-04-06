@@ -1668,7 +1668,7 @@ function installDebianUbuntuKernel(){
             echo
 
             if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
-                ${sudoCmd} apt install -y linux-xanmod-lts-5.10-generic 
+                ${sudoCmd} apt install -y linux-xanmod-lts 
             else
                 ${sudoCmd} apt install -y linux-xanmod
             fi
@@ -3032,7 +3032,7 @@ function start_menu(){
     green " 45. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
     echo
     green " 51. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
-    green " 52. 安装 XanMod Kernel 内核 5.14, 官方源安装 "   
+    green " 52. 安装 XanMod Kernel 内核 5.15, 官方源安装 "   
 
     fi
 
@@ -3113,7 +3113,7 @@ function start_menu(){
     green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
     echo
     green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
-    green " 52. Install XanMod kernel 5.14, from XanMod repository source "   
+    green " 52. Install XanMod kernel 5.15, from XanMod repository source "   
 
     fi
 
@@ -3256,7 +3256,7 @@ function start_menu(){
             installKernel
         ;;
         52 )
-            linuxKernelToInstallVersion="5.14"
+            linuxKernelToInstallVersion="5.15"
             linuxKernelToBBRType="xanmod"
             isInstallFromRepo="yes"
             installKernel
