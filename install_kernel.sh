@@ -1651,7 +1651,7 @@ function installDebianUbuntuKernel(){
         if [ "${linuxKernelToBBRType}" = "xanmod" ]; then 
 
             green " =================================================="
-            green "    开始通过 XanMod 官方源安装 linux 内核 ${linuxKernelToInstallVersion}"
+            green "    开始准备从 XanMod 官方源安装 linux 内核 ${linuxKernelToInstallVersion}"
             green " =================================================="
 
             # https://xanmod.org/
@@ -1662,9 +1662,10 @@ function installDebianUbuntuKernel(){
 
             listAvailableLinuxKernel "xanmod"
 
+            linuxKernelToInstallVersionFull=${linuxKernelToInstallVersion}
             echo
             green " =================================================="
-            green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
+            green " 开始安装 linux 内核版本: XanMod ${linuxKernelToInstallVersionFull}"
             echo
 
             if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
@@ -1673,6 +1674,8 @@ function installDebianUbuntuKernel(){
                 ${sudoCmd} apt install -y linux-xanmod
             fi
 
+
+            listInstalledLinuxKernel
             rebootSystem
         else
 
