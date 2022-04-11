@@ -846,7 +846,7 @@ function installBTPanelCrack(){
     fi
 }
 
-function installBTPanelCrack2(){
+function installBTPanelCrackHostcli(){
     if [ "$osRelease" == "centos" ]; then
         yum install -y wget && wget -O install.sh http://v7.hostcli.com/install/install_6.0.sh && sh install.sh
     else
@@ -6450,8 +6450,8 @@ function startMenuOther(){
     green " 54. 测试VPS 是否支持 Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
     echo
     green " 61. 安装 官方宝塔面板"
-    green " 62. 安装 宝塔面板破解版 by fenhao.me"
-    green " 63. 安装 宝塔面板纯净版 by hostcli.com"
+    #green " 63. 安装 宝塔面板破解版 by fenhao.me"
+    green " 62. 安装 宝塔面板纯净版 by hostcli.com"
     echo
     green " 99. 返回上级菜单"
     green " 0. 退出脚本"    
@@ -6494,8 +6494,8 @@ function startMenuOther(){
     green " 54. Netflix, Disney, Hulu etc unlock test by by lmc999"
     echo
     green " 61. install official bt panel (aa panel)"
-    green " 62. install modified bt panel (aa panel) by fenhao.me"
-    green " 63. install modified bt panel (aa panel) by hostcli.com"
+    #green " 63. install modified bt panel (aa panel) by fenhao.me"
+    green " 62. install modified bt panel (aa panel) by hostcli.com"
     echo
     green " 99. Back to main menu"
     green " 0. exit"
@@ -6579,10 +6579,10 @@ function startMenuOther(){
             installBTPanel
         ;;
         62 )
-            installBTPanelCrack
+            installBTPanelCrackHostcli
         ;;
         63 )
-            installBTPanelCrack2
+            installBTPanelCrack
         ;;
         81 )
             installBBR

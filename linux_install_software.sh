@@ -704,11 +704,19 @@ function downloadAndUnzip(){
     mkdir -p ${configDownloadTempPath}
 
     if [[ $3 == *"tar.xz"* ]]; then
-        green "===== 下载并解压tar文件: $3 "
+        green "===== 下载并解压tar.xz文件: $3 "
         wget -O ${configDownloadTempPath}/$3 $1
         tar xf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
         mv ${configDownloadTempPath}/* $2
         rm -rf ${configDownloadTempPath}
+
+    elif [[ $3 == *"tar.gz"* ]]; then
+        green "===== 下载并解压tar.gz文件: $3 "
+        wget -O ${configDownloadTempPath}/$3 $1
+        tar zxvf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
+        mv ${configDownloadTempPath}/* $2
+        rm -rf ${configDownloadTempPath}
+
     else
         green "===== 下载并解压zip文件:  $3 "
         wget -O ${configDownloadTempPath}/$3 $1
@@ -725,7 +733,10 @@ function getGithubLatestReleaseVersion(){
     # https://github.com/p4gefau1t/trojan-go/issues/63
     wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
 }
-
+function getGithubLatestReleaseVersion2(){
+    # https://github.com/p4gefau1t/trojan-go/issues/63
+    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 1-
+}
 
 
 
@@ -944,6 +955,217 @@ function installPortainer(){
     green "   Portainer 安装成功 !"
     green " ================================================== "
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+configCloudrevePath="/root/cloudreve"
+configCloudreveDownloadFolder="${configCloudrevePath}/download"
+configCloudreveCommandFolder="${configCloudrevePath}/web"
+configCloudreveReadme="${configCloudrevePath}/web/readme.txt"
+configCloudreveIni="${configCloudrevePath}/web/conf.ini"
+configCloudrevePort="$(($RANDOM + 4000))"
+
+
+function installCloudreve(){
+
+    if [ -f "${configCloudreveCommandFolder}/cloudreve" ]; then
+        green " =================================================="
+        green "     Cloudreve Already installed !"
+        green " =================================================="
+        exit
+    fi
+
+    versionCloudreve=$(getGithubLatestReleaseVersion2 "cloudreve/Cloudreve")
+
+    green " ================================================== "
+    green "   Prepare to install Cloudreve ${versionCloudreve}"
+    green " ================================================== "
+
+
+    mkdir -p ${configCloudreveDownloadFolder}
+    mkdir -p ${configCloudreveCommandFolder}
+    cd ${configCloudrevePath}
+
+
+    # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_amd64.tar.gz
+    # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_arm.tar.gz
+    # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_arm64.tar.gz
+
+    downloadFilenameCloudreve="cloudreve_${versionCloudreve}_linux_amd64.tar.gz"
+    if [[ ${osArchitecture} == "arm" ]] ; then
+        downloadFilenameCloudreve="cloudreve_${versionCloudreve}_linux_arm.tar.gz"
+    fi
+    if [[ ${osArchitecture} == "arm64" ]] ; then
+        downloadFilenameCloudreve="cloudreve_${versionCloudreve}_linux_arm64.tar.gz"
+    fi
+
+    downloadAndUnzip "https://github.com/cloudreve/Cloudreve/releases/download/${versionCloudreve}/${downloadFilenameCloudreve}" "${configCloudreveDownloadFolder}" "${downloadFilenameCloudreve}"
+    mv ${configCloudreveDownloadFolder}/cloudreve ${configCloudreveCommandFolder}/cloudreve
+
+    chmod +x ${configCloudreveCommandFolder}/cloudreve
+    cd ${configCloudreveCommandFolder}
+    ./cloudreve >> ${configCloudreveReadme} &
+    sleep 3
+
+    pid=`ps -ef | grep cloudreve | grep -v grep | awk '{print $2}'`;kill $pid
+
+
+
+        cat > ${osSystemMdPath}cloudreve.service <<-EOF
+[Unit]
+Description=Cloudreve
+Documentation=https://docs.cloudreve.org
+After=network.target
+Wants=network.target
+
+[Service]
+WorkingDirectory=${configCloudreveCommandFolder}
+ExecStart=${configCloudreveCommandFolder}/cloudreve -c ${configCloudreveIni}
+Restart=on-abnormal
+RestartSec=5s
+KillMode=mixed
+
+StandardOutput=null
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+    sed -i "s/5212/${configCloudrevePort}/g" ${configCloudreveIni}
+    sed -i "s/5212/${configCloudrevePort}/g" ${configCloudreveReadme}
+
+    systemctl daemon-reload
+    systemctl start cloudreve
+    systemctl enable cloudreve
+
+
+
+    echo
+    green " ================================================== "
+    green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
+    green " 如无法访问, 请设置防火墙规则 放行 ${configCloudrevePort} 端口"
+    green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
+    cat ${configCloudreveReadme}
+    green " ================================================== "
+}
+
+
+
+
+
+
+
+function removeCloudreve(){
+
+    echo
+    read -p "是否确认卸载 Cloudreve? 直接回车默认卸载, 请输入[Y/n]:" isRemoveCloudreveInput
+    isRemoveCloudreveInput=${isRemoveCloudreveInput:-Y}
+
+    if [[ "${isRemoveCloudreveInput}" == [Yy] ]]; then
+        echo
+
+        if [[ -f "${configCloudreveCommandFolder}/cloudreve" ]]; then
+            echo
+            green " ================================================== "
+            red " Prepare to uninstall Cloudreve"
+            green " ================================================== "
+            echo
+
+            ${sudoCmd} systemctl stop cloudreve.service
+            ${sudoCmd} systemctl disable cloudreve.service
+
+            rm -rf ${configCloudrevePath}
+            rm -f ${osSystemMdPath}cloudreve.service
+
+            echo
+            green " ================================================== "
+            green "  Cloudreve removed !"
+            green " ================================================== "
+            
+        else
+            red " Cloudreve not found !"
+        fi
+
+    fi
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3008,6 +3230,8 @@ function start_menu(){
     red " 14. 卸载 Docker 与 Docker Compose"
     green " 15. 设置 Docker Hub 镜像 "
     green " 16. 安装 Portainer "
+    green " 17. 安装 Cloudreve 云盘系统 "
+    red " 18. 卸载 Cloudreve 云盘系统 "
 
     echo
     green " 21. 安装 V2Ray-Poseidon 服务器端"
@@ -3066,6 +3290,8 @@ function start_menu(){
     red " 14. Remove Docker and Docker Compose"
     green " 15. Set Docker Hub Registry"
     green " 16. Install Portainer "
+    green " 17. Install Cloudreve cloud storage system"
+    red " 18. Remove Cloudreve cloud storage system"
 
     echo
     green " 21. Install V2Ray-Poseidon server side"
@@ -3145,15 +3371,20 @@ function start_menu(){
         ;;
         14 )
             removeDocker 
-        ;;        
+        ;;
         15 )
             addDockerRegistry
-        ;;        
+        ;;
         16 )
             installPortainer 
-        ;;        
-
+        ;;
         17 )
+            installCloudreve
+        ;;
+        18 )
+            removeCloudreve
+        ;;        
+        20 )
             installPython3
             installPython3Rembg
         ;;
