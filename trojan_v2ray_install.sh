@@ -1429,7 +1429,8 @@ function installWebServerNginx(){
     if [ "$osRelease" == "centos" ]; then
         ${osSystemPackage} install -y nginx-mod-stream
     else
-        ${osSystemPackage} install -y libnginx-mod-stream
+        echo
+        #${osSystemPackage} install -y libnginx-mod-stream
     fi
 
     ${osSystemPackage} install -y nginx
@@ -1860,6 +1861,7 @@ function removeNginx(){
                 yum remove -y nginx-mod-stream
                 yum remove -y nginx
             else
+                apt-get remove --purge libnginx-mod-stream
                 apt autoremove -y --purge nginx nginx-common nginx-core
                 apt-get remove --purge nginx nginx-full nginx-common nginx-core
             fi
