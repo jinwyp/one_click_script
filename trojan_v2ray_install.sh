@@ -557,9 +557,8 @@ EOF
 
         # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
         if  [[ ${osReleaseVersionNoShort} == "8" ]]; then
-
             ${sudoCmd} yum module -y reset nginx
-            ${sudoCmd} yum module -y enable nginx:1.18
+            ${sudoCmd} yum module -y enable nginx:1.20
             ${sudoCmd} yum module list nginx
         fi
 
@@ -597,7 +596,7 @@ EOF
 deb [arch=amd64] http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 EOF
-        
+
         ${osSystemPackage} update -y
 
         if ! dpkg -l | grep -qw iperf3; then
@@ -625,9 +624,9 @@ function installSoftEditor(){
     fi
 
     if [ "$osRelease" == "centos" ]; then   
-        $osSystemPackage install -y xz  vim-minimal vim-enhanced vim-common
+        $osSystemPackage install -y xz  vim-minimal vim-enhanced vim-common nano
     else
-        $osSystemPackage install -y vim-gui-common vim-runtime vim 
+        $osSystemPackage install -y vim-gui-common vim-runtime vim nano
     fi
 
     # 设置vim 中文乱码
@@ -1861,9 +1860,9 @@ function removeNginx(){
                 yum remove -y nginx-mod-stream
                 yum remove -y nginx
             else
-                apt-get remove --purge libnginx-mod-stream
+                apt-get remove --purge -y libnginx-mod-stream
                 apt autoremove -y --purge nginx nginx-common nginx-core
-                apt-get remove --purge nginx nginx-full nginx-common nginx-core
+                apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
             fi
 
 
@@ -2283,10 +2282,11 @@ function installTrojanServer(){
 
     green " =================================================="
     green " 开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
-    yellow " 请输入 trojan${promptInfoTrojanName} 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     green " =================================================="
-
-    read configTrojanPasswordPrefixInput
+    echo
+    yellow " 请输入 trojan${promptInfoTrojanName} 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
+    
+    read -p "请输入密码的前缀:" configTrojanPasswordPrefixInput
     configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-jin}
 
 

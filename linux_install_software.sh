@@ -531,7 +531,7 @@ EOF
 deb [arch=amd64] http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
 EOF
-        
+
         ${osSystemPackage} update -y
 
         if ! dpkg -l | grep -qw iperf3; then
@@ -562,9 +562,9 @@ function installSoftEditor(){
     fi
 
     if [ "$osRelease" == "centos" ]; then   
-        $osSystemPackage install -y xz  vim-minimal vim-enhanced vim-common
+        $osSystemPackage install -y xz  vim-minimal vim-enhanced vim-common nano
     else
-        $osSystemPackage install -y vim-gui-common vim-runtime vim 
+        $osSystemPackage install -y vim-gui-common vim-runtime vim nano
     fi
 
     # 设置vim 中文乱码
@@ -1036,6 +1036,7 @@ function installCloudreve(){
     # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_amd64.tar.gz
     # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_arm.tar.gz
     # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_arm64.tar.gz
+    
 
     downloadFilenameCloudreve="cloudreve_${versionCloudreve}_linux_amd64.tar.gz"
     if [[ ${osArchitecture} == "arm" ]] ; then
@@ -1046,18 +1047,21 @@ function installCloudreve(){
     fi
 
     downloadAndUnzip "https://github.com/cloudreve/Cloudreve/releases/download/${versionCloudreve}/${downloadFilenameCloudreve}" "${configCloudreveDownloadFolder}" "${downloadFilenameCloudreve}"
+
     mv ${configCloudreveDownloadFolder}/cloudreve ${configCloudreveCommandFolder}/cloudreve
-
     chmod +x ${configCloudreveCommandFolder}/cloudreve
+
     cd ${configCloudreveCommandFolder}
-    ./cloudreve >> ${configCloudreveReadme} &
+    echo "nohup ${configCloudreveCommandFolder}/cloudreve > ${configCloudreveReadme} 2>&1 &"
+    nohup ${configCloudreveCommandFolder}/cloudreve > ${configCloudreveReadme} 2>&1 &
     sleep 3
+    pidCloudreve=$(ps -ef | grep cloudreve | grep -v grep | awk '{print $2}')
+    echo "kill -9 ${pidCloudreve}"
+    kill -9 ${pidCloudreve}
+    echo
 
-    pid=`ps -ef | grep cloudreve | grep -v grep | awk '{print $2}'`;kill $pid
 
-
-
-        cat > ${osSystemMdPath}cloudreve.service <<-EOF
+    cat > ${osSystemMdPath}cloudreve.service <<-EOF
 [Unit]
 Description=Cloudreve
 Documentation=https://docs.cloudreve.org
@@ -1078,14 +1082,13 @@ StandardError=syslog
 WantedBy=multi-user.target
 EOF
 
-
+    echo
+    echo "Install cloudreve systemmd service ..."
     sed -i "s/5212/${configCloudrevePort}/g" ${configCloudreveIni}
     sed -i "s/5212/${configCloudrevePort}/g" ${configCloudreveReadme}
-
     systemctl daemon-reload
     systemctl start cloudreve
     systemctl enable cloudreve
-
 
 
     echo
@@ -1095,12 +1098,19 @@ EOF
     green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
     cat ${configCloudreveReadme}
     green " ================================================== "
+
+
+    echo
+    read -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        getHTTPS
+        configInstallNginxMode="cloudreve"
+        installWebServerNginx
+    fi
+
 }
-
-
-
-
-
 
 
 function removeCloudreve(){
@@ -1135,7 +1145,339 @@ function removeCloudreve(){
         fi
 
     fi
+
+    removeNginx
 }
+
+
+
+
+
+
+
+
+configWebsiteFatherPath="${HOME}/website"
+
+configWebsitePath="${HOME}/website/html"
+nginxConfigPath="/etc/nginx/nginx.conf"
+nginxAccessLogFilePath="${HOME}/nginx-access.log"
+nginxErrorLogFilePath="${HOME}/nginx-error.log"
+
+function installWebServerNginx(){
+
+    echo
+    green " ================================================== "
+    yellow "     开始安装 Web服务器 nginx !"
+    green " ================================================== "
+    echo
+
+    if test -s ${nginxConfigPath}; then
+        green " ================================================== "
+        red "     Nginx 已存在, 退出安装!"
+        green " ================================================== "
+        exit
+    fi
+
+    if [ "$osRelease" == "centos" ]; then
+        ${osSystemPackage} install -y nginx-mod-stream
+    else
+        echo
+        #${osSystemPackage} install -y libnginx-mod-stream
+    fi
+
+    ${osSystemPackage} install -y nginx
+    ${sudoCmd} systemctl enable nginx.service
+    ${sudoCmd} systemctl stop nginx.service
+
+    # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
+    # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
+    
+    mkdir -p /etc/systemd/system/nginx.service.d
+    printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+    
+    ${sudoCmd} systemctl daemon-reload
+    
+    mkdir -p ${configWebsitePath}
+
+
+    nginxConfigServerHttpInput=""
+
+
+    if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
+
+        read -r -d '' nginxConfigServerHttpInput << EOM
+    server {
+        listen       80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location /$configV2rayWebSocketPath {
+            proxy_pass http://127.0.0.1:$configV2rayPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }
+
+        location /$configV2rayGRPCServiceName {
+            grpc_pass grpc://127.0.0.1:$configV2rayGRPCPort;
+            grpc_connect_timeout 60s;
+            grpc_read_timeout 720m;
+            grpc_send_timeout 720m;
+            grpc_set_header X-Real-IP \$remote_addr;
+            grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }  
+    }
+
+EOM
+
+    elif [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
+
+        read -r -d '' nginxConfigServerHttpInput << EOM
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:${configCloudrevePort};
+
+            # 如果您要使用本地存储策略，请将下一行注释符删除，并更改大小为理论最大文件尺寸
+            client_max_body_size   6000m;
+        }
+        
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+
+EOM
+
+
+    elif [[ "${configInstallNginxMode}" == "cloud" ]]; then
+
+        read -r -d '' nginxConfigServerHttpInput << EOM
+    server {
+        listen       80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header Host $http_host;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:5212;
+
+            # 如果您要使用本地存储策略，请将下一行注释符删除，并更改大小为理论最大文件尺寸
+            # client_max_body_size 20000m;
+        }
+
+
+        location ~* ^/(static|common|auth|trojan)/ {
+            proxy_pass  http://127.0.0.1:$configTrojanWebPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+        }
+
+        # http redirect to https
+        if ( \$remote_addr != 127.0.0.1 ){
+            rewrite ^/(.*)$ https://$configSSLDomain/\$1 redirect;
+        }
+    }
+
+EOM
+
+    else
+
+        echo
+
+    fi
+
+
+        cat > "${nginxConfigPath}" <<-EOF
+
+${nginxConfigNginxModuleInput}
+
+user  root;
+worker_processes  1;
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+events {
+    worker_connections  1024;
+}
+
+
+
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    log_format  main  '\$remote_addr - \$remote_user [\$time_local] '
+                      '"\$request" \$status \$body_bytes_sent  '
+                      '"\$http_referer" "\$http_user_agent" "\$http_x_forwarded_for"';
+    access_log  $nginxAccessLogFilePath  main;
+    error_log $nginxErrorLogFilePath;
+
+    sendfile        on;
+    #tcp_nopush     on;
+    keepalive_timeout  120;
+    client_max_body_size 20m;
+    gzip  on;
+
+
+    ${nginxConfigServerHttpInput}
+
+}
+
+
+EOF
+
+
+
+    ${sudoCmd} systemctl start nginx.service
+
+    green " ================================================== "
+    green " Web服务器 nginx 安装成功. 站点为 https://${configSSLDomain}"
+    echo
+	red " nginx 配置路径 ${nginxConfigPath} "
+	green " nginx 访问日志 ${nginxAccessLogFilePath},  错误日志 ${nginxErrorLogFilePath}  "
+    green " nginx 查看日志命令: journalctl -n 50 -u nginx.service"
+	green " nginx 启动命令: systemctl start nginx.service  停止命令: systemctl stop nginx.service  重启命令: systemctl restart nginx.service"
+	green " nginx 查看运行状态命令: systemctl status nginx.service "
+    green " ================================================== "
+    echo
+
+    if [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
+        
+        green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
+        green " 如无法访问, 请设置防火墙规则 放行 ${configCloudrevePort} 端口"
+        green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
+        cat ${configCloudreveReadme}
+        green " ================================================== "
+    fi
+}
+
+function removeNginx(){
+
+    echo
+    read -p "是否确认卸载Nginx? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNginxServerInput
+    isRemoveNginxServerInput=${isRemoveNginxServerInput:-Y}
+
+    if [[ "${isRemoveNginxServerInput}" == [Yy] ]]; then
+
+
+        echo
+        if [[ -f "${nginxConfigPath}" ]]; then
+            green " ================================================== "
+            red " 准备卸载已安装的nginx"
+            green " ================================================== "
+            echo
+
+            ${sudoCmd} systemctl stop nginx.service
+            ${sudoCmd} systemctl disable nginx.service
+
+            if [ "$osRelease" == "centos" ]; then
+                yum remove -y nginx-mod-stream
+                yum remove -y nginx
+            else
+                apt-get remove --purge -y libnginx-mod-stream
+                apt autoremove -y --purge nginx nginx-common nginx-core
+                apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
+            fi
+
+
+            rm -f ${nginxAccessLogFilePath}
+            rm -f ${nginxErrorLogFilePath}
+
+            rm -rf "/etc/nginx"
+            
+            rm -rf ${configDownloadTempPath}
+
+            echo
+            read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
+            isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
+
+            
+            if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
+                rm -rf ${configWebsiteFatherPath}
+                ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+                
+                echo
+                green " ================================================== "
+                green "  Nginx 卸载完毕, SSL 证书文件已删除!"
+                
+            else
+                rm -rf ${configWebsitePath}
+                echo
+                green " ================================================== "
+                green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
+            fi
+
+            green " ================================================== "
+        else
+            red " 系统没有安装 nginx, 退出卸载"
+        fi
+        echo
+
+    fi    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3234,23 +3576,23 @@ function start_menu(){
     red " 18. 卸载 Cloudreve 云盘系统 "
 
     echo
-    green " 21. 安装 V2Ray-Poseidon 服务器端"
-    red " 22. 卸载 V2Ray-Poseidon"
-    green " 23. 停止, 重启, 查看日志, 管理 V2Ray-Poseidon"
+    green " 31. 安装 V2Ray-Poseidon 服务器端"
+    red " 32. 卸载 V2Ray-Poseidon"
+    green " 33. 停止, 重启, 查看日志, 管理 V2Ray-Poseidon"
     echo
-    green " 25. 编辑 V2Ray-Poseidon 直接命令行 方式运行 配置文件 v2ray-poseidon/config.json"
-    green " 26. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker方式运行 配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
-    green " 27. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker Compose 配置文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
+    green " 35. 编辑 V2Ray-Poseidon 直接命令行 方式运行 配置文件 v2ray-poseidon/config.json"
+    green " 36. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker方式运行 配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
+    green " 37. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker Compose 配置文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
     
     echo
-    green " 31. 安装 Soga 服务器端"
-    green " 32. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
-    green " 33. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
+    green " 41. 安装 Soga 服务器端"
+    green " 42. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
+    green " 43. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
     
     echo
-    green " 41. 安装 XrayR 服务器端"
-    green " 42. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
-    green " 43. 编辑 XrayR 配置文件 ${configXrayRConfigFilePath}"
+    green " 45. 安装 XrayR 服务器端"
+    green " 46. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
+    green " 47. 编辑 XrayR 配置文件 ${configXrayRConfigFilePath}"
 
     echo
     green " 51. 安装 Air-Universe 服务器端"
@@ -3294,23 +3636,23 @@ function start_menu(){
     red " 18. Remove Cloudreve cloud storage system"
 
     echo
-    green " 21. Install V2Ray-Poseidon server side"
-    red " 22. Remove V2Ray-Poseidon"
-    green " 23. Stop, restart, show log, manage V2Ray-Poseidon"
+    green " 31. Install V2Ray-Poseidon server side"
+    red " 32. Remove V2Ray-Poseidon"
+    green " 33. Stop, restart, show log, manage V2Ray-Poseidon"
     echo
-    green " 25. Using VI open V2Ray-Poseidon config file v2ray-poseidon/config.json (direct command line running mode)"
-    green " 26. Using VI open V2Ray-Poseidon Docker WS-TLS Mode config file v2ray-poseidon/docker/v2board/ws-tls/config.json (Docker mode)"
-    green " 27. Using VI open V2Ray-Poseidon Docker WS-TLS Mode Docker Compose config file v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml (Docker mode)"
+    green " 35. Using VI open V2Ray-Poseidon config file v2ray-poseidon/config.json (direct command line running mode)"
+    green " 36. Using VI open V2Ray-Poseidon Docker WS-TLS Mode config file v2ray-poseidon/docker/v2board/ws-tls/config.json (Docker mode)"
+    green " 37. Using VI open V2Ray-Poseidon Docker WS-TLS Mode Docker Compose config file v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml (Docker mode)"
     
     echo
-    green " 31. Install Soga server side "
-    green " 32. Stop, restart, show log, manage Soga server side "
-    green " 33. Using VI open Soga config file ${configSogaConfigFilePath}"
+    green " 41. Install Soga server side "
+    green " 42. Stop, restart, show log, manage Soga server side "
+    green " 43. Using VI open Soga config file ${configSogaConfigFilePath}"
     
     echo
-    green " 41. Install XrayR server side "
-    green " 42. Stop, restart, show log, manage XrayR server side "
-    green " 43. Using VI open XrayR config file ${configXrayRConfigFilePath}"
+    green " 45. Install XrayR server side "
+    green " 46. Stop, restart, show log, manage XrayR server side "
+    green " 47. Using VI open XrayR config file ${configXrayRConfigFilePath}"
 
     echo
     green " 51. Install Air-Universe server side "
@@ -3390,47 +3732,49 @@ function start_menu(){
         ;;
 
 
-        21 )
+        31 )
             setLinuxDateZone
             installPackage
             installV2rayPoseidon
         ;;
-        22 )
+        32 )
             removeV2rayPoseidon
         ;;
-        23 )
+        33 )
             manageV2rayPoseidon
         ;;
-        25 )
+        35 )
             editV2rayPoseidonConfig
         ;;
-        26 )
+        36 )
             editV2rayPoseidonDockerWSConfig
         ;;
-        27 )
+        37 )
             editV2rayPoseidonDockerComposeConfig
         ;;
-       
-        31 )
+
+        41 )
             setLinuxDateZone
             installSoga 
         ;;
-        32 )
+        42 )
             manageSoga
         ;;                                        
-        33 )
+        43 )
             editSogaConfig
         ;; 
-        41 )
+
+        45 )
             setLinuxDateZone
             installXrayR
         ;;
-        42 )
+        46 )
             manageXrayR
         ;;                                        
-        43 )
+        47 )
             editXrayRConfig
         ;; 
+
         51 )
             setLinuxDateZone
             installAirUniverse
