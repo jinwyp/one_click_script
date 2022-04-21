@@ -406,7 +406,7 @@ function setLinuxDateZone(){
         green " =================================================="
         # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 
-        read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]:" osTimezoneInput
+        read -p " 是否设置为北京时间 +0800 时区? 请输入[Y/n]:" osTimezoneInput
         osTimezoneInput=${osTimezoneInput:-Y}
 
         if [[ $osTimezoneInput == [Yy] ]]; then
@@ -414,7 +414,7 @@ function setLinuxDateZone(){
                 mv /etc/localtime /etc/localtime.bak
                 cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
-                yellow "设置成功! 当前时区已设置为 $(date -R)"
+                yellow " 设置成功! 当前时区已设置为 $(date -R)"
                 green " =================================================="
             fi
         fi
@@ -811,6 +811,9 @@ function vps_LemonBench(){
 function vps_autoBestTrace(){
     wget -N --no-check-certificate -O autoBestTrace.sh https://raw.githubusercontent.com/zq/shell/master/autoBestTrace.sh && chmod +x autoBestTrace.sh && ./autoBestTrace.sh
 }
+function vps_mtrTrace(){
+    curl https://raw.githubusercontent.com/zhucaidan/mtr_trace/main/mtr_trace.sh | bash
+}
 
 
 
@@ -929,7 +932,7 @@ promptInfoTrojanName=""
 isTrojanGo="yes"
 isTrojanGoSupportWebsocket="false"
 configTrojanGoWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-configTrojanPasswordPrefixInput="jin"
+configTrojanPasswordPrefixInputDefault=$(cat /dev/urandom | head -1 | md5sum | head -c 2)
 
 configTrojanPath="${HOME}/trojan"
 configTrojanGoPath="${HOME}/trojan-go"
@@ -1138,18 +1141,38 @@ function compareRealIpWithLocalIp(){
 
 
 acmeSSLRegisterEmailInput=""
+isDomainSSLGoogleEABKeyInput=""
+isDomainSSLGoogleEABIdInput=""
 function getHTTPSCertificateCheckEmail(){
-    if [ -z ${acmeSSLRegisterEmailInput} ]; then
-        red " 请输入邮箱地址不能为空, 请重新输入!"
-        getHTTPSCertificateInputEmail
+    if [ -z $2 ]; then
+        
+        if [[ $1 == "email" ]]; then
+            red " 输入邮箱地址不能为空, 请重新输入!"
+            getHTTPSCertificateInputEmail
+        elif [[ $1 == "googleEabKey" ]]; then
+            red " 输入EAB key 不能为空, 请重新输入!"
+            getHTTPSCertificateInputGoogleEABKey
+        elif [[ $1 == "googleEabId" ]]; then
+            red " 输入EAB Id 不能为空, 请重新输入!"
+            getHTTPSCertificateInputGoogleEABId            
+        fi
     fi
 }
 function getHTTPSCertificateInputEmail(){
     echo
     read -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
-    getHTTPSCertificateCheckEmail
+    getHTTPSCertificateCheckEmail "email" ${acmeSSLRegisterEmailInput}
 }
-
+function getHTTPSCertificateInputGoogleEABKey(){
+    echo
+    read -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
+    getHTTPSCertificateCheckEmail "googleEabKey" ${isDomainSSLGoogleEABKeyInput}
+}
+function getHTTPSCertificateInputGoogleEABId(){
+    echo
+    read -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
+    getHTTPSCertificateCheckEmail "googleEabId" ${isDomainSSLGoogleEABIdInput}
+}
 
 acmeSSLDays="89"
 acmeSSLServerName="letsencrypt"
@@ -1178,6 +1201,7 @@ function getHTTPSCertificateWithAcme(){
     green " 1 Letsencrypt.org "
     green " 2 BuyPass.com "
     green " 3 ZeroSSL.com "
+    green " 4 Google Public CA "
     echo
     read -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
     isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
@@ -1195,6 +1219,16 @@ function getHTTPSCertificateWithAcme(){
         acmeSSLServerName="zerossl"
         echo
         ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server zerossl
+
+    elif [[ "$isDomainSSLFromLetInput" == "4" ]]; then
+        green " ================================================== "
+        yellow " 请先按照如下链接申请 google Public CA  https://hostloc.com/thread-993780-1-1.html"
+        yellow " 具体可参考 https://github.com/acmesh-official/acme.sh/wiki/Google-Public-CA"
+        getHTTPSCertificateInputEmail
+        acmeSSLServerName="google"
+        getHTTPSCertificateInputGoogleEABKey
+        getHTTPSCertificateInputGoogleEABId
+        ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server google --eab-kid ${isDomainSSLGoogleEABIdInput} --eab-hmac-key ${isDomainSSLGoogleEABKeyInput}    
     else
         acmeSSLServerName="letsencrypt"
         #${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days 89 --server letsencrypt
@@ -2286,8 +2320,8 @@ function installTrojanServer(){
     echo
     yellow " 请输入 trojan${promptInfoTrojanName} 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     
-    read -p "请输入密码的前缀:" configTrojanPasswordPrefixInput
-    configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-jin}
+    read -p "请输入密码的前缀, 直接回车默认随机生成前缀:" configTrojanPasswordPrefixInput
+    configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-${configTrojanPasswordPrefixInputDefault}}
 
 
     if [[ "$configV2rayWorkingMode" != "trojan" && "$configV2rayWorkingMode" != "sni" ]] ; then
@@ -6669,7 +6703,7 @@ function start_menu(){
     red " 24. 卸载 trojan, v2ray或xray 和 nginx"
     echo
     green " 25. 查看已安装的配置和用户密码等信息"
-    green " 26. 单独申请域名SSL证书"
+    green " 26. 申请免费的域名SSL证书"
     green " 30. 子菜单 安装 trojan 和 v2ray 可视化管理面板, VPS测速工具, Netflix测试解锁工具, 安装宝塔面板等"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"

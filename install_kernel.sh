@@ -1137,7 +1137,7 @@ function installCentosKernelManual(){
         if [ "${kernelVersionFirstletter}" = "5" ]; then 
             linuxKernelByUser="elrepo"
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.16" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.16" || "${linuxKernelToInstallVersion}" == "5.17" ]]; then 
                 linuxKernelByUserTeddysun="Teddysun"
             fi
         else
@@ -3003,7 +3003,7 @@ function start_menu(){
     green " 10. 查看 WireGuard 和 WARP SOCKS5 运行状态, 错误日志, 如果WireGuard启动失败 请选该项排查错误"
     echo
     green " 11. 安装官方 Cloudflare WARP Client 启动SOCKS5代理, 用于解锁 Netflix 限制"
-    green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf ${versionWgcf}, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
+    green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
     green " 13. 同时安装 官方 Cloudflare WARP Client, WireGuard 和 命令行工具 Wgcf, 不推荐 "
     red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client"
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
@@ -3020,8 +3020,8 @@ function start_menu(){
     green " 35. 安装 内核 5.4 LTS, 从 elrepo网站 下载安装"
     echo
     green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
-    green " 37. 安装 内核 5.15, Teddysun 编译"
-    green " 38. 安装 内核 5.16, 下载安装. (安装最新版内核 可能会高于5.16) "
+    green " 37. 安装 内核 5.16, Teddysun 编译"
+    green " 38. 安装 内核 5.17, 下载安装. (安装最新版内核 可能会高于5.17) "
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
@@ -3084,7 +3084,7 @@ function start_menu(){
     green " 10. Show WireGuard and WARP SOCKS5 working status, error log, etc."
     echo
     green " 11. Install official Cloudflare WARP linux client SOCKS5 proxy, in order to unlock Netflix geo restriction "
-    green " 12. Install WireGuard and Cloudflare WARP tool Wgcf ${versionWgcf}, enable IPv4 or IPv6, avoid Google reCAPTCHA"
+    green " 12. Install WireGuard and Cloudflare WARP tool Wgcf, enable IPv4 or IPv6, avoid Google reCAPTCHA"
     green " 13. Install official Cloudflare WARP linux client, WireGuard and WARP toll Wgcf, not recommended "
     red " 14. Remove WireGuard 和 Cloudflare WARP linux client"
     green " 15. Switch WireGuard using IPv6 or IPv4 for your VPS"
@@ -3101,8 +3101,8 @@ function start_menu(){
     green " 35. Install linux kernel 5.4 LTS, download and install from elrepo website"
     echo
     green " 36. Install linux kernel 5.10 LTS, compile by Teddysun. Recommended"
-    green " 37. Install linux kernel 5.15, compile by Teddysun."
-    green " 38. Install linux kernel 5.16, download and install (will install latest kernel, maybe higher than 5.16) "
+    green " 37. Install linux kernel 5.16, compile by Teddysun."
+    green " 38. Install linux latest kernel 5.17 elrepo, download from Teddysun ftp"
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
@@ -3224,11 +3224,11 @@ function start_menu(){
             installKernel
         ;;
         37 )
-            linuxKernelToInstallVersion="5.15"
+            linuxKernelToInstallVersion="5.16"
             installKernel
         ;; 
         38 )
-            linuxKernelToInstallVersion="5.16"
+            linuxKernelToInstallVersion="5.17"
             installKernel
         ;;
         41 )
