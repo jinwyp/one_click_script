@@ -377,7 +377,7 @@ function changeLinuxSSHPort(){
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            sudo ufw allow $osSSHLoginPortInput/tcp
+            ${sudoCmd} ufw allow $osSSHLoginPortInput/tcp
 
             ${sudoCmd} service ssh restart
             ${sudoCmd} systemctl restart ssh
@@ -406,7 +406,7 @@ function setLinuxDateZone(){
         green " =================================================="
         # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 
-        read -p " 是否设置为北京时间 +0800 时区? 请输入[Y/n]:" osTimezoneInput
+        read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]:" osTimezoneInput
         osTimezoneInput=${osTimezoneInput:-Y}
 
         if [[ $osTimezoneInput == [Yy] ]]; then
@@ -779,7 +779,13 @@ function vps_netflixgo(){
 
 
 function vps_superspeed(){
-	bash <(curl -Lso- https://git.io/superspeed.sh)
+    bash <(curl -Lso- https://git.io/superspeed_uxh)
+    # bash <(curl -Lso- https://raw.githubusercontent.com/uxh/superspeed/master/superspeed.sh)
+
+    # bash <(curl -Lso- https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh)
+	# bash <(curl -Lso- https://git.io/superspeed.sh)
+
+
     #wget -N --no-check-certificate https://raw.githubusercontent.com/flyzy2005/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
     #wget -N --no-check-certificate https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 
@@ -841,10 +847,13 @@ function installBTPanel(){
 }
 
 function installBTPanelCrack(){
+    echo "美国节点(直接随意输入 11位数字 跟 1位 密码 就能登录)"
     if [ "$osRelease" == "centos" ]; then
-        yum install -y wget && wget -O install.sh https://download.fenhao.me/install/install_6.0.sh && sh install.sh
+        yum install -y wget && wget -O btinstall.sh http://io.yu.al/install/install_6.0.sh && sh btinstall.sh
+        # yum install -y wget && wget -O install.sh https://download.fenhao.me/install/install_6.0.sh && sh install.sh
     else
-        wget -O install.sh https://download.fenhao.me/install/install-ubuntu_6.0.sh && sudo bash install.sh
+        wget -O btinstall.sh http://io.yu.al/install/install_panel.sh && sudo bash btinstall.sh
+        #wget -O install.sh https://download.fenhao.me/install/install-ubuntu_6.0.sh && sudo bash install.sh
     fi
 }
 
@@ -903,8 +912,10 @@ configSSLDomain=""
 
 
 
-configWebsiteFatherPath="${HOME}/website"
-configWebsitePath="${HOME}/website/html"
+configWebsiteFatherPath="/nginxweb"
+configWebsitePath="${configWebsiteFatherPath}/html"
+nginxAccessLogFilePath="${configWebsiteFatherPath}/nginx-access.log"
+nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
 
 configTrojanWindowsCliPrefixPath=$(cat /dev/urandom | head -1 | md5sum | head -c 20)
 configWebsiteDownloadPath="${configWebsitePath}/download/${configTrojanWindowsCliPrefixPath}"
@@ -932,7 +943,7 @@ promptInfoTrojanName=""
 isTrojanGo="yes"
 isTrojanGoSupportWebsocket="false"
 configTrojanGoWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-configTrojanPasswordPrefixInputDefault=$(cat /dev/urandom | head -1 | md5sum | head -c 2)
+configTrojanPasswordPrefixInputDefault=$(cat /dev/urandom | head -1 | md5sum | head -c 3)
 
 configTrojanPath="${HOME}/trojan"
 configTrojanGoPath="${HOME}/trojan-go"
@@ -948,8 +959,7 @@ configTrojanWebPort="$(($RANDOM + 10000))"
 
 configInstallNginxMode=""
 nginxConfigPath="/etc/nginx/nginx.conf"
-nginxAccessLogFilePath="${HOME}/nginx-access.log"
-nginxErrorLogFilePath="${HOME}/nginx-error.log"
+
 
 promptInfoXrayInstall="V2ray"
 promptInfoXrayVersion=""
@@ -1180,7 +1190,7 @@ acmeSSLDNSProvider="dns_cf"
 
 configRanPath="${HOME}/ran"
 configSSLAcmeScriptPath="${HOME}/.acme.sh"
-configSSLCertPath="${HOME}/website/cert"
+configSSLCertPath="${configWebsiteFatherPath}/cert"
 
 configSSLCertKeyFilename="private.key"
 configSSLCertFullchainFilename="fullchain.cer"
@@ -1295,7 +1305,7 @@ function getHTTPSCertificateWithAcme(){
 
             if [ -z ${isDomainSSLNginxWebrootFolderInput} ]; then
                 red " 输入的Web服务器的 html网站根目录路径不能为空, 网站根目录将默认设置为 ${configWebsitePath}, 请修改你的web服务器配置后再申请证书!"
-                configWebsitePath="${HOME}/website/html"
+                
             else
                 configWebsitePath="${isDomainSSLNginxWebrootFolderInput}"
             fi
@@ -1458,6 +1468,15 @@ function installWebServerNginx(){
 
     stopServiceV2ray
 
+	wwwUsername="www-data"
+	isHaveWwwUser=$(cat /etc/passwd|cut -d ":" -f 1|grep ^www-data$)
+	if [ "${isHaveWwwUser}" != "www-data" ]; then
+		${sudoCmd} groupadd ${wwwUsername}
+		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
+	fi
+
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
+    ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
 
     if [ "$osRelease" == "centos" ]; then
         ${osSystemPackage} install -y nginx-mod-stream
@@ -1750,7 +1769,7 @@ EOM
 
 ${nginxConfigNginxModuleInput}
 
-user  root;
+user  ${wwwUsername} ${wwwUsername};
 worker_processes  1;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -1959,10 +1978,10 @@ configNginxSNIDomainWebsite=""
 configNginxSNIDomainV2ray=""
 configNginxSNIDomainTrojan=""
 
-configSSLCertPath="${HOME}/website/cert"
-configNginxSNIDomainTrojanCertPath="${HOME}/website/cert/nginxsni/trojan"
-configNginxSNIDomainV2rayCertPath="${HOME}/website/cert/nginxsni/v2ray"
-configNginxSNIDomainWebsiteCertPath="${HOME}/website/cert/nginxsni/web"
+configSSLCertPath="${configWebsiteFatherPath}/cert"
+configNginxSNIDomainTrojanCertPath="${configWebsiteFatherPath}/cert/nginxsni/trojan"
+configNginxSNIDomainV2rayCertPath="${configWebsiteFatherPath}/cert/nginxsni/v2ray"
+configNginxSNIDomainWebsiteCertPath="${configWebsiteFatherPath}/cert/nginxsni/web"
 
 function checkNginxSNIDomain(){
 
@@ -4068,6 +4087,13 @@ EOM
     trojanPassword8=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+
+    if [[ "$configV2rayWorkingMode" == "vlessTCPWSTrojan" ]]; then
+        echo
+        yellow " 请输入 trojan 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
+        read -p "请输入密码的前缀, 直接回车默认随机生成前缀:" configTrojanPasswordPrefixInput
+        configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-${configTrojanPasswordPrefixInputDefault}}
+    fi
 
     if [ "${isTrojanMultiPassword}" = "no" ] ; then
     read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
@@ -6486,8 +6512,8 @@ function startMenuOther(){
     green " 54. 测试VPS 是否支持 Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
     echo
     green " 61. 安装 官方宝塔面板"
-    #green " 63. 安装 宝塔面板破解版 by fenhao.me"
     green " 62. 安装 宝塔面板纯净版 by hostcli.com"
+    green " 63. 安装 宝塔面板破解版 7.9 by yu.al"
     echo
     green " 99. 返回上级菜单"
     green " 0. 退出脚本"    
@@ -6530,8 +6556,8 @@ function startMenuOther(){
     green " 54. Netflix, Disney, Hulu etc unlock test by by lmc999"
     echo
     green " 61. install official bt panel (aa panel)"
-    #green " 63. install modified bt panel (aa panel) by fenhao.me"
     green " 62. install modified bt panel (aa panel) by hostcli.com"
+    green " 63. install modified bt panel (aa panel) 7.9 by yu.al"
     echo
     green " 99. Back to main menu"
     green " 0. exit"
@@ -6703,7 +6729,7 @@ function start_menu(){
     red " 24. 卸载 trojan, v2ray或xray 和 nginx"
     echo
     green " 25. 查看已安装的配置和用户密码等信息"
-    green " 26. 申请免费的域名SSL证书"
+    green " 26. 申请免费的SSL证书"
     green " 30. 子菜单 安装 trojan 和 v2ray 可视化管理面板, VPS测速工具, Netflix测试解锁工具, 安装宝塔面板等"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
@@ -6746,7 +6772,7 @@ function start_menu(){
     red " 24.  Remove trojan/trojan-go, v2ray/xray and nginx"
     echo
     green " 25. Show info and password for installed trojan and v2ray"
-    green " 26. Get a free SSL certificate for domain name"
+    green " 26. Get a free SSL certificate for one or multiple domains"
     green " 30. Submenu. install trojan and v2ray UI admin panel, VPS speedtest tools, Netflix unlock tools. Miscellaneous tools"
     green " =================================================="
     green " 31. Install Oh My Zsh and zsh-autosuggestions plugin, Micro editor"

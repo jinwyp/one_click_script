@@ -3105,38 +3105,46 @@ function getHTTPSCertificate(){
         read -r -p "请输入您的邮箱Email 用于在 ZeroSSL.com 申请SSL证书:" isSSLDNSEmailInput
         ${configSSLAcmeScriptPath}/acme.sh --register-account  -m ${isSSLDNSEmailInput} --server zerossl
 
+
         echo
-        green "请选择 DNS provider DNS 提供商: 1. CloudFlare, 2. AliYun, 3. DNSPod(Tencent) "
-        red "注意 CloudFlare 针对某些免费的域名例如.tk .cf 等  不再支持使用API 申请DNS证书 "
-        read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isSSLDNSProviderInput
-        isSSLDNSProviderInput=${isSSLDNSProviderInput:-1}    
-
+        green "请选择 DNS provider DNS 提供商: 1 CloudFlare, 2 AliYun,  3 DNSPod(Tencent), 4 GoDaddy "
+        red "注意 CloudFlare 针对某些免费域名例如 .tk .cf 等  不再支持使用API 申请DNS证书 "
+        echo
+        read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isAcmeSSLDNSProviderInput
+        isAcmeSSLDNSProviderInput=${isAcmeSSLDNSProviderInput:-1}    
         
-        if [ "$isSSLDNSProviderInput" == "1" ]; then
-            read -r -p "Please Input CloudFlare Email: " cf_email
-            export CF_Email="${cf_email}"
-            read -r -p "Please Input CloudFlare Global API Key: " cf_key
-            export CF_Key="${cf_key}"
-
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_cf --force --keylength ec-256 --server zerossl --debug 
-
-        elif [ "$isSSLDNSProviderInput" == "2" ]; then
+        if [ "$isAcmeSSLDNSProviderInput" == "2" ]; then
             read -r -p "Please Input Ali Key: " Ali_Key
             export Ali_Key="${Ali_Key}"
             read -r -p "Please Input Ali Secret: " Ali_Secret
             export Ali_Secret="${Ali_Secret}"
+            acmeSSLDNSProvider="dns_ali"
 
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_ali --force --keylength ec-256 --server zerossl --debug 
-
-        elif [ "$isSSLDNSProviderInput" == "3" ]; then
-            read -r -p "Please Input DNSPod ID: " DP_Id
+        elif [ "$isAcmeSSLDNSProviderInput" == "3" ]; then
+            read -r -p "Please Input DNSPod API ID: " DP_Id
             export DP_Id="${DP_Id}"
-            read -r -p "Please Input DNSPod Key: " DP_Key
+            read -r -p "Please Input DNSPod API Key: " DP_Key
             export DP_Key="${DP_Key}"
+            acmeSSLDNSProvider="dns_dp"
 
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns dns_dp --force --keylength ec-256 --server zerossl --debug 
+        elif [ "$isAcmeSSLDNSProviderInput" == "4" ]; then
+            read -r -p "Please Input GoDaddy API Key: " gd_Key
+            export GD_Key="${gd_Key}"
+            read -r -p "Please Input GoDaddy API Secret: " gd_Secret
+            export GD_Secret="${gd_Secret}"
+            acmeSSLDNSProvider="dns_gd"
+
+        else
+            read -r -p "Please Input CloudFlare Email: " cf_email
+            export CF_Email="${cf_email}"
+            read -r -p "Please Input CloudFlare Global API Key: " cf_key
+            export CF_Key="${cf_key}"
+            acmeSSLDNSProvider="dns_cf"
         fi
-
+        
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns ${acmeSSLDNSProvider} --force --keylength ec-256 --server zerossl --debug 
+        
         ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
         --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
         --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
