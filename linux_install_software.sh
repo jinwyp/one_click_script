@@ -449,12 +449,48 @@ function installSoftDownload(){
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
+            
         if ! rpm -qa | grep -qw wget; then
 		    ${osSystemPackage} -y install wget curl git unzip
+
+            if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
+
+                # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+
+                cd /etc/yum.repos.d/
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+                yum update -y
+
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+                ${sudoCmd} dnf install centos-release-stream -y
+                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
+                ${sudoCmd} dnf distro-sync -y
+            fi
+
         elif ! rpm -qa | grep -qw git; then
+            if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
+
+                # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+
+                cd /etc/yum.repos.d/
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+                yum update -y
+
+                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+                ${sudoCmd} dnf install centos-release-stream -y
+                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
+                ${sudoCmd} dnf distro-sync -y
+            fi
+            
 		    ${osSystemPackage} -y install wget curl git unzip
 		fi
-	fi 
+	fi
 }
 
 
@@ -2184,18 +2220,21 @@ function downgradeXray(){
     red " 注意 Air-Universe 最新版不支持 Xray 1.5.0或更老版本"
     red " 如需要使用Xray 1.5.0或更老版本的Xray, 请选择 Air-Universe 1.0.0或 0.9.2"
     green " 1. 不降级 使用最新版本"
-    green " 2. 1.0.0"
-    green " 3. 0.9.2"
+    green " 2. 1.1.0 (不支持 Xray 1.5.0或更老版本)"
+    green " 3. 1.0.0 (仅支持 Xray 1.5.0或更老版本)"
+    green " 4. 0.9.2 (仅支持 Xray 1.5.0或更老版本)"
     echo
     read -p "请选择Air-Universe版本? 直接回车默认选1, 请输入纯数字:" isAirUniverseVersionInput
     isAirUniverseVersionInput=${isAirUniverseVersionInput:-1}
 
-    downloadAirUniverseVersion="1.0.2"
+    downloadAirUniverseVersion="1.1.0"
     downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v1.0.2/Air-Universe-linux-64.zip"
 
     if [[ "${isAirUniverseVersionInput}" == "2" ]]; then
-        downloadAirUniverseVersion="1.0.0"
+        downloadAirUniverseVersion="1.1.0"
     elif [[ "${isAirUniverseVersionInput}" == "3" ]]; then
+        downloadAirUniverseVersion="1.0.0"
+    elif [[ "${isAirUniverseVersionInput}" == "4" ]]; then
         downloadAirUniverseVersion="0.9.2"
     else
         echo
@@ -2243,43 +2282,47 @@ function downgradeXray(){
     yellow " 请选择Xray降级到的版本, 默认不降级"
     green " 1. 不降级 使用最新版本"
 
-    if [[ "${isAirUniverseVersionInput}" == "1" ]]; then
-        green " 2. 1.5.3"
+    if [[ "${isAirUniverseVersionInput}" == "1" || "${isAirUniverseVersionInput}" == "2" ]]; then
+        green " 2. 1.5.4"
+        green " 3. 1.5.3"
     else
-        green " 3. 1.5.0"
-        green " 4. 1.4.5"
-        green " 5. 1.4.3"
-        green " 6. 1.4.2"
-        green " 7. 1.4.0"
-        green " 8. 1.3.1"
+        green " 4. 1.5.0"
+        green " 5. 1.4.5"
+        green " 6. 1.4.3"
+        green " 7. 1.4.2"
+        green " 8. 1.4.0"
+        green " 9. 1.3.1"
     fi
 
     echo
     read -p "请选择Xray版本? 直接回车默认选1, 请输入纯数字:" isXrayVersionInput
     isXrayVersionInput=${isXrayVersionInput:-1}
 
-    downloadXrayVersion="1.5.0"
+    downloadXrayVersion="1.5.4"
     downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip"
 
     if [[ "${isXrayVersionInput}" == "2" ]]; then
-        downloadXrayVersion="1.5.3"
+        downloadXrayVersion="1.5.4"
 
     elif [[ "${isXrayVersionInput}" == "3" ]]; then
-        downloadXrayVersion="1.5.0"
+        downloadXrayVersion="1.5.3"
 
     elif [[ "${isXrayVersionInput}" == "4" ]]; then
-        downloadXrayVersion="1.4.5"
+        downloadXrayVersion="1.5.0"
 
     elif [[ "${isXrayVersionInput}" == "5" ]]; then
-        downloadXrayVersion="1.4.3"
+        downloadXrayVersion="1.4.5"
 
     elif [[ "${isXrayVersionInput}" == "6" ]]; then
-        downloadXrayVersion="1.4.2"
+        downloadXrayVersion="1.4.3"
 
     elif [[ "${isXrayVersionInput}" == "7" ]]; then
-        downloadXrayVersion="1.4.0"
+        downloadXrayVersion="1.4.2"
 
     elif [[ "${isXrayVersionInput}" == "8" ]]; then
+        downloadXrayVersion="1.4.0"
+
+    elif [[ "${isXrayVersionInput}" == "9" ]]; then
         downloadXrayVersion="1.3.1"
 
     else
@@ -2331,7 +2374,9 @@ function downgradeXray(){
         chmod ugoa+rw ${configSSLCertPath}/*
         
         systemctl start xray.service
+        echo
         airu start
+        echo
         systemctl status xray.service
         echo
     fi    
@@ -3564,14 +3609,14 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2022-3-27 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2022-4-24 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
-    green " 5. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
-    green " 6. 修改 SSH 登陆端口号"
-    green " 7. 设置时区为北京时间"
-    green " 8. 用VI 编辑 /etc/hosts"
+    green " 3. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
+    green " 4. 修改 SSH 登陆端口号"
+    green " 5. 设置时区为北京时间"
+    green " 6. 用VI 编辑 /etc/hosts"
     
     echo
     green " 11. 安装 Vim Nano Micro 编辑器"
@@ -3580,8 +3625,9 @@ function start_menu(){
     red " 14. 卸载 Docker 与 Docker Compose"
     green " 15. 设置 Docker Hub 镜像 "
     green " 16. 安装 Portainer "
-    green " 17. 安装 Cloudreve 云盘系统 "
-    red " 18. 卸载 Cloudreve 云盘系统 "
+    echo
+    green " 21. 安装 Cloudreve 云盘系统 "
+    red " 22. 卸载 Cloudreve 云盘系统 "
 
     echo
     green " 31. 安装 V2Ray-Poseidon 服务器端"
@@ -3608,8 +3654,8 @@ function start_menu(){
     green " 53. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
     green " 54. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
-    green " 56. 配合WARP(Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
-    green " 57. 降级 Air-Universe 到 0.9.2, 降级 Xray 到 1.5或1.4"
+    green " 56. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
+    green " 57. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
     green " 58. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     echo 
     green " 71. 单独申请域名SSL证书"
@@ -3624,14 +3670,14 @@ function start_menu(){
 
     else
     green " =================================================="
-    green " Linux tools installation script | 2022-3-27 | By jinwyp | OS support：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux tools installation script | 2022-4-24 | By jinwyp | OS support：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
-    green " 5. Using VI open authorized_keys file, enter your public key. Then save file. In order to login VPS without Password"
-    green " 6. Modify SSH login port number. Secure your VPS"
-    green " 7. Set timezone to Beijing time"
-    green " 8. Using VI open /etc/hosts file"
+    green " 3. Using VI open authorized_keys file, enter your public key. Then save file. In order to login VPS without Password"
+    green " 4. Modify SSH login port number. Secure your VPS"
+    green " 5. Set timezone to Beijing time"
+    green " 6. Using VI open /etc/hosts file"
     
     echo
     green " 11. Install Vim Nano Micro editor"
@@ -3640,8 +3686,9 @@ function start_menu(){
     red " 14. Remove Docker and Docker Compose"
     green " 15. Set Docker Hub Registry"
     green " 16. Install Portainer "
-    green " 17. Install Cloudreve cloud storage system"
-    red " 18. Remove Cloudreve cloud storage system"
+    echo
+    green " 21. Install Cloudreve cloud storage system"
+    red " 22. Remove Cloudreve cloud storage system"
 
     echo
     green " 31. Install V2Ray-Poseidon server side"
@@ -3668,8 +3715,8 @@ function start_menu(){
     green " 53. Stop, restart, show log, manage Air-Universe server side "
     green " 54. Using VI open Air-Universe config file ${configAirUniverseConfigFilePath}"
     green " 55. Using VI open Air-Universe Xray config file ${configAirUniverseXrayConfigFilePath}"
-    green " 56. Using WARP(Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
-    green " 57. Downgrade Air-Universe to 0.9.2, downgrade Xray to 1.5 / 1.4"
+    green " 56. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
+    green " 57. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
     green " 58. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
     echo 
     green " 71. Get a free SSL certificate for domain name only"
@@ -3689,20 +3736,20 @@ function start_menu(){
         1 )
             installWireguard
         ;;    
-        5 )
+        3 )
             editLinuxLoginWithPublicKey
         ;;
-        6 )
+        4 )
             changeLinuxSSHPort
             sleep 10s
             start_menu
         ;;
-        7 )
+        5 )
             setLinuxDateZone
             sleep 4s
             start_menu
         ;;
-        8 )
+        6 )
             DSMEditHosts
         ;;
         11 )
@@ -3710,7 +3757,6 @@ function start_menu(){
         ;;
         12 )
             installPackage
-            installSoftEditor
             installNodejs
         ;;
         13 )
@@ -3728,16 +3774,12 @@ function start_menu(){
         16 )
             installPortainer 
         ;;
-        17 )
+        21 )
             installCloudreve
         ;;
-        18 )
+        22 )
             removeCloudreve
         ;;        
-        20 )
-            installPython3
-            installPython3Rembg
-        ;;
 
 
         31 )

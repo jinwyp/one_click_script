@@ -478,7 +478,7 @@ function installSoftDownload(){
         if ! rpm -qa | grep -qw wget; then
 		    ${osSystemPackage} -y install wget curl git unzip
 
-            if  [[ ${osReleaseVersion} == "8.1.1911" ]]; then
+            if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
 
                 # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
 
@@ -496,7 +496,7 @@ function installSoftDownload(){
             fi
 
         elif ! rpm -qa | grep -qw git; then
-            if  [[ ${osReleaseVersion} == "8.1.1911" ]]; then
+            if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
 
                 # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
 
@@ -515,7 +515,7 @@ function installSoftDownload(){
             
 		    ${osSystemPackage} -y install wget curl git unzip
 		fi
-	fi 
+	fi
 }
 
 
@@ -859,9 +859,9 @@ function installBTPanelCrack(){
 
 function installBTPanelCrackHostcli(){
     if [ "$osRelease" == "centos" ]; then
-        yum install -y wget && wget -O install.sh http://v7.hostcli.com/install/install_6.0.sh && sh install.sh
+        yum install -y wget && wget -O btinstall.sh http://v7.hostcli.com/install/install_6.0.sh && sh btinstall.sh
     else
-        wget -O install.sh http://v7.hostcli.com/install/install-ubuntu_6.0.sh && sudo bash install.sh
+        wget -O btinstall.sh http://v7.hostcli.com/install/install-ubuntu_6.0.sh && sudo bash btinstall.sh
     fi
 }
 
@@ -6500,8 +6500,8 @@ function startMenuOther(){
     green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）推荐使用 "
     green " 42. yet-another-bench-script 综合测试 （包含 CPU IO 测试 国际多个数据节点网速测试）推荐使用"
     green " 43. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 国内多个数据节点网速测试）"
-	green " 44. LemonBench 快速全方位测试 （包含CPU内存性能、回程、节点测速） "
-    green " 45. ZBench 综合网速测试 （包含节点测速, Ping 以及 路由测试）"
+	green " 44. LemonBench 快速全方位测试 (包含CPU内存性能、回程、节点测速) "
+    green " 45. ZBench 综合网速测试 (包含节点测速, Ping 以及 路由测试)"
     green " 46. testrace 回程路由测试 by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace 回程路由测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     echo
@@ -6702,7 +6702,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-3-27 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-4-24 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -6745,7 +6745,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray Installation | 2022-3-27 | By jinwyp | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray Installation | 2022-4-24 | By jinwyp | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
