@@ -461,58 +461,41 @@ function setLinuxDateZone(){
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget git unzip
+			${osSystemPackage} -y install wget git unzip curl
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 		if ! dpkg -l | grep -qw curl; then
-			${osSystemPackage} -y install curl git unzip
+			${osSystemPackage} -y install curl git unzip wget
 			
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
-            
+
+        if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
+
+            # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+
+            cd /etc/yum.repos.d/
+            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+            sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+            yum update -y
+
+            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+            sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+            ${sudoCmd} dnf install centos-release-stream -y
+            ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
+            ${sudoCmd} dnf distro-sync -y
+        fi
+        
         if ! rpm -qa | grep -qw wget; then
 		    ${osSystemPackage} -y install wget curl git unzip
 
-            if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
-
-                # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
-
-                cd /etc/yum.repos.d/
-                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-                yum update -y
-
-                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
-                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
-
-                ${sudoCmd} dnf install centos-release-stream -y
-                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
-                ${sudoCmd} dnf distro-sync -y
-            fi
-
         elif ! rpm -qa | grep -qw git; then
-            if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
-
-                # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
-
-                cd /etc/yum.repos.d/
-                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-                yum update -y
-
-                sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
-                sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
-
-                ${sudoCmd} dnf install centos-release-stream -y
-                ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
-                ${sudoCmd} dnf distro-sync -y
-            fi
-            
 		    ${osSystemPackage} -y install wget curl git unzip
 		fi
 	fi

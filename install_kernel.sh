@@ -2132,7 +2132,7 @@ function installWARPClient(){
 
     # (crontab -l ; echo "10 6 * * 0,1,2,3,4,5,6 warp-cli disable-always-on ") | sort - | uniq - | crontab -
     # (crontab -l ; echo "11 6 * * 0,1,2,3,4,5,6 warp-cli disconnect ") | sort - | uniq - | crontab -
-    (crontab -l ; echo "12 6 * * 0,1,2,3,4,5,6 systemctl restart warp-svc ") | sort - | uniq - | crontab -
+    # (crontab -l ; echo "12 6 * * 0,1,2,3,4,5,6 systemctl restart warp-svc ") | sort - | uniq - | crontab -
     # (crontab -l ; echo "16 6 * * 0,1,2,3,4,5,6 warp-cli connect ") | sort - | uniq - | crontab -
     # (crontab -l ; echo "17 6 * * 0,1,2,3,4,5,6 warp-cli enable-always-on ") | sort - | uniq - | crontab -
 
