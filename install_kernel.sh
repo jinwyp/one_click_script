@@ -945,8 +945,8 @@ function installKernel(){
 
 
 function getVersionBBRPlus(){
-    if [ "${linuxKernelToInstallVersion}" = "5.14" ]; then 
-        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.14")
+    if [ "${linuxKernelToInstallVersion}" = "5.17" ]; then 
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.17")
 
     elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.10")
@@ -1715,7 +1715,7 @@ function installDebianUbuntuKernel(){
         fi
 
     else
-
+        echo
         green " =================================================="
         green "    开始手动安装 linux 内核 "
         green " =================================================="
@@ -1734,6 +1734,7 @@ function installDebianUbuntuKernel(){
             green " 准备从 ${linuxKernelByUser} github 网站下载 bbr plus 的linux内核并安装 "
         else
             green " 准备从 Ubuntu kernel-ppa mainline 网站下载linux内核并安装 "
+            libssl3
         fi
         echo
 
@@ -1747,6 +1748,25 @@ function installDebianUbuntuKernel(){
             fi     
         
             ${sudoCmd} dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb 
+        fi
+        
+        if [ "${linuxKernelToInstallVersion}" = "5.17.5" ]; then 
+            if [ -f "${userHomePath}/libssl3_3.0.2-0ubuntu1_amd64.deb" ]; then
+                green "文件已存在, 不需要下载, 文件原下载地址: http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/libssl3_3.0.2-0ubuntu1_amd64.deb "
+            else 
+                green "文件下载中... 下载地址: http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/libssl3_3.0.2-0ubuntu1_amd64.deb "
+                wget -P ${userHomePath} http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/libssl3_3.0.2-0ubuntu1_amd64.deb
+            fi
+
+            if [ -f "${userHomePath}/libssl3_3.0.2-0ubuntu1_amd64.deb" ]; then
+                green "文件已存在, 不需要下载, 文件原下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc6_2.35-0ubuntu3_amd64.deb "
+            else 
+                green "文件下载中... 下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc6_2.35-0ubuntu3_amd64.deb "
+                wget -P ${userHomePath} http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc6_2.35-0ubuntu3_amd64.deb
+            fi     
+        
+            ${sudoCmd} dpkg -i libssl3_3.0.2-0ubuntu1_amd64.deb
+            ${sudoCmd} dpkg -i libc6_2.35-0ubuntu3_amd64.deb
         fi
 
 
@@ -3029,7 +3049,7 @@ function start_menu(){
         echo
         fi
 
-    green " 42. 安装 最新版本内核 5.16, 通过 Ubuntu kernel mainline 安装"
+    green " 42. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
     green " 43. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 44. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 45. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -3046,7 +3066,7 @@ function start_menu(){
     green " 64. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
     green " 65. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
     green " 66. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译" 
-    green " 67. 安装 BBR Plus 内核 5.14, UJX6N 编译"   
+    green " 67. 安装 BBR Plus 内核 5.17, UJX6N 编译"   
  
     echo
     green " 0. 退出脚本"
@@ -3110,7 +3130,7 @@ function start_menu(){
         echo
         fi
 
-    green " 42. Install latest linux kernel 5.16, download and install from Ubuntu kernel mainline"
+    green " 42. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
     green " 43. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
     green " 44. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
     green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
@@ -3127,7 +3147,7 @@ function start_menu(){
     green " 64. Install BBR Plus kernel 4.19 LTS, compile by UJX6N"
     green " 65. Install BBR Plus kernel 5.4 LTS, compile by UJX6N"
     green " 66. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
-    green " 67. Install BBR Plus kernel 5.14, compile by UJX6N"   
+    green " 67. Install BBR Plus kernel 5.17, compile by UJX6N"   
  
     echo
     green " 0. exit"
@@ -3237,7 +3257,7 @@ function start_menu(){
             installKernel
         ;;
         42 )
-            linuxKernelToInstallVersion="5.16.14"
+            linuxKernelToInstallVersion="5.17.5"
             installKernel
         ;;
         43 ) 
@@ -3249,7 +3269,7 @@ function start_menu(){
             installKernel
         ;;
         45 )
-            linuxKernelToInstallVersion="5.10.105"
+            linuxKernelToInstallVersion="5.10.113"
             installKernel
         ;;
         51 )
@@ -3295,7 +3315,7 @@ function start_menu(){
             installKernel
         ;;
         67 )
-            linuxKernelToInstallVersion="5.14"
+            linuxKernelToInstallVersion="5.17"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;

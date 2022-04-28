@@ -570,17 +570,18 @@ EOF
 
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+        apt update -y
 
-        ${osSystemPackage} install -y gnupg2
-        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
-        # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        apt install -y gnupg2
+        apt install -y curl ca-certificates lsb-release
+        wget https://nginx.org/keys/nginx_signing.key -O- | apt-key add - 
 
         cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
-deb [arch=amd64] http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
-deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+deb https://nginx.org/packages/mainline/debian/ $osReleaseVersionCodeName nginx
+deb-src https://nginx.org/packages/mainline/debian $osReleaseVersionCodeName nginx
 EOF
 
-        ${osSystemPackage} update -y
+        apt update -y
 
         if ! dpkg -l | grep -qw iperf3; then
             ${osSystemPackage} install -y curl wget git unzip zip tar
