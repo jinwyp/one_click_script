@@ -16,11 +16,11 @@
 
 ![HTTPS1](https://github.com/jinwyp/one_click_script/blob/master/docs/https1.png?raw=true)
 
-4. 虽然得到IP后网页传输是加密的https,其他人无法知道浏览的内容是什么,但第一步查询DNS时是未加密的, GFW防火墙就可以获取到域名信息并污染DNS,返回一个错误的IP地址,这样就无法正常打开网页了. 所以DNS也要加密啊, DOT(DNS over TLS) 与 DOH(DNS over HTTPS)就诞生了. 开启DOT或DOH后就如下图, 查询DNS后返回的IP地址信息也是加密的. GFW就无法截取信息并污染DNS了. 如何开启DOT和DOH 请看[Chrome开启方法](Chrome) 和 [Firefox开启方法](Firefox)
+4. 通过DNS解析后得到IP后虽然网页传输是加密的https,其他人无法知道浏览的内容是什么,但第一步查询DNS时是未加密的, GFW防火墙就可以获取到域名信息并污染DNS,返回一个错误的IP地址,这样就无法正常打开网页了. 所以DNS也要加密, DOT(DNS over TLS) 与 DOH(DNS over HTTPS)就诞生了. 开启DOT或DOH后就如下图, 查询DNS后返回的IP地址信息也是加密的. GFW就无法截取信息并污染DNS了. 如何开启DOT和DOH 请看[Chrome开启方法](#chrome) 和 [Firefox开启方法](#firefox)
 
-![DNS3](https://github.com/jinwyp/one_click_script/blob/master/docs/dns2.png?raw=true)
+![DNS3](https://github.com/jinwyp/one_click_script/blob/master/docs/dns3.png?raw=true)
 
-5. 根据上图仔细看还会发现,第一步输入网址查询DNS的时候还是未加密的, 这样网址的名称还会被其他人获取, 为了解决这个问题又提出了ESNI(Encrypted server name indication), 这样从所有链路都加密了. 由于从第一步输入网址信息就是加密的, 那么DNS服务器如何知道输入的什么网址呢, 所以该技术需要浏览器和DNS提供商配合, 目前新版firefox和CDN服务商Cloudflare已支持开启ESNI. 如何开启Firefox的ESNI方法
+5. 根据上图仔细看还会发现,第一步输入网址查询DNS的时候还是未加密的, 这样网址的名称还会被其他人获取, 为了解决这个问题又提出了ESNI(Encrypted server name indication), 这样从所有链路都加密了. 由于从第一步输入网址信息就是加密的, 那么DNS服务器如何知道输入的什么网址呢, 所以该技术需要浏览器和DNS提供商配合, 目前新版firefox和CDN服务商Cloudflare已支持开启ESNI. [如何开启Firefox的ESNI方法](#firefoxesni).
 
 6. 更多DOH DOT ESNI 资料请看[什么是加密的 SNI](https://www.cloudflare.com/zh-cn/learning/ssl/what-is-encrypted-sni/). [使用 ESNI、DoH 和 DoT](https://www.toptal.com/web/encrypted-safe-with-esni-doh-dot). [搭建全协议DNS服务器](https://blog.dnomd343.top/dns-server/)
 
@@ -59,6 +59,7 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 4. 其他网上教程 [在Firefox中启用 DNS-over-HTTPS(DoH)](https://zhuanlan.zhihu.com/p/75845767)
 
+### FirefoxESNI
 ### Edge
 
 1. Edge 浏览器 [设置DoH加密DNS的方法] (https://www.icoa.cn/a/953.html)
