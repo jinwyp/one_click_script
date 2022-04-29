@@ -3593,7 +3593,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2022-4-24 | By jinwyp | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2022-4-29 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -3644,7 +3644,7 @@ function start_menu(){
     echo 
     green " 71. 单独申请域名SSL证书"
     green " 72. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
-    green " 73. 卸载共享Netflix账号服务器端"
+    red " 73. 卸载共享Netflix账号服务器端"
     echo
     green " 81. 工具脚本合集 by BlueSkyXN "
     green " 82. 工具脚本合集 by jcnf "
@@ -3654,7 +3654,7 @@ function start_menu(){
 
     else
     green " =================================================="
-    green " Linux tools installation script | 2022-4-24 | By jinwyp | OS support：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux tools installation script | 2022-4-29 | OS support：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
@@ -3704,9 +3704,11 @@ function start_menu(){
     green " 58. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
     echo 
     green " 71. Get a free SSL certificate for domain name only"
+    green " 72. Install Netflix account share service server, Play Netflix without Netflix account"
+    red " 73. Remove Netflix account share service server"    
     echo
-    green " 81. toolset by BlueSkyXN "
-    green " 82. toolset by jcnf "
+    green " 81. toolkit by BlueSkyXN "
+    green " 82. toolkit by jcnf "
     echo
     green " 88. upgrade this script to latest version"
     green " 0. exit"

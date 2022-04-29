@@ -1734,7 +1734,6 @@ function installDebianUbuntuKernel(){
             green " 准备从 ${linuxKernelByUser} github 网站下载 bbr plus 的linux内核并安装 "
         else
             green " 准备从 Ubuntu kernel-ppa mainline 网站下载linux内核并安装 "
-            libssl3
         fi
         echo
 
@@ -1758,15 +1757,32 @@ function installDebianUbuntuKernel(){
                 wget -P ${userHomePath} http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/libssl3_3.0.2-0ubuntu1_amd64.deb
             fi
 
-            if [ -f "${userHomePath}/libssl3_3.0.2-0ubuntu1_amd64.deb" ]; then
+            if [ -f "${userHomePath}/libc6_2.35-0ubuntu3_amd64.deb" ]; then
                 green "文件已存在, 不需要下载, 文件原下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc6_2.35-0ubuntu3_amd64.deb "
             else 
                 green "文件下载中... 下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc6_2.35-0ubuntu3_amd64.deb "
                 wget -P ${userHomePath} http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc6_2.35-0ubuntu3_amd64.deb
-            fi     
-        
+            fi 
+
+            if [ -f "${userHomePath}/locales_2.35-0ubuntu3_all.deb" ]; then
+                green "文件已存在, 不需要下载, 文件原下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/locales_2.35-0ubuntu3_all.deb "
+            else 
+                green "文件下载中... 下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/locales_2.35-0ubuntu3_all.deb "
+                wget -P ${userHomePath} http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/locales_2.35-0ubuntu3_all.deb
+            fi 
+
+            if [ -f "${userHomePath}/libc-bin_2.35-0ubuntu3_amd64.deb" ]; then
+                green "文件已存在, 不需要下载, 文件原下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc-bin_2.35-0ubuntu3_amd64.deb "
+            else 
+                green "文件下载中... 下载地址: http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc-bin_2.35-0ubuntu3_amd64.deb "
+                wget -P ${userHomePath} http://mirrors.kernel.org/ubuntu/pool/main/g/glibc/libc-bin_2.35-0ubuntu3_amd64.deb
+            fi
+            
+            ${sudoCmd} dpkg -i locales_2.35-0ubuntu3_all.deb
+            ${sudoCmd} dpkg -i libc-bin_2.35-0ubuntu3_amd64.deb
             ${sudoCmd} dpkg -i libssl3_3.0.2-0ubuntu1_amd64.deb
             ${sudoCmd} dpkg -i libc6_2.35-0ubuntu3_amd64.deb
+
         fi
 
 
@@ -2994,7 +3010,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2022-3-27 | By jinwyp | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2022-4-29 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " 在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -3033,7 +3049,7 @@ function start_menu(){
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
-    green " 31. 安装 最新版本内核 5.16, 通过elrepo源安装"
+    green " 31. 安装 最新版本内核 5.17, 通过elrepo源安装"
     green " 32. 安装 LTS内核 5.4 LTS, 通过elrepo源安装"
     green " 33. 安装 内核 4.14 LTS, 从 altarch网站 下载安装"
     green " 34. 安装 内核 4.19 LTS, 从 altarch网站 下载安装"
@@ -3049,6 +3065,10 @@ function start_menu(){
         echo
         fi
 
+
+
+    fi
+    echo
     green " 42. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
     green " 43. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
     green " 44. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -3056,9 +3076,6 @@ function start_menu(){
     echo
     green " 51. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
     green " 52. 安装 XanMod Kernel 内核 5.15, 官方源安装 "   
-
-    fi
-
     echo
     green " 61. 安装 BBR Plus 内核 4.14.129 LTS, cx9208 编译的 dog250 原版, 推荐使用"
     green " 62. 安装 BBR Plus 内核 4.9 LTS, UJX6N 编译"
@@ -3075,7 +3092,7 @@ function start_menu(){
     else
 
     green " =================================================="
-    green " Linux kernel install script | 2022-3-27 | By jinwyp | OS support：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux kernel install script | 2022-4-29 | OS support：centos7+ / debian10+ / ubuntu16.04+"
     green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
     red " Please use this script with caution in production. Backup your data first! Upgrade linux kernel will cause VPS unable to boot sometimes."
     green " =================================================="
@@ -3114,7 +3131,7 @@ function start_menu(){
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
-    green " 31. Install latest linux kernel, 5.16, from elrepo yum repository"
+    green " 31. Install latest linux kernel, 5.17, from elrepo yum repository"
     green " 32. Install LTS linux kernel, 5.4 LTS, from elrepo yum repository"
     green " 33. Install linux kernel 4.14 LTS, download and install from altarch website"
     green " 34. Install linux kernel 4.19 LTS, download and install from altarch website"
@@ -3130,16 +3147,17 @@ function start_menu(){
         echo
         fi
 
+ 
+
+    fi
+    echo
     green " 42. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
     green " 43. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
     green " 44. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
     green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
     echo
     green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
-    green " 52. Install XanMod kernel 5.15, from XanMod repository source "   
-
-    fi
-
+    green " 52. Install XanMod kernel 5.15, from XanMod repository source "  
     echo
     green " 61. Install BBR Plus kernel 4.14.129 LTS, compile by cx9208 from original dog250 source code. Recommended"
     green " 62. Install BBR Plus kernel 4.9 LTS, compile by UJX6N"
@@ -3218,7 +3236,7 @@ function start_menu(){
            vps_netflix_jin_auto
         ;;
         31 )
-            linuxKernelToInstallVersion="5.16"
+            linuxKernelToInstallVersion="5.17"
             isInstallFromRepo="yes"
             installKernel
         ;;
