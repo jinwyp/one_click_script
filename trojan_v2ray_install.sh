@@ -424,7 +424,11 @@ function setLinuxDateZone(){
 
     if [ "$osRelease" == "centos" ]; then   
         if  [[ ${osReleaseVersionNoShort} == "7" ]]; then
-            $osSystemPackage -y install ntpdate
+            systemctl stop chronyd
+            systemctl disable chronyd
+
+            $osSystemPackage -y install ntpdate ntp
+            $osSystemPackage -y install ntp
             ntpdate -q 0.rhel.pool.ntp.org
             systemctl enable ntpd
             systemctl restart ntpd

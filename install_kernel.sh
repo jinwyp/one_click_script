@@ -3065,17 +3065,16 @@ function start_menu(){
         echo
         fi
 
-
+        green " 42. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
+        green " 43. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
+        green " 44. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
+        green " 45. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
+        echo
+        green " 51. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
+        green " 52. 安装 XanMod Kernel 内核 5.15, 官方源安装 "   
 
     fi
-    echo
-    green " 42. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
-    green " 43. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
-    green " 44. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
-    green " 45. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
-    echo
-    green " 51. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
-    green " 52. 安装 XanMod Kernel 内核 5.15, 官方源安装 "   
+
     echo
     green " 61. 安装 BBR Plus 内核 4.14.129 LTS, cx9208 编译的 dog250 原版, 推荐使用"
     green " 62. 安装 BBR Plus 内核 4.9 LTS, UJX6N 编译"
@@ -3147,17 +3146,15 @@ function start_menu(){
         echo
         fi
 
- 
-
+        green " 42. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
+        green " 43. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
+        green " 44. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
+        green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
+        echo
+        green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
+        green " 52. Install XanMod kernel 5.15, from XanMod repository source "  
     fi
-    echo
-    green " 42. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
-    green " 43. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
-    green " 44. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
-    green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
-    echo
-    green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
-    green " 52. Install XanMod kernel 5.15, from XanMod repository source "  
+
     echo
     green " 61. Install BBR Plus kernel 4.14.129 LTS, compile by cx9208 from original dog250 source code. Recommended"
     green " 62. Install BBR Plus kernel 4.9 LTS, compile by UJX6N"
