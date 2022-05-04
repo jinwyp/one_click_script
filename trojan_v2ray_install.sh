@@ -427,7 +427,7 @@ function setLinuxDateZone(){
             systemctl stop chronyd
             systemctl disable chronyd
 
-            $osSystemPackage -y install ntpdate ntp
+            $osSystemPackage -y install ntpdate
             $osSystemPackage -y install ntp
             ntpdate -q 0.rhel.pool.ntp.org
             systemctl enable ntpd
@@ -479,7 +479,7 @@ function installSoftDownload(){
 
 	elif [[ "${osRelease}" == "centos" ]]; then
 
-        if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
+        if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" || ${osReleaseVersion} == "8.0.1905" ]]; then
 
             # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
 

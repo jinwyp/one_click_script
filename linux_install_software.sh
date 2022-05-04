@@ -449,7 +449,7 @@ function installSoftDownload(){
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
-        if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" ]]; then
+        if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" || ${osReleaseVersion} == "8.0.1905" ]]; then
 
             # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
 
@@ -2192,6 +2192,21 @@ function editXrayRConfig(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function downgradeXray(){
     echo
     green " =================================================="
@@ -2727,9 +2742,9 @@ EOM
         green " 4. 解锁 Pornhub, 解决视频变成玉米无法观看问题"
         green " 5. 同时解锁 Netflix 和 Pornhub 限制"
         green " 6. 同时解锁 Netflix, Youtube 和 Pornhub 限制"
-        green " 7. 同时解锁 Netflix, Hulu, HBO, Disney 和 Pornhub 限制"
-        green " 8. 同时解锁 Netflix, Hulu, HBO, Disney, Youtube 和 Pornhub 限制"
-        green " 9. 解锁 全部流媒体 包括 Netflix, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico, dmm, Pornhub 等"
+        green " 7. 同时解锁 Netflix, Hulu, HBO, Disney, Spotify 和 Pornhub 限制"
+        green " 8. 同时解锁 Netflix, Hulu, HBO, Disney, Spotify, Youtube 和 Pornhub 限制"
+        green " 9. 解锁 全部流媒体 包括 Netflix, Youtube, Hulu, HBO, Disney, BBC, Fox, niconico, dmm, Spotify, Pornhub 等"
         echo
         read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockVideoSiteInput
         isV2rayUnlockVideoSiteInput=${isV2rayUnlockVideoSiteInput:-1}
@@ -2750,13 +2765,13 @@ EOM
             V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "7" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:spotify\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "8" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:spotify\", \"geosite:youtube\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "9" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:spotify\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
 
         fi
 

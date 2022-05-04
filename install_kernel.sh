@@ -2134,8 +2134,8 @@ function installWARPClient(){
 
     echo 
     echo
-    read -p "是否生成随机的WARP SOCKS5 端口号? 直接回车默认 40000 不生成随机端口号, 请输入[y/N]:" isWarpPortInput
-    isWarpPortInput=${isWarpPortInput:-n}
+    read -p "是否生成随机的WARP SOCKS5 端口号? 默认随机端口, 输入N为设置固定端口号40000, 请输入[Y/n]:" isWarpPortInput
+    isWarpPortInput=${isWarpPortInput:-y}
 
     if [[ $isWarpPortInput == [Nn] ]]; then
         echo
@@ -2168,11 +2168,11 @@ function installWARPClient(){
 
     # (crontab -l ; echo "10 6 * * 0,1,2,3,4,5,6 warp-cli disable-always-on ") | sort - | uniq - | crontab -
     # (crontab -l ; echo "11 6 * * 0,1,2,3,4,5,6 warp-cli disconnect ") | sort - | uniq - | crontab -
-    # (crontab -l ; echo "12 6 * * 0,1,2,3,4,5,6 systemctl restart warp-svc ") | sort - | uniq - | crontab -
+    (crontab -l ; echo "12 6 * * 1,4 systemctl restart warp-svc ") | sort - | uniq - | crontab -
     # (crontab -l ; echo "16 6 * * 0,1,2,3,4,5,6 warp-cli connect ") | sort - | uniq - | crontab -
     # (crontab -l ; echo "17 6 * * 0,1,2,3,4,5,6 warp-cli enable-always-on ") | sort - | uniq - | crontab -
 
-
+    
 
     echo
     green " ================================================== "
@@ -2429,6 +2429,8 @@ function installWGCF(){
 
     # 启用守护进程
     ${sudoCmd} systemctl start wg-quick@wgcf
+
+    (crontab -l ; echo "12 6 * * 1 systemctl restart wg-quick@wgcf ") | sort - | uniq - | crontab -
 
     checkWireguardBootStatus
 
