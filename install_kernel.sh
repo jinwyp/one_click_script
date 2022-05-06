@@ -1679,7 +1679,11 @@ function installDebianUbuntuKernel(){
             rebootSystem
         else
 
-            debianKernelVersion="5.10.0"
+            if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
+                debianKernelVersion="5.10.0-14"
+            else
+                debianKernelVersion="5.16.0-0"
+            fi
 
             green " =================================================="
             green "    开始通过 Debian 官方源安装 linux 内核 ${debianKernelVersion}"
@@ -1692,14 +1696,16 @@ function installDebianUbuntuKernel(){
 
             linuxKernelToInstallVersionFull=${debianKernelVersion}
 
-            echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
-            echo "deb-src http://deb.debian.org/debian buster-backports main contrib non-free" >> /etc/apt/sources.list.d/buster-backports.list
+            echo "deb http://deb.debian.org/debian $osReleaseVersionCodeName-backports main contrib non-free" > /etc/apt/sources.list.d/$osReleaseVersionCodeName-backports.list
+            echo "deb-src http://deb.debian.org/debian $osReleaseVersionCodeName-backports main contrib non-free" >> /etc/apt/sources.list.d/$osReleaseVersionCodeName-backports.list
             ${sudoCmd} apt update -y
 
             listAvailableLinuxKernel
             
-            ${sudoCmd} apt install -y -t buster-backports linux-image-amd64
-            ${sudoCmd} apt install -y -t buster-backports firmware-linux firmware-linux-nonfree
+            ${sudoCmd} apt --fix-broken install
+
+            ${sudoCmd} apt install -y -t $osReleaseVersionCodeName-backports linux-image-amd64
+            ${sudoCmd} apt install -y -t $osReleaseVersionCodeName-backports firmware-linux firmware-linux-nonfree
 
             echo
             echo "dpkg --get-selections | grep linux-image-${debianKernelVersion} | awk '/linux-image-[4-9]./{print \$1}' | awk -F'linux-image-' '{print \$2}' "
@@ -1711,6 +1717,8 @@ function installDebianUbuntuKernel(){
             echo
             ${sudoCmd} apt install -y linux-headers-${debianKernelVersionPackageName}
             # ${sudoCmd} apt-get -y dist-upgrade
+
+            
 
         fi
 
@@ -1749,7 +1757,7 @@ function installDebianUbuntuKernel(){
             ${sudoCmd} dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb 
         fi
         
-        if [ "${linuxKernelToInstallVersion}" = "5.17.5" ]; then 
+        if [ "${linuxKernelToInstallVersion}" = "5.17" ]; then 
             if [ -f "${userHomePath}/libssl3_3.0.2-0ubuntu1_amd64.deb" ]; then
                 green "文件已存在, 不需要下载, 文件原下载地址: http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/libssl3_3.0.2-0ubuntu1_amd64.deb "
             else 
@@ -3064,13 +3072,15 @@ function start_menu(){
     else
         if [[ "${osRelease}" == "debian" ]]; then
         green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
+        green " 42. 安装 最新版本内核 5.16, 通过 Debian 官方源安装"
         echo
         fi
 
-        green " 42. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
-        green " 43. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
-        green " 44. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
-        green " 45. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
+        green " 44. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
+        green " 45. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
+        green " 46. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
+        green " 47. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
+
         echo
         green " 51. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
         green " 52. 安装 XanMod Kernel 内核 5.15, 官方源安装 "   
@@ -3145,13 +3155,14 @@ function start_menu(){
     else
         if [[ "${osRelease}" == "debian" ]]; then
         green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
+        green " 42. Install latest linux kernel, 5.16, from Debian repository source"
         echo
         fi
 
-        green " 42. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
-        green " 43. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
-        green " 44. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
-        green " 45. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
+        green " 44. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
+        green " 45. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
+        green " 46. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
+        green " 47. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
         echo
         green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
         green " 52. Install XanMod kernel 5.15, from XanMod repository source "  
@@ -3274,21 +3285,26 @@ function start_menu(){
             installKernel
         ;;
         42 )
-            linuxKernelToInstallVersion="5.17.5"
+            linuxKernelToInstallVersion="5.16"
+            isInstallFromRepo="yes"
             installKernel
-        ;;
-        43 ) 
+        ;;        
+        44 ) 
             linuxKernelToInstallVersion="4.19"
             installKernel
         ;;
-        44 )
+        45 )
             linuxKernelToInstallVersion="5.4"
             installKernel
         ;;
-        45 )
+        46 )
             linuxKernelToInstallVersion="5.10.113"
             installKernel
         ;;
+        47 )
+            linuxKernelToInstallVersion="5.17"
+            installKernel
+        ;;        
         51 )
             linuxKernelToInstallVersion="5.10"
             linuxKernelToBBRType="xanmod"
