@@ -2633,7 +2633,14 @@ function replaceAirUniverseConfigWARP(){
         V2rayDNSUnlockText="AsIs"
     else
         V2rayDNSUnlockText="UseIP"
+        read -r -d '' v2rayConfigDNSOutboundSettingsInput << EOM
+            "settings": {
+                "domainStrategy": "UseIP"
+            }
+EOM
+
         read -r -d '' v2rayConfigDNSInput << EOM
+
     "dns": {
         "servers": [
             {
@@ -2990,7 +2997,7 @@ EOM
 }
 EOM
 
-    # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
+    
 
     if [[ "${isV2rayUnlockWarpModeInput}" == "1" && "${isV2rayUnlockGoogleInput}" == "1"  && "${isV2rayUnlockGoNetflixInput}" == [Nn]  ]]; then
         if [[ "${isV2rayUnlockDNSInput}" == [Nn] ]]; then
@@ -3003,8 +3010,20 @@ EOM
 
             sed -i "/outbounds/i \    ${TEST}" ${configAirUniverseXrayConfigFilePath}
 
+            TEST2="${v2rayConfigDNSOutboundSettingsInput//\\/\\\\}"
+            TEST2="${TEST2//\//\\/}"
+            TEST2="${TEST2//&/\\&}"
+            TEST2="${TEST2//$'\n'/\\n}"
+
+            # https://stackoverflow.com/questions/4396974/sed-or-awk-delete-n-lines-following-a-pattern
+
+            sed -i -e '/freedom/{n;d}' ${configAirUniverseXrayConfigFilePath}
+            sed -i "/freedom/a \      ${TEST2}" ${configAirUniverseXrayConfigFilePath}
+
         fi
     else
+        
+        # https://stackoverflow.com/questions/31091332/how-to-use-sed-to-delete-multiple-lines-when-the-pattern-is-matched-and-stop-unt/31091398
         sed -i '/outbounds/,/^&/d' ${configAirUniverseXrayConfigFilePath}
         cat >> ${configAirUniverseXrayConfigFilePath} <<-EOF
 

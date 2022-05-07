@@ -13,6 +13,7 @@
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
 * [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
 * [如何使用GO语言开发的软件](/HOWTOUSEGO.md)
+* [开启DOH 解决DNS污染](/DNS.md)
 
 
 ## 功能说明 Features 
@@ -79,7 +80,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 1. 本脚本可以用来单独给网站申请免费的SSL证书, 选择26 即可. 申请SSL证书过程中请关闭域名的CDN功能, 保证域名已经成功解析到VPS真实IP.
 2. 申请SSL证书过程中如果不方便关闭CDN, 或者纯IPv6主机 可以选择不检测IP解析是否正确, 从而跳过检测IP继续申请证书.
-3. 本脚本使用的 acme.sh 来申请的免费证书. 可以选择 Let's Encrypt, BuyPass.com, ZeroSSL.com 提供商.  Let's Encrypt 申请证书有一些限制, 如果频繁申请证书出现无法申请的情况请选择其他证书提供商如 BuyPass.com
+3. 本脚本使用的 acme.sh 来申请的免费证书. 可以选择 Let's Encrypt, BuyPass.com, ZeroSSL.com, Google 提供商.  Let's Encrypt 申请证书有一些限制, 如果频繁申请证书出现无法申请的情况请选择其他证书提供商如 BuyPass.com
 4. 三个月之后需要续期，本脚本通过cron任务自动完成续期，无需用户操作.
 
 #####  Let's Encrypt 申请证书有一些限制, 具体限制如下：

@@ -17,7 +17,7 @@ Thanks for support this project. Check on [patreon](https://www.patreon.com/linu
 * [Install V2Ray-Poseidon, Soga, XrayR, Air-Universe shell script for V2board panel](/TOOL.md)
 * [PVE Proxmox VE and Synology DiskStation Manager NAS Toolkit](/dsm/readme.md)
 * [Install FRP shell script (expose local server behind a NAT or firewall to the Internet tool)](/dsm/readme.md)
-
+* [Enable DOH for DNS](/DNS.md)
 
 
 
@@ -84,7 +84,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 1. Run script then choose 26 to request SSL certificate for any domains. It's better to disable CDN of your domain duiring the SSL certificate application process. Make sure the domain is resolved to the real VPS ip.
 2. Duiring the SSL certificate application process, if you can't disable CDN or the VPS only have IPv6, you can skip the IP check process to continue your following SSL certificate request.
-3. The script is using acme.sh to get SSL certificate. There are three providers: Let's Encrypt, BuyPass.com, ZeroSSL.com. When you request too many times in one day and reach the limit of Let's Encrypt, you can switch other providers such as BuyPass.com.
+3. The script is using acme.sh to get SSL certificate. There are 4 providers: Let's Encrypt, BuyPass.com, ZeroSSL.com, Google. When you request too many times in one day and reach the limit of Let's Encrypt, you can switch other providers such as BuyPass.com.
 4. Normally SSL certificate need renew in three month，The script will autorenew the certificate with Cronjob by acme.sh .
 
 
