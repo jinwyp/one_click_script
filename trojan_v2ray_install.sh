@@ -1817,7 +1817,7 @@ EOF
 
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
     ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
-    
+
     ${sudoCmd} systemctl start nginx.service
 
     green " ================================================== "
@@ -1912,6 +1912,7 @@ function removeNginx(){
 
             rm -f ${nginxAccessLogFilePath}
             rm -f ${nginxErrorLogFilePath}
+            rm -f ${nginxConfigPath}
 
             rm -f ${configReadme}
             rm -rf "/etc/nginx"

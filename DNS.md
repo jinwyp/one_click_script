@@ -34,7 +34,7 @@
 
 ![Chrome2](https://github.com/jinwyp/one_click_script/blob/master/docs/chrome2.png?raw=true)
 
-3. 在打开的 "安全" 设置页面中, 选中 "使用安全 DNS" 后面的滑块, 再选择下拉框中的Cloudflare 1.1.1.1 或 Google Public DNS，也可以选择下拉框里选择自定义, 然后在下面文本框中输入自己找到的 DoH 服务器. [DNS服务器列表](https://dns.icoa.cn/) 
+3. 在打开的 "安全" 设置页面中, 选中 "使用安全 DNS" 后面的滑块, 再选择下拉框中的Cloudflare 1.1.1.1 或 Google Public DNS，也可以选择下拉框里选择自定义, 然后在下面文本框中输入自己找到的 DoH 服务器. [DNS服务器列表](https://dns.icoa.cn/)  [如何验证是否开启DOT和ESNI](#测试是否开启DOT和ESNI ).
 
 ![Chrome3](https://github.com/jinwyp/one_click_script/blob/master/docs/chrome2.png?raw=true)
 
@@ -53,16 +53,45 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 ![Firefox2](https://github.com/jinwyp/one_click_script/blob/master/docs/firefox2.png?raw=true)
 
-3. 在打开的对话框中，在最下面, 选中 "启用基于 HTTPS 的 DNS", 然后在下拉框可以选择Cloudflare 默认值或自定义的DOT服务器 
+3. 在打开的对话框中，在最下面, 选中 "启用基于 HTTPS 的 DNS", 然后在下拉框可以选择Cloudflare 默认值或自定义的DOT服务器 .  [如何验证是否开启DOT和ESNI](#测试是否开启DOT和ESNI ).
 
 ![Firefox3](https://github.com/jinwyp/one_click_script/blob/master/docs/firefox3.png?raw=true)
 
 4. 其他网上教程 [在Firefox中启用 DNS-over-HTTPS(DoH)](https://zhuanlan.zhihu.com/p/75845767)
 
 ### FirefoxESNI
+
+1. 需要下载最新版的Firefox  [下载地址1](https://pan.baidu.com/s/19u-Ayy-rKvgYDmg_TNDIzA?pwd=827m). [下载地址2](https://wws.lanzout.com/ipGdD040ylbg) 
+2. 在地址栏输入 ``` about:config ``` , 然后点击 "接受风险并继续", 然后搜索 ``` network.security.esni.enabled ``` , 
+![Firefox1](https://github.com/jinwyp/one_click_script/blob/master/docs/firefoxesni1.png?raw=true)
+
+![Firefox2](https://github.com/jinwyp/one_click_script/blob/master/docs/firefoxesni2.png?raw=true)
+
+3. 然后选择 "布尔" 类型, 点击右边 + 号, 然后点击右边按钮 将值设为true, 完成.  [如何验证是否开启DOT和ESNI](#测试是否开启DOT和ESNI ).
+![Firefox3](https://github.com/jinwyp/one_click_script/blob/master/docs/firefoxesni3.png?raw=true)
+
+4. 开启 Encrypted Client Hello (ECH) (ESNI的进化版本). 同样在 ``` about:config ``` 搜索条目 ```network.dns.echconfig.enabled``` 和 ```network.dns.use_https_rr_as_altsvc```，将它们的值设定改为 true 即可。
+
+5. 更多问题请查看 [在 Firefox 上设置 DoH 和 ESNI/ECH](https://blog.outv.im/2020/firefox-doh-ech-esni/)
 ### Edge
 
 1. Edge 浏览器 [设置DoH加密DNS的方法] (https://www.icoa.cn/a/953.html)
+
+### 测试是否开启DOT和ESNI 
+
+1. 使用浏览器打开 https://www.cloudflare.com/zh-cn/ssl/encrypted-sni/ 点击 "Check My Browser" 按钮. 测试之前浏览器设置DNS的服务器请选择Cloudflare的DOH的服务器.
+![CF1](https://github.com/jinwyp/one_click_script/blob/master/docs/cfcheck1.png?raw=true)
+
+2. 查看结果. 目前Chrome 还不支持ESNI,估计很快就会支持.
+
+![CF2](https://github.com/jinwyp/one_click_script/blob/master/docs/cfcheck2.png?raw=true)
+
+
+3. 常见问题: Cloudflare 提醒我 ESNI 未启用！可能是你的 DNS over HTTPS 并没有生效，Firefox 还在使用普通的 DNS 请求方式。这种情况下 ECH 无法工作。
+
+你可以尝试按照 Mozilla Wiki 的指示，在 about:config 中将 network.trr.mode设置为 3，即只使用 TRR（也就是我们的 DNS over HTTPS），强制 Firefox 使用 DoH，这样就能确保使用 ESNI 了。
+
+![CF3](https://github.com/jinwyp/one_click_script/blob/master/docs/cfcheck3.png?raw=true)
 
 ### 搭建自己的DNS服务器
 
