@@ -36,7 +36,7 @@
 
 3. 在打开的 "安全" 设置页面中, 选中 "使用安全 DNS" 后面的滑块, 再选择下拉框中的Cloudflare 1.1.1.1 或 Google Public DNS，也可以选择下拉框里选择自定义, 然后在下面文本框中输入自己找到的 DoH 服务器. [DNS服务器列表](https://dns.icoa.cn/)  [如何验证是否开启DOT和ESNI](#测试是否开启DOT和ESNI ).
 
-![Chrome3](https://github.com/jinwyp/one_click_script/blob/master/docs/chrome2.png?raw=true)
+![Chrome3](https://github.com/jinwyp/one_click_script/blob/master/docs/chrome3.png?raw=true)
 
 4. 有时候选择Cloudflare 1.1.1.1 或  Google Public DNS 会出现打不开网站的情况, 这是因为GFW防火墙除了会污染DNS, 还会直接屏蔽掉IP, 导致Cloudflare 1.1.1.1 或 Google Public DNS 8.8.8.8 无法访问, 也就无法解析DNS域名. 解决办法就是自己找到其他海外支持DOT或DOH的DNS服务器, 或者自己在海外架设DNS服务器. 可以使用[
 AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭建自己的DNS服务器](#搭建自己的DNS服务器).
