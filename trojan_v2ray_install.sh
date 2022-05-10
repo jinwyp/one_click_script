@@ -917,7 +917,7 @@ downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 versionTrojanGo="0.10.5"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.44.0"
+versionV2ray="4.45.0"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
 versionXray="1.5.2"
