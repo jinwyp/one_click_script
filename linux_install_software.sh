@@ -269,6 +269,7 @@ function testLinuxPortUsage(){
         red " 关闭防火墙 ufw"
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
+        ufw disable
         
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y

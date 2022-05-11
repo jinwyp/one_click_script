@@ -268,6 +268,8 @@ function testLinuxPortUsage(){
         red " 关闭防火墙 ufw"
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
+
+        ufw disable
         
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
@@ -1462,7 +1464,7 @@ function installWebServerNginx(){
 
 	wwwUsername="www-data"
 	isHaveWwwUser=$(cat /etc/passwd|cut -d ":" -f 1|grep ^www-data$)
-	if [ "${isHaveWwwUser}" != "www-data" ]; then
+	if [ "${isHaveWwwUser}" != "${wwwUsername}" ]; then
 		${sudoCmd} groupadd ${wwwUsername}
 		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
 	fi
