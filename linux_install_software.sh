@@ -1019,15 +1019,22 @@ function installPortainer(){
 
 
 
+wwwUsername="www-data"
+function createUserWWW(){
+	isHaveWwwUser=$(cat /etc/passwd|cut -d ":" -f 1|grep ^www-data$)
+	if [ "${isHaveWwwUser}" != "${wwwUsername}" ]; then
+		${sudoCmd} groupadd ${wwwUsername}
+		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
+	fi
+}
 
 
 
-
-configCloudrevePath="/root/cloudreve"
-configCloudreveDownloadFolder="${configCloudrevePath}/download"
-configCloudreveCommandFolder="${configCloudrevePath}/web"
-configCloudreveReadme="${configCloudrevePath}/web/readme.txt"
-configCloudreveIni="${configCloudrevePath}/web/conf.ini"
+configCloudrevePath="/usr/local/cloudreve"
+configCloudreveDownloadCodeFolder="${configCloudrevePath}/download"
+configCloudreveCommandFolder="${configCloudrevePath}/cmd"
+configCloudreveReadme="${configCloudrevePath}/cmd/readme.txt"
+configCloudreveIni="${configCloudrevePath}/cmd/conf.ini"
 configCloudrevePort="$(($RANDOM + 4000))"
 
 
@@ -1040,6 +1047,8 @@ function installCloudreve(){
         exit
     fi
 
+    createUserWWW
+
     versionCloudreve=$(getGithubLatestReleaseVersion2 "cloudreve/Cloudreve")
 
     green " ================================================== "
@@ -1047,7 +1056,7 @@ function installCloudreve(){
     green " ================================================== "
 
 
-    mkdir -p ${configCloudreveDownloadFolder}
+    mkdir -p ${configCloudreveDownloadCodeFolder}
     mkdir -p ${configCloudreveCommandFolder}
     cd ${configCloudrevePath}
 
@@ -1065,10 +1074,13 @@ function installCloudreve(){
         downloadFilenameCloudreve="cloudreve_${versionCloudreve}_linux_arm64.tar.gz"
     fi
 
-    downloadAndUnzip "https://github.com/cloudreve/Cloudreve/releases/download/${versionCloudreve}/${downloadFilenameCloudreve}" "${configCloudreveDownloadFolder}" "${downloadFilenameCloudreve}"
+    downloadAndUnzip "https://github.com/cloudreve/Cloudreve/releases/download/${versionCloudreve}/${downloadFilenameCloudreve}" "${configCloudreveDownloadCodeFolder}" "${downloadFilenameCloudreve}"
 
-    mv ${configCloudreveDownloadFolder}/cloudreve ${configCloudreveCommandFolder}/cloudreve
+    mv ${configCloudreveDownloadCodeFolder}/cloudreve ${configCloudreveCommandFolder}/cloudreve
     chmod +x ${configCloudreveCommandFolder}/cloudreve
+
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
+    ${sudoCmd} chmod -R 771 ${configCloudrevePath}
 
     cd ${configCloudreveCommandFolder}
     echo "nohup ${configCloudreveCommandFolder}/cloudreve > ${configCloudreveReadme} 2>&1 &"
@@ -1088,6 +1100,7 @@ After=network.target
 Wants=network.target
 
 [Service]
+User=${wwwUsername}
 WorkingDirectory=${configCloudreveCommandFolder}
 ExecStart=${configCloudreveCommandFolder}/cloudreve -c ${configCloudreveIni}
 Restart=on-abnormal
@@ -1110,11 +1123,20 @@ EOF
     systemctl enable cloudreve
 
 
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
+    ${sudoCmd} chmod -R 771 ${configCloudrevePath}
+
+
     echo
     green " ================================================== "
     green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
     green " 如无法访问, 请设置防火墙规则 放行 ${configCloudrevePort} 端口"
     green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
+    green " Cloudreve 配置文件路径: ${configCloudreveIni}"
+    green " Cloudreve 默认SQLite数据库文件路径: ${configCloudreveCommandFolder}/cloudreve.db"
+    green " Cloudreve 账号密码文件路径: ${configCloudreveReadme}"
+    
+
     cat ${configCloudreveReadme}
     green " ================================================== "
 
@@ -1196,12 +1218,10 @@ function installWebServerNginx(){
         exit
     fi
 
-	wwwUsername="www-data"
-	isHaveWwwUser=$(cat /etc/passwd|cut -d ":" -f 1|grep ^www-data$)
-	if [ "${isHaveWwwUser}" != "www-data" ]; then
-		${sudoCmd} groupadd ${wwwUsername}
-		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
-	fi
+    createUserWWW
+
+    nginxUser="${wwwUsername} ${wwwUsername}"
+
 
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
     ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
@@ -1265,6 +1285,10 @@ function installWebServerNginx(){
 EOM
 
     elif [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
+        nginxUser="root"
+        mkdir -p ${configWebsitePath}/cloudreve_storage
+        ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsitePath}/cloudreve_storage
+        ${sudoCmd} chmod -R 774 ${configWebsitePath}/cloudreve_storage
 
         read -r -d '' nginxConfigServerHttpInput << EOM
     server {
@@ -1287,6 +1311,7 @@ EOM
         index index.php index.html index.htm;
 
         location / {
+
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
@@ -1294,9 +1319,8 @@ EOM
             proxy_pass http://127.0.0.1:${configCloudrevePort};
 
             # 如果您要使用本地存储策略，请将下一行注释符删除，并更改大小为理论最大文件尺寸
-            client_max_body_size   6000m;
+            client_max_body_size   7000m;
         }
-        
     }
 
     server {
@@ -1356,8 +1380,8 @@ EOM
 
 ${nginxConfigNginxModuleInput}
 
-user  ${wwwUsername} ${wwwUsername};
-worker_processes  1;
+user  ${nginxUser};
+worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 events {
@@ -1379,9 +1403,8 @@ http {
     sendfile        on;
     #tcp_nopush     on;
     keepalive_timeout  120;
-    client_max_body_size 20m;
+    client_max_body_size 10m;
     gzip  on;
-
 
     ${nginxConfigServerHttpInput}
 
@@ -1396,6 +1419,7 @@ EOF
 
     ${sudoCmd} systemctl start nginx.service
 
+    echo
     green " ================================================== "
     green " Web服务器 nginx 安装成功. 站点为 https://${configSSLDomain}"
     echo
@@ -1412,6 +1436,11 @@ EOF
         green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
         green " 如无法访问, 请设置防火墙规则 放行 ${configCloudrevePort} 端口"
         green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
+        green " Cloudreve 配置文件路径: ${configCloudreveIni}"
+        green " Cloudreve 默认SQLite数据库文件路径: ${configCloudreveCommandFolder}/cloudreve.db"
+        green " Cloudreve 账号密码文件路径: ${configCloudreveReadme}"
+        red " 请在管理面板->存储策略->编辑默认存储策略->存储路径 设置为 ${configWebsitePath}/cloudreve_storage"
+
         cat ${configCloudreveReadme}
         green " ================================================== "
     fi
@@ -1424,7 +1453,6 @@ function removeNginx(){
     isRemoveNginxServerInput=${isRemoveNginxServerInput:-Y}
 
     if [[ "${isRemoveNginxServerInput}" == [Yy] ]]; then
-
 
         echo
         if [[ -f "${nginxConfigPath}" ]]; then
