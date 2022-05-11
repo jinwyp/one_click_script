@@ -83,6 +83,9 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 3. 本脚本使用的 acme.sh 来申请的免费证书. 可以选择 Let's Encrypt, BuyPass.com, ZeroSSL.com, Google 提供商.  Let's Encrypt 申请证书有一些限制, 如果频繁申请证书出现无法申请的情况请选择其他证书提供商如 BuyPass.com
 4. 三个月之后需要续期，本脚本通过cron任务自动完成续期，无需用户操作.
 
+
+![功能列表4](https://github.com/jinwyp/one_click_script/blob/master/docs/readme4.png?raw=true)
+
 #####  Let's Encrypt 申请证书有一些限制, 具体限制如下：
 
 1. 同一个主域名一周之内只能申请50个证书

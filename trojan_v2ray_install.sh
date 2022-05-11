@@ -1102,7 +1102,7 @@ function compareRealIpWithLocalIp(){
             #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
             #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
             
-
+            
             #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
             #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
 
@@ -1204,7 +1204,6 @@ function getHTTPSCertificateWithAcme(){
     read -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
     isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
     
-    
     if [[ "$isDomainSSLFromLetInput" == "2" ]]; then
         getHTTPSCertificateInputEmail
         acmeSSLDays="179"
@@ -1232,6 +1231,7 @@ function getHTTPSCertificateWithAcme(){
         #${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days 89 --server letsencrypt
     fi
 
+
     echo
     green " ================================================== "
     green " 请选择 acme.sh 脚本申请SSL证书方式: 1 http方式, 2 dns方式 "
@@ -1239,7 +1239,6 @@ function getHTTPSCertificateWithAcme(){
     echo
     read -r -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则为 dns 方式申请证书, 请输入[Y/n]:" isAcmeSSLRequestMethodInput
     isAcmeSSLRequestMethodInput=${isAcmeSSLRequestMethodInput:-Y}
-
     echo
 
     if [[ $isAcmeSSLRequestMethodInput == [Yy] ]]; then
@@ -1248,9 +1247,9 @@ function getHTTPSCertificateWithAcme(){
         if [ -z $1 ]; then
             green " ================================================== "
             green " 请选择 http 申请证书方式: 默认为 3. webroot 并使用 ran 作为临时的Web服务器 "
-            green " 1 standalone 模式, 适合没有安装Web服务器, 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
+            green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
             green " 2 webroot 模式, 适合已经安装Web服务器, 例如 Caddy Apache 或 Nginx, 请确保Web服务器已经运行在80端口"
-            green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 推荐使用此方式, 可以正常续签"
+            green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
             green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
             echo
             read -p "请选择http申请证书方式? 默认回车为 3 webroot 并用ran作为临时的Web服务器申请, 请输入纯数字:" isAcmeSSLWebrootModeInput
@@ -1388,11 +1387,16 @@ function getHTTPSCertificateWithAcme(){
     fi
 
     echo
-    ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-    --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
-    --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
-    --reloadcmd "systemctl restart nginx.service"
-
+    if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} 
+    else
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+        --reloadcmd "systemctl restart nginx.service"
+    fi
     green " ================================================== "
 }
 
@@ -1402,7 +1406,7 @@ function getHTTPSCertificateWithAcme(){
 function getHTTPSCertificateStep1(){
     echo
     green " ================================================== "
-    yellow " 请输入解析到本VPS的域名 例如 www.xxx.com: (此步骤请关闭CDN后安装)"
+    yellow " 请输入解析到本VPS的域名 例如 www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
     read -p "请输入解析到本VPS的域名:" configSSLDomain
 
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then

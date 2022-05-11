@@ -87,6 +87,8 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 3. The script is using acme.sh to get SSL certificate. There are 4 providers: Let's Encrypt, BuyPass.com, ZeroSSL.com, Google. When you request too many times in one day and reach the limit of Let's Encrypt, you can switch other providers such as BuyPass.com.
 4. Normally SSL certificate need renew in three month，The script will autorenew the certificate with Cronjob by acme.sh .
 
+![功能列表4](https://github.com/jinwyp/one_click_script/blob/master/docs/readme4.png?raw=true)
+
 
 #####  [The Rate Limits rule of Let's Encrypt](https://letsencrypt.org/docs/rate-limits/)
 

@@ -1124,7 +1124,7 @@ EOF
     isNginxInstallInput=${isNginxInstallInput:-Y}
 
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
-        getHTTPS
+        getHTTPSCertificateStep1
         configInstallNginxMode="cloudreve"
         installWebServerNginx
     fi
@@ -1173,14 +1173,13 @@ function removeCloudreve(){
 
 
 
+configWebsiteFatherPath="/nginxweb"
+configWebsitePath="${configWebsiteFatherPath}/html"
+nginxAccessLogFilePath="${configWebsiteFatherPath}/nginx-access.log"
+nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
 
-
-configWebsiteFatherPath="${HOME}/website"
-
-configWebsitePath="${HOME}/website/html"
 nginxConfigPath="/etc/nginx/nginx.conf"
-nginxAccessLogFilePath="${HOME}/nginx-access.log"
-nginxErrorLogFilePath="${HOME}/nginx-error.log"
+
 
 function installWebServerNginx(){
 
@@ -1197,6 +1196,17 @@ function installWebServerNginx(){
         exit
     fi
 
+	wwwUsername="www-data"
+	isHaveWwwUser=$(cat /etc/passwd|cut -d ":" -f 1|grep ^www-data$)
+	if [ "${isHaveWwwUser}" != "www-data" ]; then
+		${sudoCmd} groupadd ${wwwUsername}
+		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
+	fi
+
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
+    ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
+
+    
     if [ "$osRelease" == "centos" ]; then
         ${osSystemPackage} install -y nginx-mod-stream
     else
@@ -1346,7 +1356,7 @@ EOM
 
 ${nginxConfigNginxModuleInput}
 
-user  root;
+user  ${wwwUsername} ${wwwUsername};
 worker_processes  1;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -1381,6 +1391,8 @@ http {
 EOF
 
 
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
+    ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
 
     ${sudoCmd} systemctl start nginx.service
 
@@ -1436,6 +1448,7 @@ function removeNginx(){
 
             rm -f ${nginxAccessLogFilePath}
             rm -f ${nginxErrorLogFilePath}
+            rm -f ${nginxConfigPath}
 
             rm -rf "/etc/nginx"
             
@@ -1564,6 +1577,9 @@ function installV2rayPoseidon(){
     fi
 
     echo
+    red "该项目已经长时间不更新, 作者疑为骗子 不推荐使用"
+    red "https://github.com/ColetteContreras/v2ray-poseidon/issues/114"
+    echo
     read -p "请选择直接运行模式还是Docker运行模式? 默认直接回车为直接运行模式, 选否则为Docker运行模式, 请输入[Y/n]:" isV2rayDockerNotInput
     isV2rayDockerNotInput=${isV2rayDockerNotInput:-Y}
 
@@ -1573,6 +1589,7 @@ function installV2rayPoseidon(){
         echo
         green " =================================================="
         green "  开始安装 支持V2board面板的 服务器端程序 V2ray-Poseidon ${versionV2rayPoseidon}"
+        red "  注意最新版 V2board面板不支持 V2ray-Poseidon, 请使用老板本V2board v1.5.2 "
         green " =================================================="
         echo
 
@@ -1651,16 +1668,19 @@ function replaceV2rayPoseidonConfig(){
     if test -s ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml; then
 
         echo
-        green "请选择SSL证书申请方式 V2ray-Poseidon共有3种: 1 http方式, 2 手动放置证书文件, 3 dns方式 "
-        green "本脚本提供2种 默认直接回车为 手动放置证书文件, 手动放置证书文件, 本脚本也会自动通过acme.sh申请证书"
-        red "如选否 为 http 自动获取证书方式, 但由于acme.sh脚本2021年8月开始默认从 Letsencrypt 换到 ZeroSSL, 而V2ray-Poseidon已经很长时间没有更新 导致http申请证书模式会出现问题!"
-        green "如需要使用 dns 申请SSL证书方式, 请手动修改 docker-compose.yml 配置文件"
+        green "请选择SSL证书申请方式: 1 V2ray-Poseidon 内置的http方式, 2 通过acme.sh申请并放置证书文件 "
+        green "默认直接回车为通过acme.sh申请并放置证书, 本脚本会自动通过acme.sh申请证书 支持http和dns方式申请"
+        red "如选否 为V2ray-Poseidon 内置的http 自动获取证书方式, 但由于acme.sh脚本2021年8月开始默认从 Letsencrypt 换到 ZeroSSL, 而V2ray-Poseidon已经很长时间没有更新 导致内置的http申请证书模式会出现问题!"
+        echo
+        green "注意: V2ray-Poseidon 的SSL证书申请方式共有3种: 1 内置http方式, 2 内置的dns方式, 3 手动放置证书文件,"
+        green "如需使用内置的dns 申请SSL证书方式, 请手动修改 docker-compose.yml 配置文件"
+        echo
         read -p "请选择SSL证书申请方式 ? 默认直接回车为手动放置证书文件, 选否则http申请模式, 请输入[Y/n]:" isSSLRequestHTTPInput
         isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
 
         if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
             echo
-            getHTTPS
+            getHTTPSCertificateStep1
 
             sed -i "s?#- ./v2ray.crt:/etc/v2ray/v2ray.crt?- ${configSSLCertPath}/${configSSLCertFullchainFilename}:/etc/v2ray/v2ray.crt?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
             sed -i "s?#- ./v2ray.key:/etc/v2ray/v2ray.key?- ${configSSLCertPath}/${configSSLCertKeyFilename}:/etc/v2ray/v2ray.key?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
@@ -1698,7 +1718,7 @@ function replaceV2rayPoseidonConfig(){
     if test -s ${configV2rayPoseidonPath}/config.json; then
 
         echo
-        getHTTPS
+        getHTTPSCertificateStep1
 
         echo
         read -p "请选择支持面板是v2board或sspanel? 默认直接回车为v2board, 选否则sspanel, 请输入[Y/n]:" isPanelV2boardInput
@@ -1940,10 +1960,14 @@ function replaceSogaConfig(){
     if test -s ${configSogaConfigFilePath}; then
 
         echo
-        green "请选择SSL证书申请方式 Soga共有3种: 1 http方式, 2 手动放置证书文件, 3 dns方式 "
-        green "本脚本提供2种 默认直接回车为 http自动申请模式, 选否则手动放置证书文件同时本脚本也会自动通过acme.sh申请证书"
-        green "如需要使用 dns 申请SSL证书方式, 请手动修改 soga.conf 配置文件"
-        read -p "请选择SSL证书申请方式 ? 默认直接回车为http自动申请模式, 选否则手动放置证书文件同时也会自动申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
+        green "请选择SSL证书申请方式: 1 Soga内置的http方式, 2 通过acme.sh申请并放置证书文件"
+        green "默认直接回车为 Soga内置的http自动申请模式"
+        green "选否 则通过acme.sh申请证书并放置证书文件, 支持http和dns模式申请证书, 推荐此模式"
+        echo
+        green "注意: Soga SSL证书申请方式共有3种: 1 Soga内置的http方式, 2 Soga内置的dns方式, 3 手动放置证书文件 "
+        green "如需要使用 Soga内置的dns方式 申请SSL证书方式, 请手动修改 soga.conf 配置文件"
+        echo
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为http自动申请模式, 选否则通过acme.sh手动申请并放置证书, 请输入[Y/n]:" isSSLRequestHTTPInput
         isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
 
         if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
@@ -1956,7 +1980,7 @@ function replaceSogaConfig(){
 
             sed -i 's/cert_mode=/cert_mode=http/g' ${configSogaConfigFilePath}
         else
-            getHTTPS
+            getHTTPSCertificateStep1
             sed -i "s?cert_file=?cert_file=${configSSLCertPath}/${configSSLCertFullchainFilename}?g" ${configSogaConfigFilePath}
             sed -i "s?key_file=?key_file=${configSSLCertPath}/${configSSLCertKeyFilename}?g" ${configSogaConfigFilePath}
 
@@ -2053,9 +2077,12 @@ function replaceXrayRConfig(){
     if test -s ${configXrayRConfigFilePath}; then
 
         echo
-        green "请选择SSL证书申请方式 XrayR  共有4种: 1 http 方式, 2 file 手动放置证书文件, 3 dns 方式, 4 none 不申请证书"
-        green "本脚本提供2种 默认直接回车为 http自动申请模式, 选否则手动放置证书文件同时本脚本也会自动通过acme.sh申请证书"
-        green "如需要使用 dns 申请SSL证书方式, 请手动修改 ${configXrayRConfigFilePath} 配置文件"
+        green "请选择SSL证书申请方式: 1 XrayR内置的http 方式, 2 通过acme.sh 申请并放置证书文件, "
+        green "默认直接回车为 XrayR内置的http自动申请模式"
+        green "选否则通过acme.sh申请证书, 支持http 和 dns 等更多模式申请证书, 推荐使用"
+        echo
+        green "注意: XrayR 的SSL证书申请方式 共有4种: 1 XrayR内置的http 方式, 2 XrayR内置的 dns 方式, 3 file 手动放置证书文件, 4 none 不申请证书"
+        green "如需要使用 XrayR内置的dns 申请SSL证书方式, 请手动修改 ${configXrayRConfigFilePath} 配置文件"
     
         read -p "请选择SSL证书申请方式 ? 默认直接回车为http自动申请模式, 选否则手动放置证书文件同时也会自动申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
         isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
@@ -2069,16 +2096,14 @@ function replaceXrayRConfig(){
 
             read configSSLDomain
 
-            
         else
-            getHTTPS
+            getHTTPSCertificateStep1
             configXrayRSSLRequestMode="file"
         
             sed -i "s?./cert/node1.test.com.cert?${configSSLCertPath}/${configSSLCertFullchainFilename}?g" ${configXrayRConfigFilePath}
             sed -i "s?./cert/node1.test.com.key?${configSSLCertPath}/${configSSLCertKeyFilename}?g" ${configXrayRConfigFilePath}
 
         fi
-
 
         sed -i "s/CertMode: dns/CertMode: ${configXrayRSSLRequestMode}/g" ${configXrayRConfigFilePath}
         sed -i 's/CertDomain: "node1.test.com"/CertDomain: "www.xxxx.net"/g' ${configXrayRConfigFilePath}
@@ -2207,6 +2232,13 @@ function editXrayRConfig(){
 
 
 
+
+
+
+
+
+
+
 function downgradeXray(){
     echo
     green " =================================================="
@@ -2227,7 +2259,7 @@ function downgradeXray(){
     isAirUniverseVersionInput=${isAirUniverseVersionInput:-1}
 
     downloadAirUniverseVersion="1.1.0"
-    downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v1.0.2/Air-Universe-linux-64.zip"
+    downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v${downloadAirUniverseVersion}/Air-Universe-linux-64.zip"
 
     if [[ "${isAirUniverseVersionInput}" == "2" ]]; then
         downloadAirUniverseVersion="1.1.0"
@@ -2242,7 +2274,7 @@ function downgradeXray(){
     if [[ "${isAirUniverseVersionInput}" == "1" ]]; then
         echo
         green " =================================================="
-        green "  已选择不降级 使用最新版本 Air-Universe"
+        green "  已选择不降级 使用最新版本 Air-Universe ${downloadAirUniverseVersion}"
         green " =================================================="
         echo
     else
@@ -2297,8 +2329,8 @@ function downgradeXray(){
     read -p "请选择Xray版本? 直接回车默认选1, 请输入纯数字:" isXrayVersionInput
     isXrayVersionInput=${isXrayVersionInput:-1}
 
-    downloadXrayVersion="1.5.4"
-    downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v1.5.0/Xray-linux-64.zip"
+    downloadXrayVersion="1.5.5"
+    downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
 
     if [[ "${isXrayVersionInput}" == "2" ]]; then
         downloadXrayVersion="1.5.4"
@@ -2331,7 +2363,7 @@ function downgradeXray(){
     if [[ "${isXrayVersionInput}" == "1" ]]; then
         echo
         green " =================================================="
-        green "  已选择不降级 使用最新版本 Xray"
+        green "  已选择不降级 使用最新版本 Xray ${downloadXrayVersion}"
         green " =================================================="
         echo
     else
@@ -2365,7 +2397,6 @@ function downgradeXray(){
 
     if [[ -z $1 ]]; then
         echo
-        configSSLCertPath="/usr/local/share/au"
         
         airu stop
         systemctl stop xray.service
@@ -2383,8 +2414,8 @@ function downgradeXray(){
 
 
 
-configAirUniverseXrayAccessLogFilePath="${HOME}/air-universe-access.log"
-configAirUniverseXrayErrorLogFilePath="${HOME}/air-universe-error.log"
+configAirUniverseXrayAccessLogFilePath="${HOME}/xray_access.log"
+configAirUniverseXrayErrorLogFilePath="${HOME}/xray_error.log"
 
 
 configAirUniverseAccessLogFilePath="${HOME}/air-universe-access.log"
@@ -2428,18 +2459,16 @@ function installAirUniverse(){
     if test -s ${configAirUniverseConfigFilePath}; then
 
         echo
-        green "请选择SSL证书申请方式 acme.sh 共有2种: 1 http方式, 2 dns方式, 3 不申请证书"
-        green "Air-Universe 本身没有自动获取证书功能, 使用 acme.sh 申请证书"
-        read -p "请选择SSL证书申请方式 ? 默认直接回车为1 http方式,  请输入纯数字:" isSSLRequestHTTPInput
-        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-1}
+        green "请选择SSL证书申请方式: 1 通过acme.sh申请证书, 2 不申请证书"
+        green "默认直接回车为通过acme.sh申请证书, 支持 http 和 dns 等更多方式申请证书, 推荐使用"
+        green "注: Air-Universe 本身没有自动获取证书功能, 使用 acme.sh 申请证书"
+        echo
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为申请证书, 选否则不申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
 
-        if [[  ( $isSSLRequestHTTPInput == "1" ) || ( $isSSLRequestHTTPInput == "2" ) ]]; then
+        if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
             echo
-            if [[ $isSSLRequestHTTPInput == "1" ]]; then
-                getHTTPS "air" "http"
-            else
-                getHTTPS "air" "dns"
-            fi
+            getHTTPSCertificateStep1
 
             airUniverseConfigNodeIdNumberInput=`grep "nodes_type"  ${configAirUniverseConfigFilePath} | awk -F  ":" '{print $2}'`
 
@@ -2494,7 +2523,6 @@ EOM
             read -p "Press enter to continue. 按回车继续运行 airu 命令"
             airu
         fi
-
 
     else
         manageAirUniverse
@@ -3036,7 +3064,6 @@ EOF
 
 
 
-    configSSLCertPath="/usr/local/share/au"
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
     chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
@@ -3122,52 +3149,223 @@ function removeAirUniverse(){
 
 
 
+
+
+
+
+
+
+
+
+acmeSSLRegisterEmailInput=""
+isDomainSSLGoogleEABKeyInput=""
+isDomainSSLGoogleEABIdInput=""
+function getHTTPSCertificateCheckEmail(){
+    if [ -z $2 ]; then
+        
+        if [[ $1 == "email" ]]; then
+            red " 输入邮箱地址不能为空, 请重新输入!"
+            getHTTPSCertificateInputEmail
+        elif [[ $1 == "googleEabKey" ]]; then
+            red " 输入EAB key 不能为空, 请重新输入!"
+            getHTTPSCertificateInputGoogleEABKey
+        elif [[ $1 == "googleEabId" ]]; then
+            red " 输入EAB Id 不能为空, 请重新输入!"
+            getHTTPSCertificateInputGoogleEABId            
+        fi
+    fi
+}
+function getHTTPSCertificateInputEmail(){
+    echo
+    read -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
+    getHTTPSCertificateCheckEmail "email" ${acmeSSLRegisterEmailInput}
+}
+function getHTTPSCertificateInputGoogleEABKey(){
+    echo
+    read -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
+    getHTTPSCertificateCheckEmail "googleEabKey" ${isDomainSSLGoogleEABKeyInput}
+}
+function getHTTPSCertificateInputGoogleEABId(){
+    echo
+    read -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
+    getHTTPSCertificateCheckEmail "googleEabId" ${isDomainSSLGoogleEABIdInput}
+}
+
 configNetworkRealIp=""
 configNetworkLocalIp=""
 configSSLDomain=""
 
+acmeSSLDays="89"
+acmeSSLServerName="letsencrypt"
+acmeSSLDNSProvider="dns_cf"
 
 configRanPath="${HOME}/ran"
-
 configSSLAcmeScriptPath="${HOME}/.acme.sh"
-configSSLCertPath="/root/.cert"
+configSSLCertPath="${configWebsiteFatherPath}/cert"
 configSSLCertKeyFilename="server.key"
 configSSLCertFullchainFilename="server.crt"
 
-configWebsitePath="${HOME}/website/html"
 
 
 
-
-function getHTTPSCertificate(){
+function getHTTPSCertificateWithAcme(){
 
     # 申请https证书
 	mkdir -p ${configSSLCertPath}
 	mkdir -p ${configWebsitePath}
 	curl https://get.acme.sh | sh
 
-    green "=========================================="
-
-	if [[ $1 == "standalone" ]] ; then
-
-	    green "  开始申请证书, acme.sh 通过 http standalone mode 申请 "
+    echo
+    green " ================================================== "
+    green " 请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书 "
+    green " 如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请."
+    green " 1 Letsencrypt.org "
+    green " 2 BuyPass.com "
+    green " 3 ZeroSSL.com "
+    green " 4 Google Public CA "
+    echo
+    read -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
+    isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
+    
+    if [[ "$isDomainSSLFromLetInput" == "2" ]]; then
+        getHTTPSCertificateInputEmail
+        acmeSSLDays="179"
+        acmeSSLServerName="buypass"
         echo
-
-	    ${configSSLAcmeScriptPath}/acme.sh --issue --standalone -d ${configSSLDomain} --keylength ec-256 --server letsencrypt
+        ${configSSLAcmeScriptPath}/acme.sh --register-account --accountemail ${acmeSSLRegisterEmailInput} --server buypass
+        
+    elif [[ "$isDomainSSLFromLetInput" == "3" ]]; then
+        getHTTPSCertificateInputEmail
+        acmeSSLServerName="zerossl"
         echo
+        ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server zerossl
 
-        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
-        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
-        --reloadcmd "systemctl restart nginx.service"
+    elif [[ "$isDomainSSLFromLetInput" == "4" ]]; then
+        green " ================================================== "
+        yellow " 请先按照如下链接申请 google Public CA  https://hostloc.com/thread-993780-1-1.html"
+        yellow " 具体可参考 https://github.com/acmesh-official/acme.sh/wiki/Google-Public-CA"
+        getHTTPSCertificateInputEmail
+        acmeSSLServerName="google"
+        getHTTPSCertificateInputGoogleEABKey
+        getHTTPSCertificateInputGoogleEABId
+        ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server google --eab-kid ${isDomainSSLGoogleEABIdInput} --eab-hmac-key ${isDomainSSLGoogleEABKeyInput}    
+    else
+        acmeSSLServerName="letsencrypt"
+        #${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days 89 --server letsencrypt
+    fi
 
-    elif [[ $1 == "dns" ]] ; then
 
-        green "  开始申请证书, acme.sh 通过 dns mode 申请 "
+    echo
+    green " ================================================== "
+    green " 请选择 acme.sh 脚本申请SSL证书方式: 1 http方式, 2 dns方式 "
+    green " 默认直接回车为 http 申请方式, 选否则为 dns 方式"
+    echo
+    read -r -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则为 dns 方式申请证书, 请输入[Y/n]:" isAcmeSSLRequestMethodInput
+    isAcmeSSLRequestMethodInput=${isAcmeSSLRequestMethodInput:-Y}
+    echo
+
+    if [[ $isAcmeSSLRequestMethodInput == [Yy] ]]; then
+        acmeSSLHttpWebrootMode=""
+
+        if [ -z $1 ]; then
+            green " ================================================== "
+            green " 请选择 http 申请证书方式: 默认为 1. standalone 模式 "
+            green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
+            green " 2 webroot 模式, 适合已经安装Web服务器, 例如 Caddy Apache 或 Nginx, 请确保Web服务器已经运行在80端口"
+            green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
+            green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
+            echo
+            read -p "请选择http申请证书方式? 默认回车为 1 standalone 模式申请, 请输入纯数字:" isAcmeSSLWebrootModeInput
+            isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-1}
+            
+            if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
+                acmeSSLHttpWebrootMode="standalone"
+            elif [[ ${isAcmeSSLWebrootModeInput} == "2" ]]; then
+                acmeSSLHttpWebrootMode="webroot"
+            elif [[ ${isAcmeSSLWebrootModeInput} == "4" ]]; then
+                acmeSSLHttpWebrootMode="nginx"
+            else
+                acmeSSLHttpWebrootMode="webrootran"
+            fi
+        else
+            if [[ $1 == "standalone" ]]; then
+                acmeSSLHttpWebrootMode="standalone"
+            elif [[ $1 == "webroot" ]]; then
+                acmeSSLHttpWebrootMode="webroot"
+            elif [[ $1 == "webrootran" ]] ; then
+                acmeSSLHttpWebrootMode="webrootran"
+            elif [[ $1 == "nginx" ]] ; then
+                acmeSSLHttpWebrootMode="nginx"
+            fi
+        fi
+
         echo
-        read -r -p "请输入您的邮箱Email 用于在 ZeroSSL.com 申请SSL证书:" isSSLDNSEmailInput
-        ${configSSLAcmeScriptPath}/acme.sh --register-account  -m ${isSSLDNSEmailInput} --server zerossl
+        if [[ ${acmeSSLHttpWebrootMode} == "standalone" ]] ; then
+            green " 开始申请证书 acme.sh 通过 http standalone mode 从 ${acmeSSLServerName} 申请, 请确保80端口不被占用 "
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --standalone --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+        
+        elif [[ ${acmeSSLHttpWebrootMode} == "webroot" ]] ; then
+            green " 开始申请证书, acme.sh 通过 http webroot mode 从 ${acmeSSLServerName} 申请, 请确保web服务器 例如 nginx 已经运行在80端口 "
+            
+            echo
+            read -r -p "请输入Web服务器的html网站根目录路径? 例如/usr/share/nginx/html:" isDomainSSLNginxWebrootFolderInput
+            echo " 您输入的网站根目录路径为 ${isDomainSSLNginxWebrootFolderInput}"
 
+            if [ -z ${isDomainSSLNginxWebrootFolderInput} ]; then
+                red " 输入的Web服务器的 html网站根目录路径不能为空, 网站根目录将默认设置为 ${configWebsitePath}, 请修改你的web服务器配置后再申请证书!"
+                
+            else
+                configWebsitePath="${isDomainSSLNginxWebrootFolderInput}"
+            fi
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+        
+        elif [[ ${acmeSSLHttpWebrootMode} == "nginx" ]] ; then
+            green " 开始申请证书, acme.sh 通过 http nginx mode 从 ${acmeSSLServerName} 申请, 请确保web服务器 nginx 已经运行 "
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --nginx --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+
+        elif [[ ${acmeSSLHttpWebrootMode} == "webrootran" ]] ; then
+
+            # https://github.com/m3ng9i/ran/issues/10
+
+            ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_amd64.zip"
+            ranDownloadFileName="ran_linux_amd64"
+            
+            if [[ "${osArchitecture}" == "arm64" || "${osArchitecture}" == "arm" ]]; then
+                ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_arm64.zip"
+                ranDownloadFileName="ran_linux_arm64"
+            fi
+
+
+            mkdir -p ${configRanPath}
+            
+            if [[ -f "${configRanPath}/${ranDownloadFileName}" ]]; then
+                green " 检测到 ran 已经下载过, 准备启动 ran 临时的web服务器 "
+            else
+                green " 开始下载 ran 作为临时的web服务器 "
+                downloadAndUnzip "${ranDownloadUrl}" "${configRanPath}" "${ranDownloadFileName}" 
+                chmod +x "${configRanPath}/${ranDownloadFileName}"
+            fi
+
+            echo "nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
+            nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
+            echo
+            
+            green " 开始申请证书, acme.sh 通过 http webroot mode 从 ${acmeSSLServerName} 申请, 并使用 ran 作为临时的web服务器 "
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+
+            sleep 4
+            ps -C ${ranDownloadFileName} -o pid= | xargs -I {} kill {}
+        fi
+
+    else
+        green " 开始申请证书, acme.sh 通过 dns mode 申请 "
 
         echo
         green "请选择 DNS provider DNS 提供商: 1 CloudFlare, 2 AliYun,  3 DNSPod(Tencent), 4 GoDaddy "
@@ -3175,6 +3373,7 @@ function getHTTPSCertificate(){
         echo
         read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isAcmeSSLDNSProviderInput
         isAcmeSSLDNSProviderInput=${isAcmeSSLDNSProviderInput:-1}    
+
         
         if [ "$isAcmeSSLDNSProviderInput" == "2" ]; then
             read -r -p "Please Input Ali Key: " Ali_Key
@@ -3206,61 +3405,22 @@ function getHTTPSCertificate(){
         fi
         
         echo
-        ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns ${acmeSSLDNSProvider} --force --keylength ec-256 --server zerossl --debug 
+        ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns ${acmeSSLDNSProvider} --force --keylength ec-256 --server ${acmeSSLServerName} --debug 
         
-        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
-        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
-        --reloadcmd "systemctl restart nginx.service"
-
-
-	else
-
-        mkdir -p ${configRanPath}
-        
-        if [[ -f "${configRanPath}/ran_linux_amd64" ]]; then
-            echo
-        else
-            downloadAndUnzip "https://github.com/m3ng9i/ran/releases/download/v0.1.5/ran_linux_amd64.zip" "${configRanPath}" "ran_linux_amd64.zip" 
-            chmod +x ${configRanPath}/ran_linux_amd64
-        fi    
-
-        echo
-        echo "nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
-        nohup ${configRanPath}/ran_linux_amd64 -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
-        echo
-
-        green "  开始申请证书, acme.sh 通过 http webroot mode 申请, 并使用 ran 作为临时的web服务器 "
-        echo
-        echo
-        green "默认通过Letsencrypt.org来申请证书, 如果证书申请失败, 例如一天内通过Letsencrypt.org申请次数过多, 可以选否通过BuyPass.com来申请."
-        read -p "是否通过Letsencrypt.org来申请证书? 默认直接回车为是, 选否则通过BuyPass.com来申请, 请输入[Y/n]:" isDomainSSLFromLetInput
-        isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-Y}
-
-        echo
-        if [[ $isDomainSSLFromLetInput == [Yy] ]]; then
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --server letsencrypt
-            
-        else
-            read -p "请输入邮箱地址, 用于BuyPass.com申请证书:" isDomainSSLFromBuyPassEmailInput
-            isDomainSSLFromBuyPassEmailInput=${isDomainSSLFromBuyPassEmailInput:-test@gmail.com}
-
-            echo
-            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --register-account  --accountemail ${isDomainSSLFromBuyPassEmailInput}
-            
-            echo
-            ${configSSLAcmeScriptPath}/acme.sh --server https://api.buypass.com/acme/directory --days 170 --issue -d ${configSSLDomain} --webroot ${configWebsitePath}  --keylength ec-256
-        fi
-        
-        echo
-        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
-        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
-        --reloadcmd "systemctl restart nginx.service"
-
-        sleep 4
-        ps -C ran_linux_amd64 -o pid= | xargs -I {} kill {}
     fi
+
+    echo
+    if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} 
+    else
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+        --reloadcmd "systemctl restart nginx.service"
+    fi
+    green " ================================================== "
 
 }
 
@@ -3285,10 +3445,8 @@ function compareRealIpWithLocalIp(){
             #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
             #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
             
-
             #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
             #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
-
 
             green " ================================================== "
             green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
@@ -3322,40 +3480,34 @@ function compareRealIpWithLocalIp(){
 
 
 
+acmeSSLRegisterEmailInput=""
+isDomainSSLGoogleEABKeyInput=""
+isDomainSSLGoogleEABIdInput=""
 
-function getHTTPS(){
+function getHTTPSCertificateStep1(){
 
     testLinuxPortUsage
-
-    if [[ $1 == "air" ]] ; then
-        configSSLCertPath="/usr/local/share/au"
-    fi
-
 
     echo
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
-    green " ================================================== "
-
-    read configSSLDomain
+    read -p "请输入解析到本VPS的域名:" configSSLDomain
     
-    echo
-    read -p "是否申请证书? 默认为自动申请证书,如果二次安装或已有证书可以选否 请输入[Y/n]?" isDomainSSLRequestInput
-    isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
-
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+        echo
+        green " =================================================="
+        green " 是否申请证书? 默认直接回车为申请证书, 如第二次安装或已有证书 可以选否"
+        green " 如果已经有SSL证书文件 请放到下面路径"
+        red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+        red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
+        echo
+
+        read -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]?" isDomainSSLRequestInput
+        isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
+
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-
-            if [[ $1 == "air" ]] ; then
-                if [[ $2 == "dns" ]] ; then
-                    getHTTPSCertificate "dns"
-                else
-                    getHTTPSCertificate "standalone"
-                fi
-            else
-                getHTTPSCertificate "standalone"
-            fi
-
+            
+            getHTTPSCertificateWithAcme
 
             if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
                 green " =================================================="
@@ -3871,7 +4023,7 @@ function start_menu(){
             installAirUniverse "ssl"
         ;;        
         71 )
-            getHTTPS
+            getHTTPSCertificateStep1
         ;;     
         72 )
             installShareNetflixAccount
