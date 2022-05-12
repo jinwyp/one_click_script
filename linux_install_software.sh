@@ -1080,8 +1080,6 @@ function installCloudreve(){
     mv ${configCloudreveDownloadCodeFolder}/cloudreve ${configCloudreveCommandFolder}/cloudreve
     chmod +x ${configCloudreveCommandFolder}/cloudreve
 
-    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
-    ${sudoCmd} chmod -R 771 ${configCloudrevePath}
 
     cd ${configCloudreveCommandFolder}
     echo "nohup ${configCloudreveCommandFolder}/cloudreve > ${configCloudreveReadme} 2>&1 &"
@@ -1091,6 +1089,9 @@ function installCloudreve(){
     echo "kill -9 ${pidCloudreve}"
     kill -9 ${pidCloudreve}
     echo
+
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
+    ${sudoCmd} chmod -R 771 ${configCloudrevePath}
 
 
     cat > ${osSystemMdPath}cloudreve.service <<-EOF
@@ -1119,6 +1120,7 @@ EOF
     echo "Install cloudreve systemmd service ..."
     sed -i "s/5212/${configCloudrevePort}/g" ${configCloudreveIni}
     sed -i "s/5212/${configCloudrevePort}/g" ${configCloudreveReadme}
+
     systemctl daemon-reload
     systemctl start cloudreve
     systemctl enable cloudreve
@@ -1205,6 +1207,8 @@ nginxAccessLogFilePath="${configWebsiteFatherPath}/nginx-access.log"
 nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
 
 nginxConfigPath="/etc/nginx/nginx.conf"
+nginxCloudreveStoragePath="${configWebsitePath}/cloudreve_storage"
+nginxTempPath="/var/lib/nginx/tmp"
 isInstallNginx="false"
 
 function installWebServerNginx(){
@@ -1227,10 +1231,6 @@ function installWebServerNginx(){
     createUserWWW
 
     nginxUser="${wwwUsername} ${wwwUsername}"
-
-
-    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
-    ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
 
     
     if [ "$osRelease" == "centos" ]; then
@@ -1291,10 +1291,10 @@ function installWebServerNginx(){
 EOM
 
     elif [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
-        nginxUser="root"
-        mkdir -p ${configWebsitePath}/cloudreve_storage
-        ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsitePath}/cloudreve_storage
-        ${sudoCmd} chmod -R 774 ${configWebsitePath}/cloudreve_storage
+
+        mkdir -p ${nginxCloudreveStoragePath}
+        ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxCloudreveStoragePath}
+        ${sudoCmd} chmod -R 774 ${nginxCloudreveStoragePath}
 
         read -r -d '' nginxConfigServerHttpInput << EOM
     server {
@@ -1423,6 +1423,10 @@ EOF
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
     ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
 
+    # /var/lib/nginx/tmp/client_body 权限问题
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxTempPath}
+    ${sudoCmd} chmod -R 771 ${nginxTempPath}
+
     ${sudoCmd} systemctl start nginx.service
 
     echo
@@ -1444,7 +1448,7 @@ EOF
         green " Cloudreve INI 配置文件路径: ${configCloudreveIni}"
         green " Cloudreve 默认SQLite 数据库文件路径: ${configCloudreveCommandFolder}/cloudreve.db"
         green " Cloudreve readme 账号密码文件路径: ${configCloudreveReadme}"
-        red " 请在管理面板->存储策略->编辑默认存储策略->存储路径 设置为 ${configWebsitePath}/cloudreve_storage"
+        red " 请在管理面板->存储策略->编辑默认存储策略->存储路径 设置为 ${nginxCloudreveStoragePath}"
 
         cat ${configCloudreveReadme}
         green " ================================================== "
