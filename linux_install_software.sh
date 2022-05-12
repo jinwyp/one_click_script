@@ -1131,11 +1131,12 @@ EOF
     echo
     green " ================================================== "
     green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
-    green " 如无法访问, 请设置防火墙规则 放行 ${configCloudrevePort} 端口"
+    green " Please visit http://your ip:${configCloudrevePort}"
+    green " 如无法访问, 请设置Firewall防火墙规则 放行 ${configCloudrevePort} 端口"
     green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
-    green " Cloudreve 配置文件路径: ${configCloudreveIni}"
-    green " Cloudreve 默认SQLite数据库文件路径: ${configCloudreveCommandFolder}/cloudreve.db"
-    green " Cloudreve 账号密码文件路径: ${configCloudreveReadme}"
+    green " Cloudreve INI 配置文件路径: ${configCloudreveIni}"
+    green " Cloudreve 默认SQLite 数据库文件路径: ${configCloudreveCommandFolder}/cloudreve.db"
+    green " Cloudreve readme 账号密码文件路径: ${configCloudreveReadme}"
     
 
     cat ${configCloudreveReadme}
@@ -1143,10 +1144,12 @@ EOF
 
 
     echo
+    green "如果要安装 nginx web服务器 需要提供域名, 并设置好DNS指向"
     read -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
     isNginxInstallInput=${isNginxInstallInput:-Y}
 
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
         getHTTPSCertificateStep1
         configInstallNginxMode="cloudreve"
         installWebServerNginx
@@ -1202,7 +1205,7 @@ nginxAccessLogFilePath="${configWebsiteFatherPath}/nginx-access.log"
 nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
 
 nginxConfigPath="/etc/nginx/nginx.conf"
-
+isInstallNginx="false"
 
 function installWebServerNginx(){
 
@@ -1218,6 +1221,8 @@ function installWebServerNginx(){
         green " ================================================== "
         exit
     fi
+
+    isInstallNginx="true"
 
     createUserWWW
 
@@ -1433,13 +1438,12 @@ EOF
     echo
 
     if [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
-        
         green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
-        green " 如无法访问, 请设置防火墙规则 放行 ${configCloudrevePort} 端口"
+        green " Please visit https://${configSSLDomain}"
         green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
-        green " Cloudreve 配置文件路径: ${configCloudreveIni}"
-        green " Cloudreve 默认SQLite数据库文件路径: ${configCloudreveCommandFolder}/cloudreve.db"
-        green " Cloudreve 账号密码文件路径: ${configCloudreveReadme}"
+        green " Cloudreve INI 配置文件路径: ${configCloudreveIni}"
+        green " Cloudreve 默认SQLite 数据库文件路径: ${configCloudreveCommandFolder}/cloudreve.db"
+        green " Cloudreve readme 账号密码文件路径: ${configCloudreveReadme}"
         red " 请在管理面板->存储策略->编辑默认存储策略->存储路径 设置为 ${configWebsitePath}/cloudreve_storage"
 
         cat ${configCloudreveReadme}
@@ -3297,15 +3301,25 @@ function getHTTPSCertificateWithAcme(){
         acmeSSLHttpWebrootMode=""
 
         if [ -z $1 ]; then
+
+            if [[ "${isInstallNginx}" == "true" ]]; then
+                acmeDefaultValue="3"
+                acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
+            else
+                acmeDefaultValue="1"
+                acmeDefaultText="1. standalone 模式"
+            fi
+
             green " ================================================== "
-            green " 请选择 http 申请证书方式: 默认为 1. standalone 模式 "
+            green " 请选择 http 申请证书方式: 默认直接回车为 ${acmeDefaultText} "
             green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
             green " 2 webroot 模式, 适合已经安装Web服务器, 例如 Caddy Apache 或 Nginx, 请确保Web服务器已经运行在80端口"
             green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
             green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
             echo
-            read -p "请选择http申请证书方式? 默认回车为 1 standalone 模式申请, 请输入纯数字:" isAcmeSSLWebrootModeInput
-            isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-1}
+            read -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
+       
+            isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-${acmeDefaultValue}}
             
             if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
                 acmeSSLHttpWebrootMode="standalone"
