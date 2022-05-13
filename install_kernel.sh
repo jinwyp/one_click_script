@@ -885,7 +885,7 @@ isInstallFromRepo="no"
 userHomePath="${HOME}/download_linux_kernel"
 linuxKernelByUser="elrepo"
 linuxKernelToBBRType=""
-linuxKernelToInstallVersion="5.10"
+linuxKernelToInstallVersion="5.15"
 linuxKernelToInstallVersionFull=""
 
 elrepo_kernel_name="kernel-ml"
@@ -947,6 +947,9 @@ function installKernel(){
 function getVersionBBRPlus(){
     if [ "${linuxKernelToInstallVersion}" = "5.17" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.17")
+
+    elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.15")
 
     elif [ "${linuxKernelToInstallVersion}" = "5.10" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.10")
@@ -1021,6 +1024,11 @@ function getLatestCentosKernelVersion(){
                     elrepo_kernel_version_ml_Teddysun510=${ver}
                 fi
 
+                if [[ ${ver} == *"5.15"* ]]; then
+                    # echo "符合所选版本的Linux 5.15 内核版本: ${ver}"
+                    elrepo_kernel_version_ml_Teddysun515=${ver}
+                fi
+
                 if [[ ${ver} == *"${elrepo_kernel_version_ml_Teddysun_latest_version}"* ]]; then
                     # echo "符合所选版本的Linux 内核版本: ${ver}, ${elrepo_kernel_version_ml_Teddysun_latest_version}"
                     elrepo_kernel_version_ml_Teddysun_latest=${ver}
@@ -1030,6 +1038,7 @@ function getLatestCentosKernelVersion(){
 
             green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml}" 
             green "由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun510}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 5.15 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun515}" 
             green "由 Teddysun 编译的 Centos 最新的Linux 5.xx 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun_latest}" 
             
         fi
@@ -1137,7 +1146,7 @@ function installCentosKernelManual(){
         if [ "${kernelVersionFirstletter}" = "5" ]; then 
             linuxKernelByUser="elrepo"
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.16" || "${linuxKernelToInstallVersion}" == "5.17" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.17" ]]; then 
                 linuxKernelByUserTeddysun="Teddysun"
             fi
         else
@@ -1177,6 +1186,12 @@ function installCentosKernelManual(){
             # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.37-1.el7.x86_64.rpm
             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
+
+        elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
+            elrepo_kernel_name="kernel-ml"
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun515}
+            elrepo_kernel_filename=""
+            ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNoShort}"
 
         elif [ "${linuxKernelToInstallVersion}" = "${elrepo_kernel_version_ml_Teddysun_latest_version}" ]; then
             elrepo_kernel_name="kernel-ml"
@@ -3066,7 +3081,7 @@ function start_menu(){
     green " 35. 安装 内核 5.4 LTS, 从 elrepo网站 下载安装"
     echo
     green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
-    green " 37. 安装 内核 5.16, Teddysun 编译"
+    green " 37. 安装 内核 5.15 LTS, Teddysun 编译 推荐安装此内核"
     green " 38. 安装 内核 5.17, 下载安装. (安装最新版内核 可能会高于5.17) "
 
     else
@@ -3094,7 +3109,8 @@ function start_menu(){
     green " 64. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
     green " 65. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
     green " 66. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译" 
-    green " 67. 安装 BBR Plus 内核 5.17, UJX6N 编译"   
+    green " 67. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译" 
+    green " 68. 安装 BBR Plus 内核 5.17, UJX6N 编译"   
  
     echo
     green " 0. 退出脚本"
@@ -3149,7 +3165,7 @@ function start_menu(){
     green " 35. Install linux kernel 5.4 LTS, download and install from elrepo website"
     echo
     green " 36. Install linux kernel 5.10 LTS, compile by Teddysun. Recommended"
-    green " 37. Install linux kernel 5.16, compile by Teddysun."
+    green " 37. Install linux kernel 5.15 LTS, compile by Teddysun. Recommended"
     green " 38. Install linux latest kernel 5.17 elrepo, download from Teddysun ftp"
 
     else
@@ -3175,7 +3191,8 @@ function start_menu(){
     green " 64. Install BBR Plus kernel 4.19 LTS, compile by UJX6N"
     green " 65. Install BBR Plus kernel 5.4 LTS, compile by UJX6N"
     green " 66. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
-    green " 67. Install BBR Plus kernel 5.17, compile by UJX6N"   
+    green " 67. Install BBR Plus kernel 5.15 LTS, compile by UJX6N" 
+    green " 68. Install BBR Plus kernel 5.17, compile by UJX6N"   
  
     echo
     green " 0. exit"
@@ -3272,7 +3289,7 @@ function start_menu(){
             installKernel
         ;;
         37 )
-            linuxKernelToInstallVersion="5.16"
+            linuxKernelToInstallVersion="5.15"
             installKernel
         ;; 
         38 )
@@ -3348,6 +3365,11 @@ function start_menu(){
             installKernel
         ;;
         67 )
+            linuxKernelToInstallVersion="5.15"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        68 )
             linuxKernelToInstallVersion="5.17"
             linuxKernelToBBRType="bbrplus"
             installKernel

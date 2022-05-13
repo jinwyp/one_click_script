@@ -733,7 +733,13 @@ function installWireguard(){
 
 
 
-
+# DNS server 
+function installAdGuardHome(){
+	wget -qN --no-check-certificate -O ./ad_guard_install.sh https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh && chmod +x ./ad_guard_install.sh && ./ad_guard_install.sh -v
+    echo
+    green " Remove AdGuardHome, pls run ./ad_guard_install.sh -u "
+    echo
+}
 
 
 
@@ -758,6 +764,7 @@ function vps_netflix_jin(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
 	wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./nf.sh && ./nf.sh
 }
+
 
 
 function vps_netflixgo(){
@@ -6728,6 +6735,7 @@ function start_menu(){
     echo
     green " 25. 查看已安装的配置和用户密码等信息"
     green " 26. 申请免费的SSL证书"
+    green " 28. 安装DNS服务器 AdGuardHome 支持去广告"
     green " 30. 子菜单 安装 trojan 和 v2ray 可视化管理面板, VPS测速工具, Netflix测试解锁工具, 安装宝塔面板等"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
@@ -6771,6 +6779,7 @@ function start_menu(){
     echo
     green " 25. Show info and password for installed trojan and v2ray"
     green " 26. Get a free SSL certificate for one or multiple domains"
+    green " 28. Install AdGuardHome ads & trackers blocking DNS server "
     green " 30. Submenu. install trojan and v2ray UI admin panel, VPS speedtest tools, Netflix unlock tools. Miscellaneous tools"
     green " =================================================="
     green " 31. Install Oh My Zsh and zsh-autosuggestions plugin, Micro editor"
@@ -6903,8 +6912,8 @@ function start_menu(){
         35 )
             editLinuxLoginWithPublicKey
         ;;
-        29 )
-            startMenuOther
+        28 )
+            installAdGuardHome
         ;;
         30 )
             startMenuOther
