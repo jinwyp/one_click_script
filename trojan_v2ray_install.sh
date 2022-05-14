@@ -739,11 +739,11 @@ function installAdGuardHome(){
     echo
     if [[ ${configLanguage} == "cn" ]] ; then
         green " 如要卸载删除AdGuard Home 请运行命令 ./ad_guard_install.sh -u"
-        green " 请打开网址 http://yourip 完成初始化配置 "
+        green " 请打开网址 http://yourip:3000 完成初始化配置 "
         green " 完成初始化后, 请重新运行本脚本 选择26 获取SSL 证书. 开启DOH和DOT "
     else
         green " Remove AdGuardHome, pls run ./ad_guard_install.sh -u "
-        green " Please open http://yourip and complete the initialization "
+        green " Please open http://yourip:3000 and complete the initialization "
         green " After the initialization, pls rerun this script and choose 26 to get SSL certificate "
     fi
     echo
@@ -766,8 +766,8 @@ function replaceAdGuardConfig(){
             yellow " prepare to get SSL certificate and replace AdGuardHome config"
 
             # 
-            sed -i -e '/tls:/{n;d}' ${configAdGuardPath}/AdGuardHome.yaml
-            sed -i "/tls:/a \  enabled: true" ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i -e '/^tls:/{n;d}' ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "/^tls:/a \  enabled: true" ${configAdGuardPath}/AdGuardHome.yaml
             # sed -i 's/enabled: false/enabled: true/g' ${configAdGuardPath}/AdGuardHome.yaml
 
             sed -i "s/server_name: \"\"/server_name: ${configSSLDomain}/g" ${configAdGuardPath}/AdGuardHome.yaml
@@ -824,12 +824,15 @@ EOM
             TEST3="${TEST3//&/\\&}"
             TEST3="${TEST3//$'\n'/\\n}"
 
-            sed -i "/id: 2/a \  ${TEST3}" ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "/id: 2/a ${TEST3}" ${configAdGuardPath}/AdGuardHome.yaml
 
 
 
             echo
-            green " AdGuard Home config updated sucess: ${configAdGuardPath}/AdGuardHome.yaml "
+            green " AdGuard Home config updated success: ${configAdGuardPath}/AdGuardHome.yaml "
+            green " AdGuard Home 配置文件更新成功: ${configAdGuardPath}/AdGuardHome.yaml "
+
+            ${configAdGuardPath}/AdGuardHome -s restart
         else
             red " 未检测到AdGuardHome配置文件 ${configAdGuardPath}/AdGuardHome.yaml, 请先完成AdGuardHome初始化配置"
             red " ${configAdGuardPath}/AdGuardHome.yaml not found, pls complete the AdGuardHome initialization first!"
@@ -1535,6 +1538,11 @@ function getHTTPSCertificateWithAcme(){
 
 
 function getHTTPSCertificateStep1(){
+
+    if [ -f "${configAdGuardPath}/AdGuardHome" ] ; then
+        ${configAdGuardPath}/AdGuardHome -s stop
+    fi
+
     echo
     green " ================================================== "
     yellow " 请输入解析到本VPS的域名 例如 www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
