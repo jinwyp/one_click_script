@@ -737,9 +737,121 @@ function installWireguard(){
 function installAdGuardHome(){
 	wget -qN --no-check-certificate -O ./ad_guard_install.sh https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh && chmod +x ./ad_guard_install.sh && ./ad_guard_install.sh -v
     echo
-    green " Remove AdGuardHome, pls run ./ad_guard_install.sh -u "
+    if [[ ${configLanguage} == "cn" ]] ; then
+        green " 如要卸载删除AdGuard Home 请运行命令 ./ad_guard_install.sh -u"
+        green " 请打开网址 http://yourip 完成初始化配置 "
+        green " 完成初始化后, 请重新运行本脚本 选择26 获取SSL 证书. 开启DOH和DOT "
+    else
+        green " Remove AdGuardHome, pls run ./ad_guard_install.sh -u "
+        green " Please open http://yourip and complete the initialization "
+        green " After the initialization, pls rerun this script and choose 26 to get SSL certificate "
+    fi
     echo
+
 }
+
+configAdGuardPath="/opt/AdGuardHome"
+function replaceAdGuardConfig(){
+
+    if [ -f "${configAdGuardPath}/AdGuardHome" ] ; then
+        
+        echo
+        green " =================================================="
+        green " 检测到 AdGuard Home 已安装"
+        green " Detected AdGuard Home have already installed"
+
+        if [ -f "${configAdGuardPath}/AdGuardHome.yaml" ] ; then
+            echo
+            yellow " 准备把已申请到的SSL证书填入 AdGuardHome 配置文件"
+            yellow " prepare to get SSL certificate and replace AdGuardHome config"
+
+            # 
+            sed -i -e '/tls:/{n;d}' ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "/tls:/a \  enabled: true" ${configAdGuardPath}/AdGuardHome.yaml
+            # sed -i 's/enabled: false/enabled: true/g' ${configAdGuardPath}/AdGuardHome.yaml
+
+            sed -i "s/server_name: \"\"/server_name: ${configSSLDomain}/g" ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "s|certificate_path: \"\"|certificate_path: ${configSSLCertPath}/${configSSLCertFullchainFilename}|g" ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "s|private_key_path: \"\"|private_key_path: ${configSSLCertPath}/${configSSLCertKeyFilename}|g" ${configAdGuardPath}/AdGuardHome.yaml
+
+            # 开启DNS并行查询 加速
+            sed -i 's/all_servers: false/all_servers: true/g' ${configAdGuardPath}/AdGuardHome.yaml
+
+
+            read -r -d '' adGuardConfigUpstreamDns << EOM
+  - 1.1.1.1
+  - https://dns.cloudflare.com/dns-query
+  - tls://1dot1dot1dot1.cloudflare-dns.com
+  - 8.8.8.8
+  - https://dns.google/dns-query
+  - tls://dns.google
+  - 9.9.9.9
+  - https://dns.quad9.net/dns-query
+  - tls://dns.quad9.net
+EOM
+            TEST1="${adGuardConfigUpstreamDns//\\/\\\\}"
+            TEST1="${TEST1//\//\\/}"
+            TEST1="${TEST1//&/\\&}"
+            TEST1="${TEST1//$'\n'/\\n}"
+
+            sed -i "/upstream_dns:/a \  ${TEST1}" ${configAdGuardPath}/AdGuardHome.yaml
+
+
+            read -r -d '' adGuardConfigBootstrapDns << EOM
+  - 8.8.8.8
+  - 8.8.4.4
+EOM
+            TEST2="${adGuardConfigBootstrapDns//\\/\\\\}"
+            TEST2="${TEST2//\//\\/}"
+            TEST2="${TEST2//&/\\&}"
+            TEST2="${TEST2//$'\n'/\\n}"
+
+            sed -i "/bootstrap_dns:/a \  ${TEST2}" ${configAdGuardPath}/AdGuardHome.yaml
+
+
+            read -r -d '' adGuardConfigFilters << EOM
+- enabled: true
+  url: https://anti-ad.net/easylist.txt
+  name: 'CHN: anti-AD'
+  id: 1652375944
+- enabled: true
+  url: https://easylist-downloads.adblockplus.org/easylistchina.txt
+  name: EasyList China
+  id: 1652375945
+EOM
+            TEST3="${adGuardConfigFilters//\\/\\\\}"
+            TEST3="${TEST3//\//\\/}"
+            TEST3="${TEST3//&/\\&}"
+            TEST3="${TEST3//$'\n'/\\n}"
+
+            sed -i "/id: 2/a \  ${TEST3}" ${configAdGuardPath}/AdGuardHome.yaml
+
+
+
+            echo
+            green " AdGuard Home config updated sucess: ${configAdGuardPath}/AdGuardHome.yaml "
+        else
+            red " 未检测到AdGuardHome配置文件 ${configAdGuardPath}/AdGuardHome.yaml, 请先完成AdGuardHome初始化配置"
+            red " ${configAdGuardPath}/AdGuardHome.yaml not found, pls complete the AdGuardHome initialization first!"
+        fi 
+
+        echo
+    fi
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1254,15 +1366,25 @@ function getHTTPSCertificateWithAcme(){
         acmeSSLHttpWebrootMode=""
 
         if [ -z $1 ]; then
+
+            if [[ -n "${configInstallNginxMode}" ]]; then
+                acmeDefaultValue="3"
+                acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
+            else
+                acmeDefaultValue="1"
+                acmeDefaultText="1. standalone 模式"
+            fi
+                    
             green " ================================================== "
-            green " 请选择 http 申请证书方式: 默认为 3. webroot 并使用 ran 作为临时的Web服务器 "
+            green " 请选择 http 申请证书方式: 默认直接回车为 ${acmeDefaultText} "
             green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
             green " 2 webroot 模式, 适合已经安装Web服务器, 例如 Caddy Apache 或 Nginx, 请确保Web服务器已经运行在80端口"
             green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
             green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
             echo
-            read -p "请选择http申请证书方式? 默认回车为 3 webroot 并用ran作为临时的Web服务器申请, 请输入纯数字:" isAcmeSSLWebrootModeInput
-            isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-3}
+            read -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
+
+            isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-${acmeDefaultValue}}
             
             if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
                 acmeSSLHttpWebrootMode="standalone"
@@ -1444,6 +1566,11 @@ function getHTTPSCertificateStep1(){
     fi
 
 }
+
+
+
+
+
 
 
 
@@ -2187,6 +2314,7 @@ function installTrojanV2rayWithNginx(){
 
         else
             echo
+            replaceAdGuardConfig
         fi
     else
         red " ================================================== "
@@ -6888,6 +7016,12 @@ function start_menu(){
         26 )
             installTrojanV2rayWithNginx
         ;;
+        28 )
+            installAdGuardHome
+        ;;
+        30 )
+            startMenuOther
+        ;;        
         31 )
             setLinuxDateZone
             installPackage
@@ -6912,12 +7046,7 @@ function start_menu(){
         35 )
             editLinuxLoginWithPublicKey
         ;;
-        28 )
-            installAdGuardHome
-        ;;
-        30 )
-            startMenuOther
-        ;;
+
         66 )
             promptInfoXrayNameServiceName="-jin"
             echo "promptInfoXrayNameServiceName: -jin"

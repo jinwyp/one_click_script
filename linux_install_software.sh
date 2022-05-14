@@ -1146,7 +1146,8 @@ EOF
 
 
     echo
-    green "如果要安装 nginx web服务器 需要提供域名, 并设置好DNS指向"
+    green "是否继续安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
     read -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
     isNginxInstallInput=${isNginxInstallInput:-Y}
 
@@ -3816,6 +3817,133 @@ function removeShareNetflixAccount(){
 
 
 
+
+function startMenuOther(){
+    clear
+
+    if [[ ${configLanguage} == "cn" ]] ; then
+    
+        green " =================================================="
+        echo
+        green " 21. 安装 XrayR 服务器端"
+        green " 22. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
+        green " 23. 编辑 XrayR 配置文件 ${configXrayRConfigFilePath}"        
+        echo
+        green " 31. 安装 V2Ray-Poseidon 服务器端"
+        red " 32. 卸载 V2Ray-Poseidon"
+        green " 33. 停止, 重启, 查看日志, 管理 V2Ray-Poseidon"
+        green " 35. 编辑 V2Ray-Poseidon 直接命令行 方式运行 配置文件 v2ray-poseidon/config.json"
+        green " 36. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker方式运行 配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
+        green " 37. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker Compose 配置文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
+        echo
+        green " 41. 安装 Soga 服务器端"
+        green " 42. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
+        green " 43. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
+        
+        echo
+        green " 9. 返回上级菜单"
+        green " 0. 退出脚本"    
+
+    else
+        green " =================================================="
+        echo
+        green " 21. Install XrayR server side "
+        green " 22. Stop, restart, show log, manage XrayR server side "
+        green " 23. Using VI open XrayR config file ${configXrayRConfigFilePath}"        
+        echo
+        green " 31. Install V2Ray-Poseidon server side"
+        red " 32. Remove V2Ray-Poseidon"
+        green " 33. Stop, restart, show log, manage V2Ray-Poseidon"
+        green " 35. Using VI open V2Ray-Poseidon config file v2ray-poseidon/config.json (direct command line running mode)"
+        green " 36. Using VI open V2Ray-Poseidon Docker WS-TLS Mode config file v2ray-poseidon/docker/v2board/ws-tls/config.json (Docker mode)"
+        green " 37. Using VI open V2Ray-Poseidon Docker WS-TLS Mode Docker Compose config file v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml (Docker mode)"
+        echo
+        green " 41. Install Soga server side "
+        green " 42. Stop, restart, show log, manage Soga server side "
+        green " 43. Using VI open Soga config file ${configSogaConfigFilePath}"
+
+        echo
+        green " 9. Back to main menu"
+        green " 0. exit"
+
+    fi
+
+
+    echo
+    read -p "Please input number:" menuNumberInput
+    case "$menuNumberInput" in
+        21 )
+            setLinuxDateZone
+            installXrayR
+        ;;
+        22 )
+            manageXrayR
+        ;;
+        23 )
+            editXrayRConfig
+        ;;    
+        31 )
+            setLinuxDateZone
+            installPackage
+            installV2rayPoseidon
+        ;;
+        32 )
+            removeV2rayPoseidon
+        ;;
+        33 )
+            manageV2rayPoseidon
+        ;;
+        35 )
+            editV2rayPoseidonConfig
+        ;;
+        36 )
+            editV2rayPoseidonDockerWSConfig
+        ;;
+        37 )
+            editV2rayPoseidonDockerComposeConfig
+        ;;
+
+        41 )
+            setLinuxDateZone
+            installSoga 
+        ;;
+        42 )
+            manageSoga
+        ;;                                        
+        43 )
+            editSogaConfig
+        ;; 
+        9)
+            start_menu
+        ;;
+        0 )
+            exit 1
+        ;;
+        * )
+            clear
+            red "请输入正确数字 !"
+            sleep 2s
+            startMenuOther
+        ;;
+    esac
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function start_menu(){
     clear
 
@@ -3834,7 +3962,6 @@ function start_menu(){
     green " 4. 修改 SSH 登陆端口号"
     green " 5. 设置时区为北京时间"
     green " 6. 用VI 编辑 /etc/hosts"
-    
     echo
     green " 11. 安装 Vim Nano Micro 编辑器"
     green " 12. 安装 Nodejs 与 PM2"
@@ -3847,25 +3974,6 @@ function start_menu(){
     red " 22. 卸载 Cloudreve 云盘系统 "
 
     echo
-    green " 31. 安装 V2Ray-Poseidon 服务器端"
-    red " 32. 卸载 V2Ray-Poseidon"
-    green " 33. 停止, 重启, 查看日志, 管理 V2Ray-Poseidon"
-    echo
-    green " 35. 编辑 V2Ray-Poseidon 直接命令行 方式运行 配置文件 v2ray-poseidon/config.json"
-    green " 36. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker方式运行 配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
-    green " 37. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker Compose 配置文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
-    
-    echo
-    green " 41. 安装 Soga 服务器端"
-    green " 42. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
-    green " 43. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
-    
-    echo
-    green " 45. 安装 XrayR 服务器端"
-    green " 46. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
-    green " 47. 编辑 XrayR 配置文件 ${configXrayRConfigFilePath}"
-
-    echo
     green " 51. 安装 Air-Universe 服务器端"
     red " 52. 卸载 Air-Universe"
     green " 53. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
@@ -3875,12 +3983,15 @@ function start_menu(){
     green " 57. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
     green " 58. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     echo 
-    green " 71. 单独申请域名SSL证书"
-    green " 72. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
-    red " 73. 卸载共享Netflix账号服务器端"
+    green " 61. 单独申请域名SSL证书"
     echo
-    green " 81. 工具脚本合集 by BlueSkyXN "
-    green " 82. 工具脚本合集 by jcnf "
+    green " 62. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
+    red " 63. 卸载共享Netflix账号服务器端"
+    echo
+    green " 71. 工具脚本合集 by BlueSkyXN "
+    green " 72. 工具脚本合集 by jcnf "
+    echo
+    green " 77. 子菜单 安装 V2board 服务器端 XrayR, V2Ray-Poseidon, Soga"
     echo
     green " 88. 升级脚本"
     green " 0. 退出脚本"
@@ -3895,7 +4006,6 @@ function start_menu(){
     green " 4. Modify SSH login port number. Secure your VPS"
     green " 5. Set timezone to Beijing time"
     green " 6. Using VI open /etc/hosts file"
-    
     echo
     green " 11. Install Vim Nano Micro editor"
     green " 12. Install Nodejs and PM2"
@@ -3908,25 +4018,6 @@ function start_menu(){
     red " 22. Remove Cloudreve cloud storage system"
 
     echo
-    green " 31. Install V2Ray-Poseidon server side"
-    red " 32. Remove V2Ray-Poseidon"
-    green " 33. Stop, restart, show log, manage V2Ray-Poseidon"
-    echo
-    green " 35. Using VI open V2Ray-Poseidon config file v2ray-poseidon/config.json (direct command line running mode)"
-    green " 36. Using VI open V2Ray-Poseidon Docker WS-TLS Mode config file v2ray-poseidon/docker/v2board/ws-tls/config.json (Docker mode)"
-    green " 37. Using VI open V2Ray-Poseidon Docker WS-TLS Mode Docker Compose config file v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml (Docker mode)"
-    
-    echo
-    green " 41. Install Soga server side "
-    green " 42. Stop, restart, show log, manage Soga server side "
-    green " 43. Using VI open Soga config file ${configSogaConfigFilePath}"
-    
-    echo
-    green " 45. Install XrayR server side "
-    green " 46. Stop, restart, show log, manage XrayR server side "
-    green " 47. Using VI open XrayR config file ${configXrayRConfigFilePath}"
-
-    echo
     green " 51. Install Air-Universe server side "
     red " 52. Remove Air-Universe"
     green " 53. Stop, restart, show log, manage Air-Universe server side "
@@ -3936,12 +4027,15 @@ function start_menu(){
     green " 57. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
     green " 58. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
     echo 
-    green " 71. Get a free SSL certificate for domain name only"
-    green " 72. Install Netflix account share service server, Play Netflix without Netflix account"
-    red " 73. Remove Netflix account share service server"    
+    green " 61. Get a free SSL certificate for domain name only"
     echo
-    green " 81. toolkit by BlueSkyXN "
-    green " 82. toolkit by jcnf "
+    green " 62. Install Netflix account share service server, Play Netflix without Netflix account"
+    red " 63. Remove Netflix account share service server"    
+    echo
+    green " 71. toolkit by BlueSkyXN "
+    green " 72. toolkit by jcnf "
+    echo
+    green " 77. Submenu. install XrayR, V2Ray-Poseidon, Soga for V2board panel"
     echo
     green " 88. upgrade this script to latest version"
     green " 0. exit"
@@ -3998,51 +4092,8 @@ function start_menu(){
         ;;
         22 )
             removeCloudreve
-        ;;        
-
-
-        31 )
-            setLinuxDateZone
-            installPackage
-            installV2rayPoseidon
-        ;;
-        32 )
-            removeV2rayPoseidon
-        ;;
-        33 )
-            manageV2rayPoseidon
-        ;;
-        35 )
-            editV2rayPoseidonConfig
-        ;;
-        36 )
-            editV2rayPoseidonDockerWSConfig
-        ;;
-        37 )
-            editV2rayPoseidonDockerComposeConfig
         ;;
 
-        41 )
-            setLinuxDateZone
-            installSoga 
-        ;;
-        42 )
-            manageSoga
-        ;;                                        
-        43 )
-            editSogaConfig
-        ;; 
-
-        45 )
-            setLinuxDateZone
-            installXrayR
-        ;;
-        46 )
-            manageXrayR
-        ;;                                        
-        47 )
-            editXrayRConfig
-        ;; 
 
         51 )
             setLinuxDateZone
@@ -4062,31 +4113,35 @@ function start_menu(){
         ;; 
         56 )
             replaceAirUniverseConfigWARP
-        ;; 
+        ;;
         57 )
             downgradeXray
         ;;
         58 )
             installAirUniverse "ssl"
-        ;;        
-        71 )
+        ;;
+        61 )
             getHTTPSCertificateStep1
-        ;;     
-        72 )
+        ;;
+        62 )
             installShareNetflixAccount
         ;;
-        73 )
+        63 )
             removeShareNetflixAccount
-        ;;          
-        81 )
+        ;;
+        71 )
             toolboxSkybox
-        ;;                        
-        82 )
+        ;;
+        72 )
             toolboxJcnf
-        ;;      
+        ;;
+        
+        77 )
+            startMenuOther
+        ;;
         88 )
             upgradeScript
-        ;;                           
+        ;;
         0 )
             exit 1
         ;;
