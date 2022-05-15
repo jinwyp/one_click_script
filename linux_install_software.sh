@@ -999,6 +999,414 @@ function installPortainer(){
 
 
 
+acmeSSLRegisterEmailInput=""
+isDomainSSLGoogleEABKeyInput=""
+isDomainSSLGoogleEABIdInput=""
+function getHTTPSCertificateCheckEmail(){
+    if [ -z $2 ]; then
+        
+        if [[ $1 == "email" ]]; then
+            red " 输入邮箱地址不能为空, 请重新输入!"
+            getHTTPSCertificateInputEmail
+        elif [[ $1 == "googleEabKey" ]]; then
+            red " 输入EAB key 不能为空, 请重新输入!"
+            getHTTPSCertificateInputGoogleEABKey
+        elif [[ $1 == "googleEabId" ]]; then
+            red " 输入EAB Id 不能为空, 请重新输入!"
+            getHTTPSCertificateInputGoogleEABId            
+        fi
+    fi
+}
+function getHTTPSCertificateInputEmail(){
+    echo
+    read -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
+    getHTTPSCertificateCheckEmail "email" ${acmeSSLRegisterEmailInput}
+}
+function getHTTPSCertificateInputGoogleEABKey(){
+    echo
+    read -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
+    getHTTPSCertificateCheckEmail "googleEabKey" ${isDomainSSLGoogleEABKeyInput}
+}
+function getHTTPSCertificateInputGoogleEABId(){
+    echo
+    read -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
+    getHTTPSCertificateCheckEmail "googleEabId" ${isDomainSSLGoogleEABIdInput}
+}
+
+configNetworkRealIp=""
+configNetworkLocalIp=""
+configSSLDomain=""
+
+acmeSSLDays="89"
+acmeSSLServerName="letsencrypt"
+acmeSSLDNSProvider="dns_cf"
+
+configRanPath="${HOME}/ran"
+configSSLAcmeScriptPath="${HOME}/.acme.sh"
+configSSLCertPath="${configWebsiteFatherPath}/cert"
+configSSLCertPathV2board="${configWebsiteFatherPath}/cert/v2board"
+configSSLCertKeyFilename="server.key"
+configSSLCertFullchainFilename="server.crt"
+
+
+
+
+function getHTTPSCertificateWithAcme(){
+
+    # 申请https证书
+	mkdir -p ${configSSLCertPath}
+	mkdir -p ${configWebsitePath}
+	curl https://get.acme.sh | sh
+
+    echo
+    green " ================================================== "
+    green " 请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书 "
+    green " 如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请."
+    green " 1 Letsencrypt.org "
+    green " 2 BuyPass.com "
+    green " 3 ZeroSSL.com "
+    green " 4 Google Public CA "
+    echo
+    read -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
+    isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
+    
+    if [[ "$isDomainSSLFromLetInput" == "2" ]]; then
+        getHTTPSCertificateInputEmail
+        acmeSSLDays="179"
+        acmeSSLServerName="buypass"
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --register-account --accountemail ${acmeSSLRegisterEmailInput} --server buypass
+        
+    elif [[ "$isDomainSSLFromLetInput" == "3" ]]; then
+        getHTTPSCertificateInputEmail
+        acmeSSLServerName="zerossl"
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server zerossl
+
+    elif [[ "$isDomainSSLFromLetInput" == "4" ]]; then
+        green " ================================================== "
+        yellow " 请先按照如下链接申请 google Public CA  https://hostloc.com/thread-993780-1-1.html"
+        yellow " 具体可参考 https://github.com/acmesh-official/acme.sh/wiki/Google-Public-CA"
+        getHTTPSCertificateInputEmail
+        acmeSSLServerName="google"
+        getHTTPSCertificateInputGoogleEABKey
+        getHTTPSCertificateInputGoogleEABId
+        ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server google --eab-kid ${isDomainSSLGoogleEABIdInput} --eab-hmac-key ${isDomainSSLGoogleEABKeyInput}    
+    else
+        acmeSSLServerName="letsencrypt"
+        #${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days 89 --server letsencrypt
+    fi
+
+
+    echo
+    green " ================================================== "
+    green " 请选择 acme.sh 脚本申请SSL证书方式: 1 http方式, 2 dns方式 "
+    green " 默认直接回车为 http 申请方式, 选否则为 dns 方式"
+    echo
+    read -r -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则为 dns 方式申请证书, 请输入[Y/n]:" isAcmeSSLRequestMethodInput
+    isAcmeSSLRequestMethodInput=${isAcmeSSLRequestMethodInput:-Y}
+    echo
+
+    if [[ $isAcmeSSLRequestMethodInput == [Yy] ]]; then
+        acmeSSLHttpWebrootMode=""
+
+        if [ -z $1 ]; then
+
+            if [[ "${isInstallNginx}" == "true" ]]; then
+                acmeDefaultValue="3"
+                acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
+            else
+                acmeDefaultValue="1"
+                acmeDefaultText="1. standalone 模式"
+            fi
+
+            green " ================================================== "
+            green " 请选择 http 申请证书方式: 默认直接回车为 ${acmeDefaultText} "
+            green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
+            green " 2 webroot 模式, 适合已经安装Web服务器, 例如 Caddy Apache 或 Nginx, 请确保Web服务器已经运行在80端口"
+            green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
+            green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
+            echo
+            read -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
+       
+            isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-${acmeDefaultValue}}
+            
+            if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
+                acmeSSLHttpWebrootMode="standalone"
+            elif [[ ${isAcmeSSLWebrootModeInput} == "2" ]]; then
+                acmeSSLHttpWebrootMode="webroot"
+            elif [[ ${isAcmeSSLWebrootModeInput} == "4" ]]; then
+                acmeSSLHttpWebrootMode="nginx"
+            else
+                acmeSSLHttpWebrootMode="webrootran"
+            fi
+        else
+            if [[ $1 == "standalone" ]]; then
+                acmeSSLHttpWebrootMode="standalone"
+            elif [[ $1 == "webroot" ]]; then
+                acmeSSLHttpWebrootMode="webroot"
+            elif [[ $1 == "webrootran" ]] ; then
+                acmeSSLHttpWebrootMode="webrootran"
+            elif [[ $1 == "nginx" ]] ; then
+                acmeSSLHttpWebrootMode="nginx"
+            fi
+        fi
+
+        echo
+        if [[ ${acmeSSLHttpWebrootMode} == "standalone" ]] ; then
+            green " 开始申请证书 acme.sh 通过 http standalone mode 从 ${acmeSSLServerName} 申请, 请确保80端口不被占用 "
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --standalone --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+        
+        elif [[ ${acmeSSLHttpWebrootMode} == "webroot" ]] ; then
+            green " 开始申请证书, acme.sh 通过 http webroot mode 从 ${acmeSSLServerName} 申请, 请确保web服务器 例如 nginx 已经运行在80端口 "
+            
+            echo
+            read -r -p "请输入Web服务器的html网站根目录路径? 例如/usr/share/nginx/html:" isDomainSSLNginxWebrootFolderInput
+            echo " 您输入的网站根目录路径为 ${isDomainSSLNginxWebrootFolderInput}"
+
+            if [ -z ${isDomainSSLNginxWebrootFolderInput} ]; then
+                red " 输入的Web服务器的 html网站根目录路径不能为空, 网站根目录将默认设置为 ${configWebsitePath}, 请修改你的web服务器配置后再申请证书!"
+                
+            else
+                configWebsitePath="${isDomainSSLNginxWebrootFolderInput}"
+            fi
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+        
+        elif [[ ${acmeSSLHttpWebrootMode} == "nginx" ]] ; then
+            green " 开始申请证书, acme.sh 通过 http nginx mode 从 ${acmeSSLServerName} 申请, 请确保web服务器 nginx 已经运行 "
+            
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --nginx --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+
+        elif [[ ${acmeSSLHttpWebrootMode} == "webrootran" ]] ; then
+
+            # https://github.com/m3ng9i/ran/issues/10
+
+            ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_amd64.zip"
+            ranDownloadFileName="ran_linux_amd64"
+            
+            if [[ "${osArchitecture}" == "arm64" || "${osArchitecture}" == "arm" ]]; then
+                ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_arm64.zip"
+                ranDownloadFileName="ran_linux_arm64"
+            fi
+
+
+            mkdir -p ${configRanPath}
+            
+            if [[ -f "${configRanPath}/${ranDownloadFileName}" ]]; then
+                green " 检测到 ran 已经下载过, 准备启动 ran 临时的web服务器 "
+            else
+                green " 开始下载 ran 作为临时的web服务器 "
+                downloadAndUnzip "${ranDownloadUrl}" "${configRanPath}" "${ranDownloadFileName}" 
+                chmod +x "${configRanPath}/${ranDownloadFileName}"
+            fi
+
+            echo "nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
+            nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
+            echo
+            
+            green " 开始申请证书, acme.sh 通过 http webroot mode 从 ${acmeSSLServerName} 申请, 并使用 ran 作为临时的web服务器 "
+            echo
+            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
+
+            sleep 4
+            ps -C ${ranDownloadFileName} -o pid= | xargs -I {} kill {}
+        fi
+
+    else
+        green " 开始申请证书, acme.sh 通过 dns mode 申请 "
+
+        echo
+        green "请选择 DNS provider DNS 提供商: 1 CloudFlare, 2 AliYun,  3 DNSPod(Tencent), 4 GoDaddy "
+        red "注意 CloudFlare 针对某些免费域名例如 .tk .cf 等  不再支持使用API 申请DNS证书 "
+        echo
+        read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isAcmeSSLDNSProviderInput
+        isAcmeSSLDNSProviderInput=${isAcmeSSLDNSProviderInput:-1}    
+
+        
+        if [ "$isAcmeSSLDNSProviderInput" == "2" ]; then
+            read -r -p "Please Input Ali Key: " Ali_Key
+            export Ali_Key="${Ali_Key}"
+            read -r -p "Please Input Ali Secret: " Ali_Secret
+            export Ali_Secret="${Ali_Secret}"
+            acmeSSLDNSProvider="dns_ali"
+
+        elif [ "$isAcmeSSLDNSProviderInput" == "3" ]; then
+            read -r -p "Please Input DNSPod API ID: " DP_Id
+            export DP_Id="${DP_Id}"
+            read -r -p "Please Input DNSPod API Key: " DP_Key
+            export DP_Key="${DP_Key}"
+            acmeSSLDNSProvider="dns_dp"
+
+        elif [ "$isAcmeSSLDNSProviderInput" == "4" ]; then
+            read -r -p "Please Input GoDaddy API Key: " gd_Key
+            export GD_Key="${gd_Key}"
+            read -r -p "Please Input GoDaddy API Secret: " gd_Secret
+            export GD_Secret="${gd_Secret}"
+            acmeSSLDNSProvider="dns_gd"
+
+        else
+            read -r -p "Please Input CloudFlare Email: " cf_email
+            export CF_Email="${cf_email}"
+            read -r -p "Please Input CloudFlare Global API Key: " cf_key
+            export CF_Key="${cf_key}"
+            acmeSSLDNSProvider="dns_cf"
+        fi
+        
+        echo
+        ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns ${acmeSSLDNSProvider} --force --keylength ec-256 --server ${acmeSSLServerName} --debug 
+        
+    fi
+
+    echo
+    if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} 
+    else
+        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
+        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
+        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
+        --reloadcmd "systemctl restart nginx.service"
+    fi
+    green " ================================================== "
+
+}
+
+
+
+function compareRealIpWithLocalIp(){
+    echo
+    echo
+    green " 是否检测域名指向的IP正确 直接回车默认检测"
+    red " 如果域名指向的IP不是本机IP, 或已开启CDN不方便关闭 或只有IPv6的VPS 可以选否不检测"
+    read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
+    isDomainValidInput=${isDomainValidInput:-Y}
+
+    if [[ $isDomainValidInput == [Yy] ]]; then
+        if [ -n $1 ]; then
+            configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+            # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
+            configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
+            configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
+            #configNetworkLocalIp3="$(curl https://ipv4.icanhazip.com/)"
+            #configNetworkLocalIp4="$(curl https://v4.ident.me/)"
+            #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
+            #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
+            
+            #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
+            #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
+
+            green " ================================================== "
+            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
+
+            echo
+            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp1} || ${configNetworkRealIp} == ${configNetworkLocalIp2} ]] ; then
+
+                green " 域名解析的IP正常!"
+                green " ================================================== "
+                true
+            else
+                red " 域名解析地址与本VPS的IP地址不一致!"
+                red " 本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
+                green " ================================================== "
+                false
+            fi
+        else
+            green " ================================================== "        
+            red "     域名输入错误!"
+            green " ================================================== "        
+            false
+        fi
+        
+    else
+        green " ================================================== "
+        green "     不检测域名解析是否正确!"
+        green " ================================================== "
+        true
+    fi
+}
+
+
+
+acmeSSLRegisterEmailInput=""
+isDomainSSLGoogleEABKeyInput=""
+isDomainSSLGoogleEABIdInput=""
+
+function getHTTPSCertificateStep1(){
+
+    testLinuxPortUsage
+    
+    configSSLCertPath="${configSSLCertPathV2board}"
+    echo
+    green " ================================================== "
+    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+    read -p "请输入解析到本VPS的域名:" configSSLDomain
+    
+    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
+        echo
+        green " =================================================="
+        green " 是否申请证书? 默认直接回车为申请证书, 如第二次安装或已有证书 可以选否"
+        green " 如果已经有SSL证书文件 请放到下面路径"
+        red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+        red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
+        echo
+
+        read -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]?" isDomainSSLRequestInput
+        isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
+
+        if [[ $isDomainSSLRequestInput == [Yy] ]]; then
+            
+            getHTTPSCertificateWithAcme
+
+            if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
+                green " =================================================="
+                green "   域名SSL证书申请成功 !"
+                green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+                green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
+                green " =================================================="
+
+            else
+                red "==================================="
+                red " https证书没有申请成功，安装失败!"
+                red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
+                red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
+                red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
+                red "==================================="
+                exit
+            fi
+
+        else
+            green " =================================================="
+            green "  不申请域名的证书, 请把证书放到如下目录, 或自行修改配置!"
+            green "  ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
+            green "  ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
+            green " =================================================="
+        fi
+    else
+        exit
+    fi
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1153,6 +1561,7 @@ EOF
 
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
         isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/cloudreve"
         getHTTPSCertificateStep1
         configInstallNginxMode="cloudreve"
         installWebServerNginx
@@ -1179,6 +1588,8 @@ function removeCloudreve(){
 
             ${sudoCmd} systemctl stop cloudreve.service
             ${sudoCmd} systemctl disable cloudreve.service
+
+            rm -rf "${configSSLCertPath}/cloudreve"
 
             rm -rf ${configCloudrevePath}
             rm -f ${osSystemMdPath}cloudreve.service
@@ -3195,397 +3606,6 @@ function removeAirUniverse(){
 
 
 
-acmeSSLRegisterEmailInput=""
-isDomainSSLGoogleEABKeyInput=""
-isDomainSSLGoogleEABIdInput=""
-function getHTTPSCertificateCheckEmail(){
-    if [ -z $2 ]; then
-        
-        if [[ $1 == "email" ]]; then
-            red " 输入邮箱地址不能为空, 请重新输入!"
-            getHTTPSCertificateInputEmail
-        elif [[ $1 == "googleEabKey" ]]; then
-            red " 输入EAB key 不能为空, 请重新输入!"
-            getHTTPSCertificateInputGoogleEABKey
-        elif [[ $1 == "googleEabId" ]]; then
-            red " 输入EAB Id 不能为空, 请重新输入!"
-            getHTTPSCertificateInputGoogleEABId            
-        fi
-    fi
-}
-function getHTTPSCertificateInputEmail(){
-    echo
-    read -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
-    getHTTPSCertificateCheckEmail "email" ${acmeSSLRegisterEmailInput}
-}
-function getHTTPSCertificateInputGoogleEABKey(){
-    echo
-    read -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
-    getHTTPSCertificateCheckEmail "googleEabKey" ${isDomainSSLGoogleEABKeyInput}
-}
-function getHTTPSCertificateInputGoogleEABId(){
-    echo
-    read -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
-    getHTTPSCertificateCheckEmail "googleEabId" ${isDomainSSLGoogleEABIdInput}
-}
-
-configNetworkRealIp=""
-configNetworkLocalIp=""
-configSSLDomain=""
-
-acmeSSLDays="89"
-acmeSSLServerName="letsencrypt"
-acmeSSLDNSProvider="dns_cf"
-
-configRanPath="${HOME}/ran"
-configSSLAcmeScriptPath="${HOME}/.acme.sh"
-configSSLCertPath="${configWebsiteFatherPath}/cert"
-configSSLCertKeyFilename="server.key"
-configSSLCertFullchainFilename="server.crt"
-
-
-
-
-function getHTTPSCertificateWithAcme(){
-
-    # 申请https证书
-	mkdir -p ${configSSLCertPath}
-	mkdir -p ${configWebsitePath}
-	curl https://get.acme.sh | sh
-
-    echo
-    green " ================================================== "
-    green " 请选择证书提供商, 默认通过 Letsencrypt.org 来申请证书 "
-    green " 如果证书申请失败, 例如一天内通过 Letsencrypt.org 申请次数过多, 可选 BuyPass.com 或 ZeroSSL.com 来申请."
-    green " 1 Letsencrypt.org "
-    green " 2 BuyPass.com "
-    green " 3 ZeroSSL.com "
-    green " 4 Google Public CA "
-    echo
-    read -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
-    isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
-    
-    if [[ "$isDomainSSLFromLetInput" == "2" ]]; then
-        getHTTPSCertificateInputEmail
-        acmeSSLDays="179"
-        acmeSSLServerName="buypass"
-        echo
-        ${configSSLAcmeScriptPath}/acme.sh --register-account --accountemail ${acmeSSLRegisterEmailInput} --server buypass
-        
-    elif [[ "$isDomainSSLFromLetInput" == "3" ]]; then
-        getHTTPSCertificateInputEmail
-        acmeSSLServerName="zerossl"
-        echo
-        ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server zerossl
-
-    elif [[ "$isDomainSSLFromLetInput" == "4" ]]; then
-        green " ================================================== "
-        yellow " 请先按照如下链接申请 google Public CA  https://hostloc.com/thread-993780-1-1.html"
-        yellow " 具体可参考 https://github.com/acmesh-official/acme.sh/wiki/Google-Public-CA"
-        getHTTPSCertificateInputEmail
-        acmeSSLServerName="google"
-        getHTTPSCertificateInputGoogleEABKey
-        getHTTPSCertificateInputGoogleEABId
-        ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server google --eab-kid ${isDomainSSLGoogleEABIdInput} --eab-hmac-key ${isDomainSSLGoogleEABKeyInput}    
-    else
-        acmeSSLServerName="letsencrypt"
-        #${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days 89 --server letsencrypt
-    fi
-
-
-    echo
-    green " ================================================== "
-    green " 请选择 acme.sh 脚本申请SSL证书方式: 1 http方式, 2 dns方式 "
-    green " 默认直接回车为 http 申请方式, 选否则为 dns 方式"
-    echo
-    read -r -p "请选择SSL证书申请方式 ? 默认直接回车为http方式, 选否则为 dns 方式申请证书, 请输入[Y/n]:" isAcmeSSLRequestMethodInput
-    isAcmeSSLRequestMethodInput=${isAcmeSSLRequestMethodInput:-Y}
-    echo
-
-    if [[ $isAcmeSSLRequestMethodInput == [Yy] ]]; then
-        acmeSSLHttpWebrootMode=""
-
-        if [ -z $1 ]; then
-
-            if [[ "${isInstallNginx}" == "true" ]]; then
-                acmeDefaultValue="3"
-                acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
-            else
-                acmeDefaultValue="1"
-                acmeDefaultText="1. standalone 模式"
-            fi
-
-            green " ================================================== "
-            green " 请选择 http 申请证书方式: 默认直接回车为 ${acmeDefaultText} "
-            green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
-            green " 2 webroot 模式, 适合已经安装Web服务器, 例如 Caddy Apache 或 Nginx, 请确保Web服务器已经运行在80端口"
-            green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
-            green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
-            echo
-            read -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
-       
-            isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-${acmeDefaultValue}}
-            
-            if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
-                acmeSSLHttpWebrootMode="standalone"
-            elif [[ ${isAcmeSSLWebrootModeInput} == "2" ]]; then
-                acmeSSLHttpWebrootMode="webroot"
-            elif [[ ${isAcmeSSLWebrootModeInput} == "4" ]]; then
-                acmeSSLHttpWebrootMode="nginx"
-            else
-                acmeSSLHttpWebrootMode="webrootran"
-            fi
-        else
-            if [[ $1 == "standalone" ]]; then
-                acmeSSLHttpWebrootMode="standalone"
-            elif [[ $1 == "webroot" ]]; then
-                acmeSSLHttpWebrootMode="webroot"
-            elif [[ $1 == "webrootran" ]] ; then
-                acmeSSLHttpWebrootMode="webrootran"
-            elif [[ $1 == "nginx" ]] ; then
-                acmeSSLHttpWebrootMode="nginx"
-            fi
-        fi
-
-        echo
-        if [[ ${acmeSSLHttpWebrootMode} == "standalone" ]] ; then
-            green " 开始申请证书 acme.sh 通过 http standalone mode 从 ${acmeSSLServerName} 申请, 请确保80端口不被占用 "
-            
-            echo
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --standalone --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
-        
-        elif [[ ${acmeSSLHttpWebrootMode} == "webroot" ]] ; then
-            green " 开始申请证书, acme.sh 通过 http webroot mode 从 ${acmeSSLServerName} 申请, 请确保web服务器 例如 nginx 已经运行在80端口 "
-            
-            echo
-            read -r -p "请输入Web服务器的html网站根目录路径? 例如/usr/share/nginx/html:" isDomainSSLNginxWebrootFolderInput
-            echo " 您输入的网站根目录路径为 ${isDomainSSLNginxWebrootFolderInput}"
-
-            if [ -z ${isDomainSSLNginxWebrootFolderInput} ]; then
-                red " 输入的Web服务器的 html网站根目录路径不能为空, 网站根目录将默认设置为 ${configWebsitePath}, 请修改你的web服务器配置后再申请证书!"
-                
-            else
-                configWebsitePath="${isDomainSSLNginxWebrootFolderInput}"
-            fi
-            
-            echo
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
-        
-        elif [[ ${acmeSSLHttpWebrootMode} == "nginx" ]] ; then
-            green " 开始申请证书, acme.sh 通过 http nginx mode 从 ${acmeSSLServerName} 申请, 请确保web服务器 nginx 已经运行 "
-            
-            echo
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --nginx --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
-
-        elif [[ ${acmeSSLHttpWebrootMode} == "webrootran" ]] ; then
-
-            # https://github.com/m3ng9i/ran/issues/10
-
-            ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_amd64.zip"
-            ranDownloadFileName="ran_linux_amd64"
-            
-            if [[ "${osArchitecture}" == "arm64" || "${osArchitecture}" == "arm" ]]; then
-                ranDownloadUrl="https://github.com/m3ng9i/ran/releases/download/v0.1.6/ran_linux_arm64.zip"
-                ranDownloadFileName="ran_linux_arm64"
-            fi
-
-
-            mkdir -p ${configRanPath}
-            
-            if [[ -f "${configRanPath}/${ranDownloadFileName}" ]]; then
-                green " 检测到 ran 已经下载过, 准备启动 ran 临时的web服务器 "
-            else
-                green " 开始下载 ran 作为临时的web服务器 "
-                downloadAndUnzip "${ranDownloadUrl}" "${configRanPath}" "${ranDownloadFileName}" 
-                chmod +x "${configRanPath}/${ranDownloadFileName}"
-            fi
-
-            echo "nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &"
-            nohup ${configRanPath}/${ranDownloadFileName} -l=false -g=false -sa=true -p=80 -r=${configWebsitePath} >/dev/null 2>&1 &
-            echo
-            
-            green " 开始申请证书, acme.sh 通过 http webroot mode 从 ${acmeSSLServerName} 申请, 并使用 ran 作为临时的web服务器 "
-            echo
-            ${configSSLAcmeScriptPath}/acme.sh --issue -d ${configSSLDomain} --webroot ${configWebsitePath} --keylength ec-256 --days ${acmeSSLDays} --server ${acmeSSLServerName}
-
-            sleep 4
-            ps -C ${ranDownloadFileName} -o pid= | xargs -I {} kill {}
-        fi
-
-    else
-        green " 开始申请证书, acme.sh 通过 dns mode 申请 "
-
-        echo
-        green "请选择 DNS provider DNS 提供商: 1 CloudFlare, 2 AliYun,  3 DNSPod(Tencent), 4 GoDaddy "
-        red "注意 CloudFlare 针对某些免费域名例如 .tk .cf 等  不再支持使用API 申请DNS证书 "
-        echo
-        read -r -p "请选择 DNS 提供商 ? 默认直接回车为 1. CloudFlare, 请输入纯数字:" isAcmeSSLDNSProviderInput
-        isAcmeSSLDNSProviderInput=${isAcmeSSLDNSProviderInput:-1}    
-
-        
-        if [ "$isAcmeSSLDNSProviderInput" == "2" ]; then
-            read -r -p "Please Input Ali Key: " Ali_Key
-            export Ali_Key="${Ali_Key}"
-            read -r -p "Please Input Ali Secret: " Ali_Secret
-            export Ali_Secret="${Ali_Secret}"
-            acmeSSLDNSProvider="dns_ali"
-
-        elif [ "$isAcmeSSLDNSProviderInput" == "3" ]; then
-            read -r -p "Please Input DNSPod API ID: " DP_Id
-            export DP_Id="${DP_Id}"
-            read -r -p "Please Input DNSPod API Key: " DP_Key
-            export DP_Key="${DP_Key}"
-            acmeSSLDNSProvider="dns_dp"
-
-        elif [ "$isAcmeSSLDNSProviderInput" == "4" ]; then
-            read -r -p "Please Input GoDaddy API Key: " gd_Key
-            export GD_Key="${gd_Key}"
-            read -r -p "Please Input GoDaddy API Secret: " gd_Secret
-            export GD_Secret="${gd_Secret}"
-            acmeSSLDNSProvider="dns_gd"
-
-        else
-            read -r -p "Please Input CloudFlare Email: " cf_email
-            export CF_Email="${cf_email}"
-            read -r -p "Please Input CloudFlare Global API Key: " cf_key
-            export CF_Key="${cf_key}"
-            acmeSSLDNSProvider="dns_cf"
-        fi
-        
-        echo
-        ${configSSLAcmeScriptPath}/acme.sh --issue -d "${configSSLDomain}" --dns ${acmeSSLDNSProvider} --force --keylength ec-256 --server ${acmeSSLServerName} --debug 
-        
-    fi
-
-    echo
-    if [[ ${isAcmeSSLWebrootModeInput} == "1" ]]; then
-        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
-        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} 
-    else
-        ${configSSLAcmeScriptPath}/acme.sh --installcert --ecc -d ${configSSLDomain} \
-        --key-file ${configSSLCertPath}/${configSSLCertKeyFilename} \
-        --fullchain-file ${configSSLCertPath}/${configSSLCertFullchainFilename} \
-        --reloadcmd "systemctl restart nginx.service"
-    fi
-    green " ================================================== "
-
-}
-
-
-
-function compareRealIpWithLocalIp(){
-    echo
-    echo
-    green " 是否检测域名指向的IP正确 直接回车默认检测"
-    red " 如果域名指向的IP不是本机IP, 或已开启CDN不方便关闭 或只有IPv6的VPS 可以选否不检测"
-    read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
-    isDomainValidInput=${isDomainValidInput:-Y}
-
-    if [[ $isDomainValidInput == [Yy] ]]; then
-        if [ -n $1 ]; then
-            configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-            # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
-            configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
-            configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
-            #configNetworkLocalIp3="$(curl https://ipv4.icanhazip.com/)"
-            #configNetworkLocalIp4="$(curl https://v4.ident.me/)"
-            #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
-            #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
-            
-            #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
-            #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
-
-            green " ================================================== "
-            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
-
-            echo
-            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp1} || ${configNetworkRealIp} == ${configNetworkLocalIp2} ]] ; then
-
-                green " 域名解析的IP正常!"
-                green " ================================================== "
-                true
-            else
-                red " 域名解析地址与本VPS的IP地址不一致!"
-                red " 本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
-                green " ================================================== "
-                false
-            fi
-        else
-            green " ================================================== "        
-            red "     域名输入错误!"
-            green " ================================================== "        
-            false
-        fi
-        
-    else
-        green " ================================================== "
-        green "     不检测域名解析是否正确!"
-        green " ================================================== "
-        true
-    fi
-}
-
-
-
-acmeSSLRegisterEmailInput=""
-isDomainSSLGoogleEABKeyInput=""
-isDomainSSLGoogleEABIdInput=""
-
-function getHTTPSCertificateStep1(){
-
-    testLinuxPortUsage
-
-    echo
-    green " ================================================== "
-    yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
-    read -p "请输入解析到本VPS的域名:" configSSLDomain
-    
-    if compareRealIpWithLocalIp "${configSSLDomain}" ; then
-        echo
-        green " =================================================="
-        green " 是否申请证书? 默认直接回车为申请证书, 如第二次安装或已有证书 可以选否"
-        green " 如果已经有SSL证书文件 请放到下面路径"
-        red " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
-        red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
-        echo
-
-        read -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]?" isDomainSSLRequestInput
-        isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
-
-        if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-            
-            getHTTPSCertificateWithAcme
-
-            if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
-                green " =================================================="
-                green "   域名SSL证书申请成功 !"
-                green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
-                green " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
-                green " =================================================="
-
-            else
-                red "==================================="
-                red " https证书没有申请成功，安装失败!"
-                red " 请检查域名和DNS是否生效, 同一域名请不要一天内多次申请!"
-                red " 请检查80和443端口是否开启, VPS服务商可能需要添加额外防火墙规则，例如阿里云、谷歌云等!"
-                red " 重启VPS, 重新执行脚本, 可重新选择修复证书选项再次申请证书 ! "
-                red "==================================="
-                exit
-            fi
-
-        else
-            green " =================================================="
-            green "  不申请域名的证书, 请把证书放到如下目录, 或自行修改配置!"
-            green "  ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
-            green "  ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
-            green " =================================================="
-        fi
-    else
-        exit
-    fi
-
-}
 
 
 

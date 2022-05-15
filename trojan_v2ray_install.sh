@@ -733,115 +733,6 @@ function installWireguard(){
 
 
 
-# DNS server 
-function installAdGuardHome(){
-	wget -qN --no-check-certificate -O ./ad_guard_install.sh https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh && chmod +x ./ad_guard_install.sh && ./ad_guard_install.sh -v
-    echo
-    if [[ ${configLanguage} == "cn" ]] ; then
-        green " 如要卸载删除AdGuard Home 请运行命令 ./ad_guard_install.sh -u"
-        green " 请打开网址 http://yourip:3000 完成初始化配置 "
-        green " 完成初始化后, 请重新运行本脚本 选择26 获取SSL 证书. 开启DOH和DOT "
-    else
-        green " Remove AdGuardHome, pls run ./ad_guard_install.sh -u "
-        green " Please open http://yourip:3000 and complete the initialization "
-        green " After the initialization, pls rerun this script and choose 26 to get SSL certificate "
-    fi
-    echo
-
-}
-
-configAdGuardPath="/opt/AdGuardHome"
-function replaceAdGuardConfig(){
-
-    if [ -f "${configAdGuardPath}/AdGuardHome" ] ; then
-        
-        echo
-        green " =================================================="
-        green " 检测到 AdGuard Home 已安装"
-        green " Detected AdGuard Home have already installed"
-
-        if [ -f "${configAdGuardPath}/AdGuardHome.yaml" ] ; then
-            echo
-            yellow " 准备把已申请到的SSL证书填入 AdGuardHome 配置文件"
-            yellow " prepare to get SSL certificate and replace AdGuardHome config"
-
-            # 
-            sed -i -e '/^tls:/{n;d}' ${configAdGuardPath}/AdGuardHome.yaml
-            sed -i "/^tls:/a \  enabled: true" ${configAdGuardPath}/AdGuardHome.yaml
-            # sed -i 's/enabled: false/enabled: true/g' ${configAdGuardPath}/AdGuardHome.yaml
-
-            sed -i "s/server_name: \"\"/server_name: ${configSSLDomain}/g" ${configAdGuardPath}/AdGuardHome.yaml
-            sed -i "s|certificate_path: \"\"|certificate_path: ${configSSLCertPath}/${configSSLCertFullchainFilename}|g" ${configAdGuardPath}/AdGuardHome.yaml
-            sed -i "s|private_key_path: \"\"|private_key_path: ${configSSLCertPath}/${configSSLCertKeyFilename}|g" ${configAdGuardPath}/AdGuardHome.yaml
-
-            # 开启DNS并行查询 加速
-            sed -i 's/all_servers: false/all_servers: true/g' ${configAdGuardPath}/AdGuardHome.yaml
-
-
-            read -r -d '' adGuardConfigUpstreamDns << EOM
-  - 1.1.1.1
-  - https://dns.cloudflare.com/dns-query
-  - tls://1dot1dot1dot1.cloudflare-dns.com
-  - 8.8.8.8
-  - https://dns.google/dns-query
-  - tls://dns.google
-  - 9.9.9.9
-  - https://dns.quad9.net/dns-query
-  - tls://dns.quad9.net
-EOM
-            TEST1="${adGuardConfigUpstreamDns//\\/\\\\}"
-            TEST1="${TEST1//\//\\/}"
-            TEST1="${TEST1//&/\\&}"
-            TEST1="${TEST1//$'\n'/\\n}"
-
-            sed -i "/upstream_dns:/a \  ${TEST1}" ${configAdGuardPath}/AdGuardHome.yaml
-
-
-            read -r -d '' adGuardConfigBootstrapDns << EOM
-  - 8.8.8.8
-  - 8.8.4.4
-EOM
-            TEST2="${adGuardConfigBootstrapDns//\\/\\\\}"
-            TEST2="${TEST2//\//\\/}"
-            TEST2="${TEST2//&/\\&}"
-            TEST2="${TEST2//$'\n'/\\n}"
-
-            sed -i "/bootstrap_dns:/a \  ${TEST2}" ${configAdGuardPath}/AdGuardHome.yaml
-
-
-            read -r -d '' adGuardConfigFilters << EOM
-- enabled: true
-  url: https://anti-ad.net/easylist.txt
-  name: 'CHN: anti-AD'
-  id: 1652375944
-- enabled: true
-  url: https://easylist-downloads.adblockplus.org/easylistchina.txt
-  name: EasyList China
-  id: 1652375945
-EOM
-            TEST3="${adGuardConfigFilters//\\/\\\\}"
-            TEST3="${TEST3//\//\\/}"
-            TEST3="${TEST3//&/\\&}"
-            TEST3="${TEST3//$'\n'/\\n}"
-
-            sed -i "/id: 2/a ${TEST3}" ${configAdGuardPath}/AdGuardHome.yaml
-
-
-
-            echo
-            green " AdGuard Home config updated success: ${configAdGuardPath}/AdGuardHome.yaml "
-            green " AdGuard Home 配置文件更新成功: ${configAdGuardPath}/AdGuardHome.yaml "
-
-            ${configAdGuardPath}/AdGuardHome -s restart
-        else
-            red " 未检测到AdGuardHome配置文件 ${configAdGuardPath}/AdGuardHome.yaml, 请先完成AdGuardHome初始化配置"
-            red " ${configAdGuardPath}/AdGuardHome.yaml not found, pls complete the AdGuardHome initialization first!"
-        fi 
-
-        echo
-    fi
-
-}
 
 
 
@@ -1187,18 +1078,6 @@ function getTrojanAndV2rayVersion(){
 
 }
 
-function stopServiceNginx(){
-    serviceNginxStatus=`ps -aux | grep "nginx: worker" | grep -v "grep"`
-    if [[ -n "$serviceNginxStatus" ]]; then
-        ${sudoCmd} systemctl stop nginx.service
-    fi
-}
-
-function stopServiceV2ray(){
-    if [[ -f "${osSystemMdPath}v2ray.service" ]] || [[ -f "/etc/systemd/system/v2ray.service" ]] || [[ -f "/lib/systemd/system/v2ray.service" ]] ; then
-        ${sudoCmd} systemctl stop v2ray.service
-    fi
-}
 
 
 
@@ -1265,6 +1144,7 @@ function compareRealIpWithLocalIp(){
 acmeSSLRegisterEmailInput=""
 isDomainSSLGoogleEABKeyInput=""
 isDomainSSLGoogleEABIdInput=""
+
 function getHTTPSCertificateCheckEmail(){
     if [ -z $2 ]; then
         
@@ -1539,10 +1419,6 @@ function getHTTPSCertificateWithAcme(){
 
 function getHTTPSCertificateStep1(){
 
-    if [ -f "${configAdGuardPath}/AdGuardHome" ] ; then
-        ${configAdGuardPath}/AdGuardHome -s stop
-    fi
-
     echo
     green " ================================================== "
     yellow " 请输入解析到本VPS的域名 例如 www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
@@ -1585,6 +1461,21 @@ function getHTTPSCertificateStep1(){
 
 
 
+
+
+
+function stopServiceNginx(){
+    serviceNginxStatus=`ps -aux | grep "nginx: worker" | grep -v "grep"`
+    if [[ -n "$serviceNginxStatus" ]]; then
+        ${sudoCmd} systemctl stop nginx.service
+    fi
+}
+
+function stopServiceV2ray(){
+    if [[ -f "${osSystemMdPath}v2ray.service" ]] || [[ -f "/etc/systemd/system/v2ray.service" ]] || [[ -f "/lib/systemd/system/v2ray.service" ]] ; then
+        ${sudoCmd} systemctl stop v2ray.service
+    fi
+}
 
 
 function installWebServerNginx(){
@@ -2114,6 +2005,17 @@ function removeNginx(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 configNginxSNIDomainWebsite=""
 configNginxSNIDomainV2ray=""
 configNginxSNIDomainTrojan=""
@@ -2189,6 +2091,28 @@ function inputNginxSNIDomain(){
 
     checkNginxSNIDomain $1 ${configNginxSNIDomainDefault}
     
+}
+
+function inputXraySystemdServiceName(){
+
+    if [ "$1" = "v2ray_nginxOptional" ]; then
+        echo
+        green " ================================================== "
+        yellow " 请输入自定义的 V2ray 或 Xray 的Systemd服务名称后缀, 默认为空"
+        green " 默认直接回车不输入字符 即为 v2ray.service 或 xray.service"
+        green " 输入的字符将作为后缀 例如 v2ray-xxx.service 或 xray-xxx.service"
+        green " 此功能用于在一台VPS上安装多个 v2ray / xray"
+        echo
+        read -p "请输入自定义的Xray服务名称后缀, 默认为空:" configXraySystemdServiceNameSuffix
+        configXraySystemdServiceNameSuffix=${configXraySystemdServiceNameSuffix:-""}
+
+        if [ -n "${configXraySystemdServiceNameSuffix}" ]; then
+            promptInfoXrayNameServiceName="-${configXraySystemdServiceNameSuffix}"
+            configSSLCertPath="${configSSLCertPath}/xray_${configXraySystemdServiceNameSuffix}"
+        fi
+        echo
+    fi
+
 }
 
 function installTrojanV2rayWithNginx(){
@@ -2273,7 +2197,7 @@ function installTrojanV2rayWithNginx(){
         exit
     fi
 
-
+    inputXraySystemdServiceName $1
     getHTTPSCertificateStep1
 
     echo
@@ -2322,7 +2246,7 @@ function installTrojanV2rayWithNginx(){
 
         else
             echo
-            replaceAdGuardConfig
+            
         fi
     else
         red " ================================================== "
@@ -2334,6 +2258,8 @@ function installTrojanV2rayWithNginx(){
         exit
     fi    
 }
+
+
 
 
 
@@ -3116,6 +3042,12 @@ function removeTrojan(){
 
 
 
+
+
+
+
+
+
 function downloadV2rayXrayBin(){
     if [ -z $1 ]; then
         tempDownloadV2rayPath="${configV2rayPath}"
@@ -3499,9 +3431,6 @@ EOF
 	    fi
 
     fi
-
-
-
 }
 
 
@@ -3812,8 +3741,6 @@ EOM
 
 
 
-
-
     echo
     green " =================================================="
     yellow " 是否使用 DNS 解锁 Netflix HBO Disney+ 等流媒体网站"
@@ -4027,10 +3954,6 @@ EOM
         },
 EOM
     fi
-
-
-
-
 
 
 
@@ -6522,7 +6445,6 @@ function removeXUI(){
 }
 
 
-
 function installV2rayUI(){
 
     stopServiceNginx
@@ -6574,6 +6496,141 @@ function upgradeV2rayUI(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+configAdGuardPath="/opt/AdGuardHome"
+
+# DNS server 
+function installAdGuardHome(){
+	wget -qN --no-check-certificate -O ./ad_guard_install.sh https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh && chmod +x ./ad_guard_install.sh && ./ad_guard_install.sh -v
+    echo
+    if [[ ${configLanguage} == "cn" ]] ; then
+        green " 如要卸载删除AdGuard Home 请运行命令 ./ad_guard_install.sh -u"
+        green " 请打开网址 http://yourip:3000 完成初始化配置 "
+        green " 完成初始化后, 请重新运行本脚本 选择29 获取SSL 证书. 开启DOH和DOT "
+    else
+        green " Remove AdGuardHome, pls run ./ad_guard_install.sh -u "
+        green " Please open http://yourip:3000 and complete the initialization "
+        green " After the initialization, pls rerun this script and choose 29 to get SSL certificate "
+    fi
+    echo
+}
+
+function getAdGuardHomeSSLCertification(){
+    if [ -f "${configAdGuardPath}/AdGuardHome" ]; then
+        echo
+        green " =================================================="
+        green " 检测到 AdGuard Home 已安装"
+        green " Found AdGuard Home have already installed"
+        echo
+        green " 是否继续 申请SSL证书, Continue to get Free SSL certificate ?"
+        read -p "是否申请SSL证书, 请输入[Y/n]:" isGetAdGuardSSLCertificateInput
+        isGetAdGuardSSLCertificateInput=${isGetAdGuardSSLCertificateInput:-Y}
+
+        if [[ "${isGetAdGuardSSLCertificateInput}" == [Yy] ]]; then
+            ${configAdGuardPath}/AdGuardHome -s stop
+            configSSLCertPath="${configSSLCertPath}/adguardhome"
+            getHTTPSCertificateStep1
+            replaceAdGuardConfig
+        fi
+    fi
+}
+
+function replaceAdGuardConfig(){
+
+    if [ -f "${configAdGuardPath}/AdGuardHome" ]; then
+        
+        if [ -f "${configAdGuardPath}/AdGuardHome.yaml" ]; then
+            echo
+            yellow " 准备把已申请到的SSL证书填入 AdGuardHome 配置文件"
+            yellow " prepare to get SSL certificate and replace AdGuardHome config"
+
+            # 
+            sed -i -e '/^tls:/{n;d}' ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "/^tls:/a \  enabled: true" ${configAdGuardPath}/AdGuardHome.yaml
+            # sed -i 's/enabled: false/enabled: true/g' ${configAdGuardPath}/AdGuardHome.yaml
+
+            sed -i "s/server_name: .*/server_name: ${configSSLDomain}/g" ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "s|certificate_path: .*|certificate_path: ${configSSLCertPath}/${configSSLCertFullchainFilename}|g" ${configAdGuardPath}/AdGuardHome.yaml
+            sed -i "s|private_key_path: .*|private_key_path: ${configSSLCertPath}/${configSSLCertKeyFilename}|g" ${configAdGuardPath}/AdGuardHome.yaml
+
+            # 开启DNS并行查询 加速
+            sed -i 's/all_servers: false/all_servers: true/g' ${configAdGuardPath}/AdGuardHome.yaml
+
+
+            read -r -d '' adGuardConfigUpstreamDns << EOM
+  - 1.1.1.1
+  - https://dns.cloudflare.com/dns-query
+  - tls://1dot1dot1dot1.cloudflare-dns.com
+  - 8.8.8.8
+  - https://dns.google/dns-query
+  - tls://dns.google
+  - 9.9.9.9
+  - https://dns.quad9.net/dns-query
+  - tls://dns.quad9.net
+EOM
+            TEST1="${adGuardConfigUpstreamDns//\\/\\\\}"
+            TEST1="${TEST1//\//\\/}"
+            TEST1="${TEST1//&/\\&}"
+            TEST1="${TEST1//$'\n'/\\n}"
+
+            sed -i "/upstream_dns:/a \  ${TEST1}" ${configAdGuardPath}/AdGuardHome.yaml
+
+
+            read -r -d '' adGuardConfigBootstrapDns << EOM
+  - 8.8.8.8
+  - 8.8.4.4
+EOM
+            TEST2="${adGuardConfigBootstrapDns//\\/\\\\}"
+            TEST2="${TEST2//\//\\/}"
+            TEST2="${TEST2//&/\\&}"
+            TEST2="${TEST2//$'\n'/\\n}"
+
+            sed -i "/bootstrap_dns:/a \  ${TEST2}" ${configAdGuardPath}/AdGuardHome.yaml
+
+
+            read -r -d '' adGuardConfigFilters << EOM
+- enabled: true
+  url: https://anti-ad.net/easylist.txt
+  name: 'CHN: anti-AD'
+  id: 1652375944
+- enabled: true
+  url: https://easylist-downloads.adblockplus.org/easylistchina.txt
+  name: EasyList China
+  id: 1652375945
+EOM
+            TEST3="${adGuardConfigFilters//\\/\\\\}"
+            TEST3="${TEST3//\//\\/}"
+            TEST3="${TEST3//&/\\&}"
+            TEST3="${TEST3//$'\n'/\\n}"
+
+            sed -i "/id: 2/a ${TEST3}" ${configAdGuardPath}/AdGuardHome.yaml
+
+
+
+            echo
+            green " AdGuard Home config updated success: ${configAdGuardPath}/AdGuardHome.yaml "
+            green " AdGuard Home 配置文件更新成功: ${configAdGuardPath}/AdGuardHome.yaml "
+            echo
+            ${configAdGuardPath}/AdGuardHome -s restart
+        else
+            red " 未检测到AdGuardHome配置文件 ${configAdGuardPath}/AdGuardHome.yaml, 请先完成AdGuardHome初始化配置"
+            red " ${configAdGuardPath}/AdGuardHome.yaml not found, pls complete the AdGuardHome initialization first!"
+        fi 
+
+        echo
+    fi
+
+}
 
 
 
@@ -6872,6 +6929,7 @@ function start_menu(){
     green " 25. 查看已安装的配置和用户密码等信息"
     green " 26. 申请免费的SSL证书"
     green " 28. 安装DNS服务器 AdGuardHome 支持去广告"
+    green " 29. 给 AdGuardHome 申请免费的SSL证书, 并开启DOH与DOT"
     green " 30. 子菜单 安装 trojan 和 v2ray 可视化管理面板, VPS测速工具, Netflix测试解锁工具, 安装宝塔面板等"
     green " =================================================="
     green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
@@ -6916,6 +6974,7 @@ function start_menu(){
     green " 25. Show info and password for installed trojan and v2ray"
     green " 26. Get a free SSL certificate for one or multiple domains"
     green " 28. Install AdGuardHome ads & trackers blocking DNS server "
+    green " 29. Get free SSL certificate for AdGuardHome and enable DOH/DOT "
     green " 30. Submenu. install trojan and v2ray UI admin panel, VPS speedtest tools, Netflix unlock tools. Miscellaneous tools"
     green " =================================================="
     green " 31. Install Oh My Zsh and zsh-autosuggestions plugin, Micro editor"
@@ -7027,6 +7086,9 @@ function start_menu(){
         28 )
             installAdGuardHome
         ;;
+        29 )
+            getAdGuardHomeSSLCertification
+        ;;
         30 )
             startMenuOther
         ;;        
@@ -7055,13 +7117,8 @@ function start_menu(){
             editLinuxLoginWithPublicKey
         ;;
 
+
         66 )
-            promptInfoXrayNameServiceName="-jin"
-            echo "promptInfoXrayNameServiceName: -jin"
-            sleep 3s
-            start_menu
-        ;;
-        67 )
             isTrojanMultiPassword="yes"
             echo "isTrojanMultiPassword: yes"
             sleep 3s
