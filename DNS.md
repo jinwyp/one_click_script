@@ -103,4 +103,7 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 ### DNS服务器列表大全
 
-1. [DNS服务器列表] (https://dns.icoa.cn/), [https://dns.icoa.cn/](https://dns.icoa.cn/)
+1. [AdGuard 官方DNS服务器列表1](https://kb.adguard.com/en/general/dns-providers)
+
+2. [DNS服务器列表2](https://dns.icoa.cn/), [https://dns.icoa.cn/](https://dns.icoa.cn/)
+

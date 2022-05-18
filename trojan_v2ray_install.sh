@@ -13,7 +13,7 @@ fi
 
 
 uninstall() {
-    ${sudoCmd} $(which rm) -rf $1
+    ${sudoCmd} "$(which rm)" -rf $1
     printf "File or Folder Deleted: %s\n" $1
 }
 
@@ -94,7 +94,7 @@ getLinuxOSVersion(){
         osInfo=$NAME
         osReleaseVersionNo=$VERSION_ID
 
-        if [ -n $VERSION_CODENAME ]; then
+        if [ -n "$VERSION_CODENAME" ]; then
             osReleaseVersionCodeName=$VERSION_CODENAME
         fi
     elif type lsb_release >/dev/null 2>&1; then
@@ -193,11 +193,11 @@ osSELINUXCheckIsRebootInput=""
 function testLinuxPortUsage(){
     $osSystemPackage -y install net-tools socat
 
-    osPort80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
-    osPort443=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443`
+    osPort80=$(netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80)
+    osPort443=$(netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443)
 
     if [ -n "$osPort80" ]; then
-        process80=`netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}'`
+        process80=$(netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}')
         red "==========================================================="
         red "检测到80端口被占用，占用进程为：${process80} "
         red "==========================================================="
@@ -205,7 +205,7 @@ function testLinuxPortUsage(){
     fi
 
     if [ -n "$osPort443" ]; then
-        process443=`netstat -tlpn | awk -F '[: ]+' '$5=="443"{print $9}'`
+        process443=$(netstat -tlpn | awk -F '[: ]+' '$5=="443"{print $9}')
         red "============================================================="
         red "检测到443端口被占用，占用进程为：${process443} "
         red "============================================================="
@@ -1188,6 +1188,93 @@ configSSLCertKeyFilename="private.key"
 configSSLCertFullchainFilename="fullchain.cer"
 
 
+function renewCertificationWithAcme(){
+
+    # https://stackoverflow.com/questions/8880603/loop-through-an-array-of-strings-in-bash
+    # https://stackoverflow.com/questions/9954680/how-to-store-directory-files-listing-into-an-array
+    
+
+    renewDomainArray=("${configSSLAcmeScriptPath}"/*ecc*)
+
+    COUNTER1=1
+
+    if [ ${#renewDomainArray[@]} -ne 0 ]; then
+        echo
+        green " ================================================== "
+        green " 检测到本机已经申请过域名证书 是否新增申请域名证书"
+        green " 选是为新增申请域名证书, 选否为续签或删除已申请域名证书"
+        echo
+        read -r -p "是否申请新的域名证书? 默认直接回车为新增域名, 请输入[Y/n]:" isAcmeSSLAddNewInput
+        isAcmeSSLAddNewInput=${isAcmeSSLAddNewInput:-Y}
+        if [[ "$isAcmeSSLAddNewInput" == [Yy] ]]; then
+            echo
+        else
+
+            echo
+            green " ================================================== "
+            green " 请选择要续签或要删除的域名:"
+            echo
+            for renewDomainName in "${renewDomainArray[@]}"; do
+                
+                substr=${renewDomainName##*/}
+                substr=${substr%_ecc*}
+                renewDomainArrayFix[${COUNTER1}]="$substr"
+                echo " ${COUNTER1}. 域名: ${substr}"
+
+                COUNTER1=$((COUNTER1 +1))
+            done
+
+            echo
+            read -r -p "请选择域名? 请输入纯数字:" isRenewDomainSelectNumberInput
+            isRenewDomainSelectNumberInput=${isRenewDomainSelectNumberInput:-99}
+        
+            if [[ "$isRenewDomainSelectNumberInput" == "99" ]]; then
+                red " 输入错误, 请重新输入!"
+                echo
+                read -r -p "请选择域名? 请输入纯数字:" isRenewDomainSelectNumberInput
+                isRenewDomainSelectNumberInput=${isRenewDomainSelectNumberInput:-99}
+
+                if [[ "$isRenewDomainSelectNumberInput" == "99" ]]; then
+                    red " 输入错误, 退出!"
+                    exit
+                else
+                    echo
+                fi            
+            else
+                echo
+            fi
+
+            configSSLRenewDomain=${renewDomainArrayFix[${isRenewDomainSelectNumberInput}]}
+
+            read -r -p "请选择续签还是删除? 默认直接回车为续签, 选n为删除域名, 请输入[Y/n]:" isAcmeSSLRenewInput
+            isAcmeSSLRenewInput=${isAcmeSSLRenewInput:-Y}
+            echo
+
+            if [[ -n $(${configSSLAcmeScriptPath}/acme.sh --list | grep ${configSSLRenewDomain}) ]]; then
+
+                if [[ $isAcmeSSLRenewInput == [Yy] ]]; then
+                    ${configSSLAcmeScriptPath}/acme.sh --renew -d ${configSSLDomain} --force --keylength ec-256
+                    green " 域名 ${configSSLRenewDomain} 的证书已经成功续签!"
+
+                else
+                    ${configSSLAcmeScriptPath}/acme.sh --revoke -d ${configSSLRenewDomain} --ecc
+                    ${configSSLAcmeScriptPath}/acme.sh --remove -d ${configSSLRenewDomain} --ecc
+
+                    rm -rf ${configSSLAcmeScriptPath}/acme.sh/${configSSLRenewDomain}_ecc
+                    green " 域名 ${configSSLRenewDomain} 的证书已经删除成功!"
+                fi  
+            else
+                red " 域名 ${configSSLRenewDomain} 证书不存在！"
+            fi
+
+            exit
+
+        fi
+
+    fi
+
+}
+
 function getHTTPSCertificateWithAcme(){
 
     # 申请https证书
@@ -1248,7 +1335,7 @@ function getHTTPSCertificateWithAcme(){
     if [[ $isAcmeSSLRequestMethodInput == [Yy] ]]; then
         acmeSSLHttpWebrootMode=""
 
-        if [ -z $1 ]; then
+        if [ -z "$1" ]; then
 
             if [[ -n "${configInstallNginxMode}" ]]; then
                 acmeDefaultValue="3"
@@ -1418,6 +1505,8 @@ function getHTTPSCertificateWithAcme(){
 
 
 function getHTTPSCertificateStep1(){
+    
+    renewCertificationWithAcme
 
     echo
     green " ================================================== "
@@ -1437,7 +1526,7 @@ function getHTTPSCertificateStep1(){
         isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-            getHTTPSCertificateWithAcme 
+            getHTTPSCertificateWithAcme "$@"
         else
             green " =================================================="
             green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
@@ -1667,7 +1756,7 @@ EOM
         server_name  $configNginxSNIDomainWebsite;
         return 301 https://$configNginxSNIDomainWebsite\$request_uri;
     }
-EOM 
+EOM
 
             read -r -d '' nginxConfigStreamOwnWebsiteMapInput << EOM
         ${configNginxSNIDomainWebsite} web;
@@ -2057,7 +2146,7 @@ function checkNginxSNIDomain(){
         isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-            getHTTPSCertificateWithAcme 
+            getHTTPSCertificateWithAcme "$@"
         else
             green " =================================================="
             green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
@@ -2198,7 +2287,7 @@ function installTrojanV2rayWithNginx(){
     fi
 
     inputXraySystemdServiceName $1
-    getHTTPSCertificateStep1
+    getHTTPSCertificateStep1 "$@"
 
     echo
     if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
@@ -6420,7 +6509,7 @@ function installXUI(){
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
     green " ================================================== "
 
-    read configSSLDomain
+    read -r configSSLDomain
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
 
         green " =================================================="
@@ -6455,7 +6544,7 @@ function installV2rayUI(){
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后安装)"
     green " ================================================== "
 
-    read configSSLDomain
+    read -r configSSLDomain
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
 
         green " =================================================="
@@ -6507,6 +6596,25 @@ function upgradeV2rayUI(){
 
 
 
+function installMosdns(){
+
+    if [ -f "/usr/bin/mosdns" ]; then
+        echo
+    fi
+
+    green " ================================================== "
+    yellow " "
+    green " ================================================== "
+
+
+}
+
+
+
+
+
+
+
 configAdGuardPath="/opt/AdGuardHome"
 
 # DNS server 
@@ -6539,7 +6647,7 @@ function getAdGuardHomeSSLCertification(){
         if [[ "${isGetAdGuardSSLCertificateInput}" == [Yy] ]]; then
             ${configAdGuardPath}/AdGuardHome -s stop
             configSSLCertPath="${configSSLCertPath}/adguardhome"
-            getHTTPSCertificateStep1
+            getHTTPSCertificateStep1 "$@"
             replaceAdGuardConfig
         fi
     fi
@@ -6568,7 +6676,7 @@ function replaceAdGuardConfig(){
 
 
             read -r -d '' adGuardConfigUpstreamDns << EOM
-  - 1.1.1.1
+  - 1.0.0.1
   - https://dns.cloudflare.com/dns-query
   - tls://1dot1dot1dot1.cloudflare-dns.com
   - 8.8.8.8
@@ -6577,6 +6685,8 @@ function replaceAdGuardConfig(){
   - 9.9.9.9
   - https://dns.quad9.net/dns-query
   - tls://dns.quad9.net
+  - 208.67.222.222
+  - https://doh.opendns.com/dns-query
 EOM
             TEST1="${adGuardConfigUpstreamDns//\\/\\\\}"
             TEST1="${TEST1//\//\\/}"
@@ -6587,6 +6697,7 @@ EOM
 
 
             read -r -d '' adGuardConfigBootstrapDns << EOM
+  - 1.0.0.1 
   - 8.8.8.8
   - 8.8.4.4
 EOM
@@ -6928,6 +7039,7 @@ function start_menu(){
     echo
     green " 25. 查看已安装的配置和用户密码等信息"
     green " 26. 申请免费的SSL证书"
+    green " 27. 安装DNS国内国外分流服务器 mosdns"
     green " 28. 安装DNS服务器 AdGuardHome 支持去广告"
     green " 29. 给 AdGuardHome 申请免费的SSL证书, 并开启DOH与DOT"
     green " 30. 子菜单 安装 trojan 和 v2ray 可视化管理面板, VPS测速工具, Netflix测试解锁工具, 安装宝塔面板等"
@@ -6973,6 +7085,7 @@ function start_menu(){
     echo
     green " 25. Show info and password for installed trojan and v2ray"
     green " 26. Get a free SSL certificate for one or multiple domains"
+    green " 27. Install DNS server MosDNS"
     green " 28. Install AdGuardHome ads & trackers blocking DNS server "
     green " 29. Get free SSL certificate for AdGuardHome and enable DOH/DOT "
     green " 30. Submenu. install trojan and v2ray UI admin panel, VPS speedtest tools, Netflix unlock tools. Miscellaneous tools"
@@ -7083,11 +7196,14 @@ function start_menu(){
         26 )
             installTrojanV2rayWithNginx
         ;;
+        27 )
+            installMosdns
+        ;;
         28 )
             installAdGuardHome
         ;;
         29 )
-            getAdGuardHomeSSLCertification
+            getAdGuardHomeSSLCertification "$@"
         ;;
         30 )
             startMenuOther
