@@ -1095,8 +1095,8 @@ function compareRealIpWithLocalIp(){
     isDomainValidInput=${isDomainValidInput:-Y}
 
     if [[ $isDomainValidInput == [Yy] ]]; then
-        if [ -n $1 ]; then
-            configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+        if [[ -n "$1" ]]; then
+            configNetworkRealIp=$(ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
             # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
             configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
             configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
@@ -1114,7 +1114,7 @@ function compareRealIpWithLocalIp(){
             green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
 
             echo
-            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp1} || ${configNetworkRealIp} == ${configNetworkLocalIp2} ]] ; then
+            if [[ ${configNetworkRealIp} == "${configNetworkLocalIp1}" || ${configNetworkRealIp} == "${configNetworkLocalIp2}" ]] ; then
 
                 green " 域名解析的IP正常!"
                 green " ================================================== "
@@ -1193,7 +1193,7 @@ function renewCertificationWithAcme(){
     # https://stackoverflow.com/questions/8880603/loop-through-an-array-of-strings-in-bash
     # https://stackoverflow.com/questions/9954680/how-to-store-directory-files-listing-into-an-array
     
-
+    shopt -s nullglob
     renewDomainArray=("${configSSLAcmeScriptPath}"/*ecc*)
 
     COUNTER1=1
