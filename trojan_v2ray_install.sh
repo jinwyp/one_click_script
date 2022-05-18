@@ -1253,7 +1253,8 @@ function renewCertificationWithAcme(){
             if [[ -n $(${configSSLAcmeScriptPath}/acme.sh --list | grep ${configSSLRenewDomain}) ]]; then
 
                 if [[ $isAcmeSSLRenewInput == [Yy] ]]; then
-                    ${configSSLAcmeScriptPath}/acme.sh --renew -d ${configSSLDomain} --force --keylength ec-256
+                    ${configSSLAcmeScriptPath}/acme.sh --renew -d ${configSSLRenewDomain} --force --ecc
+                    echo
                     green " 域名 ${configSSLRenewDomain} 的证书已经成功续签!"
 
                 else
@@ -1261,9 +1262,11 @@ function renewCertificationWithAcme(){
                     ${configSSLAcmeScriptPath}/acme.sh --remove -d ${configSSLRenewDomain} --ecc
 
                     rm -rf ${configSSLAcmeScriptPath}/acme.sh/${configSSLRenewDomain}_ecc
+                    echo
                     green " 域名 ${configSSLRenewDomain} 的证书已经删除成功!"
                 fi  
             else
+                echo
                 red " 域名 ${configSSLRenewDomain} 证书不存在！"
             fi
 
