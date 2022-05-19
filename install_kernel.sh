@@ -1734,6 +1734,8 @@ function installDebianUbuntuKernel(){
 
             if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
                 debianKernelVersion="5.10.0-14"
+            elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then
+                debianKernelVersion="4.19.0-0"
             else
                 debianKernelVersion="5.16.0-0"
             fi
@@ -1768,10 +1770,10 @@ function installDebianUbuntuKernel(){
             green " Debian 官方源安装 linux 内核版本: ${debianKernelVersionPackageName}"
             green " 开始安装 linux-headers  命令为:  apt install -y linux-headers-${debianKernelVersionPackageName}"
             echo
+            ${sudoCmd} apt install -y linux-image-${debianKernelVersionPackageName}
             ${sudoCmd} apt install -y linux-headers-${debianKernelVersionPackageName}
             # ${sudoCmd} apt-get -y dist-upgrade
 
-            
 
         fi
 
@@ -3341,6 +3343,11 @@ function start_menu(){
         ;;
         42 )
             linuxKernelToInstallVersion="5.16"
+            isInstallFromRepo="yes"
+            installKernel
+        ;;        
+        43 )
+            linuxKernelToInstallVersion="4.19"
             isInstallFromRepo="yes"
             installKernel
         ;;        

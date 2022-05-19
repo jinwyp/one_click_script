@@ -467,14 +467,14 @@ function setLinuxDateZone(){
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget git unzip curl
+			${osSystemPackage} -y install wget git unzip curl apt-transport-https
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 		if ! dpkg -l | grep -qw curl; then
-			${osSystemPackage} -y install curl git unzip wget
+			${osSystemPackage} -y install curl git unzip wget apt-transport-https
 			
 			${osSystemPackage} -y install cpu-checker
 		fi
@@ -1338,16 +1338,19 @@ function getHTTPSCertificateWithAcme(){
     if [[ $isAcmeSSLRequestMethodInput == [Yy] ]]; then
         acmeSSLHttpWebrootMode=""
 
+        if [[ -n "${configInstallNginxMode}" ]]; then
+            acmeDefaultValue="3"
+            acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
+            acmeSSLHttpWebrootMode="webrootran"
+        else
+            acmeDefaultValue="1"
+            acmeDefaultText="1. standalone 模式"
+            acmeSSLHttpWebrootMode="standalone"
+        fi
+        
+        echo "1: $1"
         if [ -z "$1" ]; then
-
-            if [[ -n "${configInstallNginxMode}" ]]; then
-                acmeDefaultValue="3"
-                acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
-            else
-                acmeDefaultValue="1"
-                acmeDefaultText="1. standalone 模式"
-            fi
-                    
+ 
             green " ================================================== "
             green " 请选择 http 申请证书方式: 默认直接回车为 ${acmeDefaultText} "
             green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
@@ -1529,7 +1532,7 @@ function getHTTPSCertificateStep1(){
         isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-            getHTTPSCertificateWithAcme "$@"
+            getHTTPSCertificateWithAcme ""
         else
             green " =================================================="
             green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
@@ -2149,7 +2152,7 @@ function checkNginxSNIDomain(){
         isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
-            getHTTPSCertificateWithAcme "$@"
+            getHTTPSCertificateWithAcme ""
         else
             green " =================================================="
             green " 不申请域名的证书, 请把证书放到如下目录, 或自行修改trojan或v2ray配置!"
@@ -2290,7 +2293,7 @@ function installTrojanV2rayWithNginx(){
     fi
 
     inputXraySystemdServiceName $1
-    getHTTPSCertificateStep1 "$@"
+    getHTTPSCertificateStep1 ""
 
     echo
     if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
@@ -6650,7 +6653,7 @@ function getAdGuardHomeSSLCertification(){
         if [[ "${isGetAdGuardSSLCertificateInput}" == [Yy] ]]; then
             ${configAdGuardPath}/AdGuardHome -s stop
             configSSLCertPath="${configSSLCertPath}/adguardhome"
-            getHTTPSCertificateStep1 "$@"
+            getHTTPSCertificateStep1 ""
             replaceAdGuardConfig
         fi
     fi
