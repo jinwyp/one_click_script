@@ -3345,14 +3345,14 @@ function checkPortInUse(){
     if [ $1 = "999999" ]; then
         echo
     elif [[ $1 -gt 1 && $1 -le 65535 ]]; then
-            
-        netstat -tulpn | grep [0-9]:$1 -q ; 
-        if [ $? -eq 1 ]; then 
+        isPortUsed=$(netstat -tulpn | grep -e ":$1") ;
+        if [ -z "${isPortUsed}" ]; then 
             green "输入的端口号 $1 没有被占用, 继续安装..."  
             
-        else 
-            red "输入的端口号 $1 已被占用! 请退出安装, 检查端口是否已被占用 或 重新输入!" 
-            inputV2rayServerPort $2 
+        else
+            processInUsedName=$(echo "${isPortUsed}" | awk '{print $7}' | awk -F"/" '{print $2}')
+            red "输入的端口号 $1 已被 ${processInUsedName} 占用! 请退出安装, 检查端口是否已被占用 或 重新输入!"  
+            inputV2rayServerPort $2
         fi
     else
         red "输入的端口号错误! 必须是[1-65535]. 请重新输入" 
