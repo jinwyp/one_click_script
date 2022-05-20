@@ -1667,7 +1667,7 @@ function getLatestUbuntuKernelVersion(){
     echo
     green "Ubuntu mainline 最新的Linux 内核 kernel 版本号为 ${ubuntuKernelLatestVersion}" 
     
-    for ver in ${ubuntuKernelLatestVersionArray[@]}; do
+    for ver in "${ubuntuKernelLatestVersionArray[@]}"; do
         
         if [[ ${ver} == *"${linuxKernelToInstallVersion}"* ]]; then
             # echo "符合所选版本的Linux 内核版本: ${ver}"
@@ -3419,8 +3419,13 @@ function start_menu(){
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
-        88 )
+        87 )
             getLatestUbuntuKernelVersion
+            getLatestCentosKernelVersion
+            getLatestCentosKernelVersion "manual"
+        ;;
+        88 )
+            upgradeScript
         ;;
 
         0 )

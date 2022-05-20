@@ -2319,7 +2319,7 @@ function installTrojanV2rayWithNginx(){
         elif [ "$1" = "v2ray_nginxOptional" ]; then
             echo
             green " 是否安装 Nginx 用于提供伪装网站, 如果已有网站或搭配宝塔面板请选择N不安装"
-            read -p "是否确安装Nginx伪装网站? 直接回车默认安装, 请输入[Y/n]:" isInstallNginxServerInput
+            read -r -p "是否确安装Nginx伪装网站? 直接回车默认安装, 请输入[Y/n]:" isInstallNginxServerInput
             isInstallNginxServerInput=${isInstallNginxServerInput:-Y}
 
             if [[ "${isInstallNginxServerInput}" == [Yy] ]]; then
@@ -3407,6 +3407,10 @@ function generateVmessImportLink(){
         configV2rayVmessLinkStreamSetting2="grpc"
     fi
 
+    configV2rayProtocolDisplayName="${configV2rayProtocol}"
+    configV2rayVmessLinkConfigPath=""
+    configV2rayVmessLinkConfigPath2=""
+
     if [[ "${configV2rayWorkingMode}" == "vlessTCPVmessWS" ]]; then
         configV2rayVmessLinkStreamSetting1="ws"
         configV2rayVmessLinkStreamSetting2="tcp"
@@ -3414,7 +3418,9 @@ function generateVmessImportLink(){
         configV2rayVmessLinkConfigPath="${configV2rayWebSocketPath}"
         configV2rayVmessLinkConfigPath2="tcp${configV2rayWebSocketPath}" 
 
-        configV2rayVmessLinkConfigTls="tls"      
+        configV2rayVmessLinkConfigTls="tls" 
+
+        configV2rayProtocolDisplayName="vmess"
     fi
 
 
@@ -3424,8 +3430,7 @@ function generateVmessImportLink(){
         configV2rayVmessLinkConfigHost="none"
     fi
 
-    configV2rayVmessLinkConfigPath=""
-    configV2rayVmessLinkConfigPath2=""
+
     if [[ "${configV2rayStreamSetting}" == "kcp" || "${configV2rayStreamSetting}" == "quic" ]]; then
         configV2rayVmessLinkConfigPath="${configV2rayKCPSeedPassword}"
 
@@ -3443,7 +3448,7 @@ function generateVmessImportLink(){
     cat > ${configV2rayVmessImportLinkFile1Path} <<-EOF
 {
     "v": "2",
-    "ps": "${configSSLDomain}_${configV2rayProtocol}_${configV2rayVmessLinkStreamSetting1}",
+    "ps": "${configSSLDomain}_${configV2rayProtocolDisplayName}_${configV2rayVmessLinkStreamSetting1}",
     "add": "${configSSLDomain}",
     "port": "${configV2rayPortShowInfo}",
     "id": "${v2rayPassword1}",
@@ -3461,7 +3466,7 @@ EOF
     cat > ${configV2rayVmessImportLinkFile2Path} <<-EOF
 {
     "v": "2",
-    "ps": "${configSSLDomain}_${configV2rayProtocol}_${configV2rayVmessLinkStreamSetting2}",
+    "ps": "${configSSLDomain}_${configV2rayProtocolDisplayName}_${configV2rayVmessLinkStreamSetting2}",
     "add": "${configSSLDomain}",
     "port": "${configV2rayPortShowInfo}",
     "id": "${v2rayPassword1}",
@@ -5047,6 +5052,7 @@ EOM
                 "network": "ws",
                 "security": "none",
                 "wsSettings": {
+                    "acceptProxyProtocol": true,
                     "path": "/${configV2rayWebSocketPath}" 
                 }
             }
