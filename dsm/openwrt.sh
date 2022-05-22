@@ -2,10 +2,6 @@
 
 
 
-
-
-
-
 checkArchitecture(){
 	# https://stackoverflow.com/questions/48678152/how-to-detect-386-amd64-arm-or-arm64-os-architecture-via-shell-bash
 
@@ -43,15 +39,53 @@ getLinuxOSRelease(){
 }
 
 
+getGithubLatestReleaseVersion(){
+    # https://github.com/p4gefau1t/trojan-go/issues/63
+    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 1-
+}
+
+
 mosdnsDownloadPath="/tmp"
 mosdnsEtcPath="/etc/mosdns"
 
-downloadMosdns(){
-    mosdnsFilename1="mosdns_42e20fb-54_x86_64.ipk"
-    mosdnsLuciFilename1="luci-app-mosdns_git-22.137.45088-fd0f4a5_all.ipk"
+getIPDKdownloadFilename(){
+    # mosdnsIPK_array=($(wget -qO- https://op.supes.top/packages/x86_64/ | grep -E "mosdns|v2ray" | awk -F'<a href=\"' '/ipk/{print $2}' | cut -d\" -f1 | sort -V))
 
-    mosdnsUrl1="https://op.supes.top/packages/x86_64/mosdns_42e20fb-54_x86_64.ipk"
-    mosdnsLuciUrl2="https://op.supes.top/packages/x86_64/luci-app-mosdns_git-22.137.45088-fd0f4a5_all.ipk"
+    mosdnsIPK_array=$(wget -qO- https://op.supes.top/packages/x86_64/ | grep -E "mosdns|v2ray" | awk -F'<a href=\"' '/ipk/{print $2}' | cut -d\" -f1 | sort -V)
+
+    for filename in ${mosdnsIPK_array}; do
+
+        if [ "${filename#*luci-app-mosdns}" != "$filename" ]; then
+            mosdnsLuciFilename1="${filename}"
+            mosdnsLuciUrl2="https://op.supes.top/packages/x86_64/${mosdnsLuciFilename1}"
+            echo "1 $mosdnsLuciFilename1"
+
+        elif [ "${filename#*mosdns}" != "$filename" ]; then
+            mosdnsFilename1="${filename}"
+            mosdnsUrl1="https://op.supes.top/packages/x86_64/${mosdnsFilename1}"
+            echo "2 $mosdnsFilename1"
+
+        elif [ "${filename#*geosite}" != "$filename" ]; then
+            v2rayGeoSiteFilename="${filename}"
+            v2rayGeoSiteUrl1="https://op.supes.top/packages/x86_64/${v2rayGeoSiteFilename}"
+            echo "4 $v2rayGeoSiteFilename"
+
+        elif [ "${filename#*geoip}" != "$filename" ]; then
+            v2rayGeoIpFilename="${filename}"
+            v2rayGeoIpUrl1="https://op.supes.top/packages/x86_64/${v2rayGeoIpFilename}"
+            echo "3 $v2rayGeoIpFilename"            
+        else
+            echo
+        fi
+    done
+}
+
+installMosdns(){
+    mosdnsFilename1="mosdns_cee9e6d-55_x86_64.ipk"
+    mosdnsLuciFilename1="luci-app-mosdns_git-22.142.44511-c664869_all.ipk"
+
+    mosdnsUrl1="https://op.supes.top/packages/x86_64/mosdns_cee9e6d-55_x86_64.ipk"
+    mosdnsLuciUrl2="https://op.supes.top/packages/x86_64/luci-app-mosdns_git-22.142.44511-c664869_all.ipk"
 
     v2rayGeoSiteFilename="v2ray-geosite_20220425025949-4_all.ipk"
     v2rayGeoIpFilename="v2ray-geoip_202204210050-4_all.ipk"
@@ -59,14 +93,70 @@ downloadMosdns(){
     v2rayGeoSiteUrl1="https://op.supes.top/packages/x86_64/v2ray-geosite_20220425025949-4_all.ipk"
     v2rayGeoIpUrl1="https://op.supes.top/packages/x86_64/v2ray-geoip_202204210050-4_all.ipk"
 
+    getIPDKdownloadFilename
+
 
     geositeFilename="geosite.dat"
     geoipFilename="geoip.dat"
     cnipFilename="cn.dat"
 
-    geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geosite.dat"
-    geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geoip.dat"
-    cnipUrl="https://github.com/Loyalsoldier/geoip/releases/download/202205120123/cn.dat"
+    # versionV2rayRulesDat=$(getGithubLatestReleaseVersion "Loyalsoldier/v2ray-rules-dat")
+    # geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geosite.dat"
+    # geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geoip.dat"
+    # cnipUrl="https://github.com/Loyalsoldier/geoip/releases/download/202205120123/cn.dat"
+
+    geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+    geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
+
+
+    echo
+    echo " ================================================== "
+    echo " 是否添加自建的DNS服务器, 默认直接回车不添加"
+    echo " 选是为添加DNS服务器, 建议先架设好DNS服务器后再运行此脚本"
+    echo " 本脚本默认已经内置了多个DNS服务器地址"
+    echo
+    read -r -p "是否添加自建的DNS服务器? 默认直接回车为不添加, 请输入[y/N]:" isAddNewDNSServerInput
+    isAddNewDNSServerInput=${isAddNewDNSServerInput:-n}
+
+    addNewDNSServerIPText=""
+    addNewDNSServerDomainText=""
+    if [[ "$isAddNewDNSServerInput" == [Nn] ]]; then
+        echo 
+    else
+        echo
+        echo " ================================================== "
+        echo " 请输入自建的DNS服务器IP 格式例如 1.1.1.1"
+        echo " 请保证端口53 提供DNS解析服务, 如果是非53端口请填写端口号, 格式例如 1.1.1.1:8053"
+        echo 
+        read -r -p "请输入自建DNS服务器IP地址, 请输入:" isAddNewDNSServerIPInput
+
+        if [ -n "${isAddNewDNSServerIPInput}" ]; then
+        read -r -d '' addNewDNSServerIPText << EOM
+        - addr: "udp://${isAddNewDNSServerIPInput}"
+          idle_timeout: 500
+          trusted: true
+EOM
+
+        fi
+
+        echo
+        echo " ================================================== "
+        echo " 请输入自建的DNS服务器的域名 用于提供DOH服务, 格式例如 www.dns.com"
+        echo " 请保证服务器在 /dns-query 提供DOH服务, 例如 https://www.dns.com/dns-query"
+        echo 
+        read -r -p "请输入自建DOH服务器的域名, 不要输入https://, 请直接输入域名:" isAddNewDNSServerDomainInput
+
+        if [ -n "${isAddNewDNSServerDomainInput}" ]; then
+        read -r -d '' addNewDNSServerDomainText << EOM
+        - addr: "https://${isAddNewDNSServerDomainInput}/dns-query"       
+          idle_timeout: 400
+          trusted: true
+EOM
+        fi
+    fi
+
+
 
 
 
@@ -216,13 +306,16 @@ plugin:
     type: fast_forward
     args:
       upstream:
+${addNewDNSServerIPText}
+${addNewDNSServerDomainText}
+
         - addr: "udp://208.67.222.222"
           trusted: true
         - addr: "https://doh.opendns.com/dns-query"       
           idle_timeout: 400
           trusted: true
 
-        - addr: "udp://172.105.216.54"   
+        #- addr: "udp://172.105.216.54"   
         - addr: "udp://5.2.75.231"
           idle_timeout: 400
           trusted: true
@@ -339,7 +432,7 @@ main(){
     fi
 
 
-    downloadMosdns
+    installMosdns
 
 }
 

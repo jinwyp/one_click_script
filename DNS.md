@@ -93,13 +93,26 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 ![CF3](https://github.com/jinwyp/one_click_script/blob/master/docs/cfcheck3.png?raw=true)
 
-### 搭建自己的DNS服务器
+### 搭建的DNS服务器
 
-1. 自己通过AdGuardHome架设DNS服务器, 同时还可以去广告. https://github.com/AdguardTeam/AdGuardHome
+1. 通过本脚本, ```bash bash <(curl -Lso- https://git.io/oneclick) ``` 运行本脚本, 选择28 安装 AdGuard Home 架设DNS服务器, 同时还可以去广告. 建议在国外的服务器上安装 
+2. 安装完成后, 再次运行本脚本 选择29 申请域名证书. 这样就可以开启DOH和DOT 加密DNS解析. 
+
+3. 具体设置请参考 [AdGuardHome 官方网站](https://github.com/AdguardTeam/AdGuardHome). 本脚本已经自动添加了针对中国网站的广告屏蔽规则.
+4. [AdGuard Home 的整理的DNS服务器列表](https://kb.adguard.com/en/general/dns-providers)
 
 ### 分流国内和国外的DNS服务解析
 
-1. 通过使用mosdns-cn 可以让国内的网址走国内的DNS解析, 国外的网址走国外的DNS解析. https://github.com/IrineSistiana/mosdns-cn
+1. 建议有能力的自建的请先搭建自己DNS服务器. 然后在安装mosdns 进行DNS分流
+2. 通过使用mosdns 或 mosdns-cn 可以让国内的网址走国内的DNS解析, 国外的网址走国外的DNS解析. 
+3. 如果使用x86 openwrt 软路由, 可以直接使用 SSH登录到软路由上 使用本项目内的脚本安装mosdns  
+```bash 
+cd /tmp
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/openwrt.sh && chmod +x ./openwrt.sh && ./openwrt.sh
+```
+4. 如果 linux系统 可以使用本脚本在linux 系统上安装 mosdns 或 mosdns-cn
+5. 如果是 windows 可以下载 mosdns 或 mosdns-cn 压缩包直接解压运行 
+6. https://github.com/IrineSistiana/mosdns-cn
 
 ### DNS服务器列表大全
 

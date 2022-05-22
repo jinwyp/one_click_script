@@ -13,7 +13,8 @@
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
 * [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
 * [如何使用GO语言开发的软件](/HOWTOUSEGO.md)
-* [开启DOH 解决DNS污染](/DNS.md)
+* [如何开启DOH 解决DNS污染](/DNS.md)
+* [安装 AdGuard Home DNS 服务器 并使用 Mosdns 分流国内与国外域名DNS解析请求](/DNS.md)
 
 
 ## 功能说明 Features 

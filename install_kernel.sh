@@ -2553,7 +2553,7 @@ function enableWireguardIPV6OrIPV4(){
         sed -i 's/162\.159\.192\.1/\[2606\:4700\:d0\:\:a29f\:c001\]/g' ${configWireGuardConfigFilePath}
 
         sed -i 's/^DNS = 1\.1\.1\.1/DNS = 2620:fe\:\:10,2001\:4860\:4860\:\:8888,2606\:4700\:4700\:\:1111/g'  ${configWireGuardConfigFilePath}
-        sed -i 's/^DNS = 8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/DNS = 2620:fe\:\:10,2001\:4860\:4860\:\:8888,2606\:4700\:4700\:\:1111/g'  ${configWireGuardConfigFilePath}
+        sed -i 's/^DNS = 8\.8\.8\.8,8\.8\.4\.4,1\.1\.1\.1,9\.9\.9\.10/DNS = 2620:fe\:\:10,2001\:4860\:4860\:\:8888,2606\:4700\:4700\:\:1111/g'  ${configWireGuardConfigFilePath}
         
         echo "nameserver 2a00:1098:2b::1" >> /etc/resolv.conf
         
@@ -2569,13 +2569,13 @@ function enableWireguardIPV6OrIPV4(){
         sed -i 's/engage\.cloudflareclient\.com/162\.159\.192\.1/g' ${configWireGuardConfigFilePath}
         sed -i 's/\[2606\:4700\:d0\:\:a29f\:c001\]/162\.159\.192\.1/g' ${configWireGuardConfigFilePath}
         
-        sed -i 's/^DNS = 1\.1\.1\.1/DNS = 8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/g' ${configWireGuardConfigFilePath}
+        sed -i 's/^DNS = 1\.1\.1\.1/DNS = 8\.8\.8\.8,8\.8\.4\.4,1\.1\.1\.1,9\.9\.9\.10/g' ${configWireGuardConfigFilePath}
         sed -i 's/^DNS = 2620:fe\:\:10,2001\:4860\:4860\:\:8888,2606\:4700\:4700\:\:1111/DNS = 8\.8\.8\.8,1\.1\.1\.1,9\.9\.9\.10/g' ${configWireGuardConfigFilePath}
 
         echo "nameserver 8.8.8.8" >> /etc/resolv.conf
         echo "nameserver 8.8.4.4" >> /etc/resolv.conf
         echo "nameserver 1.1.1.1" >> /etc/resolv.conf
-        echo "nameserver 9.9.9.9" >> /etc/resolv.conf
+        #echo "nameserver 9.9.9.9" >> /etc/resolv.conf
         echo "nameserver 9.9.9.10" >> /etc/resolv.conf
 
         echo

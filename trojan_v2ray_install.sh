@@ -808,13 +808,12 @@ function vps_bench(){
 function vps_zbench(){
 	wget -N --no-check-certificate https://raw.githubusercontent.com/FunctionClub/ZBench/master/ZBench-CN.sh && chmod +x ZBench-CN.sh && bash ZBench-CN.sh
 }
+function vps_LemonBench(){
+    wget -N --no-check-certificate -O LemonBench.sh https://ilemonra.in/LemonBenchIntl && chmod +x LemonBench.sh && ./LemonBench.sh fast
+}
 
 function vps_testrace(){
 	wget -N --no-check-certificate https://raw.githubusercontent.com/nanqinlang-script/testrace/master/testrace.sh && chmod +x testrace.sh && ./testrace.sh
-}
-
-function vps_LemonBench(){
-    wget -N --no-check-certificate -O LemonBench.sh https://ilemonra.in/LemonBenchIntl && chmod +x LemonBench.sh && ./LemonBench.sh fast
 }
 
 function vps_autoBestTrace(){
@@ -822,6 +821,11 @@ function vps_autoBestTrace(){
 }
 function vps_mtrTrace(){
     curl https://raw.githubusercontent.com/zhucaidan/mtr_trace/main/mtr_trace.sh | bash
+}
+function vps_returnroute(){
+    # https://www.zhujizixun.com/6216.html
+    # https://91ai.net/thread-1015693-5-1.html
+    wget --no-check-certificate https://tutu.ovh/bash/returnroute/route && chmod +x route && clear && ./route
 }
 
 
@@ -908,9 +912,6 @@ function installBTPanelCrackHostcli(){
 
 
 
-configNetworkRealIp=""
-configNetworkLocalIp=""
-configSSLDomain=""
 
 
 
@@ -1085,60 +1086,10 @@ function getTrojanAndV2rayVersion(){
 
 
 
+configNetworkRealIp=""
+configNetworkLocalIp=""
+configSSLDomain=""
 
-
-function compareRealIpWithLocalIp(){
-    echo
-    green " 是否检测域名指向的IP正确 直接回车默认检测"
-    red " 如果域名指向的IP不是本机IP, 或已开启CDN不方便关闭 或只有IPv6的VPS 可以选否不检测"
-    read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
-    isDomainValidInput=${isDomainValidInput:-Y}
-
-    if [[ $isDomainValidInput == [Yy] ]]; then
-        if [[ -n "$1" ]]; then
-            configNetworkRealIp=$(ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
-            # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
-            configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
-            configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
-            #configNetworkLocalIp3="$(curl https://ipv4.icanhazip.com/)"
-            #configNetworkLocalIp4="$(curl https://v4.ident.me/)"
-            #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
-            #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
-            
-            
-            #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
-            #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
-
-
-            green " ================================================== "
-            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
-
-            echo
-            if [[ ${configNetworkRealIp} == "${configNetworkLocalIp1}" || ${configNetworkRealIp} == "${configNetworkLocalIp2}" ]] ; then
-
-                green " 域名解析的IP正常!"
-                green " ================================================== "
-                true
-            else
-                red " 域名解析地址与本VPS的IP地址不一致!"
-                red " 本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
-                green " ================================================== "
-                false
-            fi
-        else
-            green " ================================================== "        
-            red "     域名输入错误!"
-            green " ================================================== "        
-            false
-        fi
-        
-    else
-        green " ================================================== "
-        green "     不检测域名解析是否正确!"
-        green " ================================================== "
-        true
-    fi
-}
 
 
 acmeSSLRegisterEmailInput=""
@@ -1162,18 +1113,18 @@ function getHTTPSCertificateCheckEmail(){
 }
 function getHTTPSCertificateInputEmail(){
     echo
-    read -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
-    getHTTPSCertificateCheckEmail "email" ${acmeSSLRegisterEmailInput}
+    read -r -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
+    getHTTPSCertificateCheckEmail "email" "${acmeSSLRegisterEmailInput}"
 }
 function getHTTPSCertificateInputGoogleEABKey(){
     echo
-    read -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
-    getHTTPSCertificateCheckEmail "googleEabKey" ${isDomainSSLGoogleEABKeyInput}
+    read -r -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
+    getHTTPSCertificateCheckEmail "googleEabKey" "${isDomainSSLGoogleEABKeyInput}"
 }
 function getHTTPSCertificateInputGoogleEABId(){
     echo
-    read -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
-    getHTTPSCertificateCheckEmail "googleEabId" ${isDomainSSLGoogleEABIdInput}
+    read -r -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
+    getHTTPSCertificateCheckEmail "googleEabId" "${isDomainSSLGoogleEABIdInput}"
 }
 
 acmeSSLDays="89"
@@ -1295,7 +1246,7 @@ function getHTTPSCertificateWithAcme(){
     green " 3 ZeroSSL.com "
     green " 4 Google Public CA "
     echo
-    read -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
+    read -r -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
     isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
     
     if [[ "$isDomainSSLFromLetInput" == "2" ]]; then
@@ -1348,7 +1299,6 @@ function getHTTPSCertificateWithAcme(){
             acmeSSLHttpWebrootMode="standalone"
         fi
         
-        echo "1: $1"
         if [ -z "$1" ]; then
  
             green " ================================================== "
@@ -1358,7 +1308,7 @@ function getHTTPSCertificateWithAcme(){
             green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
             green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
             echo
-            read -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
+            read -r -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
 
             isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-${acmeDefaultValue}}
             
@@ -1510,6 +1460,60 @@ function getHTTPSCertificateWithAcme(){
 
 
 
+function compareRealIpWithLocalIp(){
+    echo
+    green " 是否检测域名指向的IP正确 直接回车默认检测"
+    red " 如果域名指向的IP不是本机IP, 或已开启CDN不方便关闭 或只有IPv6的VPS 可以选否不检测"
+    read -r -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
+    isDomainValidInput=${isDomainValidInput:-Y}
+
+    if [[ $isDomainValidInput == [Yy] ]]; then
+        if [[ -n "$1" ]]; then
+            configNetworkRealIp=$(ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
+            # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
+            configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
+            configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
+            #configNetworkLocalIp3="$(curl https://ipv4.icanhazip.com/)"
+            #configNetworkLocalIp4="$(curl https://v4.ident.me/)"
+            #configNetworkLocalIp5="$(curl https://api.ip.sb/ip)"
+            #configNetworkLocalIp6="$(curl https://ipinfo.io/ip)"
+            
+            
+            #configNetworkLocalIPv61="$(curl https://ipv6.icanhazip.com/)"
+            #configNetworkLocalIPv62="$(curl https://v6.ident.me/)"
+
+
+            green " ================================================== "
+            green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
+
+            echo
+            if [[ ${configNetworkRealIp} == "${configNetworkLocalIp1}" || ${configNetworkRealIp} == "${configNetworkLocalIp2}" ]] ; then
+
+                green " 域名解析的IP正常!"
+                green " ================================================== "
+                true
+            else
+                red " 域名解析地址与本VPS的IP地址不一致!"
+                red " 本次安装失败，请确保域名解析正常, 请检查域名和DNS是否生效!"
+                green " ================================================== "
+                false
+            fi
+        else
+            green " ================================================== "        
+            red "     域名输入错误!"
+            green " ================================================== "        
+            false
+        fi
+        
+    else
+        green " ================================================== "
+        green "     不检测域名解析是否正确!"
+        green " ================================================== "
+        true
+    fi
+}
+
+
 function getHTTPSCertificateStep1(){
     
     renewCertificationWithAcme
@@ -1517,7 +1521,7 @@ function getHTTPSCertificateStep1(){
     echo
     green " ================================================== "
     yellow " 请输入解析到本VPS的域名 例如 www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
-    read -p "请输入解析到本VPS的域名:" configSSLDomain
+    read -r -p "请输入解析到本VPS的域名:" configSSLDomain
 
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         echo
@@ -1528,7 +1532,7 @@ function getHTTPSCertificateStep1(){
         red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
         echo
 
-        read -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]:" isDomainSSLRequestInput
+        read -r -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]:" isDomainSSLRequestInput
         isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
@@ -6825,6 +6829,7 @@ function startMenuOther(){
     green " 45. ZBench 综合网速测试 (包含节点测速, Ping 以及 路由测试)"
     green " 46. testrace 回程路由测试 by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace 回程路由测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
+    green " 48. returnroute 回程路由测试 推荐使用 (北京电信/联通/移动 上海电信/联通/移动 广州电信/联通/移动 )"
     echo
     green " =================================================="
     green " 51. 测试VPS 是否支持 Netflix 非自制剧解锁 支持 WARP sock5 测试, 推荐使用 "
@@ -6869,6 +6874,7 @@ function startMenuOther(){
     green " 45. ZBench "
     green " 46. testrace by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace (Traceroute test 广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
+    green " 48. returnroute test (北京电信/联通/移动 上海电信/联通/移动 广州电信/联通/移动 )"
     echo
     green " =================================================="
     green " 51. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
@@ -6942,9 +6948,12 @@ function startMenuOther(){
         ;;
         46 )
             vps_testrace
-        ;;        
+        ;;
         47 )
             vps_autoBestTrace
+        ;;
+        48 )
+            vps_returnroute
         ;;        
         51 )
             vps_netflix_jin

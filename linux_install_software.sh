@@ -999,9 +999,19 @@ function installPortainer(){
 
 
 
+
+
+
+
+
+
+
+
+
 acmeSSLRegisterEmailInput=""
 isDomainSSLGoogleEABKeyInput=""
 isDomainSSLGoogleEABIdInput=""
+
 function getHTTPSCertificateCheckEmail(){
     if [ -z $2 ]; then
         
@@ -1019,18 +1029,18 @@ function getHTTPSCertificateCheckEmail(){
 }
 function getHTTPSCertificateInputEmail(){
     echo
-    read -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
-    getHTTPSCertificateCheckEmail "email" ${acmeSSLRegisterEmailInput}
+    read -r -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
+    getHTTPSCertificateCheckEmail "email" "${acmeSSLRegisterEmailInput}"
 }
 function getHTTPSCertificateInputGoogleEABKey(){
     echo
-    read -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
-    getHTTPSCertificateCheckEmail "googleEabKey" ${isDomainSSLGoogleEABKeyInput}
+    read -r -p "请输入 Google EAB key :" isDomainSSLGoogleEABKeyInput
+    getHTTPSCertificateCheckEmail "googleEabKey" "${isDomainSSLGoogleEABKeyInput}"
 }
 function getHTTPSCertificateInputGoogleEABId(){
     echo
-    read -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
-    getHTTPSCertificateCheckEmail "googleEabId" ${isDomainSSLGoogleEABIdInput}
+    read -r -p "请输入 Google EAB id :" isDomainSSLGoogleEABIdInput
+    getHTTPSCertificateCheckEmail "googleEabId" "${isDomainSSLGoogleEABIdInput}"
 }
 
 configNetworkRealIp=""
@@ -1067,7 +1077,7 @@ function getHTTPSCertificateWithAcme(){
     green " 3 ZeroSSL.com "
     green " 4 Google Public CA "
     echo
-    read -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
+    read -r -p "请选择证书提供商? 默认直接回车为通过 Letsencrypt.org 申请, 请输入纯数字:" isDomainSSLFromLetInput
     isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
     
     if [[ "$isDomainSSLFromLetInput" == "2" ]]; then
@@ -1110,16 +1120,17 @@ function getHTTPSCertificateWithAcme(){
     if [[ $isAcmeSSLRequestMethodInput == [Yy] ]]; then
         acmeSSLHttpWebrootMode=""
 
-        if [ -z $1 ]; then
+        if [[ "${isInstallNginx}" == "true" ]]; then
+            acmeDefaultValue="3"
+            acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
+            acmeSSLHttpWebrootMode="webrootran"
+        else
+            acmeDefaultValue="1"
+            acmeDefaultText="1. standalone 模式"
+            acmeSSLHttpWebrootMode="standalone"
+        fi
 
-            if [[ "${isInstallNginx}" == "true" ]]; then
-                acmeDefaultValue="3"
-                acmeDefaultText="3. webroot 并使用ran作为临时的Web服务器"
-            else
-                acmeDefaultValue="1"
-                acmeDefaultText="1. standalone 模式"
-            fi
-
+        if [ -z "$1" ]; then
             green " ================================================== "
             green " 请选择 http 申请证书方式: 默认直接回车为 ${acmeDefaultText} "
             green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"
@@ -1127,7 +1138,7 @@ function getHTTPSCertificateWithAcme(){
             green " 3 webroot 模式 并使用 ran 作为临时的Web服务器, 如已选择同时安装Nginx，请使用此模式, 可以正常续签"
             green " 4 nginx 模式 适合已经安装 Nginx, 请确保 Nginx 已经运行"
             echo
-            read -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
+            read -r -p "请选择http申请证书方式? 默认为 ${acmeDefaultText}, 请输入纯数字:" isAcmeSSLWebrootModeInput
        
             isAcmeSSLWebrootModeInput=${isAcmeSSLWebrootModeInput:-${acmeDefaultValue}}
             
@@ -1284,12 +1295,12 @@ function compareRealIpWithLocalIp(){
     echo
     green " 是否检测域名指向的IP正确 直接回车默认检测"
     red " 如果域名指向的IP不是本机IP, 或已开启CDN不方便关闭 或只有IPv6的VPS 可以选否不检测"
-    read -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
+    read -r -p "是否检测域名指向的IP正确? 请输入[Y/n]:" isDomainValidInput
     isDomainValidInput=${isDomainValidInput:-Y}
 
     if [[ $isDomainValidInput == [Yy] ]]; then
-        if [ -n $1 ]; then
-            configNetworkRealIp=`ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+        if [ -n "$1" ]; then
+            configNetworkRealIp=$(ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
             # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script
             configNetworkLocalIp1="$(curl http://whatismyip.akamai.com/)"
             configNetworkLocalIp2="$(curl https://checkip.amazonaws.com/)"
@@ -1305,7 +1316,7 @@ function compareRealIpWithLocalIp(){
             green " 域名解析地址为 ${configNetworkRealIp}, 本VPS的IP为 ${configNetworkLocalIp1} "
 
             echo
-            if [[ ${configNetworkRealIp} == ${configNetworkLocalIp1} || ${configNetworkRealIp} == ${configNetworkLocalIp2} ]] ; then
+            if [[ ${configNetworkRealIp} == "${configNetworkLocalIp1}" || ${configNetworkRealIp} == "${configNetworkLocalIp2}" ]] ; then
 
                 green " 域名解析的IP正常!"
                 green " ================================================== "
@@ -1345,7 +1356,7 @@ function getHTTPSCertificateStep1(){
     echo
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
-    read -p "请输入解析到本VPS的域名:" configSSLDomain
+    read -r -p "请输入解析到本VPS的域名:" configSSLDomain
     
     if compareRealIpWithLocalIp "${configSSLDomain}" ; then
         echo
@@ -1356,14 +1367,14 @@ function getHTTPSCertificateStep1(){
         red " ${configSSLDomain} 域名证书私钥文件路径 ${configSSLCertPath}/${configSSLCertKeyFilename} "
         echo
 
-        read -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]?" isDomainSSLRequestInput
+        read -r -p "是否申请证书? 默认直接回车为自动申请证书,请输入[Y/n]?" isDomainSSLRequestInput
         isDomainSSLRequestInput=${isDomainSSLRequestInput:-Y}
 
         if [[ $isDomainSSLRequestInput == [Yy] ]]; then
             
-            getHTTPSCertificateWithAcme
+            getHTTPSCertificateWithAcme ""
 
-            if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
+            if test -s "${configSSLCertPath}/${configSSLCertFullchainFilename}"; then
                 green " =================================================="
                 green "   域名SSL证书申请成功 !"
                 green " ${configSSLDomain} 域名证书内容文件路径 ${configSSLCertPath}/${configSSLCertFullchainFilename} "
@@ -1799,7 +1810,7 @@ EOM
 ${nginxConfigNginxModuleInput}
 
 user  ${nginxUser};
-worker_processes  auto;
+worker_processes  f;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 events {
@@ -2699,6 +2710,7 @@ function downgradeXray(){
     yellow " 请选择 Air-Universe 降级到的版本, 默认不降级"
     red " 注意 Air-Universe 最新版不支持 Xray 1.5.0或更老版本"
     red " 如需要使用Xray 1.5.0或更老版本的Xray, 请选择 Air-Universe 1.0.0或 0.9.2"
+    echo
     green " 1. 不降级 使用最新版本"
     green " 2. 1.1.0 (不支持 Xray 1.5.0或更老版本)"
     green " 3. 1.0.0 (仅支持 Xray 1.5.0或更老版本)"
@@ -2707,11 +2719,12 @@ function downgradeXray(){
     read -p "请选择Air-Universe版本? 直接回车默认选1, 请输入纯数字:" isAirUniverseVersionInput
     isAirUniverseVersionInput=${isAirUniverseVersionInput:-1}
 
-    downloadAirUniverseVersion="1.1.0"
+
+    downloadAirUniverseVersion=$(getGithubLatestReleaseVersion "crossfw/Air-Universe")
     downloadAirUniverseUrl="https://github.com/crossfw/Air-Universe/releases/download/v${downloadAirUniverseVersion}/Air-Universe-linux-64.zip"
 
     if [[ "${isAirUniverseVersionInput}" == "2" ]]; then
-        downloadAirUniverseVersion="1.1.0"
+        downloadAirUniverseVersion="1.1.1"
     elif [[ "${isAirUniverseVersionInput}" == "3" ]]; then
         downloadAirUniverseVersion="1.0.0"
     elif [[ "${isAirUniverseVersionInput}" == "4" ]]; then
@@ -2721,7 +2734,6 @@ function downgradeXray(){
     fi
 
     if [[ "${isAirUniverseVersionInput}" == "1" ]]; then
-        echo
         green " =================================================="
         green "  已选择不降级 使用最新版本 Air-Universe ${downloadAirUniverseVersion}"
         green " =================================================="
@@ -2759,7 +2771,8 @@ function downgradeXray(){
 
 
     echo
-    yellow " 请选择Xray降级到的版本, 默认不降级"
+    yellow " 请选择Xray降级到的版本, 默认直接回车为不降级"
+    echo
     green " 1. 不降级 使用最新版本"
 
     if [[ "${isAirUniverseVersionInput}" == "1" || "${isAirUniverseVersionInput}" == "2" ]]; then
@@ -2778,7 +2791,7 @@ function downgradeXray(){
     read -p "请选择Xray版本? 直接回车默认选1, 请输入纯数字:" isXrayVersionInput
     isXrayVersionInput=${isXrayVersionInput:-1}
 
-    downloadXrayVersion="1.5.5"
+    downloadXrayVersion=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
     downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
 
     if [[ "${isXrayVersionInput}" == "2" ]]; then
@@ -2804,13 +2817,11 @@ function downgradeXray(){
 
     elif [[ "${isXrayVersionInput}" == "9" ]]; then
         downloadXrayVersion="1.3.1"
-
     else
         echo
     fi
 
     if [[ "${isXrayVersionInput}" == "1" ]]; then
-        echo
         green " =================================================="
         green "  已选择不降级 使用最新版本 Xray ${downloadXrayVersion}"
         green " =================================================="

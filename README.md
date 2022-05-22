@@ -17,7 +17,8 @@ Thanks for support this project. Check on [patreon](https://www.patreon.com/linu
 * [Install V2Ray-Poseidon, Soga, XrayR, Air-Universe shell script for V2board panel](/TOOL.md)
 * [PVE Proxmox VE and Synology DiskStation Manager NAS Toolkit](/dsm/readme.md)
 * [Install FRP shell script (expose local server behind a NAT or firewall to the Internet tool)](/dsm/readme.md)
-* [Enable DOH for DNS](/DNS.md)
+* [How to enable DOH for DNS](/DNS.md)
+* [Install DNS server AdGuard Home and Mosdns to divert domestic and foreign dns traffic](/DNS.md)
 
 
 
