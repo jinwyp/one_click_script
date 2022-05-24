@@ -1,6 +1,13 @@
 # DNS, DOT(DNS over TLS) and DOH(DNS over HTTPS) 
 
+## 目录 Table of Contents
 
+* [DNS DOT DOH 介绍](#dns)
+* [Chrome 如何开启DOH 解决DNS污染](#chrome)
+* [Firefox 如何开启DOH](#firefox)
+* [Edge 如何开启DOH](#edge)
+* [安装 AdGuard Home  搭建 DNS 服务器](#adguardhome)
+* [使用 Mosdns 分流国内与国外域名DNS解析请求](#mosdns)
 
 ### DNS
 
@@ -73,6 +80,8 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 4. 开启 Encrypted Client Hello (ECH) (ESNI的进化版本). 同样在 ``` about:config ``` 搜索条目 ```network.dns.echconfig.enabled``` 和 ```network.dns.use_https_rr_as_altsvc```，将它们的值设定改为 true 即可。
 
 5. 更多问题请查看 [在 Firefox 上设置 DoH 和 ESNI/ECH](https://blog.outv.im/2020/firefox-doh-ech-esni/)
+
+
 ### Edge
 
 1. Edge 浏览器 [设置DoH加密DNS的方法] (https://www.icoa.cn/a/953.html)
@@ -93,26 +102,47 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 ![CF3](https://github.com/jinwyp/one_click_script/blob/master/docs/cfcheck3.png?raw=true)
 
+### AdGuardHome
 ### 搭建的DNS服务器
 
-1. 通过本脚本, ```bash bash <(curl -Lso- https://git.io/oneclick) ``` 运行本脚本, 选择28 安装 AdGuard Home 架设DNS服务器, 同时还可以去广告. 建议在国外的服务器上安装 
+1. 通过本脚本, ``` bash <(curl -Lso- https://git.io/oneclick) ``` 运行本脚本, 选择28 安装 AdGuard Home 架设DNS服务器, 同时还可以去广告. 建议在国外的服务器上安装 
 2. 安装完成后, 再次运行本脚本 选择29 申请域名证书. 这样就可以开启DOH和DOT 加密DNS解析. 
 
 3. 具体设置请参考 [AdGuardHome 官方网站](https://github.com/AdguardTeam/AdGuardHome). 本脚本已经自动添加了针对中国网站的广告屏蔽规则.
 4. [AdGuard Home 的整理的DNS服务器列表](https://kb.adguard.com/en/general/dns-providers)
 
+### Mosdns
 ### 分流国内和国外的DNS服务解析
 
-1. 建议有能力的自建的请先搭建自己DNS服务器. 然后在安装mosdns 进行DNS分流
-2. 通过使用mosdns 或 mosdns-cn 可以让国内的网址走国内的DNS解析, 国外的网址走国外的DNS解析. 
-3. 如果使用x86 openwrt 软路由, 可以直接使用 SSH登录到软路由上 使用本项目内的脚本安装mosdns  
+1. 建议有条件的请先搭建DNS服务器. 然后再安装mosdns 进行DNS分流. 没有条件搭建DNS服务器也不用担心, 本脚本已经内置多个DNS服务器地址 
+2. 通过使用mosdns 或 mosdns-cn 可以让国内的网址走国内的DNS解析, 国外的网址走国外的DNS解析.   安装mosdns 分为 Openwrt X86版本, linux 版本 或 windows 版本. 建议有软路由的直接在软路由安装Openwrt X86版本.
+3. 如果使用x86 openwrt 软路由, 可以直接使用 SSH登录到软路由上 使用如下脚本安装mosdns
 ```bash 
-cd /tmp
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/openwrt.sh && chmod +x ./openwrt.sh && ./openwrt.sh
 ```
-4. 如果 linux系统 可以使用本脚本在linux 系统上安装 mosdns 或 mosdns-cn
-5. 如果是 windows 可以下载 mosdns 或 mosdns-cn 压缩包直接解压运行 
-6. https://github.com/IrineSistiana/mosdns-cn
+
+4. 使用上面脚本在软路由安装 luci-app-mosdns 完毕后, 请进入OpenWRT管理菜单: 服务-> MosDNS -> MosDNS 配置文件选择 下拉框选择 自定义配置. 然后勾选 启用 复选框后, 点击 保存&应用 按钮 就可以启动 MosDNS. 注意:如果mosdns启动失败, 请先关闭ssr 或 passwall 插件, 因为这些插件内置的PDNSD也运行在5335端口导致冲突. 或者更换mosdns的启动端口.
+![mosdns1](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns1.png?raw=true)
+
+5. 然后在 OpenWRT管理菜单: 网络-> DHCP/DNS -> DNS 转发 填入 127.0.0.1#5335, 因为mosdns运行在软路由的5335端口, 如果mosdns不是运行在软路由而是用下面的脚本运行在其他linux上,则填入对应IP和端口即可. 然后在第二个tab "HOSTS 和解析文件" 勾选 忽略解析文件. 最后点击右下角 保存&应用 按钮完成设置.  注意: 如果没有正确填写转发就勾选了 "忽略解析文件" 会导致无法上网, 忽略解析文件的意思就是在dnsmasq 添加 no-reslov 指令不再使用原有的上游DNS解析. 最后在 ShadowSocksR Plus+ 设置 -> DNS解析方式 -> 使用本机端口为5335的DNS服务. 注意: 默认使用PDNSD TCP查询并缓存, 该项的PDNSD的也运行在5335端口, 所以会导致冲突, 如果mosdns启动失败, 请先关闭ssr 然后选择"使用本机端口为5335的DNS服务"后再启动ssr , 或者更换mosdns的启动端口.
+![mosdns2](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns2.png?raw=true)
+![mosdns3](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns3.png?raw=true)
+![mosdns4](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns4.png?raw=true)
+
+
+6. 如果 linux系统 可以使用如下脚本在linux 系统上安装 mosdns 或 mosdns-cn. 安装完成后按照上面的步骤在路由器中设置DNS即可. 
+```bash 
+wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
+```
+7. 如果是 windows 系统, 可以从 [mosdns-cn 官方网站](https://github.com/IrineSistiana/mosdns-cn/releases/download/v1.2.3/mosdns-cn-windows-amd64.zip) 下载 mosdns-cn 压缩包直接解压后放到一个目录中. 再下载 [geosite文件](https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat) [geoip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat)  [cnip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat)  放到mosdns-cn解压的同一个目录中. 最后运行 ``` mosdns-cn -s :53 --blacklist-domain "geosite.dat:category-ads-all" --local-upstream https://223.5.5.5/dns-query --local-domain "geosite.dat:cn" --local-ip "geoip.dat:cn" --remote-upstream https://8.8.8.8/dns-query --remote-domain "geosite.dat:geolocation-!cn" ``` 即可.
+
+
+8. 如果是 windows 系统, 也可以直接下载打包好的 [mosdns-cn](https://wws.lanzout.com/i7pYR05e80eh) 解压后运行 run.bat 或 ``` mosdns-cn --config ./my-config.yaml ```
+
+9. 在 OpenWRT中可以在DHCP给客户端分配IP时, 直接给客户端赋予与路由器IP不同的DNS服务器, 这样无论通过上面方法架设好mosdns后, 把mosdns机器的IP填入下图.客户端就不用手动设置DNS了. OpenWRT管理菜单: 网络 -> 接口 -> LAN 点击"修改" 按钮 进入页面下部 "DHCP 服务器" 部分, 点击第二个tab "高级设置" -> DHCP 选项 填入6,192.168.1.5, 其中192.168.1.5改为mosdns的机器IP就可以了.  这样所有客户端会默认使用mosdns作为DNS服务器, 同时也不需要上面的设置 DHCP/DNS -> DNS 转发 的修改方法了.
+![mosdns5](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns5.png?raw=true)
+
+10. 具体参数可以参考官方网站 https://github.com/IrineSistiana/mosdns-cn
 
 ### DNS服务器列表大全
 

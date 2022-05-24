@@ -33,8 +33,6 @@ getLinuxOSRelease(){
         osReleaseVersionNo=$VERSION_ID
     fi
 
-    echo
-    echo " ================================================== "
     echo "OS: ${osInfo}, ${ID}, ${VERSION_ID}   CPU: $osArchitecture"
 }
 
@@ -46,12 +44,15 @@ getGithubLatestReleaseVersion(){
 
 
 mosdnsDownloadPath="/tmp"
+mosdnsLogFilePath="/tmp/mosdns.txt"
 mosdnsEtcPath="/etc/mosdns"
 
 getIPDKdownloadFilename(){
     # mosdnsIPK_array=($(wget -qO- https://op.supes.top/packages/x86_64/ | grep -E "mosdns|v2ray" | awk -F'<a href=\"' '/ipk/{print $2}' | cut -d\" -f1 | sort -V))
 
     mosdnsIPK_array=$(wget -qO- https://op.supes.top/packages/x86_64/ | grep -E "mosdns|v2ray" | awk -F'<a href=\"' '/ipk/{print $2}' | cut -d\" -f1 | sort -V)
+
+    echo " 准备下载并安装以下文件"
 
     for filename in ${mosdnsIPK_array}; do
 
@@ -75,12 +76,45 @@ getIPDKdownloadFilename(){
             v2rayGeoIpUrl1="https://op.supes.top/packages/x86_64/${v2rayGeoIpFilename}"
             echo "3 $v2rayGeoIpFilename"            
         else
-            echo
+            tempXXXX=""
         fi
     done
 }
 
 installMosdns(){
+    getLinuxOSRelease
+
+    echo
+    echo " ================================================== "
+
+    if [ "${osInfo}" = "OpenWrt" ]; then
+        if [ "${osArchitecture}" = "amd64" ]; then
+            echo " Prepare to install Mosdns on OpenWrt X86"
+            echo " 准备安装 OpenWrt X86 的 Mosdns, 通过 opkg 安装"
+        else
+            echo " Only support X86 on Openwrt, not support on Arm Openwrt ! "
+            echo " 只支持安装在X86的软路由, 不支持Arm 路由器, 请自行查找Arm路由器的带有Mosdns的固件 ! "
+            exit
+        fi
+    else
+        echo " ================================================== "
+        echo " For Other linux platform, please use the script below:  "
+        echo " 针对 非OpenWrt 的 linux 系统, 请使用如下脚本安装: "
+        echo " wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh "
+        echo
+        exit
+    fi
+
+    echo
+    echo " 请保证网络可以正常访问 github.com"
+    echo " 如果不能正常访问 github.com 将会导致下载文件失败从而无法正常安装"
+    echo " 请访问下面的链接 来检查是否可以正常访问 github.com"
+    echo " https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/direct-list.txt"
+    echo
+
+
+    cd "${mosdnsDownloadPath}" || exit
+
     mosdnsFilename1="mosdns_cee9e6d-55_x86_64.ipk"
     mosdnsLuciFilename1="luci-app-mosdns_git-22.142.44511-c664869_all.ipk"
 
@@ -109,6 +143,21 @@ installMosdns(){
     geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
 
+
+
+   
+    echo
+    echo " ================================================== "
+    echo " 请填写mosdns运行的端口号 默认端口5335"
+    echo
+    read -r -p "请填写mosdns运行的端口号? 默认直接回车为5335, 请输入纯数字:" isMosDNSServerPortInput
+    isMosDNSServerPortInput=${isMosDNSServerPortInput:-5335}
+
+    mosDNSServerPort="5335"
+    isNumberMosdnsPort=$(echo $mosDNSServerPort | grep -E '^[+-]?[0-9]+$')
+    if [ -n "${isNumberMosdnsPort}" ] ; then
+        mosDNSServerPort="${isMosDNSServerPortInput}"
+    fi
 
     echo
     echo " ================================================== "
@@ -161,7 +210,8 @@ EOM
 
 
     echo
-    echo "Downloading mosdns.  开始下载 mosdns.ipk 等相关文件"
+    echo " ================================================== "
+    echo " Downloading mosdns.  开始下载 mosdns.ipk 等相关文件"
     echo
     wget -O ${mosdnsDownloadPath}/${mosdnsFilename1} ${mosdnsUrl1}
     wget -O ${mosdnsDownloadPath}/${mosdnsLuciFilename1} ${mosdnsLuciUrl2}
@@ -171,38 +221,45 @@ EOM
 
 
     echo
-    echo "Downloading geosite and geoip. 开始下载 geosite.dat geoip.dat 等相关文件"
+    echo " Downloading cn.dat, geosite.dat, geoip.dat.  开始下载 cn.dat geosite.dat geoip.dat  等相关文件"
     echo
 
     wget -O ${mosdnsDownloadPath}/${geositeFilename} ${geositeUrl}
     wget -O ${mosdnsDownloadPath}/${geoipFilename} ${geoipeUrl}
     wget -O ${mosdnsDownloadPath}/${cnipFilename} ${cnipUrl}
 
+    if [ ! -f "${mosdnsDownloadPath}/${cnipFilename}" ]; then
+        echo
+        echo "下载失败, 请检查网络是否可以正常访问 gitHub.com"
+        echo "安装失败, 请检查网络后, 重新运行本脚本"
+        echo
+        exit 1
+    fi 
+
     echo
     echo "Install mosdns.ipk and luci-app-mosdns.ipk. 开始安装 mosdns.ipk luci-app-mosdns.ipk"
     echo
 
-    opkg install ${v2rayGeoSiteFilename}
-    opkg install ${v2rayGeoIpFilename}
+    # opkg install ${v2rayGeoSiteFilename}
+    # opkg install ${v2rayGeoIpFilename}
 
-    opkg install ${mosdnsFilename1}
-    opkg install ${mosdnsLuciFilename1}
+    # opkg install ${mosdnsFilename1}
+    # opkg install ${mosdnsLuciFilename1}
 
-    cd ${mosdnsDownloadPath}
 
     mkdir -p ${mosdnsEtcPath}
     cp -f ${mosdnsDownloadPath}/${geositeFilename} ${mosdnsEtcPath}
     cp -f ${mosdnsDownloadPath}/${geoipFilename} ${mosdnsEtcPath}
     cp -f ${mosdnsDownloadPath}/${cnipFilename} ${mosdnsEtcPath}
 
-    rm -f "/tmp/mosdns.txt"
+    rm -f "${mosdnsLogFilePath}"
     rm -f "${mosdnsEtcPath}/cus_config.yaml"
 
     cat > "${mosdnsEtcPath}/cus_config.yaml" <<-EOF    
 
 log:
   level: info
-  file: "/tmp/mosdns.txt"
+  file: "${mosdnsLogFilePath}"
 plugin:
   - tag: main_server
     type: server
@@ -211,13 +268,9 @@ plugin:
         - main_sequence
       server:
         - protocol: udp
-          addr: "[::1]:5335"
+          addr: ":${mosDNSServerPort}"
         - protocol: tcp
-          addr: "[::1]:5335"
-        - protocol: udp
-          addr: "127.0.0.1:5335"
-        - protocol: tcp
-          addr: "127.0.0.1:5335"
+          addr: ":${mosDNSServerPort}"
 
   - tag: main_sequence
     type: sequence
@@ -271,7 +324,7 @@ plugin:
   - tag: mem_cache
     type: cache
     args:
-      size: 2048
+      size: 4096
       # use redis as the backend cache
       # redis: 'redis://localhost:6379/0'
       # redis_timeout: 50
@@ -287,19 +340,17 @@ plugin:
   #       - 'api.miwifi.com 127.0.0.1'
   #       - 'www.baidu.com 0.0.0.0'
 
-
   - tag: forward_local
     type: fast_forward
     args:
       upstream:
-        - addr: "udp://114.114.114.114"
         - addr: "udp://223.5.5.5"
-        - addr: "https://dns.alidns.com/dns-query"
-          idle_timeout: 20
+          idle_timeout: 50
           trusted: true
-        - addr: "https://doh.pub/dns-query"
-          idle_timeout: 25
-          trusted: true
+        - addr: "udp://114.114.114.114"
+          idle_timeout: 50
+        - addr: "udp://119.29.29.29"
+          idle_timeout: 50
 
 
   - tag: forward_remote
@@ -308,11 +359,7 @@ plugin:
       upstream:
 ${addNewDNSServerIPText}
 ${addNewDNSServerDomainText}
-
         - addr: "udp://208.67.222.222"
-          trusted: true
-        - addr: "https://doh.opendns.com/dns-query"       
-          idle_timeout: 400
           trusted: true
 
         #- addr: "udp://172.105.216.54"   
@@ -328,13 +375,18 @@ ${addNewDNSServerDomainText}
           trusted: true
 
         - addr: "udp://185.121.177.177"
+          idle_timeout: 400
+          trusted: true        
         - addr: "udp://169.239.202.202"
           idle_timeout: 400
           trusted: true
 
         - addr: "udp://94.130.180.225"
+          idle_timeout: 400
+          trusted: true        
         - addr: "udp://78.47.64.161"
-          trusted: true
+          idle_timeout: 400
+          trusted: true 
         - addr: "tls://dns-dot.dnsforfamily.com"
         - addr: "https://dns-doh.dnsforfamily.com/dns-query"
           dial_addr: "94.130.180.225:443"
@@ -342,15 +394,16 @@ ${addNewDNSServerDomainText}
 
 
         - addr: "udp://101.101.101.101"
-          trusted: true
+          idle_timeout: 400
+          trusted: true 
         - addr: "udp://101.102.103.104"
+          idle_timeout: 400
           trusted: true 
         - addr: "tls://101.101.101.101"
         - addr: "https://dns.twnic.tw/dns-query"
           idle_timeout: 400
-          trusted: true
 
-        - addr: "udp://172.104.237.57"
+        # - addr: "udp://172.104.237.57"
 
         - addr: "udp://51.38.83.141"          
         - addr: "tls://dns.oszx.co"
@@ -406,34 +459,20 @@ EOF
 
 
     echo
-    echo "Install mosdns success! 安装mosdns成功!"
+    echo " ================================================== "
+    echo " Install mosdns success! 安装 mosdns 成功!"
+    echo " mosdns running at port ${mosDNSServerPort}! 运行端口: ${mosDNSServerPort}!"
+    echo " 查看访问日志: cat ${mosdnsLogFilePath}"
+
+    echo " 请进入OpenWRT管理菜单: 服务-> MosDNS -> MosDNS 配置文件选择 下拉框选择 自定义配置 !"
+    echo " 然后勾选 启用 复选框后, 点击 保存&应用 按钮 启动 MosDNS !"
+    echo " ================================================== "
     echo
 }
 
 main(){
-    checkArchitecture
-    getLinuxOSRelease
-
-    echo
-    echo " ================================================== "
-
-    if [ "${osInfo}" = "OpenWrt" ]; then
-        if [ "${osArchitecture}" = "amd64" ]; then
-            echo "Prepare to install Mosdns on OpenWrt X86"
-            echo "准备安装 OpenWrt X86 的 Mosdns, 通过 opkg 安装"
-        else
-            echo "Only support X86 on Openwrt, not support on Arm Openwrt ! "
-            echo "只支持安装在X86的软路由, 不支持Arm 路由器, 请自行查找Arm路由器的带有Mosdns的固件 ! "
-            exit
-        fi
-    else
-        echo "Only support OpenWrt! "
-        exit
-    fi
-
 
     installMosdns
-
 }
 
 main

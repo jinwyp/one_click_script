@@ -2521,9 +2521,10 @@ function installTrojanServer(){
         configSSLDomain=${configNginxSNIDomainTrojan}    
     fi
 
-    mkdir -p ${configTrojanBasePath}
+    rm -rf "${configTrojanBasePath}"
+    mkdir -p "${configTrojanBasePath}"
     cd ${configTrojanBasePath}
-    rm -rf ${configTrojanBasePath}/*
+
 
     downloadTrojanBin
 
@@ -4075,7 +4076,7 @@ EOM
     green " 3. 使用 WARP IPv6 解锁 推荐使用"
     green " 4. 通过转发到可解锁的v2ray或xray服务器解锁"
     echo
-    read -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
+    read -r -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockGoogleInput
     isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
 
     if [[ "${isV2rayUnlockWarpModeInput}" == "${isV2rayUnlockGoogleInput}" ]]; then
@@ -6612,18 +6613,549 @@ function upgradeV2rayUI(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+configMosdnsPath="/usr/local/bin/mosdns"
+isInstallMosdns="true"
+isinstallMosdnsName="mosdns"
+downloadFilenameMosdns="mosdns-linux-amd64.zip"
+downloadFilenameMosdnsCn="mosdns-cn-linux-amd64.zip"
+
+
+function downloadMosdns(){
+
+    rm -rf "${configMosdnsPath}"
+    mkdir -p "${configMosdnsPath}"
+    cd ${configMosdnsPath} || exit
+    
+    if [[ "${isInstallMosdns}" == "true" ]]; then
+        versionMosdns=$(getGithubLatestReleaseVersion "IrineSistiana/mosdns")
+
+        downloadFilenameMosdns="mosdns-linux-amd64.zip"
+
+        # https://github.com/IrineSistiana/mosdns/releases/download/v3.8.0/mosdns-linux-amd64.zip
+        # https://github.com/IrineSistiana/mosdns/releases/download/v3.8.0/mosdns-linux-arm64.zip
+        # https://github.com/IrineSistiana/mosdns/releases/download/v3.8.0/mosdns-linux-arm-7.zip
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameMosdns="mosdns-linux-arm-7.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameMosdns="mosdns-linux-arm64.zip"
+        fi
+        
+        downloadAndUnzip "https://github.com/IrineSistiana/mosdns/releases/download/v${versionMosdns}/${downloadFilenameMosdns}" "${configMosdnsPath}" "${downloadFilenameMosdns}"
+        ${sudoCmd} chmod +x "${configMosdnsPath}/mosdns"
+    
+    else
+        versionMosdnsCn=$(getGithubLatestReleaseVersion "IrineSistiana/mosdns-cn")
+
+        downloadFilenameMosdnsCn="mosdns-cn-linux-amd64.zip"
+
+        # https://github.com/IrineSistiana/mosdns-cn/releases/download/v1.2.3/mosdns-cn-linux-amd64.zip
+        # https://github.com/IrineSistiana/mosdns-cn/releases/download/v1.2.3/mosdns-cn-linux-arm64.zip
+        # https://github.com/IrineSistiana/mosdns-cn/releases/download/v1.2.3/mosdns-cn-linux-arm-7.zip
+        if [[ ${osArchitecture} == "arm" ]] ; then
+            downloadFilenameMosdnsCn="mosdns-cn-linux-arm-7.zip"
+        fi
+        if [[ ${osArchitecture} == "arm64" ]] ; then
+            downloadFilenameMosdnsCn="mosdns-cn-linux-arm64.zip"
+        fi
+
+        downloadAndUnzip "https://github.com/IrineSistiana/mosdns-cn/releases/download/v${versionMosdnsCn}/${downloadFilenameMosdnsCn}" "${configMosdnsPath}" "${downloadFilenameMosdnsCn}"
+        ${sudoCmd} chmod +x "${configMosdnsPath}/mosdns-cn"
+    fi
+
+    if [ ! -f "${configMosdnsPath}/${isinstallMosdnsName}" ]; then
+        echo
+        red "下载失败, 请检查网络是否可以正常访问 gitHub.com"
+        red "请检查网络后, 重新运行本脚本!"
+        echo
+        exit 1
+    fi 
+
+    echo
+    green " Downloading files: cn.dat, geosite.dat, geoip.dat. "
+    green " 开始下载文件: cn.dat, geosite.dat, geoip.dat  等相关文件"
+    echo
+
+    # versionV2rayRulesDat=$(getGithubLatestReleaseVersion "Loyalsoldier/v2ray-rules-dat")
+    # geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geosite.dat"
+    # geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geoip.dat"
+    # cnipUrl="https://github.com/Loyalsoldier/geoip/releases/download/202205120123/cn.dat"
+
+    geositeFilename="geosite.dat"
+    geoipFilename="geoip.dat"
+    cnipFilename="cn.dat"
+
+    geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+    geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
+
+
+    wget -O ${configMosdnsPath}/${geositeFilename} ${geositeUrl}
+    wget -O ${configMosdnsPath}/${geoipFilename} ${geoipeUrl}
+    wget -O ${configMosdnsPath}/${cnipFilename} ${cnipUrl}
+
+}
+
+
 function installMosdns(){
 
-    if [ -f "/usr/bin/mosdns" ]; then
+    if [ "${osInfo}" = "OpenWrt" ]; then
+        echo " ================================================== "
+        echo " For Openwrt X86, please use the script below:  "
+        echo " 针对 OpenWrt X86 系统, 请使用如下脚本安装: "
+        echo " wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/openwrt.sh && chmod +x ./openwrt.sh && ./openwrt.sh "
+        echo
+        exit
+    fi
+    
+    # https://askubuntu.com/questions/27213/what-is-the-linux-equivalent-to-windows-program-files
+
+
+    if [ -f "${configMosdnsPath}/mosdns" ]; then
+        echo
+        green " =================================================="
+        green " 检测到 mosdns 已安装, 退出安装! "
+        echo
+        exit 1
+    fi
+
+
+    if [ -f "${configMosdnsPath}/mosdns-cn" ]; then
+        echo
+        green " =================================================="
+        green " 检测到 mosdns-cn 已安装, 退出安装! "
+        echo
+        exit 1        
+    fi
+
+    echo
+    green " =================================================="
+    green " 请选择安装 Mosdns 还是 Mosdns-cn DNS 服务器:"
+    echo
+    green " 1. Mosdns 配置规则比较复杂"
+    green " 2. Mosdns-cn, 容易配置, 相当于Mosdns配置简化版 推荐使用"
+    echo
+    read -r -p "请选择Mosdns还是Mosdns-cn, 默认直接回车安装Mosdns-cn, 请输入纯数字:" isInstallMosdnsServerInput
+    isInstallMosdnsServerInput=${isInstallMosdnsServerInput:-2}
+
+    if [[ "${isInstallMosdnsServerInput}" == "1" ]]; then
+        isInstallMosdns="true"
+        isinstallMosdnsName="mosdns"
+    else
+        isInstallMosdns="false"
+        isinstallMosdnsName="mosdns-cn"        
+    fi
+
+    echo
+    green " ================================================== "
+    green "    开始安装 ${isinstallMosdnsName} !"
+    green " ================================================== "
+    echo
+    downloadMosdns
+
+
+    echo
+    green " ================================================== "
+    green " 请填写mosdns运行的端口号 默认端口5335"
+    green " DNS服务器常用为53端口, 推荐输入53"
+    yellow " 软路由一般内置DNS服务器, 如果在软路由安装 为避免冲突 默认为5335"
+    echo
+    read -r -p "请填写mosdns运行的端口号? 默认直接回车为5335, 请输入纯数字:" isMosDNSServerPortInput
+    isMosDNSServerPortInput=${isMosDNSServerPortInput:-5335}
+
+    mosDNSServerPort="5335"
+    reNumber='^[0-9]+$'
+
+    if [[ "${isMosDNSServerPortInput}" =~ ${reNumber} ]] ; then
+        mosDNSServerPort="${isMosDNSServerPortInput}"
+    fi
+
+
+    echo
+    green " ================================================== "
+    green " 是否添加自建的DNS服务器, 默认直接回车不添加"
+    green " 选是为添加DNS服务器, 建议先架设好DNS服务器后再运行此脚本"
+    green " 本脚本默认已经内置了多个DNS服务器地址"
+    echo
+    read -r -p "是否添加自建的DNS服务器? 默认直接回车为不添加, 请输入[y/N]:" isAddNewDNSServerInput
+    isAddNewDNSServerInput=${isAddNewDNSServerInput:-n}
+
+    addNewDNSServerIPMosdnsCnText=""
+    addNewDNSServerDomainMosdnsCnText=""
+
+    addNewDNSServerIPText=""
+    addNewDNSServerDomainText=""
+    if [[ "$isAddNewDNSServerInput" == [Nn] ]]; then
+        echo 
+    else
+        echo
+        green " ================================================== "
+        green " 请输入自建的DNS服务器IP 格式例如 1.1.1.1"
+        green " 请保证端口53 提供DNS解析服务, 如果是非53端口请填写端口号, 格式例如 1.1.1.1:8053"
+        echo 
+        read -r -p "请输入自建DNS服务器IP地址, 请输入:" isAddNewDNSServerIPInput
+
+        if [ -n "${isAddNewDNSServerIPInput}" ]; then
+            addNewDNSServerIPMosdnsCnText="\"udp://${isAddNewDNSServerIPInput}\", "
+            read -r -d '' addNewDNSServerIPText << EOM
+        - addr: "udp://${isAddNewDNSServerIPInput}"
+          idle_timeout: 500
+          trusted: true
+EOM
+
+        fi
+
+        echo
+        green " ================================================== "
+        green " 请输入自建的DNS服务器的域名 用于提供DOH服务, 格式例如 www.dns.com"
+        green " 请保证服务器在 /dns-query 提供DOH服务, 例如 https://www.dns.com/dns-query"
+        echo 
+        read -r -p "请输入自建DOH服务器的域名, 不要输入https://, 请直接输入域名:" isAddNewDNSServerDomainInput
+
+        if [ -n "${isAddNewDNSServerDomainInput}" ]; then
+            addNewDNSServerDomainMosdnsCnText="\"https://${isAddNewDNSServerDomainInput}/dns-query\", "
+            read -r -d '' addNewDNSServerDomainText << EOM
+        - addr: "https://${isAddNewDNSServerDomainInput}/dns-query"       
+          idle_timeout: 400
+          trusted: true
+EOM
+        fi
+    fi
+
+
+    if [[ "${isInstallMosdns}" == "true" ]]; then
+
+        rm -f "${configMosdnsPath}/config.yaml"
+
+        cat > "${configMosdnsPath}/config.yaml" <<-EOF    
+
+log:
+  level: info
+  file: "${configMosdnsPath}/mosdns.log"
+  err_file: "${configMosdnsPath}/mosdns_error.log"
+  info_file: "${configMosdnsPath}/mosdns_info.log" 
+plugin:
+  - tag: main_server
+    type: server
+    args:
+      entry:
+        - main_sequence
+      server:
+        - protocol: udp
+          addr: ":${mosDNSServerPort}"
+        - protocol: tcp
+          addr: ":${mosDNSServerPort}"
+
+  - tag: main_sequence
+    type: sequence
+    args:
+      exec:
+        # ad block
+        # - if:
+        #     - query_is_ad_domain
+        #   exec:
+        #     - _block_with_nxdomain
+        #     - _return
+
+        # hosts map
+        # - map_hosts
+
+        - mem_cache
+
+        - if:
+            - query_is_gfw_domain
+          exec:
+            - forward_remote
+            - _return
+
+        - if:
+            - query_is_local_domain
+            - "!_query_is_common"
+          exec:
+            - forward_local
+            - _return 
+
+        - if:
+            - query_is_non_local_domain
+          exec:
+            - _prefer_ipv4
+            - forward_remote
+            - _return
+
+        - primary:
+            - forward_local
+            - if:
+                - "!response_has_local_ip"
+              exec:
+                - _drop_response
+          secondary:
+            - _prefer_ipv4
+            - forward_remote
+          fast_fallback: 200
+          always_standby: true
+
+  - tag: mem_cache
+    type: cache
+    args:
+      size: 4096
+      # use redis as the backend cache
+      # redis: 'redis://localhost:6379/0'
+      # redis_timeout: 50
+      lazy_cache_ttl: 86400
+      lazy_cache_reply_ttl: 30
+
+  # hosts map
+  # - tag: map_hosts
+  #   type: hosts
+  #   args:
+  #     hosts:
+  #       - 'google.com 0.0.0.0'
+  #       - 'api.miwifi.com 127.0.0.1'
+  #       - 'www.baidu.com 0.0.0.0'
+
+  - tag: forward_local
+    type: fast_forward
+    args:
+      upstream:
+        - addr: "udp://223.5.5.5"
+          idle_timeout: 50
+          trusted: true
+        - addr: "udp://114.114.114.114"
+          idle_timeout: 50
+        - addr: "udp://119.29.29.29"
+          idle_timeout: 50
+
+  - tag: forward_remote
+    type: fast_forward
+    args:
+      upstream:
+${addNewDNSServerIPText}
+${addNewDNSServerDomainText}
+        - addr: "udp://208.67.222.222"
+          trusted: true
+
+        #- addr: "udp://172.105.216.54"   
+        - addr: "udp://5.2.75.231"
+          idle_timeout: 400
+          trusted: true
+
+        - addr: "udp://1.0.0.1"
+          trusted: true
+        - addr: "tls://1dot1dot1dot1.cloudflare-dns.com"
+        - addr: "https://dns.cloudflare.com/dns-query"
+          idle_timeout: 400
+          trusted: true
+
+        - addr: "udp://185.121.177.177"
+          idle_timeout: 400
+          trusted: true        
+        - addr: "udp://169.239.202.202"
+          idle_timeout: 400
+          trusted: true
+
+        - addr: "udp://94.130.180.225"
+          idle_timeout: 400
+          trusted: true        
+        - addr: "udp://78.47.64.161"
+          idle_timeout: 400
+          trusted: true 
+        - addr: "tls://dns-dot.dnsforfamily.com"
+        - addr: "https://dns-doh.dnsforfamily.com/dns-query"
+          dial_addr: "94.130.180.225:443"
+          idle_timeout: 400
+
+        - addr: "udp://101.101.101.101"
+          idle_timeout: 400
+          trusted: true 
+        - addr: "udp://101.102.103.104"
+          idle_timeout: 400
+          trusted: true 
+        - addr: "tls://101.101.101.101"
+        - addr: "https://dns.twnic.tw/dns-query"
+          idle_timeout: 400
+
+        # - addr: "udp://172.104.237.57"
+
+        - addr: "udp://51.38.83.141"          
+        - addr: "tls://dns.oszx.co"
+        - addr: "https://dns.oszx.co/dns-query"
+          idle_timeout: 400 
+
+        - addr: "udp://176.9.93.198"
+        - addr: "udp://176.9.1.117"                  
+        - addr: "tls://dnsforge.de"
+        - addr: "https://dnsforge.de/dns-query"
+          idle_timeout: 400
+
+        - addr: "udp://88.198.92.222"                  
+        - addr: "tls://dot.libredns.gr"
+        - addr: "https://doh.libredns.gr/dns-query"
+          idle_timeout: 400 
+
+
+  - tag: query_is_local_domain
+    type: query_matcher
+    args:
+      domain:
+        - "ext:${configMosdnsPath}/${geositeFilename}:cn"
+
+  - tag: query_is_gfw_domain
+    type: query_matcher
+    args:
+      domain:
+        - "ext:${configMosdnsPath}/${geositeFilename}:gfw"
+
+  - tag: query_is_non_local_domain
+    type: query_matcher
+    args:
+      domain:
+        - "ext:${configMosdnsPath}/${geositeFilename}:geolocation-!cn"
+
+  - tag: query_is_ad_domain
+    type: query_matcher
+    args:
+      domain:
+        - "ext:${configMosdnsPath}/${geositeFilename}:category-ads-all"
+
+  - tag: response_has_local_ip
+    type: response_matcher
+    args:
+      ip:
+        # 使用默认geoip.dat文件
+        # - "ext:${configMosdnsPath}/${geoipFilename}:cn"
+        # 使用高性能cn.dat文件, 需要下载对应的文件
+        - "ext:${configMosdnsPath}/${cnipFilename}:cn"
+
+EOF
+
+        ${configMosdnsPath}/mosdns -s install -c "${configMosdnsPath}/config.yaml" -dir "${configMosdnsPath}" 
+        ${configMosdnsPath}/mosdns -s start
+
+
+
+    else
+
+
+        rm -f "${configMosdnsPath}/config_mosdns_cn.yaml"
+
+        cat > "${configMosdnsPath}/config_mosdns_cn.yaml" <<-EOF    
+server_addr: ":${mosDNSServerPort}"
+cache_size: 0
+lazy_cache_ttl: 0
+lazy_cache_reply_ttl: 0
+redis_cache: ""
+min_ttl: 0
+max_ttl: 0
+hosts: []
+arbitrary: []
+blacklist_domain: []
+insecure: false
+ca: []
+debug: false
+log_file: "${configMosdnsPath}/mosdns-cn.log"
+upstream: []
+local_upstream: ["udp://223.5.5.5", "udp://119.29.29.29"]
+local_ip: ["${configMosdnsPath}/${cnipFilename}:cn"]
+local_domain: []
+local_latency: 50
+remote_upstream: [${addNewDNSServerIPMosdnsCnText}  ${addNewDNSServerDomainMosdnsCnText}  "udp://1.0.0.1", "udp://208.67.222.222", "udp://5.2.75.231", "udp://185.121.177.177", "udp://169.239.202.202"]
+remote_domain: ["${configMosdnsPath}/${geositeFilename}:geolocation-!cn"]
+working_dir: "${configMosdnsPath}"
+cd2exe: false
+
+EOF
+
+        ${configMosdnsPath}/mosdns-cn --service install --config "${configMosdnsPath}/config_mosdns_cn.yaml" --dir "${configMosdnsPath}" 
+
+        ${configMosdnsPath}/mosdns-cn --service start
+    fi
+
+    echo 
+    green " =================================================="
+    green " ${isinstallMosdnsName} 安装成功! 运行端口: ${mosDNSServerPort}"
+    echo
+    green " 启动: systemctl start ${isinstallMosdnsName}   停止: systemctl stop ${isinstallMosdnsName}"  
+    green " 重启: systemctl restart ${isinstallMosdnsName}"
+    green " 查看状态: systemctl status ${isinstallMosdnsName} "
+    green " 查看log: journalctl -n 50 -u ${isinstallMosdnsName} "
+    green " 查看访问日志: cat  ${configMosdnsPath}/${isinstallMosdnsName}.log"
+
+    # green " 启动命令: ${configMosdnsPath}/${isinstallMosdnsName} -s start -dir ${configMosdnsPath} "
+    # green " 停止命令: ${configMosdnsPath}/${isinstallMosdnsName} -s stop -dir ${configMosdnsPath} "
+    # green " 重启命令: ${configMosdnsPath}/${isinstallMosdnsName} -s restart -dir ${configMosdnsPath} "
+    green " =================================================="
+
+}
+
+function removeMosdns(){
+    if [[ -f "${configMosdnsPath}/mosdns" || -f "${configMosdnsPath}/mosdns-cn" ]]; then
+        if [[ -f "${configMosdnsPath}/mosdns" ]]; then
+            isInstallMosdns="true"
+            isinstallMosdnsName="mosdns"
+        fi
+
+        if [ -f "${configMosdnsPath}/mosdns-cn" ]; then
+            isInstallMosdns="false"
+            isinstallMosdnsName="mosdns-cn"
+        fi
+
+        echo
+        green " =================================================="
+        green " 准备卸载已安装的 ${isinstallMosdnsName} "
+        green " =================================================="
+        echo
+
+        if [[ "${isInstallMosdns}" == "true" ]]; then
+            ${configMosdnsPath}/${isinstallMosdnsName} -s stop 
+            ${configMosdnsPath}/${isinstallMosdnsName} -s uninstall 
+        else
+            ${configMosdnsPath}/mosdns-cn --service stop
+            ${configMosdnsPath}/mosdns-cn --service uninstall
+
+        fi
+
+        rm -rf "${configMosdnsPath}"
+
+        echo
+        green " ================================================== "
+        green "  ${isinstallMosdnsName} 卸载完毕 !"
+        green " ================================================== "
+
+    else
+        echo
+        red " 系统没有安装 mosdns, 退出卸载"
         echo
     fi
 
-    green " ================================================== "
-    yellow " "
-    green " ================================================== "
-
-
 }
+
+
+
+
 
 
 
@@ -7032,7 +7564,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-4-29 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-5-25 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -7060,16 +7592,18 @@ function start_menu(){
     echo
     green " 25. 查看已安装的配置和用户密码等信息"
     green " 26. 申请免费的SSL证书"
-    green " 27. 安装DNS国内国外分流服务器 mosdns"
-    green " 28. 安装DNS服务器 AdGuardHome 支持去广告"
-    green " 29. 给 AdGuardHome 申请免费的SSL证书, 并开启DOH与DOT"
     green " 30. 子菜单 安装 trojan 和 v2ray 可视化管理面板, VPS测速工具, Netflix测试解锁工具, 安装宝塔面板等"
     green " =================================================="
-    green " 31. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
-    green " 32. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
-    green " 33. 修改SSH 登陆端口号"
-    green " 34. 设置时区为北京时间"
-    green " 35. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
+    green " 31. 安装DNS服务器 AdGuardHome 支持去广告"
+    green " 32. 给 AdGuardHome 申请免费的SSL证书, 并开启DOH与DOT"    
+    green " 33. 安装DNS国内国外分流服务器 mosdns"    
+    red " 34 卸载 mosdns DNS服务器 "
+    echo
+    green " 41. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
+    green " 42. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
+    green " 43. 修改SSH 登陆端口号"
+    green " 44. 设置时区为北京时间"
+    green " 45. 用 VI 编辑 authorized_keys 文件 填入公钥, 用于SSH免密码登录 增加安全性"
     echo
     green " 88. 升级脚本"
     green " 0. 退出脚本"
@@ -7078,7 +7612,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray Installation | 2022-4-29 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray Installation | 2022-5-25 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
@@ -7106,16 +7640,19 @@ function start_menu(){
     echo
     green " 25. Show info and password for installed trojan and v2ray"
     green " 26. Get a free SSL certificate for one or multiple domains"
-    green " 27. Install DNS server MosDNS"
-    green " 28. Install AdGuardHome ads & trackers blocking DNS server "
-    green " 29. Get free SSL certificate for AdGuardHome and enable DOH/DOT "
     green " 30. Submenu. install trojan and v2ray UI admin panel, VPS speedtest tools, Netflix unlock tools. Miscellaneous tools"
     green " =================================================="
-    green " 31. Install Oh My Zsh and zsh-autosuggestions plugin, Micro editor"
-    green " 32. Enable root user login SSH, Some VPS disable root login as default, use this option to enable"
-    green " 33. Modify SSH login port number. Secure your VPS"
-    green " 34. Set timezone to Beijing time"
-    green " 35. Using VI open authorized_keys file, enter your public key. Then save file. In order to login VPS without Password"
+    green " 31. Install AdGuardHome, ads & trackers blocking DNS server "
+    green " 32. Get free SSL certificate for AdGuardHome and enable DOH/DOT "
+    green " 33. Install DNS server MosDNS"
+    red " 34. Remove DNS server MosDNS"
+
+    echo
+    green " 41. Install Oh My Zsh and zsh-autosuggestions plugin, Micro editor"
+    green " 42. Enable root user login SSH, Some VPS disable root login as default, use this option to enable"
+    green " 43. Modify SSH login port number. Secure your VPS"
+    green " 44. Set timezone to Beijing time"
+    green " 45. Using VI open authorized_keys file, enter your public key. Then save file. In order to login VPS without Password"
     echo
     green " 88. upgrade this script to latest version"
     green " 0. exit"
@@ -7217,40 +7754,43 @@ function start_menu(){
         26 )
             installTrojanV2rayWithNginx
         ;;
-        27 )
-            installMosdns
-        ;;
-        28 )
-            installAdGuardHome
-        ;;
-        29 )
-            getAdGuardHomeSSLCertification "$@"
-        ;;
         30 )
             startMenuOther
-        ;;        
+        ;;
         31 )
+            installAdGuardHome
+        ;;
+        32 )
+            getAdGuardHomeSSLCertification "$@"
+        ;;        
+        33 )
+            installMosdns
+        ;;        
+        34 )
+            removeMosdns
+        ;;
+        41 )
             setLinuxDateZone
             installPackage
             installSoftEditor
             installSoftOhMyZsh
         ;;
-        32 )
+        42 )
             setLinuxRootLogin
             sleep 4s
             start_menu
         ;;
-        33 )
+        43 )
             changeLinuxSSHPort
             sleep 10s
             start_menu
         ;;
-        34 )
+        44 )
             setLinuxDateZone
             sleep 4s
             start_menu
         ;;
-        35 )
+        45 )
             editLinuxLoginWithPublicKey
         ;;
 
