@@ -105,8 +105,8 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 ### Mosdns
 ### 分流国内和国外的DNS服务解析
 
-1. 建议有条件的请先搭建DNS服务器. 然后再安装mosdns 进行DNS分流. 没有条件搭建DNS服务器也不用担心, 本脚本已经内置多个DNS服务器地址 
-2. 通过使用mosdns 或 mosdns-cn 可以让国内的网址走国内的DNS解析, 国外的网址走国外的DNS解析.   安装mosdns 分为 [Openwrt X86版本](#openwrt), [linux 版本](#linux) 或 [windows 版本](#windows). 建议有软路由的直接在软路由安装Openwrt X86版本.
+1. 建议有条件的请先按照上面教程搭建AdGuardHome DNS服务器. 然后再安装mosdns 进行DNS分流. 没有条件搭建DNS服务器也不用担心, 本脚本已经内置多个DNS服务器地址 
+2. 通过使用mosdns 或 mosdns-cn 可以让国内的网址走国内的DNS解析, 国外的网址走国外的DNS解析. 同时也不用在浏览器里面设置DOH了 (上面教程里浏览器设置部分不需要了).  安装mosdns 分为 [Openwrt X86版本](#openwrt), [linux 版本](#linux) 或 [windows 版本](#windows). 建议有软路由的直接在软路由安装Openwrt X86版本.
 
 #### openwrt
 3. 如果使用x86 openwrt 软路由, 可以直接使用 SSH登录到软路由上 使用如下脚本安装mosdns. 如果已经安装过mosdns 可以在OpenWRT中先删除mosdns. 在openwrt管理菜单 系统 -> 软件包 -> 过滤器  里面 搜索 mosdns 有两个结果 一个是mosdns 一个是 luci-app-mosdns  2个都点击移除 然后再用下面脚本重新安装就可以了
@@ -135,7 +135,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 7. 如果是 windows 系统, 可以从 [mosdns-cn 官方网站](https://github.com/IrineSistiana/mosdns-cn/releases/download/v1.2.3/mosdns-cn-windows-amd64.zip) 下载 mosdns-cn 压缩包直接解压后放到一个目录中. 再下载 [geosite文件](https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat) [geoip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat)  [cnip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat)  放到mosdns-cn解压的同一个目录中. 最后运行 ``` mosdns-cn -s :53 --blacklist-domain "geosite.dat:category-ads-all" --local-upstream https://223.5.5.5/dns-query --local-domain "geosite.dat:cn" --local-ip "geoip.dat:cn" --remote-upstream https://8.8.8.8/dns-query --remote-domain "geosite.dat:geolocation-!cn" ``` 即可.
 
 
-8. 如果是 windows 系统, 也可以直接下载打包好的 [mosdns-cn](https://wws.lanzout.com/i7pYR05e80eh) 解压后运行 run.bat 或 ``` mosdns-cn --config ./my-config.yaml ```
+8. 如果是 windows 系统, 也可以直接下载打包好的 [mosdns-cn](https://wws.lanzout.com/i7pYR05e80eh) 解压后运行 run.bat 或运行命令 ``` mosdns-cn --config ./config_mosdns_cn.yaml ```
 
 9. 在 OpenWRT中可以在DHCP给客户端分配IP时, 直接给客户端赋予与路由器IP不同的DNS服务器, 这样无论通过上面方法架设好mosdns后, 把mosdns机器的IP填入下图.客户端就不用手动设置DNS了. OpenWRT管理菜单: 网络 -> 接口 -> LAN 点击"修改" 按钮 进入页面下部 "DHCP 服务器" 部分, 点击第二个tab "高级设置" -> DHCP 选项 填入6,192.168.1.5, 其中192.168.1.5改为mosdns的机器IP就可以了.  这样所有客户端会默认使用mosdns作为DNS服务器, 同时也不需要上面的设置 DHCP/DNS -> DNS 转发 的修改方法了.
 ![mosdns5](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns5.png?raw=true)
