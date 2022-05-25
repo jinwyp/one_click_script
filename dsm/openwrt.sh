@@ -240,11 +240,11 @@ EOM
     echo "Install mosdns.ipk and luci-app-mosdns.ipk. 开始安装 mosdns.ipk luci-app-mosdns.ipk"
     echo
 
-    # opkg install ${v2rayGeoSiteFilename}
-    # opkg install ${v2rayGeoIpFilename}
+    opkg install ${v2rayGeoSiteFilename}
+    opkg install ${v2rayGeoIpFilename}
 
-    # opkg install ${mosdnsFilename1}
-    # opkg install ${mosdnsLuciFilename1}
+    opkg install ${mosdnsFilename1}
+    opkg install ${mosdnsLuciFilename1}
 
 
     mkdir -p ${mosdnsEtcPath}
