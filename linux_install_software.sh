@@ -1846,11 +1846,16 @@ EOF
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
     ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
 
-    # /var/lib/nginx/tmp/client_body 权限问题
+    # /var/lib/nginx/tmp/client_body /var/lib/nginx/tmp/proxy 权限问题
+    mkdir -p "${nginxTempPath}/client_body"
+    mkdir -p "${nginxTempPath}/proxy"
+    
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxTempPath}
     ${sudoCmd} chmod -R 771 ${nginxTempPath}
 
     ${sudoCmd} systemctl start nginx.service
+
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxTempPath}
 
     echo
     green " ================================================== "
