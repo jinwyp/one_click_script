@@ -43,6 +43,7 @@ getGithubLatestReleaseVersion(){
 }
 
 
+
 mosdnsDownloadPath="/tmp"
 mosdnsLogFilePath="/tmp/mosdns.txt"
 mosdnsEtcPath="/etc/mosdns"
