@@ -915,7 +915,7 @@ function removeDocker(){
     rm -fr /var/lib/docker/
 
 
-    rm -f `which dc` 
+    rm -f "$(which dc)" 
     rm -f "/usr/bin/docker-compose"
     rm -f /usr/local/bin/docker-compose
 
@@ -1544,6 +1544,7 @@ EOF
     systemctl start cloudreve
     systemctl enable cloudreve
 
+    ${configCloudreveCommandFolder}/cloudreve -eject
 
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
     ${sudoCmd} chmod -R 771 ${configCloudrevePath}
@@ -1714,6 +1715,9 @@ function installWebServerNginx(){
 EOM
 
     elif [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
+        mkdir -p ${configWebsitePath}/static
+        cp -f -R ${configCloudreveCommandFolder}/statics/* ${configWebsitePath}/static
+        mv -f ${configWebsitePath}/static/static/* ${configWebsitePath}/static
 
         mkdir -p ${nginxCloudreveStoragePath}
         ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxCloudreveStoragePath}
@@ -1738,6 +1742,22 @@ EOM
         
         root $configWebsitePath;
         index index.php index.html index.htm;
+
+        location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$ {
+            expires      3d;
+            error_log /dev/null;
+            access_log /dev/null;
+        }
+        
+        location ~ .*\.(js|css)?$ {
+            expires      24h;
+            error_log /dev/null;
+            access_log /dev/null; 
+        }
+        
+        location /static {
+            root $configWebsitePath;
+        }
 
         location / {
 
@@ -1810,7 +1830,7 @@ EOM
 ${nginxConfigNginxModuleInput}
 
 user  ${nginxUser};
-worker_processes  f;
+worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 events {
@@ -3589,6 +3609,10 @@ function editAirUniverseXrayConfig(){
 function removeAirUniverse(){
     rm -rf /usr/local/etc/xray
     /root/airu_install.sh uninstall
+    rm -f /usr/bin/airu 
+    crontab -r 
+    green " crontab 定时任务 已清除!"
+    echo
 }
 
 

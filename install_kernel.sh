@@ -1670,10 +1670,11 @@ function getLatestUbuntuKernelVersion(){
     for ver in "${ubuntuKernelLatestVersionArray[@]}"; do
         
         if [[ ${ver} == *"${linuxKernelToInstallVersion}"* ]]; then
-            # echo "符合所选版本的Linux 内核版本: ${ver}"
+            # echo "符合所选版本的Linux 内核版本: ${ver}, 选择的版本为 ${linuxKernelToInstallVersion}"
             ubuntuKernelVersion=${ver}
         fi
     done
+    
     
     green "即将安装的内核版本: ${ubuntuKernelVersion}"
     ubuntuDownloadUrl="https://kernel.ubuntu.com/~kernel-ppa/mainline/v${ubuntuKernelVersion}/amd64"
@@ -1812,7 +1813,7 @@ function installDebianUbuntuKernel(){
             ${sudoCmd} dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb 
         fi
         
-        if [ "${linuxKernelToInstallVersion}" = "5.17" ]; then 
+        if [[ "${linuxKernelToInstallVersion}" == "5.17" || "${linuxKernelToInstallVersion}" == "5.10.118" || "${linuxKernelToInstallVersion}" == "5.15" ]]; then 
             if [ -f "${userHomePath}/libssl3_3.0.2-0ubuntu1_amd64.deb" ]; then
                 green "文件已存在, 不需要下载, 文件原下载地址: http://mirrors.kernel.org/ubuntu/pool/main/o/openssl/libssl3_3.0.2-0ubuntu1_amd64.deb "
             else 
@@ -3134,7 +3135,8 @@ function start_menu(){
         green " 44. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
         green " 45. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
         green " 46. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
-        green " 47. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
+        green " 47. 安装 内核 5.15, 通过 Ubuntu kernel mainline 安装"
+        green " 48. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
 
         echo
         green " 51. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
@@ -3218,7 +3220,8 @@ function start_menu(){
         green " 44. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
         green " 45. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
         green " 46. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
-        green " 47. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
+        green " 47. Install linux kernel 5.15, download and install from Ubuntu kernel mainline"
+        green " 48. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
         echo
         green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
         green " 52. Install XanMod kernel 5.15, from XanMod repository source "  
@@ -3360,10 +3363,14 @@ function start_menu(){
             installKernel
         ;;
         46 )
-            linuxKernelToInstallVersion="5.10.113"
+            linuxKernelToInstallVersion="5.10.118"
             installKernel
         ;;
         47 )
+            linuxKernelToInstallVersion="5.15"
+            installKernel
+        ;;
+        48 )
             linuxKernelToInstallVersion="5.17"
             installKernel
         ;;        
