@@ -1216,7 +1216,7 @@ function renewCertificationWithAcme(){
                     ${configSSLAcmeScriptPath}/acme.sh --revoke -d ${configSSLRenewDomain} --ecc
                     ${configSSLAcmeScriptPath}/acme.sh --remove -d ${configSSLRenewDomain} --ecc
 
-                    rm -rf ${configSSLAcmeScriptPath}/acme.sh/${configSSLRenewDomain}_ecc
+                    rm -rf "${configSSLAcmeScriptPath}/${configSSLRenewDomain}_ecc"
                     echo
                     green " 域名 ${configSSLRenewDomain} 的证书已经删除成功!"
                 fi  

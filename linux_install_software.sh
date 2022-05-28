@@ -1053,6 +1053,7 @@ acmeSSLDNSProvider="dns_cf"
 
 configRanPath="${HOME}/ran"
 configSSLAcmeScriptPath="${HOME}/.acme.sh"
+configWebsiteFatherPath="/nginxweb"
 configSSLCertPath="${configWebsiteFatherPath}/cert"
 configSSLCertPathV2board="${configWebsiteFatherPath}/cert/v2board"
 configSSLCertKeyFilename="server.key"
@@ -1625,7 +1626,7 @@ function removeCloudreve(){
 
 
 
-configWebsiteFatherPath="/nginxweb"
+
 configWebsitePath="${configWebsiteFatherPath}/html"
 nginxAccessLogFilePath="${configWebsiteFatherPath}/nginx-access.log"
 nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
