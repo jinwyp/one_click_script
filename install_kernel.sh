@@ -2713,10 +2713,11 @@ function removeWireguard(){
 
         [ -d "/etc/wireguard" ] && ("rm -rf /etc/wireguard")
 
-        cp -f ${configWireGuardDNSBackupFilePath} /etc/resolv.conf
-
+        
         sleep 2
         modprobe -r wireguard
+
+        cp -f ${configWireGuardDNSBackupFilePath} /etc/resolv.conf
 
         green " ================================================== "
         green "  Wireguard 和 Cloudflare WARP 命令行工具 Wgcf 卸载完毕 !"
