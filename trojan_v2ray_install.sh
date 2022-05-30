@@ -783,6 +783,10 @@ function vps_netflixgo(){
 
 function vps_superspeed(){
     bash <(curl -Lso- https://git.io/superspeed_uxh)
+    # bash <(curl -Lso- https://git.io/Jlkmw)
+    # https://github.com/coolaj/sh/blob/main/speedtest.sh
+
+
     # bash <(curl -Lso- https://raw.githubusercontent.com/uxh/superspeed/master/superspeed.sh)
 
     # bash <(curl -Lso- https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh)
@@ -802,7 +806,8 @@ function vps_yabs(){
 	curl -sL yabs.sh | bash
 }
 function vps_bench(){
-	wget -N --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh && chmod +x bench.sh && bash bench.sh
+    wget -N --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/bench.sh && chmod +x bench.sh && bash bench.sh
+	# wget -N --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh && chmod +x bench.sh && bash bench.sh
 }
 function vps_bench_dedicated(){
     # bash -c "$(wget -qO- https://github.com/Aniverse/A/raw/i/a)"
