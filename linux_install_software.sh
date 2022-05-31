@@ -1436,6 +1436,44 @@ function getHTTPSCertificateStep1(){
 
 
 
+function installAlist(){
+    echo
+    green " =================================================="
+    green " 请选择 安装/更新/删除 Alist "
+    green " 1. 安装"
+    green " 2. 更新"  
+    green " 3. 删除"     
+    echo
+    read -p "请输入纯数字, 默认为安装:" languageInput
+    
+    case "${languageInput}" in
+        1 )
+            curl -fsSL "https://nn.ci/alist.sh" | bash -s install
+        ;;
+        2 )
+            curl -fsSL "https://nn.ci/alist.sh" | bash -s update
+        ;;
+        3 )
+            curl -fsSL "https://nn.ci/alist.sh" | bash -s uninstall
+        ;;        
+        * )
+            curl -fsSL "https://nn.ci/alist.sh" | bash -s install
+        ;;
+    esac    
+    echo
+    green " =================================================="
+    grenn " Alist 安装路径为 /opt/alist "
+    green " =================================================="
+    echo
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -4033,6 +4071,8 @@ function start_menu(){
     echo
     green " 21. 安装 Cloudreve 云盘系统 "
     red " 22. 卸载 Cloudreve 云盘系统 "
+    green " 23. 安装 Alist 云盘文件列表系统 "
+    red " 24. 卸载 Alist 云盘文件列表系统 "
 
     echo
     green " 51. 安装 Air-Universe 服务器端"
@@ -4154,7 +4194,12 @@ function start_menu(){
         22 )
             removeCloudreve
         ;;
-
+        21 )
+            installAlist
+        ;;
+        22 )
+            removeAlist
+        ;;
 
         51 )
             setLinuxDateZone

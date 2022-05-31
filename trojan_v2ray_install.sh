@@ -1573,7 +1573,7 @@ function getHTTPSCertificateStep1(){
 
 
 function stopServiceNginx(){
-    serviceNginxStatus=`ps -aux | grep "nginx: worker" | grep -v "grep"`
+    serviceNginxStatus=$(ps -aux | grep "nginx: worker" | grep -v "grep")
     if [[ -n "$serviceNginxStatus" ]]; then
         ${sudoCmd} systemctl stop nginx.service
     fi
@@ -1644,7 +1644,8 @@ function installWebServerNginx(){
             inputV2rayStreamSettings
         fi
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        if [[ "${configV2rayStreamSetting}" == "grpc" || "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
+            read -r -d '' nginxConfigServerHttpInput << EOM
     server {
         listen       80;
         server_name  $configSSLDomain;
@@ -1673,6 +1674,32 @@ function installWebServerNginx(){
     }
 
 EOM
+
+        else
+            read -r -d '' nginxConfigServerHttpInput << EOM
+    server {
+        listen       80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location /$configV2rayWebSocketPath {
+            proxy_pass http://127.0.0.1:$configV2rayPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }
+    }
+
+EOM
+
+        fi
+
+
 
     elif [[ "${configInstallNginxMode}" == "v2raySSL" ]]; then
         inputV2rayStreamSettings
