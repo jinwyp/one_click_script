@@ -2693,11 +2693,11 @@ function removeWireguard(){
 
         echo
         if [[ $isWgcfAccountFileRemoveInput == [Yy] ]]; then
-            rm -rf ${configWgcfConfigFolderPath}
+            rm -rf "${configWgcfConfigFolderPath}"
             green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已删除!"
             
         else
-            rm -f ${configWgcfProfileFilePath}
+            rm -f "${configWgcfProfileFilePath}"
             green " Wgcf申请的账号信息文件 ${configWgcfAccountFilePath} 已保留! "
         fi
         

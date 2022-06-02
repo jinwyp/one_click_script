@@ -1349,11 +1349,12 @@ acmeSSLRegisterEmailInput=""
 isDomainSSLGoogleEABKeyInput=""
 isDomainSSLGoogleEABIdInput=""
 
+
+
 function getHTTPSCertificateStep1(){
 
     testLinuxPortUsage
-    
-    configSSLCertPath="${configSSLCertPathV2board}"
+
     echo
     green " ================================================== "
     yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
@@ -1435,6 +1436,26 @@ function getHTTPSCertificateStep1(){
 
 
 
+configAlistPort="$(($RANDOM + 4000))"
+configAlistPort="5244"
+
+function installAlistWithNginx(){
+    createUserWWW
+    green " ================================================== "
+    echo
+    green "是否继续安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    read -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxAlistInstallInput
+    isNginxAlistInstallInput=${isNginxAlistInstallInput:-Y}
+
+    if [[ "${isNginxAlistInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/alist"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="alist"
+        installWebServerNginx
+    fi
+}
 
 function installAlist(){
     echo
@@ -1459,14 +1480,17 @@ function installAlist(){
         * )
             curl -fsSL "https://nn.ci/alist.sh" | bash -s install
         ;;
-    esac    
+    esac
     echo
     green " =================================================="
-    grenn " Alist 安装路径为 /opt/alist "
+    green " Alist 安装路径为 /opt/alist "
     green " =================================================="
     echo
 }
-
+function installAlistCert(){
+        configSSLCertPath="${configSSLCertPath}/alist"
+        getHTTPSCertificateStep1
+}   
 
 
 
@@ -1603,7 +1627,6 @@ EOF
     cat ${configCloudreveReadme}
     green " ================================================== "
 
-
     echo
     green "是否继续安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
     green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
@@ -1671,6 +1694,7 @@ nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
 
 nginxConfigPath="/etc/nginx/nginx.conf"
 nginxCloudreveStoragePath="${configWebsitePath}/cloudreve_storage"
+nginxAlistStoragePath="${configWebsitePath}/alist_storage"
 nginxTempPath="/var/lib/nginx/tmp"
 isInstallNginx="false"
 
@@ -1819,43 +1843,69 @@ EOM
     }
 
 EOM
+    elif [[ "${configInstallNginxMode}" == "alist" ]]; then
 
-
-    elif [[ "${configInstallNginxMode}" == "cloud" ]]; then
+        mkdir -p ${nginxAlistStoragePath}
+        ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxAlistStoragePath}
+        ${sudoCmd} chmod -R 774 ${nginxAlistStoragePath}
 
         read -r -d '' nginxConfigServerHttpInput << EOM
     server {
-        listen       80;
+        listen 443 ssl http2;
+        listen [::]:443 http2;
         server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
         root $configWebsitePath;
         index index.php index.html index.htm;
 
+        location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$ {
+            expires     1d;
+            error_log /dev/null;
+            access_log /dev/null;
+        }
+        
+        location ~ .*\.(js|css)?$ {
+            expires      4h;
+            error_log /dev/null;
+            access_log /dev/null; 
+        }
+        
+
         location / {
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header Host $http_host;
-            proxy_redirect off;
-            proxy_pass http://127.0.0.1:5212;
 
-            # 如果您要使用本地存储策略，请将下一行注释符删除，并更改大小为理论最大文件尺寸
-            # client_max_body_size 20000m;
-        }
-
-
-        location ~* ^/(static|common|auth|trojan)/ {
-            proxy_pass  http://127.0.0.1:$configTrojanWebPort;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
-        }
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:${configAlistPort};
 
-        # http redirect to https
-        if ( \$remote_addr != 127.0.0.1 ){
-            rewrite ^/(.*)$ https://$configSSLDomain/\$1 redirect;
+            # 上传的最大文件尺寸
+            client_max_body_size   20000m;
         }
     }
 
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+
 EOM
+
 
     else
 
@@ -1927,6 +1977,18 @@ EOF
 	green " nginx 查看运行状态命令: systemctl status nginx.service "
     green " ================================================== "
     echo
+
+    if [[ "${configInstallNginxMode}" == "alist" ]]; then
+        green " Alist Installed ! Working port: ${configAlistPort}"
+        green " Please visit https://${configSSLDomain}"
+        green " 启动命令: systemctl start alist  停止命令: systemctl stop alist "
+        green " 查看运行状态命令: systemctl status alist  重启: systemctl restart alist "
+        green " Cloudreve INI 配置文件路径: /opt/alist/data/config.json "
+        green " Cloudreve 默认SQLite 数据库文件路径: /opt/alist/data/data.db"
+        red " 请在管理面板-> 账号-> 添加-> 类型选择 本地,  把 根目录路径 设置为 ${nginxAlistStoragePath}"
+
+        green " ================================================== "
+    fi
 
     if [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
         green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
@@ -2188,7 +2250,8 @@ EOF
 
 
 function replaceV2rayPoseidonConfig(){
-
+    configSSLCertPath="${configSSLCertPathV2board}"
+    
     if test -s ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml; then
 
         echo
@@ -2504,6 +2567,7 @@ function replaceSogaConfig(){
 
             sed -i 's/cert_mode=/cert_mode=http/g' ${configSogaConfigFilePath}
         else
+            configSSLCertPath="${configSSLCertPathV2board}"
             getHTTPSCertificateStep1
             sed -i "s?cert_file=?cert_file=${configSSLCertPath}/${configSSLCertFullchainFilename}?g" ${configSogaConfigFilePath}
             sed -i "s?key_file=?key_file=${configSSLCertPath}/${configSSLCertKeyFilename}?g" ${configSogaConfigFilePath}
@@ -2621,6 +2685,7 @@ function replaceXrayRConfig(){
             read configSSLDomain
 
         else
+            configSSLCertPath="${configSSLCertPathV2board}"
             getHTTPSCertificateStep1
             configXrayRSSLRequestMode="file"
         
@@ -2957,6 +3022,7 @@ function installAirUniverse(){
     green " =================================================="
     echo
     
+
     if [ -z "$1" ]; then
         testLinuxPortUsage
 
@@ -2992,9 +3058,10 @@ function installAirUniverse(){
 
         if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
             echo
+            configSSLCertPath="${configSSLCertPathV2board}"
             getHTTPSCertificateStep1
 
-            airUniverseConfigNodeIdNumberInput=`grep "nodes_type"  ${configAirUniverseConfigFilePath} | awk -F  ":" '{print $2}'`
+            airUniverseConfigNodeIdNumberInput=$(grep "nodes_type"  ${configAirUniverseConfigFilePath} | awk -F  ":" '{print $2}')
 
             read -r -d '' airUniverseConfigProxyInput << EOM
         
@@ -4071,8 +4138,7 @@ function start_menu(){
     echo
     green " 21. 安装 Cloudreve 云盘系统 "
     red " 22. 卸载 Cloudreve 云盘系统 "
-    green " 23. 安装 Alist 云盘文件列表系统 "
-    red " 24. 卸载 Alist 云盘文件列表系统 "
+    green " 23. 安装/更新/删除 Alist 云盘文件列表系统 "
 
     echo
     green " 51. 安装 Air-Universe 服务器端"
@@ -4117,6 +4183,7 @@ function start_menu(){
     echo
     green " 21. Install Cloudreve cloud storage system"
     red " 22. Remove Cloudreve cloud storage system"
+    green " 23. Install/Update/Remove Alist file list storage system "
 
     echo
     green " 51. Install Air-Universe server side "
@@ -4194,12 +4261,13 @@ function start_menu(){
         22 )
             removeCloudreve
         ;;
-        21 )
+        23 )
             installAlist
         ;;
-        22 )
-            removeAlist
+        24 )
+            installAlistCert
         ;;
+
 
         51 )
             setLinuxDateZone
