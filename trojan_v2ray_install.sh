@@ -836,6 +836,9 @@ function vps_returnroute(){
     # https://91ai.net/thread-1015693-5-1.html
     wget --no-check-certificate https://tutu.ovh/bash/returnroute/route && chmod +x route && clear && ./route
 }
+function vps_returnroute2(){
+    curl https://raw.githubusercontent.com/zhanghanyun/backtrace/main/install.sh | sh
+}
 
 
 
@@ -1096,7 +1099,6 @@ function getTrojanAndV2rayVersion(){
 
 
 configNetworkRealIp=""
-configNetworkLocalIp=""
 configSSLDomain=""
 
 
@@ -1136,6 +1138,7 @@ function getHTTPSCertificateInputGoogleEABId(){
     getHTTPSCertificateCheckEmail "googleEabId" "${isDomainSSLGoogleEABIdInput}"
 }
 
+
 acmeSSLDays="89"
 acmeSSLServerName="letsencrypt"
 acmeSSLDNSProvider="dns_cf"
@@ -1162,13 +1165,15 @@ function renewCertificationWithAcme(){
         echo
         green " ================================================== "
         green " 检测到本机已经申请过域名证书 是否新增申请域名证书"
-        green " 选是为新增申请域名证书, 选否为续签或删除已申请域名证书"
+        yellow " 新安装或卸载后重新安装trojan或v2ray 请选择新增而不要选择续签"
         echo
-        read -r -p "是否申请新的域名证书? 默认直接回车为新增域名, 请输入[Y/n]:" isAcmeSSLAddNewInput
-        isAcmeSSLAddNewInput=${isAcmeSSLAddNewInput:-Y}
-        if [[ "$isAcmeSSLAddNewInput" == [Yy] ]]; then
-            echo
-        else
+        green " 1. 新增申请域名证书"
+        green " 2. 续签已申请域名证书"
+        green " 3. 删除已申请域名证书"
+        echo
+        read -r -p "请选择是否新增域名证书? 默认直接回车为新增, 请输入纯数字:" isAcmeSSLAddNewInput
+        isAcmeSSLAddNewInput=${isAcmeSSLAddNewInput:-1}
+        if [[ "$isAcmeSSLAddNewInput" == "2" || "$isAcmeSSLAddNewInput" == "3" ]]; then
 
             echo
             green " ================================================== "
@@ -1199,41 +1204,41 @@ function renewCertificationWithAcme(){
                     exit
                 else
                     echo
-                fi            
+                fi
             else
                 echo
             fi
 
             configSSLRenewDomain=${renewDomainArrayFix[${isRenewDomainSelectNumberInput}]}
 
-            read -r -p "请选择续签还是删除? 默认直接回车为续签, 选n为删除域名, 请输入[Y/n]:" isAcmeSSLRenewInput
-            isAcmeSSLRenewInput=${isAcmeSSLRenewInput:-Y}
-            echo
 
             if [[ -n $(${configSSLAcmeScriptPath}/acme.sh --list | grep ${configSSLRenewDomain}) ]]; then
 
-                if [[ $isAcmeSSLRenewInput == [Yy] ]]; then
+                if [[ "$isAcmeSSLAddNewInput" == "2" ]]; then
                     ${configSSLAcmeScriptPath}/acme.sh --renew -d ${configSSLRenewDomain} --force --ecc
                     echo
                     green " 域名 ${configSSLRenewDomain} 的证书已经成功续签!"
 
-                else
+                elif [[ "$isAcmeSSLAddNewInput" == "3" ]]; then
                     ${configSSLAcmeScriptPath}/acme.sh --revoke -d ${configSSLRenewDomain} --ecc
                     ${configSSLAcmeScriptPath}/acme.sh --remove -d ${configSSLRenewDomain} --ecc
 
                     rm -rf "${configSSLAcmeScriptPath}/${configSSLRenewDomain}_ecc"
                     echo
                     green " 域名 ${configSSLRenewDomain} 的证书已经删除成功!"
+                    exit
                 fi  
             else
                 echo
                 red " 域名 ${configSSLRenewDomain} 证书不存在！"
             fi
 
-            exit
-
+        else 
+            getHTTPSCertificateStep1
         fi
 
+    else
+        getHTTPSCertificateStep1
     fi
 
 }
@@ -1525,8 +1530,6 @@ function compareRealIpWithLocalIp(){
 
 function getHTTPSCertificateStep1(){
     
-    renewCertificationWithAcme
-
     echo
     green " ================================================== "
     yellow " 请输入解析到本VPS的域名 例如 www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
@@ -2332,8 +2335,8 @@ function installTrojanV2rayWithNginx(){
         exit
     fi
 
-    inputXraySystemdServiceName $1
-    getHTTPSCertificateStep1 ""
+    inputXraySystemdServiceName "$1"
+    renewCertificationWithAcme ""
 
     echo
     if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
@@ -7228,7 +7231,7 @@ function getAdGuardHomeSSLCertification(){
         if [[ "${isGetAdGuardSSLCertificateInput}" == [Yy] ]]; then
             ${configAdGuardPath}/AdGuardHome -s stop
             configSSLCertPath="${configSSLCertPath}/adguardhome"
-            getHTTPSCertificateStep1 ""
+            renewCertificationWithAcme ""
             replaceAdGuardConfig
         fi
     fi
@@ -7395,7 +7398,8 @@ function startMenuOther(){
     green " 46. testrace 回程路由测试 by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace 回程路由测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     green " 48. returnroute 回程路由测试 推荐使用 (北京电信/联通/移动 上海电信/联通/移动 广州电信/联通/移动 )"
-    green " 49. 独立服务器测试 包括系统信息和I/O测试"
+    green " 49. 三网回程路由测试 Go 语言开发 by zhanghanyun "   
+    green " 50. 独立服务器测试 包括系统信息和I/O测试" 
     echo
     green " =================================================="
     green " 51. 测试VPS 是否支持 Netflix 非自制剧解锁 支持 WARP sock5 测试, 推荐使用 "
@@ -7441,7 +7445,8 @@ function startMenuOther(){
     green " 46. testrace by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace (Traceroute test 广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
     green " 48. returnroute test (北京电信/联通/移动 上海电信/联通/移动 广州电信/联通/移动 )"
-    green " 49. A bench script for dedicated servers "    
+    green " 49. returnroute test by zhanghanyun powered by Go (三网回程路由测试 ) "    
+    green " 50. A bench script for dedicated servers "    
     echo
     green " =================================================="
     green " 51. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
@@ -7521,8 +7526,11 @@ function startMenuOther(){
         ;;
         48 )
             vps_returnroute
-        ;;        
+        ;;
         49 )
+            vps_returnroute2
+        ;;                
+        50 )
             vps_bench_dedicated
         ;;        
         51 )

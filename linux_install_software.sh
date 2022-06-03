@@ -1044,7 +1044,6 @@ function getHTTPSCertificateInputGoogleEABId(){
 }
 
 configNetworkRealIp=""
-configNetworkLocalIp=""
 configSSLDomain=""
 
 acmeSSLDays="89"
@@ -2841,7 +2840,7 @@ function downgradeXray(){
     red " 如需要使用Xray 1.5.0或更老版本的Xray, 请选择 Air-Universe 1.0.0或 0.9.2"
     echo
     green " 1. 不降级 使用最新版本"
-    green " 2. 1.1.0 (不支持 Xray 1.5.0或更老版本)"
+    green " 2. 1.1.1 (不支持 Xray 1.5.0或更老版本)"
     green " 3. 1.0.0 (仅支持 Xray 1.5.0或更老版本)"
     green " 4. 0.9.2 (仅支持 Xray 1.5.0或更老版本)"
     echo
@@ -2905,12 +2904,12 @@ function downgradeXray(){
     green " 1. 不降级 使用最新版本"
 
     if [[ "${isAirUniverseVersionInput}" == "1" || "${isAirUniverseVersionInput}" == "2" ]]; then
-        green " 2. 1.5.4"
-        green " 3. 1.5.3"
+        green " 2. 1.5.5"
+        green " 3. 1.5.4"
+        green " 4. 1.5.3"
     else
-        green " 4. 1.5.0"
-        green " 5. 1.4.5"
-        green " 6. 1.4.3"
+        green " 5. 1.5.0"
+        green " 6. 1.4.5"
         green " 7. 1.4.2"
         green " 8. 1.4.0"
         green " 9. 1.3.1"
@@ -2924,19 +2923,19 @@ function downgradeXray(){
     downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
 
     if [[ "${isXrayVersionInput}" == "2" ]]; then
-        downloadXrayVersion="1.5.4"
+        downloadXrayVersion="1.5.5"
 
     elif [[ "${isXrayVersionInput}" == "3" ]]; then
-        downloadXrayVersion="1.5.3"
+        downloadXrayVersion="1.5.4"
 
     elif [[ "${isXrayVersionInput}" == "4" ]]; then
-        downloadXrayVersion="1.5.0"
+        downloadXrayVersion="1.5.3"
 
     elif [[ "${isXrayVersionInput}" == "5" ]]; then
-        downloadXrayVersion="1.4.5"
+        downloadXrayVersion="1.5.0"
 
     elif [[ "${isXrayVersionInput}" == "6" ]]; then
-        downloadXrayVersion="1.4.3"
+        downloadXrayVersion="1.4.5"
 
     elif [[ "${isXrayVersionInput}" == "7" ]]; then
         downloadXrayVersion="1.4.2"
@@ -3096,6 +3095,8 @@ EOM
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
             chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
             chmod ugoa+rw ${configSSLCertPath}/*
+
+            # chown -R nobody:nogroup /var/log/v2ray
 
             echo
             green " =================================================="
