@@ -71,12 +71,12 @@ speed_test() {
 
 speed() {
     speed_test '' 'Speedtest.net'
-    speed_test '13088' 'San Jose, ADN'
-    speed_test '10384' 'SJ, Speedtest'
+    speed_test '15786' 'San Jose, Sprint'
+    speed_test '17846' 'SJ, Sonic'
     speed_test '21541' 'Los Angeles, i3D'
     speed_test '7190' 'LA, Sharktech'
-    speed_test '10558' 'Dallas, US'
-    speed_test '10394' 'Phoenix, AZ'
+    speed_test '11207' 'Dallas, US'
+    speed_test '15783' 'Phoenix, AZ'
     speed_test '24215' 'Paris, FR'
     speed_test '28922' 'Amsterdam, NL'
     speed_test '27377' 'BeiJing 5G, CT'
