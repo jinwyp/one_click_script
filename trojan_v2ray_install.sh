@@ -6604,7 +6604,7 @@ function installV2rayUI(){
         green "    开始安装 V2ray-UI 可视化管理面板 !"
         green " =================================================="
 
-        bash <(curl -Ls https://raw.githubusercontent.com/tszho-t/v2-ui/master/v2-ui.sh)
+        bash <(curl -Ls https://raw.githubusercontent.com/tszho-t/v2ui/master/v2-ui.sh)
 
         # wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/sprov065/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
         # wget -O v2_ui_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/tszho-t/v2-ui/master/install.sh" && chmod +x v2_ui_install.sh && ./v2_ui_install.sh
