@@ -943,8 +943,8 @@ function addDockerRegistry(){
 
 EOF
 
-    sudo systemctl daemon-reload
-    sudo systemctl restart docker
+    ${sudoCmd} systemctl daemon-reload
+    ${sudoCmd} systemctl restart docker
 }
 
 
@@ -1437,6 +1437,8 @@ function getHTTPSCertificateStep1(){
 
 configAlistPort="$(($RANDOM + 4000))"
 configAlistPort="5244"
+configAlistSystemdServicePath="/etc/systemd/system/alist.service"
+
 
 function installAlistWithNginx(){
     createUserWWW
@@ -1444,7 +1446,7 @@ function installAlistWithNginx(){
     echo
     green "是否继续安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
     green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
-    read -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxAlistInstallInput
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxAlistInstallInput
     isNginxAlistInstallInput=${isNginxAlistInstallInput:-Y}
 
     if [[ "${isNginxAlistInstallInput}" == [Yy] ]]; then
@@ -1484,6 +1486,9 @@ function installAlist(){
     green " =================================================="
     green " Alist 安装路径为 /opt/alist "
     green " =================================================="
+    sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
+    ${sudoCmd} systemctl daemon-reload
+    ${sudoCmd} systemctl restart alist    
     echo
 }
 function installAlistCert(){
@@ -1692,6 +1697,7 @@ nginxAccessLogFilePath="${configWebsiteFatherPath}/nginx-access.log"
 nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
 
 nginxConfigPath="/etc/nginx/nginx.conf"
+nginxConfigSiteConfPath="/etc/nginx/conf.d"
 nginxCloudreveStoragePath="${configWebsitePath}/cloudreve_storage"
 nginxAlistStoragePath="${configWebsitePath}/alist_storage"
 nginxTempPath="/var/lib/nginx/tmp"
@@ -1739,6 +1745,7 @@ function installWebServerNginx(){
     ${sudoCmd} systemctl daemon-reload
     
     mkdir -p ${configWebsitePath}
+    mkdir -p "${nginxConfigSiteConfPath}"
 
 
     nginxConfigServerHttpInput=""
@@ -1764,14 +1771,6 @@ function installWebServerNginx(){
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
 
-        location /$configV2rayGRPCServiceName {
-            grpc_pass grpc://127.0.0.1:$configV2rayGRPCPort;
-            grpc_connect_timeout 60s;
-            grpc_read_timeout 720m;
-            grpc_send_timeout 720m;
-            grpc_set_header X-Real-IP \$remote_addr;
-            grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        }  
     }
 
 EOM
@@ -1785,7 +1784,8 @@ EOM
         ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxCloudreveStoragePath}
         ${sudoCmd} chmod -R 774 ${nginxCloudreveStoragePath}
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        cat > "${nginxConfigSiteConfPath}/cloudreve_site.conf" <<-EOF
+
     server {
         listen 443 ssl http2;
         listen [::]:443 http2;
@@ -1841,14 +1841,17 @@ EOM
         return 301 https://$configSSLDomain\$request_uri;
     }
 
-EOM
+EOF
+
+
     elif [[ "${configInstallNginxMode}" == "alist" ]]; then
 
         mkdir -p ${nginxAlistStoragePath}
         ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxAlistStoragePath}
         ${sudoCmd} chmod -R 774 ${nginxAlistStoragePath}
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        cat > "${nginxConfigSiteConfPath}/alist_site.conf" <<-EOF
+
     server {
         listen 443 ssl http2;
         listen [::]:443 http2;
@@ -1903,13 +1906,10 @@ EOM
         return 301 https://$configSSLDomain\$request_uri;
     }
 
-EOM
-
+EOF
 
     else
-
         echo
-
     fi
 
 
@@ -1944,7 +1944,8 @@ http {
     gzip  on;
 
     ${nginxConfigServerHttpInput}
-
+    
+    include ${nginxConfigSiteConfPath}/*.conf; 
 }
 
 

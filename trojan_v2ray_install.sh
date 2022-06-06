@@ -7303,13 +7303,14 @@ EOM
   name: EasyList China
   id: 1652375945
 EOM
+            # https://fabianlee.org/2018/10/28/linux-using-sed-to-insert-lines-before-or-after-a-match/
+
             TEST3="${adGuardConfigFilters//\\/\\\\}"
             TEST3="${TEST3//\//\\/}"
             TEST3="${TEST3//&/\\&}"
             TEST3="${TEST3//$'\n'/\\n}"
 
             sed -i "/id: 2/a ${TEST3}" ${configAdGuardPath}/AdGuardHome.yaml
-
 
 
             echo

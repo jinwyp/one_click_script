@@ -80,7 +80,7 @@ speed() {
     speed_test '24215' 'Paris, FR'
     speed_test '28922' 'Amsterdam, NL'
     speed_test '27377' 'BeiJing 5G, CT'
-    speed_test '5145' 'BeiJing , CU'
+    speed_test '5145' 'BeiJing, CU'
     speed_test '26412' 'JiNan 5G, CU'
     speed_test '3633' 'ShangHai, CT'
     speed_test '24447' 'ShangHai 5G, CU'
