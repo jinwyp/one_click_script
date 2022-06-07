@@ -3564,7 +3564,7 @@ EOF
 ${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting1}&host=${configSSLDomain}&path=%2f${configV2rayVmessLinkConfigPath}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=%2f${configV2rayVmessLinkConfigPath}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting1}_protocol
 EOF
             cat > ${configV2rayVlessImportLinkFile2Path} <<-EOF
-${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting2}&host=${configSSLDomain}&path=%2f${configV2rayVmessLinkConfigPath2}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=%2f${configV2rayVmessLinkConfigPath2}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting1}_protocol
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting2}&host=${configSSLDomain}&path=${configV2rayVmessLinkConfigPath2}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=%2f${configV2rayVmessLinkConfigPath2}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting2}_protocol
 EOF
 
             v2rayVlessLinkQR1="$(cat ${configV2rayVlessImportLinkFile1Path})"
@@ -5679,7 +5679,7 @@ EOF
     额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: gRPC,
-    gRPC serviceName: ${configV2rayGRPCServiceName},
+    gRPC serviceName: ${configV2rayGRPCServiceName},    // serviceName 不能有/
     底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
@@ -5724,7 +5724,7 @@ ${v2rayVlessLinkQR1}
     额外id/AlterID: 0,  // AlterID, Vmess 请填0, 如果是Vless协议则不需要该项
     加密方式: aes-128-gcm,  // 如果是Vless协议则为none
     传输协议: gRPC,
-    gRPC serviceName: ${configV2rayGRPCServiceName},
+    gRPC serviceName: ${configV2rayGRPCServiceName},    // serviceName 不能有/
     底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
