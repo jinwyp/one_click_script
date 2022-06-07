@@ -7361,7 +7361,11 @@ EOM
 
 
 
-
+function firewallopen(){
+    firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 0 -p tcp -m tcp -d 127.0.0.1 --dport=25 -j ACCEPT
+    firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 1 -p tcp -m tcp --dport=25 -j REJECT
+    firewall-cmd --reload
+}
 
 
 
@@ -7560,6 +7564,9 @@ function startMenuOther(){
         ;;
         82 )
             installBBR2
+        ;;
+        84 )
+            firewallopen
         ;;
         99)
             start_menu
