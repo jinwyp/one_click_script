@@ -6199,11 +6199,19 @@ function removeV2ray(){
                 isXray="yes"
             fi
 
-            if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service" ]; then
-                promptInfoXrayNameServiceName="-jin"
-            else
+            tempIsXrayService=$(ls /usr/lib/systemd/system | grep xray- )
+            if [[ -z "${tempIsXrayService}" ]]; then
                 promptInfoXrayNameServiceName=""
+
+            else
+                if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service" ]; then
+                    promptInfoXrayNameServiceName="-jin"
+                else
+                    tempFilelist=$(ls /usr/lib/systemd/system | grep xray | awk -F '-' '{ print $2 }' )
+                    promptInfoXrayNameServiceName="-${tempFilelist%.*}"
+                fi
             fi
+
 
             echo
             green " ================================================== "
@@ -7361,10 +7369,20 @@ EOM
 
 
 
-function firewallopen(){
-    firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 0 -p tcp -m tcp -d 127.0.0.1 --dport=25 -j ACCEPT
-    firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 1 -p tcp -m tcp --dport=25 -j REJECT
+function firewallForbiden(){
+    # firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 0 -p tcp -m tcp --dport=25 -j ACCEPT
+    # firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 1 -p tcp -m tcp --dport=25 -j REJECT
+    # firewall-cmd --reload
+
+    firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 0 -p tcp -m tcp --dport=25 -j DROP
+    firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 1 -j ACCEPT
     firewall-cmd --reload
+
+    # iptables -A OUTPUT -p tcp --dport 25 -j DROP
+
+    # iptables -A INPUT -p tcp -s 0/0 -d 0/0 --dport 80 -j DROP
+    # iptables -A INPUT -p all -j ACCEPT
+    # iptables -A OUTPUT -p all -j ACCEPT
 }
 
 
@@ -7564,9 +7582,6 @@ function startMenuOther(){
         ;;
         82 )
             installBBR2
-        ;;
-        84 )
-            firewallopen
         ;;
         99)
             start_menu
@@ -7868,6 +7883,9 @@ function start_menu(){
         82 )
             installBBR2
         ;;
+        84 )
+            firewallForbiden
+        ;;        
         88 )
             upgradeScript
         ;;

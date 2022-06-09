@@ -1709,10 +1709,11 @@ function installDebianUbuntuKernel(){
             green " =================================================="
 
             # https://xanmod.org/
-
+            
+            
             echo 'deb http://deb.xanmod.org releases main' > /etc/apt/sources.list.d/xanmod-kernel.list
             wget -qO - https://dl.xanmod.org/gpg.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/xanmod-kernel.gpg add -
-            ${sudoCmd} apt update
+            ${sudoCmd} apt update -y
 
             listAvailableLinuxKernel "xanmod"
 
@@ -1722,7 +1723,7 @@ function installDebianUbuntuKernel(){
             green " 开始安装 linux 内核版本: XanMod ${linuxKernelToInstallVersionFull}"
             echo
 
-            if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
+            if [ "${linuxKernelToInstallVersion}" = "5.15" ]; then
                 ${sudoCmd} apt install -y linux-xanmod-lts 
             else
                 ${sudoCmd} apt install -y linux-xanmod
@@ -3140,8 +3141,8 @@ function start_menu(){
         green " 48. 安装 最新版本内核 5.17, 通过 Ubuntu kernel mainline 安装"
 
         echo
-        green " 51. 安装 XanMod Kernel 内核 5.10 LTS, 官方源安装 "    
-        green " 52. 安装 XanMod Kernel 内核 5.15, 官方源安装 "   
+        green " 51. 安装 XanMod Kernel 内核 5.15 LTS, 官方源安装 "    
+        green " 52. 安装 XanMod Kernel 内核 5.17, 官方源安装 "   
 
     fi
 
@@ -3224,8 +3225,8 @@ function start_menu(){
         green " 47. Install linux kernel 5.15, download and install from Ubuntu kernel mainline"
         green " 48. Install latest linux kernel 5.17, download and install from Ubuntu kernel mainline"
         echo
-        green " 51. Install XanMod kernel 5.10 LTS, from XanMod repository source "    
-        green " 52. Install XanMod kernel 5.15, from XanMod repository source "  
+        green " 51. Install XanMod kernel 5.15 LTS, from XanMod repository source "    
+        green " 52. Install XanMod kernel 5.17, from XanMod repository source "  
     fi
 
     echo
@@ -3376,13 +3377,13 @@ function start_menu(){
             installKernel
         ;;        
         51 )
-            linuxKernelToInstallVersion="5.10"
+            linuxKernelToInstallVersion="5.15"
             linuxKernelToBBRType="xanmod"
             isInstallFromRepo="yes"
             installKernel
         ;;
         52 )
-            linuxKernelToInstallVersion="5.15"
+            linuxKernelToInstallVersion="5.17"
             linuxKernelToBBRType="xanmod"
             isInstallFromRepo="yes"
             installKernel
