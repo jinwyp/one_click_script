@@ -837,7 +837,8 @@ function vps_returnroute(){
     wget --no-check-certificate https://tutu.ovh/bash/returnroute/route && chmod +x route && clear && ./route
 }
 function vps_returnroute2(){
-    curl https://raw.githubusercontent.com/zhanghanyun/backtrace/main/install.sh | sh
+    # curl https://raw.githubusercontent.com/zhanghanyun/backtrace/main/install.sh | sh
+    wget -N --no-check-certificate -O routeGo.sh https://raw.githubusercontent.com/zhanghanyun/backtrace/main/install.sh && chmod +x routeGo.sh && ./routeGo.sh
 }
 
 
@@ -945,7 +946,7 @@ downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 versionTrojanGo="0.10.5"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.45.0"
+versionV2ray="4.45.2"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
 versionXray="1.5.2"
