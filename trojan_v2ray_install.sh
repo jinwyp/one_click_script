@@ -522,16 +522,17 @@ function installPackage(){
     if [ "$osRelease" == "centos" ]; then
        
         # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+        rm -f /etc/yum.repos.d/nginx.repo
+        # cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
+# [nginx]
+# name=nginx repo
+# baseurl=https://nginx.org/packages/centos/$osReleaseVersionNoShort/\$basearch/
+# gpgcheck=0
+# enabled=1
+# sslverify=0
+# 
+# EOF
 
-        cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
-[nginx]
-name=nginx repo
-baseurl=https://nginx.org/packages/centos/$osReleaseVersionNoShort/\$basearch/
-gpgcheck=0
-enabled=1
-sslverify=0
-
-EOF
         if ! rpm -qa | grep -qw iperf3; then
 			${sudoCmd} ${osSystemPackage} install -y epel-release
 
@@ -699,7 +700,7 @@ function installSoftOhMyZsh(){
         fi
 
 
-        echo 'alias lla="ls -ahl"' >> ${HOME}/.zshrc
+        echo 'alias ll="ls -ahl"' >> ${HOME}/.zshrc
         echo 'alias mi="micro"' >> ${HOME}/.zshrc
 
         green " =================================================="
@@ -774,7 +775,8 @@ function vps_netflix_jin(){
 
 
 function vps_netflixgo(){
-    wget -qN --no-check-certificate -O netflixGo https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixGo && ./netflixGo -method full
+    wget -qN --no-check-certificate -O netflixGo https://github.com/sjlleo/netflix-verify/releases/download/v3.1.0/nf_linux_amd64 && chmod +x ./netflixGo && ./netflixGo
+    # wget -qN --no-check-certificate -O netflixGo https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixGo && ./netflixGo -method full
     echo
     echo
     wget -qN --no-check-certificate -O disneyplusGo https://github.com/sjlleo/VerifyDisneyPlus/releases/download/1.01/dp_1.01_linux_amd64 && chmod +x ./disneyplusGo && ./disneyplusGo
@@ -3874,6 +3876,15 @@ EOM
     V2rayUnlockVideoSiteOutboundTagText=""
     unlockWARPServerIpInput="127.0.0.1"
     unlockWARPServerPortInput="40000"
+    configWARPPortFilePath="${HOME}/wireguard/warp-port"
+    configWARPPortLocalServerPort="40000"
+    configWARPPortLocalServerText=""
+
+    if [[ -f "${configWARPPortFilePath}" ]]; then
+        configWARPPortLocalServerPort="$(cat ${configWARPPortFilePath})"
+        configWARPPortLocalServerText="检测到本机已安装 WARP Sock5, 端口号 ${configWARPPortLocalServerPort}"
+    fi
+
     green " =================================================="
     yellow " 是否要解锁 Netflix HBO Disney+ 等流媒体网站"
     read -p "是否要解锁流媒体网站? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockStreamWebsiteInput
@@ -3953,16 +3964,8 @@ EOM
     
     v2rayConfigRouteInput=""
     V2rayUnlockVideoSiteOutboundTagText=""
-    unlockWARPServerIpInput="127.0.0.1"
-    unlockWARPServerPortInput="40000"
-    configWARPPortFilePath="${HOME}/wireguard/warp-port"
-    configWARPPortLocalServerPort="40000"
-    configWARPPortLocalServerText=""
 
-    if [[ -f "${configWARPPortFilePath}" ]]; then
-        configWARPPortLocalServerPort="$(cat ${configWARPPortFilePath})"
-        configWARPPortLocalServerText="检测到本机已安装 WARP Sock5, 端口号 ${configWARPPortLocalServerPort}"
-    fi
+
 
     if [[ $isV2rayUnlockWarpModeInput == "1" ]]; then
         echo
@@ -4159,7 +4162,7 @@ EOM
 
             echo
             yellow " ${configWARPPortLocalServerText}"
-            read -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" unlockWARPServerPortInput
+            read -r -p "请输入WARP Sock5 代理服务器端口号? 直接回车默认${configWARPPortLocalServerPort}, 请输入纯数字:" unlockWARPServerPortInput
             unlockWARPServerPortInput=${unlockWARPServerPortInput:-$configWARPPortLocalServerPort}       
 
         elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
@@ -4224,10 +4227,8 @@ EOM
                 "domainStrategy": "UseIPv6" 
             }
         },
-        
         ${v2rayConfigOutboundV2rayServerInput}
         ${v2rayConfigOutboundV2rayGoNetflixServerInput}
-
         {
             "tag": "WARP_out",
             "protocol": "socks",
@@ -7667,7 +7668,7 @@ function start_menu(){
     green " 31. 安装DNS服务器 AdGuardHome 支持去广告"
     green " 32. 给 AdGuardHome 申请免费的SSL证书, 并开启DOH与DOT"    
     green " 33. 安装DNS国内国外分流服务器 mosdns"    
-    red " 34 卸载 mosdns DNS服务器 "
+    red " 34. 卸载 mosdns DNS服务器 "
     echo
     green " 41. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 42. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
@@ -7706,7 +7707,7 @@ function start_menu(){
     green " 21. Install both v2ray/xray and trojan/trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 22. Install both v2ray/xray and trojan/trojan-go with nginx, (VLess/Vmess-WS-TLS)+Trojan, support CDN, trojan/trojan-go running at 443 port serve TLS"
     green " 23. Install both v2ray/xray and trojan/trojan-go with nginx. Using nginx SNI distinguish traffic by different domain name, support CDN. Easy integration with existing website. nginx SNI running at 443 port"
-    red " 24.  Remove trojan/trojan-go, v2ray/xray and nginx"
+    red " 24. Remove trojan/trojan-go, v2ray/xray and nginx"
     echo
     green " 25. Show info and password for installed trojan and v2ray"
     green " 26. Get a free SSL certificate for one or multiple domains"
