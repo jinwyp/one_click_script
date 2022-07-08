@@ -561,10 +561,16 @@ function installPackage(){
         $osSystemPackage install -y gnupg2
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
+        if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" || "${osReleaseVersionNoShort}" == "20" ]]; then
+            echo
+        else
         cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
 deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
+        fi
+
+
 
         ${osSystemPackage} update -y
 

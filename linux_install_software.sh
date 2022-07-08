@@ -488,16 +488,17 @@ function installPackage(){
     if [ "$osRelease" == "centos" ]; then
        
         # rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+        rm -f /etc/yum.repos.d/nginx.repo
+        # cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
+# [nginx]
+# name=nginx repo
+# baseurl=https://nginx.org/packages/centos/$osReleaseVersionNoShort/\$basearch/
+# gpgcheck=0
+# enabled=1
+# sslverify=0
+# 
+# EOF
 
-        cat > "/etc/yum.repos.d/nginx.repo" <<-EOF
-[nginx]
-name=nginx repo
-baseurl=https://nginx.org/packages/centos/$osReleaseVersionNoShort/\$basearch/
-gpgcheck=0
-enabled=1
-sslverify=0
-
-EOF
         if ! rpm -qa | grep -qw iperf3; then
 			${sudoCmd} ${osSystemPackage} install -y epel-release
 
@@ -525,10 +526,16 @@ EOF
         $osSystemPackage install -y gnupg2
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
+        if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" || "${osReleaseVersionNoShort}" == "20" ]]; then
+            echo
+        else
         cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
 deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
+        fi
+
+
 
         ${osSystemPackage} update -y
 
