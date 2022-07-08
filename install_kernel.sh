@@ -26,6 +26,7 @@
 # ubuntu18 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
 # ubuntu20 安装完成默认内核  linux-image-5.4.0-70-generic , linux-headers-5.4.0-70 
 # debian10 安装完成默认内核  4.19.0-16-amd64
+# debian10 安装完成默认内核  linux-image-5.10.0-8-amd64
 
 # UJX6N 编译的bbr plus 内核  5.10.27-bbrplus    5.9.16    5.4.86  
 # UJX6N 编译的bbr plus 内核  4.19.164   4.14.213    4.9.264-1.bbrplus
@@ -132,19 +133,20 @@ getLinuxOSVersion(){
         osInfo=$NAME
         osReleaseVersionNo=$VERSION_ID
 
-        if [ -n $VERSION_CODENAME ]; then
+        if [ -n "$VERSION_CODENAME" ]; then
             osReleaseVersionCodeName=$VERSION_CODENAME
         fi
     elif type lsb_release >/dev/null 2>&1; then
         # linuxbase.org
         osInfo=$(lsb_release -si)
         osReleaseVersionNo=$(lsb_release -sr)
+
     elif [ -f /etc/lsb-release ]; then
         # For some versions of Debian/Ubuntu without lsb_release command
         . /etc/lsb-release
         osInfo=$DISTRIB_ID
-        
         osReleaseVersionNo=$DISTRIB_RELEASE
+        
     elif [ -f /etc/debian_version ]; then
         # Older Debian/Ubuntu/etc.
         osInfo=Debian
@@ -1735,12 +1737,17 @@ function installDebianUbuntuKernel(){
         else
 
             if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
-                debianKernelVersion="5.10.0-14"
+                debianKernelVersion="5.10.0-15"
             elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then
                 debianKernelVersion="4.19.0-0"
             else
                 debianKernelVersion="5.16.0-0"
+                if [ "${osReleaseVersionNo}" = "11" ]; then
+                    debianKernelVersion="5.18.0-0"
+                fi
             fi
+
+
 
             green " =================================================="
             green "    开始通过 Debian 官方源安装 linux 内核 ${debianKernelVersion}"
@@ -1753,16 +1760,21 @@ function installDebianUbuntuKernel(){
 
             linuxKernelToInstallVersionFull=${debianKernelVersion}
 
-            echo "deb http://deb.debian.org/debian $osReleaseVersionCodeName-backports main contrib non-free" > /etc/apt/sources.list.d/$osReleaseVersionCodeName-backports.list
-            echo "deb-src http://deb.debian.org/debian $osReleaseVersionCodeName-backports main contrib non-free" >> /etc/apt/sources.list.d/$osReleaseVersionCodeName-backports.list
+            # echo "deb http://deb.debian.org/debian $osReleaseVersionCodeName-backports main contrib non-free" > /etc/apt/sources.list.d/$osReleaseVersionCodeName-backports.list
+            # echo "deb-src http://deb.debian.org/debian $osReleaseVersionCodeName-backports main contrib non-free" >> /etc/apt/sources.list.d/$osReleaseVersionCodeName-backports.list
             ${sudoCmd} apt update -y
 
             listAvailableLinuxKernel
             
+            echo
+            green " apt --fix-broken install"
             ${sudoCmd} apt --fix-broken install
 
-            ${sudoCmd} apt install -y -t $osReleaseVersionCodeName-backports linux-image-amd64
-            ${sudoCmd} apt install -y -t $osReleaseVersionCodeName-backports firmware-linux firmware-linux-nonfree
+            #green " apt install -y -t $osReleaseVersionCodeName-backports linux-image-amd64"
+            #${sudoCmd} apt install -y -t $osReleaseVersionCodeName-backports linux-image-amd64
+
+            #green " apt install -y -t $osReleaseVersionCodeName-backports firmware-linux firmware-linux-nonfree"         
+            #${sudoCmd} apt install -y -t $osReleaseVersionCodeName-backports firmware-linux firmware-linux-nonfree
 
             echo
             echo "dpkg --get-selections | grep linux-image-${debianKernelVersion} | awk '/linux-image-[4-9]./{print \$1}' | awk -F'linux-image-' '{print \$2}' "
@@ -1770,13 +1782,15 @@ function installDebianUbuntuKernel(){
             
             echo
             green " Debian 官方源安装 linux 内核版本: ${debianKernelVersionPackageName}"
-            green " 开始安装 linux-headers  命令为:  apt install -y linux-headers-${debianKernelVersionPackageName}"
             echo
+    
+            green " 开始安装 linux-image  命令为:  apt install -y linux-image-${debianKernelVersionPackageName}"
             ${sudoCmd} apt install -y linux-image-${debianKernelVersionPackageName}
+            echo
+            green " 开始安装 linux-headers  命令为:  apt install -y linux-headers-${debianKernelVersionPackageName}"    
             ${sudoCmd} apt install -y linux-headers-${debianKernelVersionPackageName}
             # ${sudoCmd} apt-get -y dist-upgrade
-
-
+            
         fi
 
     else
@@ -3078,7 +3092,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2022-6-07 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2022-7-09 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " 在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -3130,7 +3144,7 @@ function start_menu(){
     else
         if [[ "${osRelease}" == "debian" ]]; then
         green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
-        green " 42. 安装 最新版本内核 5.16, 通过 Debian 官方源安装"
+        green " 42. 安装 最新版本内核 5.16 或更高, 通过 Debian 官方源安装"
         echo
         fi
 
@@ -3163,7 +3177,7 @@ function start_menu(){
     else
 
     green " =================================================="
-    green " Linux kernel install script | 2022-6-07 | OS support：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux kernel install script | 2022-7-09 | OS support：centos7+ / debian10+ / ubuntu16.04+"
     green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
     red " Please use this script with caution in production. Backup your data first! Upgrade linux kernel will cause VPS unable to boot sometimes."
     green " =================================================="
@@ -3215,7 +3229,7 @@ function start_menu(){
     else
         if [[ "${osRelease}" == "debian" ]]; then
         green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
-        green " 42. Install latest linux kernel, 5.16, from Debian repository source"
+        green " 42. Install latest linux kernel, 5.16 or higher, from Debian repository source"
         echo
         fi
 

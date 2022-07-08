@@ -101,12 +101,13 @@ getLinuxOSVersion(){
         # linuxbase.org
         osInfo=$(lsb_release -si)
         osReleaseVersionNo=$(lsb_release -sr)
+
     elif [ -f /etc/lsb-release ]; then
         # For some versions of Debian/Ubuntu without lsb_release command
         . /etc/lsb-release
         osInfo=$DISTRIB_ID
-        
         osReleaseVersionNo=$DISTRIB_RELEASE
+        
     elif [ -f /etc/debian_version ]; then
         # Older Debian/Ubuntu/etc.
         osInfo=Debian
@@ -6902,77 +6903,23 @@ EOM
 log:
   level: info
   file: "${configMosdnsPath}/mosdns.log"
-  err_file: "${configMosdnsPath}/mosdns_error.log"
-  info_file: "${configMosdnsPath}/mosdns_info.log" 
+
+data_providers:
+  - tag: geosite
+    file: ${configMosdnsPath}/${geositeFilename}
+    auto_reload: true
+  - tag: geoip
+    file: ${configMosdnsPath}/${geoipFilename}
+    auto_reload: true
+
 plugin:
-  - tag: main_server
-    type: server
-    args:
-      entry:
-        - main_sequence
-      server:
-        - protocol: udp
-          addr: ":${mosDNSServerPort}"
-        - protocol: tcp
-          addr: ":${mosDNSServerPort}"
-
-  - tag: main_sequence
-    type: sequence
-    args:
-      exec:
-        # ad block
-        # - if:
-        #     - query_is_ad_domain
-        #   exec:
-        #     - _block_with_nxdomain
-        #     - _return
-
-        # hosts map
-        # - map_hosts
-
-        - mem_cache
-
-        - if:
-            - query_is_gfw_domain
-          exec:
-            - forward_remote
-            - _return
-
-        - if:
-            - query_is_local_domain
-            - "!_query_is_common"
-          exec:
-            - forward_local
-            - _return 
-
-        - if:
-            - query_is_non_local_domain
-          exec:
-            - _prefer_ipv4
-            - forward_remote
-            - _return
-
-        - primary:
-            - forward_local
-            - if:
-                - "!response_has_local_ip"
-              exec:
-                - _drop_response
-          secondary:
-            - _prefer_ipv4
-            - forward_remote
-          fast_fallback: 200
-          always_standby: true
-
-  - tag: mem_cache
+  # 缓存
+  - tag: cache
     type: cache
     args:
       size: 4096
-      # use redis as the backend cache
-      # redis: 'redis://localhost:6379/0'
-      # redis_timeout: 50
-      lazy_cache_ttl: 86400
-      lazy_cache_reply_ttl: 30
+      lazy_cache_ttl: 86400 
+      cache_everything: true
 
   # hosts map
   # - tag: map_hosts
@@ -6983,28 +6930,55 @@ plugin:
   #       - 'api.miwifi.com 127.0.0.1'
   #       - 'www.baidu.com 0.0.0.0'
 
+  # 转发至本地服务器的插件
   - tag: forward_local
     type: fast_forward
     args:
       upstream:
         - addr: "udp://223.5.5.5"
-          idle_timeout: 50
+          idle_timeout: 30
           trusted: true
-        - addr: "udp://114.114.114.114"
-          idle_timeout: 50
         - addr: "udp://119.29.29.29"
-          idle_timeout: 50
+          idle_timeout: 30
+          trusted: true
+        - addr: "tls://120.53.53.53:853"
+          enable_pipeline: true
+          idle_timeout: 30
 
+  # 转发至本地无污染服务器的插件 [geekdns|tunadns]
+  - tag: forward_geekdns
+    type: forward
+    args:
+      upstream:
+        - addr: "tls://v.233py.com:853"
+      bootstrap:
+        - "119.29.29.29"
+        - "223.5.5.5"
+      timeout: 5
+  - tag: forward_tunadns
+    type: fast_forward
+    args:
+      upstream:
+        - addr: "https://101.6.6.6:8443/dns-query"
+
+
+  # 转发至远程服务器的插件
   - tag: forward_remote
     type: fast_forward
     args:
       upstream:
 ${addNewDNSServerIPText}
 ${addNewDNSServerDomainText}
+        - addr: "tls://8.8.4.4:853"
+          enable_pipeline: true
         - addr: "udp://208.67.222.222"
           trusted: true
+        - addr: "208.67.220.220:443"
+          trusted: true   
 
-        #- addr: "udp://172.105.216.54"   
+        - addr: "udp://172.105.216.54"
+          idle_timeout: 400
+          trusted: true        
         - addr: "udp://5.2.75.231"
           idle_timeout: 400
           trusted: true
@@ -7019,9 +6993,8 @@ ${addNewDNSServerDomainText}
         - addr: "udp://185.121.177.177"
           idle_timeout: 400
           trusted: true        
-        - addr: "udp://169.239.202.202"
-          idle_timeout: 400
-          trusted: true
+        # - addr: "udp://169.239.202.202"
+
 
         - addr: "udp://94.130.180.225"
           idle_timeout: 400
@@ -7062,44 +7035,104 @@ ${addNewDNSServerDomainText}
         - addr: "https://doh.libredns.gr/dns-query"
           idle_timeout: 400 
 
-
+# 匹配本地域名的插件
   - tag: query_is_local_domain
     type: query_matcher
     args:
       domain:
-        - "ext:${configMosdnsPath}/${geositeFilename}:cn"
+        - 'provider:geosite:cn'
 
   - tag: query_is_gfw_domain
     type: query_matcher
     args:
       domain:
-        - "ext:${configMosdnsPath}/${geositeFilename}:gfw"
+        - 'provider:geosite:gfw'
 
+  # 匹配非本地域名的插件
   - tag: query_is_non_local_domain
     type: query_matcher
     args:
       domain:
-        - "ext:${configMosdnsPath}/${geositeFilename}:geolocation-!cn"
+        - 'provider:geosite:geolocation-!cn'
 
+  # 匹配广告域名的插件
   - tag: query_is_ad_domain
     type: query_matcher
     args:
       domain:
-        - "ext:${configMosdnsPath}/${geositeFilename}:category-ads-all"
+        - 'provider:geosite:category-ads-all'
 
+  # 匹配本地 IP 的插件
   - tag: response_has_local_ip
     type: response_matcher
     args:
       ip:
-        # 使用默认geoip.dat文件
-        # - "ext:${configMosdnsPath}/${geoipFilename}:cn"
-        # 使用高性能cn.dat文件, 需要下载对应的文件
-        - "ext:${configMosdnsPath}/${cnipFilename}:cn"
+        - 'provider:geoip:cn'
+
+
+  # 主要的运行逻辑插件
+  # sequence 插件中调用的插件 tag 必须在 sequence 前定义，
+  # 否则 sequence 找不到对应插件。
+  - tag: main_sequence
+    type: sequence
+    args:
+      exec:
+        # hosts map
+        # - map_hosts
+
+        # 缓存
+        - cache
+
+        # 屏蔽广告域名 ad block
+        - if: query_is_ad_domain
+          exec:
+            - _new_nxdomain_response
+            - _return
+
+        # 已知的本地域名用本地服务器解析
+        - if: query_is_local_domain
+          exec:
+            - forward_local
+            - _return
+
+        - if:
+            - query_is_gfw_domain
+          exec:
+            - forward_remote
+            - _return
+
+        # 已知的非本地域名用远程服务器解析
+        - if: query_is_non_local_domain
+          exec:
+            - _prefer_ipv4
+            - forward_remote
+            - _return
+
+          # 剩下的未知域名用 IP 分流。
+          # primary 从本地服务器获取应答，丢弃非本地 IP 的结果。
+        - primary:
+            - forward_local
+            - if: "(! response_has_local_ip) && [_response_valid_answer]"
+              exec:
+                - _drop_response
+          secondary:
+            - _prefer_ipv4
+            - forward_remote
+          fast_fallback: 200
+          always_standby: true
+
+servers:
+  - exec: main_sequence
+    listeners:
+      - protocol: udp
+        addr: ":${mosDNSServerPort}"
+      - protocol: tcp
+        addr: ":${mosDNSServerPort}"
 
 EOF
 
-        ${configMosdnsPath}/mosdns -s install -c "${configMosdnsPath}/config.yaml" -dir "${configMosdnsPath}" 
-        ${configMosdnsPath}/mosdns -s start
+        ${configMosdnsPath}/mosdns service install -c "${configMosdnsPath}/config.yaml" -d "${configMosdnsPath}" 
+        ${configMosdnsPath}/mosdns service start
 
 
 
@@ -7110,12 +7143,12 @@ EOF
 
         cat > "${configMosdnsPath}/config_mosdns_cn.yaml" <<-EOF    
 server_addr: ":${mosDNSServerPort}"
-cache_size: 0
-lazy_cache_ttl: 0
-lazy_cache_reply_ttl: 0
+cache_size: 2048
+lazy_cache_ttl: 86400
+lazy_cache_reply_ttl: 30
 redis_cache: ""
-min_ttl: 0
-max_ttl: 0
+min_ttl: 300
+max_ttl: 3600
 hosts: []
 arbitrary: []
 blacklist_domain: []
@@ -7125,10 +7158,10 @@ debug: false
 log_file: "${configMosdnsPath}/mosdns-cn.log"
 upstream: []
 local_upstream: ["udp://223.5.5.5", "udp://119.29.29.29"]
-local_ip: ["${configMosdnsPath}/${cnipFilename}:cn"]
+local_ip: ["${configMosdnsPath}/${geoipFilename}:cn"]
 local_domain: []
 local_latency: 50
-remote_upstream: [${addNewDNSServerIPMosdnsCnText}  ${addNewDNSServerDomainMosdnsCnText}  "udp://1.0.0.1", "udp://208.67.222.222", "udp://5.2.75.231", "udp://185.121.177.177", "udp://169.239.202.202"]
+remote_upstream: [${addNewDNSServerIPMosdnsCnText}  ${addNewDNSServerDomainMosdnsCnText}  "udp://1.0.0.1", "udp://208.67.222.222", "tls://8.8.4.4:853", "udp://5.2.75.231", "udp://172.105.216.54"]
 remote_domain: ["${configMosdnsPath}/${geositeFilename}:geolocation-!cn"]
 working_dir: "${configMosdnsPath}"
 cd2exe: false
@@ -7176,8 +7209,8 @@ function removeMosdns(){
         echo
 
         if [[ "${isInstallMosdns}" == "true" ]]; then
-            ${configMosdnsPath}/${isinstallMosdnsName} -s stop 
-            ${configMosdnsPath}/${isinstallMosdnsName} -s uninstall 
+            ${configMosdnsPath}/${isinstallMosdnsName} service stop
+            ${configMosdnsPath}/${isinstallMosdnsName} service uninstall
         else
             ${configMosdnsPath}/mosdns-cn --service stop
             ${configMosdnsPath}/mosdns-cn --service uninstall
@@ -7635,7 +7668,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-6-07 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-7-09 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -7667,8 +7700,8 @@ function start_menu(){
     green " =================================================="
     green " 31. 安装DNS服务器 AdGuardHome 支持去广告"
     green " 32. 给 AdGuardHome 申请免费的SSL证书, 并开启DOH与DOT"    
-    green " 33. 安装DNS国内国外分流服务器 mosdns"    
-    red " 34. 卸载 mosdns DNS服务器 "
+    green " 33. 安装DNS国内国外分流服务器 mosdns 或 mosdns-cn"    
+    red " 34. 卸载 mosdns 或 mosdns-cn DNS服务器 "
     echo
     green " 41. 安装OhMyZsh与插件zsh-autosuggestions, Micro编辑器 等软件"
     green " 42. 开启root用户SSH登陆, 如谷歌云默认关闭root登录,可以通过此项开启"
@@ -7683,7 +7716,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray Installation | 2022-6-07 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray Installation | 2022-7-09 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
@@ -7715,8 +7748,8 @@ function start_menu(){
     green " =================================================="
     green " 31. Install AdGuardHome, ads & trackers blocking DNS server "
     green " 32. Get free SSL certificate for AdGuardHome and enable DOH/DOT "
-    green " 33. Install DNS server MosDNS"
-    red " 34. Remove DNS server MosDNS"
+    green " 33. Install DNS server MosDNS/MosDNS-cn"
+    red " 34. Remove DNS server MosDNS/MosDNS-cn"
 
     echo
     green " 41. Install Oh My Zsh and zsh-autosuggestions plugin, Micro editor"
