@@ -6918,7 +6918,7 @@ data_providers:
     file: ${configMosdnsPath}/${geoipFilename}
     auto_reload: true
 
-plugin:
+plugins:
   # 缓存
   - tag: cache
     type: cache
@@ -6982,9 +6982,9 @@ ${addNewDNSServerDomainText}
         - addr: "208.67.220.220:443"
           trusted: true   
 
-        - addr: "udp://172.105.216.54"
-          idle_timeout: 400
-          trusted: true        
+        #- addr: "udp://172.105.216.54"
+        #  idle_timeout: 400
+        #  trusted: true 
         - addr: "udp://5.2.75.231"
           idle_timeout: 400
           trusted: true
@@ -7041,7 +7041,7 @@ ${addNewDNSServerDomainText}
         - addr: "https://doh.libredns.gr/dns-query"
           idle_timeout: 400 
 
-# 匹配本地域名的插件
+  # 匹配本地域名的插件
   - tag: query_is_local_domain
     type: query_matcher
     args:
@@ -7101,8 +7101,7 @@ ${addNewDNSServerDomainText}
             - forward_local
             - _return
 
-        - if:
-            - query_is_gfw_domain
+        - if: query_is_gfw_domain
           exec:
             - forward_remote
             - _return

@@ -51,6 +51,21 @@ mosdnsEtcPath="/etc/mosdns"
 getIPDKdownloadFilename(){
     # mosdnsIPK_array=($(wget -qO- https://op.supes.top/packages/x86_64/ | grep -E "mosdns|v2ray" | awk -F'<a href=\"' '/ipk/{print $2}' | cut -d\" -f1 | sort -V))
 
+    mosdnsFilename="mosdns_abcb222-74_x86_64.ipk"
+    mosdnsNeoFilename="mosdns-neo_abcb222-73_x86_64.ipk"
+    mosdnsLuciFilename="luci-app-mosdns_git-22.189.25450-61bab3a_all.ipk"
+
+    mosdnsUrl="https://op.supes.top/packages/x86_64/mosdns_abcb222-74_x86_64.ipk"
+    mosdnsNeoUrl="https://op.supes.top/packages/x86_64/mosdns-neo_abcb222-73_x86_64.ipk"
+    mosdnsLuciUrl="https://op.supes.top/packages/x86_64/luci-app-mosdns_git-22.189.25450-61bab3a_all.ipk"
+
+    v2rayGeoSiteFilename="v2ray-geosite_20220425025949-4_all.ipk"
+    v2rayGeoIpFilename="v2ray-geoip_202204210050-4_all.ipk"
+
+    v2rayGeoSiteUrl="https://op.supes.top/packages/x86_64/v2ray-geosite_202203020836-6_all.ipk"
+    v2rayGeoIpUrl="https://op.supes.top/packages/x86_64/v2ray-geoip_202203020834-6_all.ipk"
+
+
     mosdnsIPK_array=$(wget -qO- https://op.supes.top/packages/x86_64/ | grep -E "mosdns|v2ray" | awk -F'<a href=\"' '/ipk/{print $2}' | cut -d\" -f1 | sort -V)
 
     echo " 准备下载并安装以下文件"
@@ -58,26 +73,31 @@ getIPDKdownloadFilename(){
     for filename in ${mosdnsIPK_array}; do
 
         if [ "${filename#*luci-app-mosdns}" != "$filename" ]; then
-            mosdnsLuciFilename1="${filename}"
-            mosdnsLuciUrl2="https://op.supes.top/packages/x86_64/${mosdnsLuciFilename1}"
-            echo "1 $mosdnsLuciFilename1"
+            mosdnsLuciFilename="${filename}"
+            mosdnsLuciUrl="https://op.supes.top/packages/x86_64/${mosdnsLuciFilename}"
+            echo "1 ${mosdnsLuciFilename}"
+
+        elif [ "${filename#*mosdns-neo}" != "$filename" ]; then
+            mosdnsNeoFilename="${filename}"
+            mosdnsNeoUrl="https://op.supes.top/packages/x86_64/${mosdnsNeoFilename}"
+            echo "2 ${mosdnsNeoFilename}"
 
         elif [ "${filename#*mosdns}" != "$filename" ]; then
-            mosdnsFilename1="${filename}"
-            mosdnsUrl1="https://op.supes.top/packages/x86_64/${mosdnsFilename1}"
-            echo "2 $mosdnsFilename1"
+            mosdnsFilename="${filename}"
+            mosdnsUrl="https://op.supes.top/packages/x86_64/${mosdnsFilename}"
+            echo "3 ${mosdnsFilename}"
 
         elif [ "${filename#*geosite}" != "$filename" ]; then
             v2rayGeoSiteFilename="${filename}"
-            v2rayGeoSiteUrl1="https://op.supes.top/packages/x86_64/${v2rayGeoSiteFilename}"
+            v2rayGeoSiteUrl="https://op.supes.top/packages/x86_64/${v2rayGeoSiteFilename}"
             echo "4 $v2rayGeoSiteFilename"
 
         elif [ "${filename#*geoip}" != "$filename" ]; then
             v2rayGeoIpFilename="${filename}"
-            v2rayGeoIpUrl1="https://op.supes.top/packages/x86_64/${v2rayGeoIpFilename}"
-            echo "3 $v2rayGeoIpFilename"            
+            v2rayGeoIpUrl="https://op.supes.top/packages/x86_64/${v2rayGeoIpFilename}"
+            echo "5 $v2rayGeoIpFilename"            
         else
-            tempXXXX=""
+            tempUrlXX=""
         fi
     done
 }
@@ -91,16 +111,25 @@ installMosdns(){
     if [ "${osInfo}" = "OpenWrt" ]; then
         if [ "${osArchitecture}" = "amd64" ]; then
             echo " Prepare to install Mosdns on OpenWrt X86"
-            echo " 准备安装 OpenWrt X86 的 Mosdns, 通过 opkg 安装"
+            echo " 准备安装 OpenWrt X86 Mosdns, 通过 opkg 安装"
         else
-            echo " Only support X86 on Openwrt, not support on Arm Openwrt ! "
-            echo " 只支持安装在X86的软路由, 不支持Arm 路由器, 请自行查找Arm路由器的带有Mosdns的固件 ! "
+            echo " Prepare to install Mosdns on OpenWrt Arm Openwrt ! "
+            echo " 准备安装 OpenWrt Arm Mosdns, 如果安装失败 请在下面页面自行查找对应Arm版本进行安装 ! "
+            echo " https://github.com/sbwml/luci-app-mosdns/releases ! "
+            echo
+            echo " 手动安装方法: "
+            echo " 下载文件 v2ray-geoip_2022-07-04_all.ipk, v2ray-geosite_2022-07-04_all.ipk "
+            echo " 下载文件 mosdns_4.1.5-1_arm_cortex-a7.ipk, luci-app-mosdns_1.4_all.ipk "
+            echo " 把已下载文件 通过 ssh 或 ftp 上传到路由器上 例如上传到 /tmp 目录后 "
+            echo " 运行命令 cd /tmp "
+            echo " 运行命令 opkg install v2ray-geoip_2022-07-04_all.ipk v2ray-geosite_2022-07-04_all.ipk"
+            echo " 运行命令 opkg install mosdns_4.1.5-1_arm_cortex-a7.ipk luci-app-mosdns_1.4_all.ipk "
             exit
         fi
     else
         echo " ================================================== "
         echo " For Other linux platform, please use the script below:  "
-        echo " 针对 非OpenWrt 的 linux 系统, 请使用如下脚本安装: "
+        echo " 针对非 OpenWrt 的 linux 系统, 请使用如下脚本安装: "
         echo " wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh "
         echo
         exit
@@ -116,24 +145,14 @@ installMosdns(){
 
     cd "${mosdnsDownloadPath}" || exit
 
-    mosdnsFilename1="mosdns_cee9e6d-55_x86_64.ipk"
-    mosdnsLuciFilename1="luci-app-mosdns_git-22.142.44511-c664869_all.ipk"
 
-    mosdnsUrl1="https://op.supes.top/packages/x86_64/mosdns_cee9e6d-55_x86_64.ipk"
-    mosdnsLuciUrl2="https://op.supes.top/packages/x86_64/luci-app-mosdns_git-22.142.44511-c664869_all.ipk"
-
-    v2rayGeoSiteFilename="v2ray-geosite_20220425025949-4_all.ipk"
-    v2rayGeoIpFilename="v2ray-geoip_202204210050-4_all.ipk"
-
-    v2rayGeoSiteUrl1="https://op.supes.top/packages/x86_64/v2ray-geosite_20220425025949-4_all.ipk"
-    v2rayGeoIpUrl1="https://op.supes.top/packages/x86_64/v2ray-geoip_202204210050-4_all.ipk"
 
     getIPDKdownloadFilename
 
 
     geositeFilename="geosite.dat"
     geoipFilename="geoip.dat"
-    cnipFilename="cn.dat"
+    # cnipFilename="cn.dat"
 
     # versionV2rayRulesDat=$(getGithubLatestReleaseVersion "Loyalsoldier/v2ray-rules-dat")
     # geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geosite.dat"
@@ -142,7 +161,7 @@ installMosdns(){
 
     geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
     geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
+    # cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
 
 
 
@@ -214,123 +233,94 @@ EOM
     echo " ================================================== "
     echo " Downloading mosdns.  开始下载 mosdns.ipk 等相关文件"
     echo
-    wget -O ${mosdnsDownloadPath}/${mosdnsFilename1} ${mosdnsUrl1}
-    wget -O ${mosdnsDownloadPath}/${mosdnsLuciFilename1} ${mosdnsLuciUrl2}
+    wget -O ${mosdnsDownloadPath}/${mosdnsFilename} ${mosdnsUrl}
+    #wget -O ${mosdnsDownloadPath}/${mosdnsNeoFilename} ${mosdnsNeoUrl}
+    wget -O ${mosdnsDownloadPath}/${mosdnsLuciFilename} ${mosdnsLuciUrl}
 
-    wget -O ${mosdnsDownloadPath}/${v2rayGeoSiteFilename} ${v2rayGeoSiteUrl1}
-    wget -O ${mosdnsDownloadPath}/${v2rayGeoIpFilename} ${v2rayGeoIpUrl1}
+    wget -O ${mosdnsDownloadPath}/${v2rayGeoSiteFilename} ${v2rayGeoSiteUrl}
+    wget -O ${mosdnsDownloadPath}/${v2rayGeoIpFilename} ${v2rayGeoIpUrl}
 
 
     echo
     echo " Downloading cn.dat, geosite.dat, geoip.dat.  开始下载 cn.dat geosite.dat geoip.dat  等相关文件"
     echo
+    echo " 请保证网络可以正常访问 github.com"
+    echo " 如果不能正常访问 github.com 将会导致下载文件失败从而无法正常安装"
+    echo
 
-    wget -O ${mosdnsDownloadPath}/${geositeFilename} ${geositeUrl}
-    wget -O ${mosdnsDownloadPath}/${geoipFilename} ${geoipeUrl}
-    wget -O ${mosdnsDownloadPath}/${cnipFilename} ${cnipUrl}
-
-    if [ ! -f "${mosdnsDownloadPath}/${cnipFilename}" ]; then
-        echo
-        echo "下载失败, 请检查网络是否可以正常访问 gitHub.com"
-        echo "安装失败, 请检查网络后, 重新运行本脚本"
-        echo
-        exit 1
+    if [ ! -f "${mosdnsDownloadPath}/${geositeFilename}" ]; then
+        wget -O ${mosdnsDownloadPath}/${geositeFilename} ${geositeUrl}
+        wget -O ${mosdnsDownloadPath}/${geoipFilename} ${geoipeUrl}
     fi 
 
+    if [ ! -f "${mosdnsDownloadPath}/${geositeFilename}" ]; then
+        echo
+        echo " ${geositeUrl}"
+        echo " 下载失败, 请检查网络是否可以正常访问 gitHub.com"
+    fi 
+
+    if [ ! -f "${mosdnsDownloadPath}/${geoipFilename}" ]; then
+        echo
+        echo " ${geoipeUrl}"
+        echo " 下载失败, 请检查网络是否可以正常访问 gitHub.com"
+    fi
+
+
     echo
-    echo "Install mosdns.ipk and luci-app-mosdns.ipk. 开始安装 mosdns.ipk luci-app-mosdns.ipk"
+    echo " ================================================== "    
+    echo " Install mosdns.ipk and luci-app-mosdns.ipk. 开始安装 mosdns.ipk luci-app-mosdns.ipk"
     echo
+
+    rm -f /etc/config/mosdns
+    rm -f /etc/config/mosdns-opkg
+
+    rm -f "${mosdnsLogFilePath}"
+    rm -rf "${mosdnsEtcPath}"
 
     opkg install ${v2rayGeoSiteFilename}
     opkg install ${v2rayGeoIpFilename}
 
-    opkg install ${mosdnsFilename1}
-    opkg install ${mosdnsLuciFilename1}
+    opkg install ${mosdnsFilename}
+    opkg install ${mosdnsLuciFilename}
 
 
     mkdir -p ${mosdnsEtcPath}
-    cp -f ${mosdnsDownloadPath}/${geositeFilename} ${mosdnsEtcPath}
-    cp -f ${mosdnsDownloadPath}/${geoipFilename} ${mosdnsEtcPath}
-    cp -f ${mosdnsDownloadPath}/${cnipFilename} ${mosdnsEtcPath}
 
-    rm -f "${mosdnsLogFilePath}"
-    rm -f "${mosdnsEtcPath}/cus_config.yaml"
+    if [ -f "${mosdnsDownloadPath}/${geositeFilename}" ]; then
+        cp -f ${mosdnsDownloadPath}/${geositeFilename} ${mosdnsEtcPath}
+    else
+        cp -f /usr/share/v2ray/${geositeFilename} ${mosdnsEtcPath}
+    fi
+
+    if [ -f "${mosdnsDownloadPath}/${geoipFilename}" ]; then
+        cp -f ${mosdnsDownloadPath}/${geoipFilename} ${mosdnsEtcPath}
+    else
+        cp -f /usr/share/v2ray/${geoipFilename} ${mosdnsEtcPath}
+    fi 
+
 
     cat > "${mosdnsEtcPath}/cus_config.yaml" <<-EOF    
 
 log:
   level: info
   file: "${mosdnsLogFilePath}"
-plugin:
-  - tag: main_server
-    type: server
-    args:
-      entry:
-        - main_sequence
-      server:
-        - protocol: udp
-          addr: ":${mosDNSServerPort}"
-        - protocol: tcp
-          addr: ":${mosDNSServerPort}"
 
-  - tag: main_sequence
-    type: sequence
-    args:
-      exec:
-        # ad block
-        # - if:
-        #     - query_is_ad_domain
-        #   exec:
-        #     - _block_with_nxdomain
-        #     - _return
+data_providers:
+  - tag: geosite
+    file: ./geosite.dat
+    auto_reload: true
+  - tag: geoip
+    file: ./geoip.dat
+    auto_reload: true
 
-        # hosts map
-        # - map_hosts
-
-        - mem_cache
-
-        - if:
-            - query_is_gfw_domain
-          exec:
-            - forward_remote
-            - _return
-
-        - if:
-            - query_is_local_domain
-            - "!_query_is_common"
-          exec:
-            - forward_local
-            - _return 
-
-        - if:
-            - query_is_non_local_domain
-          exec:
-            - _prefer_ipv4
-            - forward_remote
-            - _return
-
-        - primary:
-            - forward_local
-            - if:
-                - "!response_has_local_ip"
-              exec:
-                - _drop_response
-          secondary:
-            - _prefer_ipv4
-            - forward_remote
-          fast_fallback: 200
-          always_standby: true
-
-
-  - tag: mem_cache
+plugins:
+  # 缓存
+  - tag: cache
     type: cache
     args:
       size: 4096
-      # use redis as the backend cache
-      # redis: 'redis://localhost:6379/0'
-      # redis_timeout: 50
-      lazy_cache_ttl: 86400
-      lazy_cache_reply_ttl: 30
+      lazy_cache_ttl: 86400 
+      cache_everything: true
 
   # hosts map
   # - tag: map_hosts
@@ -341,29 +331,55 @@ plugin:
   #       - 'api.miwifi.com 127.0.0.1'
   #       - 'www.baidu.com 0.0.0.0'
 
+  # 转发至本地服务器的插件
   - tag: forward_local
     type: fast_forward
     args:
       upstream:
         - addr: "udp://223.5.5.5"
-          idle_timeout: 50
+          idle_timeout: 30
           trusted: true
-        - addr: "udp://114.114.114.114"
-          idle_timeout: 50
         - addr: "udp://119.29.29.29"
-          idle_timeout: 50
+          idle_timeout: 30
+          trusted: true
+        - addr: "tls://120.53.53.53:853"
+          enable_pipeline: true
+          idle_timeout: 30
+
+  # 转发至本地无污染服务器的插件 [geekdns|tunadns]
+  - tag: forward_geekdns
+    type: forward
+    args:
+      upstream:
+        - addr: "tls://v.233py.com:853"
+      bootstrap:
+        - "119.29.29.29"
+        - "223.5.5.5"
+      timeout: 5
+  - tag: forward_tunadns
+    type: fast_forward
+    args:
+      upstream:
+        - addr: "https://101.6.6.6:8443/dns-query"
 
 
+  # 转发至远程服务器的插件
   - tag: forward_remote
     type: fast_forward
     args:
       upstream:
 ${addNewDNSServerIPText}
 ${addNewDNSServerDomainText}
+        - addr: "tls://8.8.4.4:853"
+          enable_pipeline: true
         - addr: "udp://208.67.222.222"
           trusted: true
+        - addr: "208.67.220.220:443"
+          trusted: true   
 
-        #- addr: "udp://172.105.216.54"   
+        #- addr: "udp://172.105.216.54"
+        #  idle_timeout: 400
+        #  trusted: true        
         - addr: "udp://5.2.75.231"
           idle_timeout: 400
           trusted: true
@@ -378,9 +394,8 @@ ${addNewDNSServerDomainText}
         - addr: "udp://185.121.177.177"
           idle_timeout: 400
           trusted: true        
-        - addr: "udp://169.239.202.202"
-          idle_timeout: 400
-          trusted: true
+        # - addr: "udp://169.239.202.202"
+
 
         - addr: "udp://94.130.180.225"
           idle_timeout: 400
@@ -392,7 +407,6 @@ ${addNewDNSServerDomainText}
         - addr: "https://dns-doh.dnsforfamily.com/dns-query"
           dial_addr: "94.130.180.225:443"
           idle_timeout: 400
-
 
         - addr: "udp://101.101.101.101"
           idle_timeout: 400
@@ -423,38 +437,99 @@ ${addNewDNSServerDomainText}
           idle_timeout: 400 
 
 
+  # 匹配本地域名的插件
   - tag: query_is_local_domain
     type: query_matcher
     args:
       domain:
-        - "ext:./geosite.dat:cn"
+        - 'provider:geosite:cn'
 
   - tag: query_is_gfw_domain
     type: query_matcher
     args:
       domain:
-        - "ext:./geosite.dat:gfw"
+        - 'provider:geosite:gfw'
 
+  # 匹配非本地域名的插件
   - tag: query_is_non_local_domain
     type: query_matcher
     args:
       domain:
-        - "ext:./geosite.dat:geolocation-!cn"
+        - 'provider:geosite:geolocation-!cn'
 
+  # 匹配广告域名的插件
   - tag: query_is_ad_domain
     type: query_matcher
     args:
       domain:
-        - "ext:./geosite.dat:category-ads-all"
+        - 'provider:geosite:category-ads-all'
 
+  # 匹配本地 IP 的插件
   - tag: response_has_local_ip
     type: response_matcher
     args:
       ip:
-        # 使用默认geoip.dat文件
-        # - "ext:./geoip.dat:cn"
-        # 使用高性能cn.dat文件, 需要下载对应的文件
-        - "ext:./cn.dat:cn"
+        - 'provider:geoip:cn'
+
+
+  # 主要的运行逻辑插件
+  # sequence 插件中调用的插件 tag 必须在 sequence 前定义，
+  # 否则 sequence 找不到对应插件。
+  - tag: main_sequence
+    type: sequence
+    args:
+      exec:
+        # hosts map
+        # - map_hosts
+
+        # 缓存
+        - cache
+
+        # 屏蔽广告域名 ad block
+        - if: query_is_ad_domain
+          exec:
+            - _new_nxdomain_response
+            - _return
+
+        # 已知的本地域名用本地服务器解析
+        - if: query_is_local_domain
+          exec:
+            - forward_local
+            - _return
+
+        - if: query_is_gfw_domain
+          exec:
+            - forward_remote
+            - _return
+
+        # 已知的非本地域名用远程服务器解析
+        - if: query_is_non_local_domain
+          exec:
+            - _prefer_ipv4
+            - forward_remote
+            - _return
+
+          # 剩下的未知域名用 IP 分流。
+          # primary 从本地服务器获取应答，丢弃非本地 IP 的结果。
+        - primary:
+            - forward_local
+            - if: "(! response_has_local_ip) && [_response_valid_answer]"
+              exec:
+                - _drop_response
+          secondary:
+            - _prefer_ipv4
+            - forward_remote
+          fast_fallback: 200
+          always_standby: true
+
+servers:
+  - exec: main_sequence
+    listeners:
+      - protocol: udp
+        addr: ":${mosDNSServerPort}"
+      - protocol: tcp
+        addr: ":${mosDNSServerPort}"
+
 
 EOF
 
@@ -471,9 +546,45 @@ EOF
     echo
 }
 
-main(){
 
-    installMosdns
+
+removeMosdns(){
+
+    echo
+    echo " =================================================="
+    echo " 准备卸载 Mosdns on OpenWRT"
+    echo " =================================================="
+    echo
+
+    opkg remove luci-app-mosdns
+    opkg remove mosdns
+
+    rm -f "${mosdnsLogFilePath}"
+    rm -rf "${mosdnsEtcPath}"
+
+    rm -f /etc/config/mosdns
+    rm -f /etc/config/mosdns-opkg
+
+
+
+    echo
+    echo " ================================================== "
+    echo "  Mosdns 卸载完毕 !"
+    echo " ================================================== "
+
 }
 
-main
+
+main(){
+
+    if [ -z "$1" ]; then
+        installMosdns
+    else
+        removeMosdns
+    fi
+
+}
+
+main $1
+
+

@@ -73,7 +73,7 @@ function saveDateToFile(){
 function setDateFromFile(){
 	green " ================================================== "
 	echo "Set system date from file $dateFilePath "
-	currentDate=`cat $dateFilePath`
+	currentDate=$(cat $dateFilePath)
 	echo "$currentDate"
 	date -s "$currentDate"
 
@@ -103,9 +103,9 @@ function setIP(){
 
 	green " ================================================== "
 
-	read -p "Choose IP Mode: DHCP(y) or Static(n) ? (default: static ip) Pls Input [y/N]?" IPModeInput
+	read -r -p "Choose IP Mode: DHCP(y) or Static(n) ? (default: static ip) Pls Input [y/N]?" IPModeInput
 	IPModeInput=${IPModeInput:-n}
-	read -p "Please input IP address of your n3450 computer (default:192.168.7.200) ?" IPInput
+	read -r -p "Please input IP address of your n3450 computer (default:192.168.7.200) ?" IPInput
 
 	if [[ $IPModeInput == [Yy] ]]; then
     cat > /etc/network/interfaces <<-EOF
@@ -145,8 +145,8 @@ EOF
 	green " ================================================== "
 	else
 
-		read -p "Please input IP netmask (default:255.255.255.0) ?" netmaskInput
-		read -p "Please input IP gateway (default:192.168.7.1) ?" gatewayInput
+		read -r -p "Please input IP netmask (default:255.255.255.0) ?" netmaskInput
+		read -r -p "Please input IP gateway (default:192.168.7.1) ?" gatewayInput
 
 		IPInput=${IPInput:-192.168.7.200}
 		netmaskInput=${netmaskInput:-255.255.255.0}
