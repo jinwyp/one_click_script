@@ -386,7 +386,7 @@ ${addNewDNSServerDomainText}
 
         - addr: "udp://1.0.0.1"
           trusted: true
-        - addr: "tls://1dot1dot1dot1.cloudflare-dns.com"
+        # - addr: "tls://1dot1dot1dot1.cloudflare-dns.com"
         - addr: "https://dns.cloudflare.com/dns-query"
           idle_timeout: 400
           trusted: true
@@ -403,7 +403,7 @@ ${addNewDNSServerDomainText}
         - addr: "udp://78.47.64.161"
           idle_timeout: 400
           trusted: true 
-        - addr: "tls://dns-dot.dnsforfamily.com"
+        # - addr: "tls://dns-dot.dnsforfamily.com"
         - addr: "https://dns-doh.dnsforfamily.com/dns-query"
           dial_addr: "94.130.180.225:443"
           idle_timeout: 400
@@ -415,8 +415,8 @@ ${addNewDNSServerDomainText}
           idle_timeout: 400
           trusted: true 
         - addr: "tls://101.101.101.101"
-        - addr: "https://dns.twnic.tw/dns-query"
-          idle_timeout: 400
+        # - addr: "https://dns.twnic.tw/dns-query"
+        #  idle_timeout: 400
 
         # - addr: "udp://172.104.237.57"
 
