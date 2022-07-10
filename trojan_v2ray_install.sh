@@ -7013,13 +7013,13 @@ ${addNewDNSServerDomainText}
           dial_addr: "94.130.180.225:443"
           idle_timeout: 400
 
-        - addr: "udp://101.101.101.101"
-          idle_timeout: 400
-          trusted: true 
-        - addr: "udp://101.102.103.104"
-          idle_timeout: 400
-          trusted: true 
-        - addr: "tls://101.101.101.101"
+        #- addr: "udp://101.101.101.101"
+        #  idle_timeout: 400
+        #  trusted: true 
+        #- addr: "udp://101.102.103.104"
+        #  idle_timeout: 400
+        #  trusted: true 
+        #- addr: "tls://101.101.101.101"
         # - addr: "https://dns.twnic.tw/dns-query"
         #  idle_timeout: 400
 
