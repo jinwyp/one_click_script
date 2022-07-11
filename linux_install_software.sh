@@ -526,10 +526,11 @@ function installPackage(){
         $osSystemPackage install -y gnupg2
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
+        rm -f /etc/apt/sources.list.d/nginx.list
         if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" || "${osReleaseVersionNoShort}" == "20" ]]; then
             echo
         else
-        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+            cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
 deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
 EOF
@@ -554,10 +555,15 @@ EOF
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
         # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
-        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
-deb [arch=amd64] http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
-deb-src http://nginx.org/packages/debian/ $osReleaseVersionCodeName nginx
+        rm -f /etc/apt/sources.list.d/nginx.list
+        if [[ "${osReleaseVersionNoShort}" == "11" ]]; then
+            echo
+        else
+            cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+deb https://nginx.org/packages/mainline/debian/ $osReleaseVersionCodeName nginx
+deb-src https://nginx.org/packages/mainline/debian $osReleaseVersionCodeName nginx
 EOF
+        fi
 
         ${osSystemPackage} update -y
 

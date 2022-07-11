@@ -26,7 +26,7 @@
 # ubuntu18 安装完成默认内核  linux-generic 4.15.0.140, linux-headers-4.15.0-140
 # ubuntu20 安装完成默认内核  linux-image-5.4.0-70-generic , linux-headers-5.4.0-70 
 # debian10 安装完成默认内核  4.19.0-16-amd64
-# debian10 安装完成默认内核  linux-image-5.10.0-8-amd64
+# debian11 安装完成默认内核  linux-image-5.10.0-8-amd64
 
 # UJX6N 编译的bbr plus 内核  5.10.27-bbrplus    5.9.16    5.4.86  
 # UJX6N 编译的bbr plus 内核  4.19.164   4.14.213    4.9.264-1.bbrplus
