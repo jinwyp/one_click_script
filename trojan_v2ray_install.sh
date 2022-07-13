@@ -827,7 +827,7 @@ function vps_bench(){
 }
 function vps_bench_dedicated(){
     # bash -c "$(wget -qO- https://github.com/Aniverse/A/raw/i/a)"
-	wget -N --no-check-certificate -O dedicated_server_bench.sh https://raw.githubusercontent.com/Aniverse/A/master/raw/i/a && chmod +x dedicated_server_bench.sh && bash dedicated_server_bench.sh
+	wget -N --no-check-certificate -O dedicated_server_bench.sh Aniverse/A/i/a && chmod +x dedicated_server_bench.sh && bash dedicated_server_bench.sh
 }
 
 function vps_zbench(){
