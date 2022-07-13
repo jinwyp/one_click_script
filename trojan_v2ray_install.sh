@@ -7466,7 +7466,7 @@ function startMenuOther(){
     green " 45. ZBench 综合网速测试 (包含节点测速, Ping 以及 路由测试)"
     green " 46. testrace 回程路由测试 by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace 回程路由测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
-    green " 48. returnroute 回程路由测试 推荐使用 (北京电信/联通/移动 上海电信/联通/移动 广州电信/联通/移动 )"
+    green " 48. 回程路由测试 推荐使用 (北京电信/联通/移动 上海电信/联通/移动 广州电信/联通/移动 )"
     green " 49. 三网回程路由测试 Go 语言开发 by zhanghanyun "   
     green " 50. 独立服务器测试 包括系统信息和I/O测试" 
     echo
@@ -7595,6 +7595,7 @@ function startMenuOther(){
         ;;
         48 )
             vps_returnroute
+            vps_returnroute2
         ;;
         49 )
             vps_returnroute2
