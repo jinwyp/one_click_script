@@ -2667,7 +2667,10 @@ function installXrayR(){
     testLinuxPortUsage
 
     # https://raw.githubusercontent.com/XrayR-project/XrayR-release/master/install.sh
-    wget -O xrayr_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/Misaka-blog/XrayR-script/master/install.sh" && chmod +x xrayr_install.sh && ./xrayr_install.sh
+    # https://raw.githubusercontent.com/Misaka-blog/XrayR-script/master/install.sh
+    # https://raw.githubusercontent.com/long2k3pro/XrayR-release/master/install.sh
+
+    wget -O xrayr_install.sh -N --no-check-certificate "https://raw.githubusercontent.com/long2k3pro/XrayR-release/master/install.sh" && chmod +x xrayr_install.sh && ./xrayr_install.sh
 
     replaceXrayRConfig
 }
