@@ -527,7 +527,7 @@ function installPackage(){
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
         rm -f /etc/apt/sources.list.d/nginx.list
-        if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" || "${osReleaseVersionNoShort}" == "20" ]]; then
+        if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" ]]; then
             echo
         else
             cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
@@ -556,7 +556,7 @@ EOF
         # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
         rm -f /etc/apt/sources.list.d/nginx.list
-        if [[ "${osReleaseVersionNoShort}" == "11" ]]; then
+        if [[ "${osReleaseVersionNoShort}" == "12" ]]; then
             echo
         else
             cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
@@ -1928,12 +1928,13 @@ EOF
 
         cat > "${nginxConfigPath}" <<-EOF
 
-${nginxConfigNginxModuleInput}
+include /etc/nginx/modules-enabled/*.conf;
 
 user  ${nginxUser};
 worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
+
 events {
     worker_connections  1024;
 }

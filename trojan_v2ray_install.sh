@@ -562,7 +562,7 @@ function installPackage(){
         wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
 
         rm -f /etc/apt/sources.list.d/nginx.list
-        if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" || "${osReleaseVersionNoShort}" == "20" ]]; then
+        if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" ]]; then
             echo
         else
             cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
@@ -592,7 +592,7 @@ EOF
         wget https://nginx.org/keys/nginx_signing.key -O- | apt-key add - 
 
         rm -f /etc/apt/sources.list.d/nginx.list
-        if [[ "${osReleaseVersionNoShort}" == "11" ]]; then
+        if [[ "${osReleaseVersionNoShort}" == "12" ]]; then
             echo
         else
             cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
@@ -1781,6 +1781,7 @@ load_module /usr/lib64/nginx/modules/ngx_stream_module.so;
 EOM
         else
         read -r -d '' nginxConfigNginxModuleInput << EOM
+include /etc/nginx/modules-enabled/*.conf;
 # load_module /usr/lib/nginx/modules/ngx_stream_module.so;
 EOM
         fi
