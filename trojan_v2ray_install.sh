@@ -3477,7 +3477,7 @@ function generateVmessImportLink(){
         configV2rayVmessLinkStreamSetting2="tcp"
 
         configV2rayVmessLinkConfigPath="${configV2rayWebSocketPath}"
-        configV2rayVmessLinkConfigPath2="tcp${configV2rayWebSocketPath}" 
+        configV2rayVmessLinkConfigPath2="/tcp${configV2rayWebSocketPath}" 
 
         configV2rayVmessLinkConfigTls="tls" 
 

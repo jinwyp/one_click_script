@@ -2183,7 +2183,7 @@ function installWARPClient(){
 
         curl https://pkg.cloudflareclient.com/pubkey.gpg | ${sudoCmd} apt-key add -
         
-        echo "deb http://pkg.cloudflareclient.com/ $osReleaseVersionCodeName main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+        echo "deb http://pkg.cloudflareclient.com/ $osReleaseVersionCodeName main" | ${sudoCmd} tee /etc/apt/sources.list.d/cloudflare-client.list
 
         ${sudoCmd} apt-get update
         ${sudoCmd} apt install -y cloudflare-warp 
