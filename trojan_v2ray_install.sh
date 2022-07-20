@@ -3468,6 +3468,7 @@ function generateVmessImportLink(){
     fi
 
     configV2rayProtocolDisplayName="${configV2rayProtocol}"
+    configV2rayProtocolDisplayHeaderType="none"
     configV2rayVmessLinkConfigPath=""
     configV2rayVmessLinkConfigPath2=""
 
@@ -3481,6 +3482,8 @@ function generateVmessImportLink(){
         configV2rayVmessLinkConfigTls="tls" 
 
         configV2rayProtocolDisplayName="vmess"
+
+        configV2rayProtocolDisplayHeaderType="http"
     fi
 
 
@@ -3532,7 +3535,7 @@ EOF
     "id": "${v2rayPassword1}",
     "aid": "0",
     "net": "${configV2rayVmessLinkStreamSetting2}",
-    "type": "none",
+    "type": "${configV2rayProtocolDisplayHeaderType}",
     "host": "${configV2rayVmessLinkConfigHost}",
     "path": "${configV2rayVmessLinkConfigPath2}",
     "tls": "${configV2rayVmessLinkConfigTls}",
@@ -5826,8 +5829,6 @@ ${v2rayVlessLinkQR1}
 导入链接 Vmess Base64 格式:
 ${v2rayVmessLinkQR1}
 
-导入链接新版:
-vmess://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
 
 
 =========== ${promptInfoXrayInstall}客户端 VMess-TCP-TLS 配置参数 支持CDN =============
@@ -5839,6 +5840,7 @@ vmess://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryp
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     加密方式: auto,  // 如果是Vless协议则为none
     传输协议: tcp,
+    伪装类型: http,
     路径:/tcp${configV2rayWebSocketPath},
     底层传输:tls,
     别名:自己起个任意名称
@@ -5847,8 +5849,6 @@ vmess://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryp
 导入链接 Vmess Base64 格式:
 ${v2rayVmessLinkQR2}
 
-导入链接新版:
-vmess://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=auto&security=tls&type=tcp&host=${configSSLDomain}&path=%2ftcp${configV2rayWebSocketPath}#${configSSLDomain}+tcp_protocol
 
 EOF
 
