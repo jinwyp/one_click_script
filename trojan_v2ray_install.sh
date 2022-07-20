@@ -1956,6 +1956,7 @@ user  ${wwwUsername} ${wwwUsername};
 worker_processes  1;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
+
 events {
     worker_connections  1024;
 }
@@ -4299,18 +4300,18 @@ EOM
 
     # 增加 v2ray 服务器端配置
 
-    trojanPassword1=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword2=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword3=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword4=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword5=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword6=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword7=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword8=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-    trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
-
     if [[ "$configV2rayWorkingMode" == "vlessTCPWSTrojan" ]]; then
+        trojanPassword1=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword2=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword3=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword4=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword5=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword6=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword7=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword8=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+        trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+
         echo
         yellow " 请输入 trojan 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
         read -p "请输入密码的前缀, 直接回车默认随机生成前缀:" configTrojanPasswordPrefixInput
