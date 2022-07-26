@@ -1778,8 +1778,10 @@ function installDebianUbuntuKernel(){
 
             echo
             echo "dpkg --get-selections | grep linux-image-${debianKernelVersion} | awk '/linux-image-[4-9]./{print \$1}' | awk -F'linux-image-' '{print \$2}' "
-            debianKernelVersionPackageName=$(dpkg --get-selections | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk -F'linux-image-' '{print $2}')
+            #debianKernelVersionPackageName=$(dpkg --get-selections | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk -F'linux-image-' '{print $2}')
+            debianKernelVersionPackageName=$(apt-cache search linux-image | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk '/[0-9]-amd64$/{print $1}' | awk -F'linux-image-' '{print $2}')
             
+
             echo
             green " Debian 官方源安装 linux 内核版本: ${debianKernelVersionPackageName}"
             echo
@@ -3092,7 +3094,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2022-7-09 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2022-7-25 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " 在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -3177,7 +3179,7 @@ function start_menu(){
     else
 
     green " =================================================="
-    green " Linux kernel install script | 2022-7-09 | OS support：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux kernel install script | 2022-7-25 | OS support：centos7+ / debian10+ / ubuntu16.04+"
     green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
     red " Please use this script with caution in production. Backup your data first! Upgrade linux kernel will cause VPS unable to boot sometimes."
     green " =================================================="
