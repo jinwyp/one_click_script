@@ -558,17 +558,22 @@ function installPackage(){
         # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
         # https://www.nginx.com/resources/wiki/start/topics/tutorials/install/
         
-        $osSystemPackage install -y gnupg2
-        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        $osSystemPackage install -y gnupg2 curl ca-certificates lsb-release ubuntu-keyring
+        # wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
 
         rm -f /etc/apt/sources.list.d/nginx.list
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg]   https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+# deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+# deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+EOF
+
+        echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n"  | sudo tee /etc/apt/preferences.d/99-nginx
+
         if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" ]]; then
             echo
-        else
-            cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
-deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
-deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
-EOF
         fi
 
 
@@ -1637,6 +1642,17 @@ function installWebServerNginx(){
         ${osSystemPackage} install -y nginx-mod-stream
     else
         echo
+        groupadd -r -g 4 adm
+
+        apt autoremove -y
+        apt-get remove --purge -y nginx-common
+        apt-get remove --purge -y nginx-core
+        apt-get remove --purge -y libnginx-mod-stream
+        apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+
+        apt autoremove -y --purge nginx nginx-common nginx-core
+        apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
+
         #${osSystemPackage} install -y libnginx-mod-stream
     fi
 
@@ -2085,7 +2101,6 @@ function removeNginx(){
 
     if [[ "${isRemoveNginxServerInput}" == [Yy] ]]; then
 
-
         echo
         if [[ -f "${nginxConfigPath}" ]]; then
             green " ================================================== "
@@ -2100,7 +2115,12 @@ function removeNginx(){
                 yum remove -y nginx-mod-stream
                 yum remove -y nginx
             else
+                apt autoremove -y
+                apt-get remove --purge -y nginx-common
+                apt-get remove --purge -y nginx-core
                 apt-get remove --purge -y libnginx-mod-stream
+                apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+
                 apt autoremove -y --purge nginx nginx-common nginx-core
                 apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
             fi
@@ -2292,7 +2312,8 @@ function installTrojanV2rayWithNginx(){
 
     elif [ "$1" = "nginxSNI_trojan_v2ray" ]; then
         green " ================================================== "
-        green " 请选择 Nginx SNI + Trojan + V2ray 的安装模式, 默认为1"
+        yellow " 请选择 Nginx SNI + Trojan + V2ray 的安装模式, 默认为1"
+        echo
         green " 1. Nginx + Trojan + V2ray + 伪装网站"
         green " 2. Nginx + Trojan + 伪装网站"
         green " 3. Nginx + V2ray + 伪装网站"
@@ -2300,7 +2321,7 @@ function installTrojanV2rayWithNginx(){
         green " 5. Nginx + Trojan + 已有网站共存"
         green " 6. Nginx + V2ray + 已有网站共存"
 
-
+        echo 
         read -p "请选择 Nginx SNI 的安装模式 直接回车默认选1, 请输入纯数字:" isNginxSNIModeInput
         isNginxSNIModeInput=${isNginxSNIModeInput:-1}
 
@@ -2574,9 +2595,13 @@ function installTrojanServer(){
         configV2rayTrojanPort=${isTrojanUserPortInput}         
     fi
 
+    configV2rayTrojanReadmePort=${configV2rayTrojanPort}    
+
     if [[ "$configV2rayWorkingMode" == "sni" ]] ; then
         configSSLCertPath="${configNginxSNIDomainTrojanCertPath}"
-        configSSLDomain=${configNginxSNIDomainTrojan}    
+        configSSLDomain=${configNginxSNIDomainTrojan}   
+
+        configV2rayTrojanReadmePort=443 
     fi
 
     rm -rf "${configTrojanBasePath}"
@@ -2961,7 +2986,7 @@ EOF
 	# blue  "----------------------------------------"
     echo
 	yellow "Trojan${promptInfoTrojanName} 配置信息如下, 请自行复制保存, 密码任选其一 !"
-	yellow "服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort"
+	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayTrojanReadmePort}"
 	yellow "密码1: ${trojanPassword1}"
 	yellow "密码2: ${trojanPassword2}"
 	yellow "密码3: ${trojanPassword3}"
@@ -2992,31 +3017,31 @@ EOF
 
     if [ "$isTrojanGo" = "yes" ] ; then
         if [[ ${isTrojanGoSupportWebsocket} == "true" ]]; then
-            green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}&plugin=obfs-local;obfs=websocket;obfs-host=${configSSLDomain};obfs-uri=/${configTrojanGoWebSocketPath}#${configSSLDomain}_trojan_go_ws"
+            green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?peer=${configSSLDomain}&sni=${configSSLDomain}&plugin=obfs-local;obfs=websocket;obfs-host=${configSSLDomain};obfs-uri=/${configTrojanGoWebSocketPath}#${configSSLDomain}_trojan_go_ws"
             echo
             yellow " 二维码 Trojan${promptInfoTrojanName} "
-		    green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fallowInsecure%3d0%26peer%3d${configSSLDomain}%26plugin%3dobfs-local%3bobfs%3dwebsocket%3bobfs-host%3d${configSSLDomain}%3bobfs-uri%3d/${configTrojanGoWebSocketPath}%23${configSSLDomain}_trojan_go_ws"
+		    green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fallowInsecure%3d0%26peer%3d${configSSLDomain}%26plugin%3dobfs-local%3bobfs%3dwebsocket%3bobfs-host%3d${configSSLDomain}%3bobfs-uri%3d/${configTrojanGoWebSocketPath}%23${configSSLDomain}_trojan_go_ws"
 
             echo
             yellow " Trojan${promptInfoTrojanName} QV2ray 链接地址"
-            green " trojan-go://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?sni=${configSSLDomain}&type=ws&host=${configSSLDomain}&path=%2F${configTrojanGoWebSocketPath}#${configSSLDomain}_trojan_go_ws"
+            green " trojan-go://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?sni=${configSSLDomain}&type=ws&host=${configSSLDomain}&path=%2F${configTrojanGoWebSocketPath}#${configSSLDomain}_trojan_go_ws"
         
         else
-            green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan_go"
+            green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan_go"
             echo
             yellow " 二维码 Trojan${promptInfoTrojanName} "
-            green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan_go"
+            green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan_go"
 
             echo
             yellow " Trojan${promptInfoTrojanName} QV2ray 链接地址"
-            green " trojan-go://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?sni=${configSSLDomain}&type=original&host=${configSSLDomain}#${configSSLDomain}_trojan_go"
+            green " trojan-go://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?sni=${configSSLDomain}&type=original&host=${configSSLDomain}#${configSSLDomain}_trojan_go"
         fi
 
     else
-        green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan"
+        green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan"
         echo
         yellow " 二维码 Trojan${promptInfoTrojanName} "
-		green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan"
+		green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan"
 
     fi
 
@@ -3074,7 +3099,7 @@ Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTro
 Trojan${promptInfoTrojanName} 重启命令: systemctl restart trojan${promptInfoTrojanName}.service
 Trojan${promptInfoTrojanName} 查看运行状态命令: systemctl status trojan${promptInfoTrojanName}.service
 
-Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
+Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: ${configV2rayTrojanReadmePort}
 
 密码1: ${trojanPassword1}
 密码2: ${trojanPassword2}
@@ -3092,10 +3117,10 @@ ${tempTextInfoTrojanPassword}
 如果是trojan-go开启了Websocket，那么Websocket path 路径为: /${configTrojanGoWebSocketPath}
 
 小火箭链接:
-trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan"
+trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan"
 
 二维码 Trojan${promptInfoTrojanName}
-https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanPort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan
+https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan
 
 EOF
 }
@@ -5792,7 +5817,7 @@ EOF
 
         cat > ${configV2rayPath}/clientConfig.json <<-EOF
 
-VLess运行在443端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN
+VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-TLS) + (VMess-TCP-TLS) + (VMess-WS-TLS)  支持CDN
 
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
@@ -5855,7 +5880,7 @@ EOF
     elif [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
- VLess运行在443端口 (VLess-gRPC-TLS) 支持CDN
+ VLess运行在${configV2rayPortShowInfo}端口 (VLess-gRPC-TLS) 支持CDN
 
 =========== ${promptInfoXrayInstall}客户端 VLess-gRPC-TLS 配置参数 支持CDN =============
 {
@@ -5880,7 +5905,7 @@ EOF
     elif [[ "$configV2rayWorkingMode" == "vlessTCPWS" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN
+VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 支持CDN
 
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
@@ -5917,20 +5942,20 @@ ${v2rayVlessLinkQR1}
 }
 
 导入链接 Vless 格式:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
 
 EOF
 
     elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" || "$configV2rayWorkingMode" == "sni" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
-VLess运行在443端口 (VLess-TCP-TLS) + (VLess-WS-TLS) + (VLess-gRPC-TLS)支持CDN
+VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-TLS) + (VLess-WS-TLS) + (VLess-gRPC-TLS)支持CDN
 
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPort},
+    端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: 空
@@ -5949,7 +5974,7 @@ ${v2rayVlessLinkQR1}
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPort},
+    端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow: 空,
@@ -5961,14 +5986,14 @@ ${v2rayVlessLinkQR1}
 }
 
 导入链接 Vless 格式:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
 
 
 =========== ${promptInfoXrayInstall}客户端 VLess-gRPC-TLS 配置参数 支持CDN =============
 {
     协议: VLess,
     地址: ${configSSLDomain},
-    端口: ${configV2rayPort},
+    端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
     流控flow:  空,
@@ -5980,12 +6005,14 @@ vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryp
 }
 
 导入链接 Vless 格式:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC_protocol
 
 EOF
 
     elif [[ "$configV2rayWorkingMode" == "vlessTCPWSTrojan" ]]; then
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
+VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-TLS) + (VLess-WS-TLS) + (Trojan)支持CDN
+
 =========== ${promptInfoXrayInstall}客户端 VLess-TCP-TLS 配置参数 =============
 {
     协议: VLess,
@@ -6960,23 +6987,6 @@ plugins:
           enable_pipeline: true
           idle_timeout: 30
 
-  # 转发至本地无污染服务器的插件 [geekdns|tunadns]
-  - tag: forward_geekdns
-    type: forward
-    args:
-      upstream:
-        - addr: "tls://v.233py.com:853"
-      bootstrap:
-        - "119.29.29.29"
-        - "223.5.5.5"
-      timeout: 5
-  - tag: forward_tunadns
-    type: fast_forward
-    args:
-      upstream:
-        - addr: "https://101.6.6.6:8443/dns-query"
-
-
   # 转发至远程服务器的插件
   - tag: forward_remote
     type: fast_forward
@@ -7018,9 +7028,9 @@ ${addNewDNSServerDomainText}
           idle_timeout: 400
           trusted: true 
         # - addr: "tls://dns-dot.dnsforfamily.com"
-        - addr: "https://dns-doh.dnsforfamily.com/dns-query"
-          dial_addr: "94.130.180.225:443"
-          idle_timeout: 400
+        # - addr: "https://dns-doh.dnsforfamily.com/dns-query"
+        #   dial_addr: "94.130.180.225:443"
+        #   idle_timeout: 400
 
         #- addr: "udp://101.101.101.101"
         #  idle_timeout: 400
@@ -7036,17 +7046,17 @@ ${addNewDNSServerDomainText}
 
         - addr: "udp://51.38.83.141"          
         - addr: "tls://dns.oszx.co"
-        - addr: "https://dns.oszx.co/dns-query"
-          idle_timeout: 400 
+        # - addr: "https://dns.oszx.co/dns-query"
+        #   idle_timeout: 400 
 
         - addr: "udp://176.9.93.198"
         - addr: "udp://176.9.1.117"                  
         - addr: "tls://dnsforge.de"
-        - addr: "https://dnsforge.de/dns-query"
+        #- addr: "https://dnsforge.de/dns-query"
           idle_timeout: 400
 
         - addr: "udp://88.198.92.222"                  
-        - addr: "tls://dot.libredns.gr"
+        #- addr: "tls://dot.libredns.gr"
         - addr: "https://doh.libredns.gr/dns-query"
           idle_timeout: 400 
 
@@ -7092,7 +7102,6 @@ ${addNewDNSServerDomainText}
     type: sequence
     args:
       exec:
-        # hosts map
         # - map_hosts
 
         # 缓存
