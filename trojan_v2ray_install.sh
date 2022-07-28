@@ -3268,7 +3268,7 @@ function downloadV2rayXrayBin(){
 function inputV2rayStreamSettings(){
     echo
     green " =================================================="
-    yellow " 请选择 V2ray或Xray的 StreamSettings 底层传输协议, 默认为3 Websocket"
+    yellow " 请选择 V2ray或Xray的 StreamSettings 传输协议, 默认为3 Websocket"
     echo
     green " 1. TCP "
     green " 2. KCP "
@@ -3278,7 +3278,7 @@ function inputV2rayStreamSettings(){
     green " 6. gRPC 支持CDN"
     green " 7. WebSocket + gRPC 支持CDN"
     echo
-    read -p "请选择底层传输协议? 直接回车默认选3 Websocket, 请输入纯数字:" isV2rayStreamSettingInput
+    read -p "请选择传输协议? 直接回车默认选3 Websocket, 请输入纯数字:" isV2rayStreamSettingInput
     isV2rayStreamSettingInput=${isV2rayStreamSettingInput:-3}
 
     if [[ $isV2rayStreamSettingInput == 1 ]]; then
@@ -3583,8 +3583,10 @@ function generateVLessImportLink(){
     if [[ "${configV2rayStreamSetting}" == "" ]]; then
 
         configV2rayVlessXtlsFlow="tls"
+        configV2rayVlessXtlsFlowShowInfo="空"
         if [[ "${configV2rayIsTlsShowInfo}" == "xtls" ]]; then
             configV2rayVlessXtlsFlow="xtls&flow=xtls-rprx-direct"
+            configV2rayVlessXtlsFlowShowInfo="xtls-rprx-direct"
         fi
 
         if [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
@@ -5826,6 +5828,7 @@ VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-TLS) + (VMess-TCP-TLS)
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo},
     加密方式: none,  // 如果是Vless协议则为none
     传输协议: tcp ,
     websocket路径:无,
@@ -5847,7 +5850,7 @@ ${v2rayVlessLinkQR1}
     加密方式: auto,  // 如果是Vless协议则为none
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
-    底层传输:tls,
+    底层传输协议:tls,
     别名:自己起个任意名称
 }
 
@@ -5867,7 +5870,7 @@ ${v2rayVmessLinkQR1}
     传输协议: tcp,
     伪装类型: http,
     路径:/tcp${configV2rayWebSocketPath},
-    底层传输:tls,
+    底层传输协议:tls,
     别名:自己起个任意名称
 }
 
@@ -5889,11 +5892,11 @@ EOF
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow:  空,
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo},
     加密方式: none,  
     传输协议: gRPC,
     gRPC serviceName: ${configV2rayGRPCServiceName},
-    底层传输协议: tls,
+    底层传输协议: ${configV2rayIsTlsShowInfo},
     别名:自己起个任意名称
 }
 
@@ -5914,7 +5917,7 @@ VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-TLS) + (VLess-WS-TLS) 
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow: 空
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo},
     加密方式: none, 
     传输协议: tcp ,
     websocket路径:无,
@@ -5933,11 +5936,11 @@ ${v2rayVlessLinkQR1}
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow: 空,
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo},
     加密方式: none,  
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
-    底层传输:tls,     
+    底层传输协议:tls,     
     别名:自己起个任意名称
 }
 
@@ -5977,11 +5980,11 @@ ${v2rayVlessLinkQR1}
     端口: ${configV2rayPortShowInfo},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow: 空,
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo},
     加密方式: none,  
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
-    底层传输:tls,     
+    底层传输协议:tls,     
     别名:自己起个任意名称
 }
 
@@ -6000,7 +6003,7 @@ vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo
     加密方式: none,  
     传输协议: gRPC,
     gRPC serviceName: ${configV2rayGRPCServiceName},
-    底层传输:tls,     
+    底层传输协议:tls,     
     别名:自己起个任意名称
 }
 
@@ -6039,11 +6042,11 @@ ${v2rayVlessLinkQR1}
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow: 空, 
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo}, 
     加密方式: none,  
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
-    底层传输:tls,     
+    底层传输协议:tls,     
     别名:自己起个任意名称
 }
 
@@ -6102,11 +6105,11 @@ ${v2rayVlessLinkQR1}
     端口: ${configV2rayPort},
     uuid: ${v2rayPassword1},
     额外id: 0,  // AlterID 如果是Vless协议则不需要该项
-    流控flow: 空, 
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo}, 
     加密方式: none,  
     传输协议: websocket,
     websocket路径:/${configV2rayWebSocketPath},
-    底层传输:tls,     
+    底层传输协议:tls,     
     别名:自己起个任意名称
 }
 

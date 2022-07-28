@@ -180,7 +180,12 @@ function testNetflixOneMethod(){
 
         if [ "${resultIndex}" == "Not Available" ];then
             red " Netflix 不提供此地区服务 "
-            return
+            if [[  "$isAutoRefreshWarp" == "true" ]]; then
+                echo
+            else
+                return
+            fi
+            
         fi
 
 
