@@ -334,6 +334,7 @@ function installSoftDownload(){
 
 
 
+
 # 更新本脚本
 function upgradeScript(){
     wget -Nq --no-check-certificate -O ./install_kernel.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh"
