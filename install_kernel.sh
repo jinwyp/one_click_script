@@ -985,8 +985,8 @@ function installKernel(){
 
 
 function getVersionBBRPlus(){
-    if [ "${linuxKernelToInstallVersion}" = "5.17" ]; then 
-        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.17")
+    if [ "${linuxKernelToInstallVersion}" = "5.18" ]; then 
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.18")
 
     elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.15")
@@ -3170,7 +3170,7 @@ function start_menu(){
     green " 65. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
     green " 66. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译" 
     green " 67. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译" 
-    green " 68. 安装 BBR Plus 内核 5.17, UJX6N 编译"   
+    green " 68. 安装 BBR Plus 内核 5.18, UJX6N 编译"   
  
     echo
     green " 0. 退出脚本"
@@ -3253,7 +3253,7 @@ function start_menu(){
     green " 65. Install BBR Plus kernel 5.4 LTS, compile by UJX6N"
     green " 66. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
     green " 67. Install BBR Plus kernel 5.15 LTS, compile by UJX6N" 
-    green " 68. Install BBR Plus kernel 5.17, compile by UJX6N"   
+    green " 68. Install BBR Plus kernel 5.18, compile by UJX6N"   
  
     echo
     green " 0. exit"
@@ -3440,7 +3440,7 @@ function start_menu(){
             installKernel
         ;;
         68 )
-            linuxKernelToInstallVersion="5.17"
+            linuxKernelToInstallVersion="5.18"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
