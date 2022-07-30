@@ -434,23 +434,25 @@ function DSMEditHosts(){
 
 
 
+
 # 软件安装
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget git unzip
+			${osSystemPackage} -y install wget git unzip curl apt-transport-https
 			
 			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 		if ! dpkg -l | grep -qw curl; then
-			${osSystemPackage} -y install curl git unzip
+			${osSystemPackage} -y install curl git unzip wget apt-transport-https
 			
 			${osSystemPackage} -y install cpu-checker
 		fi
 
 	elif [[ "${osRelease}" == "centos" ]]; then
+
         if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" || ${osReleaseVersion} == "8.0.1905" ]]; then
 
             # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
@@ -466,17 +468,17 @@ function installSoftDownload(){
             ${sudoCmd} dnf install centos-release-stream -y
             ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
             ${sudoCmd} dnf distro-sync -y
-        fi  
-
+        fi
+        
         if ! rpm -qa | grep -qw wget; then
-            ${osSystemPackage} -y install wget curl git unzip
+		    ${osSystemPackage} -y install wget curl git unzip
 
         elif ! rpm -qa | grep -qw git; then
 		    ${osSystemPackage} -y install wget curl git unzip
-            
 		fi
 	fi
 }
+
 
 
 function installPackage(){
@@ -485,6 +487,10 @@ function installPackage(){
     yellow " 开始安装软件"
     green " =================================================="
     echo
+
+    
+    # sed -i '1s/^/nameserver 1.1.1.1 \n/' /etc/resolv.conf
+
 
     if [ "$osRelease" == "centos" ]; then
        
@@ -524,17 +530,22 @@ function installPackage(){
         # https://joshtronic.com/2018/12/17/how-to-install-the-latest-nginx-on-debian-and-ubuntu/
         # https://www.nginx.com/resources/wiki/start/topics/tutorials/install/
         
-        $osSystemPackage install -y gnupg2
-        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        $osSystemPackage install -y gnupg2 curl ca-certificates lsb-release ubuntu-keyring
+        # wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
 
         rm -f /etc/apt/sources.list.d/nginx.list
+
+        cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
+deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg]   https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+# deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+# deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
+EOF
+
+        echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n"  | sudo tee /etc/apt/preferences.d/99-nginx
+
         if [[ "${osReleaseVersionNoShort}" == "22" || "${osReleaseVersionNoShort}" == "21" ]]; then
             echo
-        else
-            cat > "/etc/apt/sources.list.d/nginx.list" <<-EOF
-deb [arch=amd64] https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
-deb-src https://nginx.org/packages/ubuntu/ $osReleaseVersionCodeName nginx
-EOF
         fi
 
 
@@ -551,10 +562,11 @@ EOF
 
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
+        ${osSystemPackage} update -y
 
-        ${osSystemPackage} install -y gnupg2
-        wget -O - https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
-        # curl -L https://nginx.org/keys/nginx_signing.key | ${sudoCmd} apt-key add -
+        apt install -y gnupg2
+        apt install -y curl ca-certificates lsb-release
+        wget https://nginx.org/keys/nginx_signing.key -O- | apt-key add - 
 
         rm -f /etc/apt/sources.list.d/nginx.list
         if [[ "${osReleaseVersionNoShort}" == "12" ]]; then
@@ -565,6 +577,7 @@ deb https://nginx.org/packages/mainline/debian/ $osReleaseVersionCodeName nginx
 deb-src https://nginx.org/packages/mainline/debian $osReleaseVersionCodeName nginx
 EOF
         fi
+
 
         ${osSystemPackage} update -y
 

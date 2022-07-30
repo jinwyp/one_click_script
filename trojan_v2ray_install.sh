@@ -515,9 +515,7 @@ function installPackage(){
     green " =================================================="
     echo
 
-    
     # sed -i '1s/^/nameserver 1.1.1.1 \n/' /etc/resolv.conf
-
 
     if [ "$osRelease" == "centos" ]; then
        
