@@ -348,7 +348,6 @@ function setLinuxRootLogin(){
     fi
 
     # /etc/init.d/ssh restart
-
 }
 
 
@@ -7391,7 +7390,8 @@ EOM
             red " ${configAdGuardPath}/AdGuardHome.yaml not found, pls complete the AdGuardHome initialization first!"
         fi 
 
-        echo
+    else
+        red "AdGuard Home not found, Please install AdGuard Home first !"
     fi
 
 }

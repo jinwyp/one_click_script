@@ -323,7 +323,7 @@ function changeLinuxSSHPort(){
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
             semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            sudo ufw allow $osSSHLoginPortInput/tcp
+            ${sudoCmd} ufw allow $osSSHLoginPortInput/tcp
 
             ${sudoCmd} service ssh restart
             ${sudoCmd} systemctl restart ssh
@@ -345,7 +345,7 @@ function setLinuxDateZone(){
 
     echo
     if [[ ${tempCurrentDateZone} == "+0800" ]]; then
-        yellow " 当前时区已经为北京时间  $tempCurrentDateZone | $(date -R) "
+        yellow "当前时区已经为北京时间  $tempCurrentDateZone | $(date -R) "
     else 
         green " =================================================="
         yellow " 当前时区为: $tempCurrentDateZone | $(date -R) "
@@ -353,7 +353,7 @@ function setLinuxDateZone(){
         green " =================================================="
         # read 默认值 https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 
-        read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]?" osTimezoneInput
+        read -p "是否设置为北京时间 +0800 时区? 请输入[Y/n]:" osTimezoneInput
         osTimezoneInput=${osTimezoneInput:-Y}
 
         if [[ $osTimezoneInput == [Yy] ]]; then
@@ -371,7 +371,11 @@ function setLinuxDateZone(){
 
     if [ "$osRelease" == "centos" ]; then   
         if  [[ ${osReleaseVersionNoShort} == "7" ]]; then
+            systemctl stop chronyd
+            systemctl disable chronyd
+
             $osSystemPackage -y install ntpdate
+            $osSystemPackage -y install ntp
             ntpdate -q 0.rhel.pool.ntp.org
             systemctl enable ntpd
             systemctl restart ntpd
@@ -394,8 +398,7 @@ function setLinuxDateZone(){
         $osSystemPackage install -y ntp
         systemctl enable ntp
         systemctl restart ntp
-    fi
-    
+    fi    
 }
 
 
@@ -420,8 +423,6 @@ function DSMEditHosts(){
         echo "140.82.114.3                 github.com" >> ${HostFilePath}
         echo "104.16.16.35                 registry.npmjs.org" >> ${HostFilePath}
     fi
-
-    
 
 	vi ${HostFilePath}
 }
