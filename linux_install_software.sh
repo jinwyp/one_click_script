@@ -1468,7 +1468,6 @@ configAlistSystemdServicePath="/etc/systemd/system/alist.service"
 
 
 function installAlistWithNginx(){
-    createUserWWW
     green " ================================================== "
     echo
     green "是否继续安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
@@ -1489,34 +1488,45 @@ function installAlist(){
     echo
     green " =================================================="
     green " 请选择 安装/更新/删除 Alist "
-    green " 1. 安装"
-    green " 2. 更新"  
-    green " 3. 删除"     
+    green " 1. 安装 Alist "
+    green " 2. 安装 Alist + Nginx (需要域名 并已解析到本机IP)"
+    green " 4. 更新"  
+    green " 5. 删除"     
     echo
     read -p "请输入纯数字, 默认为安装:" languageInput
     
+    createUserWWW
+
     case "${languageInput}" in
         1 )
             curl -fsSL "https://nn.ci/alist.sh" | bash -s install
+            sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
+            ${sudoCmd} systemctl daemon-reload
+            ${sudoCmd} systemctl restart alist       
         ;;
         2 )
+            curl -fsSL "https://nn.ci/alist.sh" | bash -s install
+            sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
+            ${sudoCmd} systemctl daemon-reload
+            ${sudoCmd} systemctl restart alist    
+
+            installAlistWithNginx
+        ;;        
+        4 )
             curl -fsSL "https://nn.ci/alist.sh" | bash -s update
         ;;
-        3 )
+        5 )
             curl -fsSL "https://nn.ci/alist.sh" | bash -s uninstall
         ;;        
         * )
-            curl -fsSL "https://nn.ci/alist.sh" | bash -s install
+            exit
         ;;
     esac
     echo
     green " =================================================="
     green " Alist 安装路径为 /opt/alist "
     green " =================================================="
-    sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
-    ${sudoCmd} systemctl daemon-reload
-    ${sudoCmd} systemctl restart alist    
-    echo
+
 }
 function installAlistCert(){
         configSSLCertPath="${configSSLCertPath}/alist"
@@ -1756,6 +1766,17 @@ function installWebServerNginx(){
         ${osSystemPackage} install -y nginx-mod-stream
     else
         echo
+        groupadd -r -g 4 adm
+
+        apt autoremove -y
+        apt-get remove --purge -y nginx-common
+        apt-get remove --purge -y nginx-core
+        apt-get remove --purge -y libnginx-mod-stream
+        apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+
+        apt autoremove -y --purge nginx nginx-common nginx-core
+        apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
+
         #${osSystemPackage} install -y libnginx-mod-stream
     fi
 
@@ -4297,9 +4318,7 @@ function start_menu(){
         23 )
             installAlist
         ;;
-        24 )
-            installAlistCert
-        ;;
+
 
 
         51 )
