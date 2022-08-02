@@ -93,7 +93,7 @@ getLinuxOSVersion(){
         osInfo=$NAME
         osReleaseVersionNo=$VERSION_ID
 
-        if [ -n "$VERSION_CODENAME" ]; then
+        if [ -n $VERSION_CODENAME ]; then
             osReleaseVersionCodeName=$VERSION_CODENAME
         fi
     elif type lsb_release >/dev/null 2>&1; then
@@ -176,7 +176,7 @@ function getLinuxOSRelease(){
 
 
 function promptContinueOpeartion(){
-	read -r -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
+	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
 	isContinueInput=${isContinueInput:-Y}
 
 	if [[ $isContinueInput == [Yy] ]]; then
@@ -194,11 +194,11 @@ osSELINUXCheckIsRebootInput=""
 function testLinuxPortUsage(){
     $osSystemPackage -y install net-tools socat
 
-    osPort80=$(netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80)
-    osPort443=$(netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443)
+    osPort80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
+    osPort443=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443`
 
     if [ -n "$osPort80" ]; then
-        process80=$(netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}')
+        process80=`netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}'`
         red "==========================================================="
         red "检测到80端口被占用，占用进程为：${process80} "
         red "==========================================================="
@@ -206,7 +206,7 @@ function testLinuxPortUsage(){
     fi
 
     if [ -n "$osPort443" ]; then
-        process443=$(netstat -tlpn | awk -F '[: ]+' '$5=="443"{print $9}')
+        process443=`netstat -tlpn | awk -F '[: ]+' '$5=="443"{print $9}'`
         red "============================================================="
         red "检测到443端口被占用，占用进程为：${process443} "
         red "============================================================="
@@ -719,29 +719,6 @@ function toolboxJcnf(){
 
 
 
-function showHeaderGreen(){
-    echo
-    green " =================================================="
-    green " $1"
-    green " =================================================="
-    echo
-}
-function showHeaderRed(){
-    echo
-    green " =================================================="
-    red " $1"
-    green " =================================================="
-    echo
-}
-function showInfoGreen(){
-    echo
-    green " $1"
-    echo
-}
-
-
-
-
 
 
 
@@ -851,10 +828,15 @@ function installNodejs(){
     green " NPM 版本:"
     npm --version  
 
-    showHeaderGreen "准备安装 PM2 进程守护程序"
+    green " =================================================="
+    yellow " 准备安装 PM2 进程守护程序"
+    green " =================================================="
     npm install -g pm2 
 
-    showHeaderGreen "Nodejs 与 PM2 安装成功 !"
+    green " ================================================== "
+    green "   Nodejs 与 PM2 安装成功 !"
+    green " ================================================== "
+
 }
 
 
@@ -862,27 +844,33 @@ function installNodejs(){
 
 
 configDockerPath="${HOME}/download"
-DOCKER_CONFIG="/usr/local/lib/docker"
 
 function installDocker(){
 
-    showHeaderGreen "准备安装 Docker 与 Docker Compose"
+    echo
+    green " =================================================="
+    yellow " 准备安装 Docker 与 Docker Compose"
+    green " =================================================="
+    echo
 
     mkdir -p ${configDockerPath}
     cd ${configDockerPath}
 
 
     if [[ -s "/usr/bin/docker" ]]; then
-        showHeaderRed "已安装过 Docker. Docker already installed!"
+        green " =================================================="
+        green "  已安装过 Docker !"
+        green " =================================================="
+    
     else
 
         if [[ "${osInfo}" == "AlmaLinux" ]]; then
-            ${sudoCmd} yum module remove container-tools
             # https://linuxconfig.org/install-docker-on-almalinux
             ${sudoCmd} dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
             ${sudoCmd} dnf remove -y podman buildah 
             ${sudoCmd} dnf install -y docker-ce docker-ce-cli containerd.io
- 
+
+            
         else
             # curl -fsSL https://get.docker.com -o get-docker.sh  
             curl -sSL https://get.daocloud.io/docker -o get-docker.sh  
@@ -890,11 +878,11 @@ function installDocker(){
             sh get-docker.sh
 
         fi
-        ${sudoCmd}
+        
         ${sudoCmd} systemctl start docker.service
         ${sudoCmd} systemctl enable docker.service
         
-        showHeaderGreen "Docker installed successfully !"
+        echo
         docker version
         echo
     fi
@@ -902,34 +890,41 @@ function installDocker(){
 
 
     if [[ -s "/usr/local/bin/docker-compose" ]]; then
-        showHeaderRed "已安装过 Docker Compose. Docker Compose already installed!"
+        green " =================================================="
+        green "  已安装过 Docker Compose !"
+        green " =================================================="
+        
     else
 
         versionDockerCompose=$(getGithubLatestReleaseVersion "docker/compose")
 
         # dockerComposeUrl="https://github.com/docker/compose/releases/download/${versionDockerCompose}/docker-compose-$(uname -s)-$(uname -m)"
-        dockerComposeUrl="https://github.com/docker/compose/releases/download/v2.9.0/docker-compose-linux-x86_64"
-        dockerComposeUrl="https://get.daocloud.io/docker/compose/releases/download/v2.9.0/docker-compose-linux-x86_64"
+        dockerComposeUrl="https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64"
+        dockerComposeUrl="https://get.daocloud.io/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64"
         
-        showInfoGreen "Downloading  ${dockerComposeUrl}"
+        echo
+        green " Downloading  ${dockerComposeUrl}"
+        echo
 
-
-        mkdir -p ${DOCKER_CONFIG}/cli-plugins
         ${sudoCmd} wget -O /usr/local/bin/docker-compose ${dockerComposeUrl}
         ${sudoCmd} chmod a+x /usr/local/bin/docker-compose
-        cp /usr/local/bin/docker-compose ${DOCKER_CONFIG}/cli-plugins
 
-        rm -f "$(which dc)"
+        rm -f `which dc` 
         rm -f "/usr/bin/docker-compose"
         ${sudoCmd} ln -s /usr/local/bin/docker-compose /usr/bin/dc
         ${sudoCmd} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         
-        showHeaderGreen "Docker-Compose installed successfully !"
-        docker compose version
-        echo
     fi
 
-    showHeaderGreen "Docker 与 Docker Compose 安装成功 !"
+
+
+    echo
+    green " ================================================== "
+    green "   Docker 与 Docker Compose 安装成功 !"
+    green " ================================================== "
+    echo
+    docker-compose --version
+    echo
     # systemctl status docker.service
 }
 
@@ -944,18 +939,24 @@ function removeDocker(){
 
     fi
 
-    rm -rf /var/lib/docker/
+    rm -fr /var/lib/docker/
+
 
     rm -f "$(which dc)" 
     rm -f "/usr/bin/docker-compose"
-    rm -f "/usr/local/bin/docker-compose"
-    rm -f "${DOCKER_CONFIG}/cli-plugins/docker-compose"
+    rm -f /usr/local/bin/docker-compose
 
-    showHeaderGreen "Docker 已经卸载完毕 !"
+    echo
+    green " ================================================== "
+    green "   Docker 已经卸载完毕 !"
+    green " ================================================== "
+    echo
+
 }
 
 
 function addDockerRegistry(){
+
 
         cat > "/etc/docker/daemon.json" <<-EOF
 
@@ -965,6 +966,7 @@ function addDockerRegistry(){
     "https://mirror.baidubce.com"
   ]
 }
+
 
 EOF
 
@@ -995,7 +997,10 @@ function installPortainer(){
     echo
     docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
 
-    showHeaderGreen "   Portainer 安装成功. Running at port 8000 !"
+    echo
+    green " ================================================== "
+    green "   Portainer 安装成功 !"
+    green " ================================================== "
 }
 
 
@@ -1457,18 +1462,6 @@ function getHTTPSCertificateStep1(){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 configAlistPort="$(($RANDOM + 4000))"
 configAlistPort="5244"
 configAlistSystemdServicePath="/etc/systemd/system/alist.service"
@@ -1539,26 +1532,6 @@ function installAlistCert(){
         configSSLCertPath="${configSSLCertPath}/alist"
         getHTTPSCertificateStep1
 }   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1749,17 +1722,6 @@ function removeCloudreve(){
 
     removeNginx
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2182,224 +2144,434 @@ function removeNginx(){
 
 
 
-function installJitsiMeet(){
 
-    showHeaderGreen "准备安装 视频会议系统 Jitsi Meet !"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+configV2rayPoseidonPort="$(($RANDOM + 10000))"
+configV2rayPoseidonPath="${HOME}/v2ray-poseidon"
+
+configV2rayAccessLogFilePath="${HOME}/v2ray-poseidon-access.log"
+configV2rayErrorLogFilePath="${HOME}/v2ray-poseidon-error.log"
+
+function installV2rayPoseidon(){
+
+    echo
+    if [ -f "${configV2rayPoseidonPath}/v2ray-poseidon" ] || [ -f "/usr/bin/v2ray" ]; then
+        green " =================================================="
+        green "     已安装过 v2ray-poseidon 或 v2ray, 退出安装 !"
+        green " =================================================="
+        exit
+    fi
+
+    echo
+    red "该项目已经长时间不更新, 作者疑为骗子 不推荐使用"
+    red "https://github.com/ColetteContreras/v2ray-poseidon/issues/114"
+    echo
+    read -p "请选择直接运行模式还是Docker运行模式? 默认直接回车为直接运行模式, 选否则为Docker运行模式, 请输入[Y/n]:" isV2rayDockerNotInput
+    isV2rayDockerNotInput=${isV2rayDockerNotInput:-Y}
+
+    if [[ $isV2rayDockerNotInput == [Yy] ]]; then
+
+        versionV2rayPoseidon=$(getGithubLatestReleaseVersion "ColetteContreras/v2ray-poseidon")
+        echo
+        green " =================================================="
+        green "  开始安装 支持V2board面板的 服务器端程序 V2ray-Poseidon ${versionV2rayPoseidon}"
+        red "  注意最新版 V2board面板不支持 V2ray-Poseidon, 请使用老板本V2board v1.5.2 "
+        green " =================================================="
+        echo
+
+        mkdir -p ${configV2rayPoseidonPath}
+        cd ${configV2rayPoseidonPath}
+
+        # https://github.com/ColetteContreras/v2ray-poseidon/releases/download/v2.2.0/v2ray-linux-64.zip
+        downloadFilenameV2rayPoseidon="v2ray-linux-64.zip"
+
+        downloadAndUnzip "https://github.com/ColetteContreras/v2ray-poseidon/releases/download/v${versionV2rayPoseidon}/${downloadFilenameV2rayPoseidon}" "${configV2rayPoseidonPath}" "${downloadFilenameV2rayPoseidon}"
+        mv ${configV2rayPoseidonPath}/v2ray ${configV2rayPoseidonPath}/v2ray-poseidon
+        cp ${configV2rayPoseidonPath}/config.json ${configV2rayPoseidonPath}/config_example.json
+        chmod +x ${configV2rayPoseidonPath}/v2ray-poseidon
+
+        sed -i "s/10086/${configV2rayPoseidonPort}/g" "${configV2rayPoseidonPath}/config.json"
+
+
+        cat > ${osSystemMdPath}v2ray-poseidon.service <<-EOF
+[Unit]
+Description=V2Ray Poseidon Service
+Documentation=https://poseidon-gfw.cc
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+ExecStart=${configV2rayPoseidonPath}/v2ray-poseidon -config ${configV2rayPoseidonPath}/config.json
+Restart=on-failure
+# Don't restart in the case of configuration error
+RestartPreventExitStatus=23
+RestartSec=15
+LimitNOFILE=655360
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+        ${sudoCmd} chmod +x ${osSystemMdPath}v2ray-poseidon.service
+        ${sudoCmd} systemctl daemon-reload
+        ${sudoCmd} systemctl enable v2ray-poseidon.service
+        ${sudoCmd} systemctl start v2ray-poseidon.service
+        
+        green " ================================================== "
+        green "   V2rayPoseidon 安装成功 "
+        red "   V2rayPoseidon 服务器端配置路径 ${configV2rayPoseidonPath}/config.json "
+        red "   V2rayPoseidon 运行访问日志文件路径: ${configV2rayAccessLogFilePath} "
+        red "   V2rayPoseidon 运行错误日志文件路径: ${configV2rayErrorLogFilePath} "
+        green "   V2rayPoseidon 查看运行日志命令: journalctl -n 100 -u v2ray-poseidon"
+
+        green "   V2rayPoseidon 停止命令: systemctl stop v2ray-poseidon.service  启动命令: systemctl start v2ray-poseidon.service  重启命令: systemctl restart v2ray-poseidon.service"
+        green "   V2rayPoseidon 查看运行状态命令:  systemctl status v2ray-poseidon.service "    
+        green " ================================================== "
+
+
+    else
+
+        cd ${HOME}
+        git clone https://github.com/ColetteContreras/v2ray-poseidon.git
+        cd v2ray-poseidon
+
+        green " ================================================== "
+        green "   V2rayPoseidon 安装成功 "
+        green " ================================================== "
+
+    fi
+
+    replaceV2rayPoseidonConfig
+
+}
+
+
+
+function replaceV2rayPoseidonConfig(){
+    configSSLCertPath="${configSSLCertPathV2board}"
+    
+    if test -s ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml; then
+
+        echo
+        green "请选择SSL证书申请方式: 1 V2ray-Poseidon 内置的http方式, 2 通过acme.sh申请并放置证书文件 "
+        green "默认直接回车为通过acme.sh申请并放置证书, 本脚本会自动通过acme.sh申请证书 支持http和dns方式申请"
+        red "如选否 为V2ray-Poseidon 内置的http 自动获取证书方式, 但由于acme.sh脚本2021年8月开始默认从 Letsencrypt 换到 ZeroSSL, 而V2ray-Poseidon已经很长时间没有更新 导致内置的http申请证书模式会出现问题!"
+        echo
+        green "注意: V2ray-Poseidon 的SSL证书申请方式共有3种: 1 内置http方式, 2 内置的dns方式, 3 手动放置证书文件,"
+        green "如需使用内置的dns 申请SSL证书方式, 请手动修改 docker-compose.yml 配置文件"
+        echo
+        read -p "请选择SSL证书申请方式 ? 默认直接回车为手动放置证书文件, 选否则http申请模式, 请输入[Y/n]:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
+
+        if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
+            echo
+            getHTTPSCertificateStep1
+
+            sed -i "s?#- ./v2ray.crt:/etc/v2ray/v2ray.crt?- ${configSSLCertPath}/${configSSLCertFullchainFilename}:/etc/v2ray/v2ray.crt?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            sed -i "s?#- ./v2ray.key:/etc/v2ray/v2ray.key?- ${configSSLCertPath}/${configSSLCertKeyFilename}:/etc/v2ray/v2ray.key?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            
+            sed -i 's/#- CERT_FILE=/- CERT_FILE=/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            sed -i 's/#- KEY_FILE=/- KEY_FILE=/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+
+            sed -i "s/demo.oppapanel.xyz/${configSSLDomain}/g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+        else
+            echo
+            green " ================================================== "
+            yellow " 请输入绑定到本VPS的域名 例如www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
+            green " ================================================== "
+
+            read configSSLDomain
+
+            sed -i 's/#- "80:80"/- "80:80"/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+            sed -i 's/CERT_MODE=dns/CERT_MODE=http/g' ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+        fi
+
+        read -p "请输入节点ID (纯数字):" inputV2boardNodeId
+        sed -i "s/1,/${inputV2boardNodeId},/g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
+
+        read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀 结尾不要带/ :" inputV2boardDomain
+        sed -i "s?http or https://YOUR V2BOARD DOMAIN?https://${inputV2boardDomain}?g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
+
+        read -p "请输入token 即通信密钥:" inputV2boardWebApiKey
+        sed -i "s/v2board token/${inputV2boardWebApiKey}/g" ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
+
+        cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+        docker-compose up -d
+    fi
+
+
+    if test -s ${configV2rayPoseidonPath}/config.json; then
+
+        echo
+        getHTTPSCertificateStep1
+
+        echo
+        read -p "请选择支持面板是v2board或sspanel? 默认直接回车为v2board, 选否则sspanel, 请输入[Y/n]:" isPanelV2boardInput
+        isPanelV2boardInput=${isPanelV2boardInput:-Y}
+
+        if [[ $isPanelV2boardInput == [Yy] ]]; then
+            sed -i "s/sspanel-webapi/v2board/g" "${configV2rayPoseidonPath}/config.json"
+
+            read -p "请输入token 即通信密钥:" inputV2boardWebApiKey
+            sed -i 's/panelKey": ""/token": "v2board token"/g' ${configV2rayPoseidonPath}/config.json
+            sed -i "s/v2board token/${inputV2boardWebApiKey}/g" ${configV2rayPoseidonPath}/config.json
+    
+            read -p "请输入面板域名 例如www.123.com 不要带有http或https前缀 结尾不要带/ :" inputV2boardDomain
+            sed -i 's/panelUrl": ""/webapi": "YOUR V2BOARD DOMAIN"/g' ${configV2rayPoseidonPath}/config.json
+            sed -i "s?YOUR V2BOARD DOMAIN?https://${inputV2boardDomain}?g" ${configV2rayPoseidonPath}/config.json
+
+            sed -i 's/"loglevel": "debug"/"loglevel": "debug", "access": "configV2rayAccessLogFilePath", "error": "configV2rayErrorLogFilePath" /g' ${configV2rayPoseidonPath}/config.json
+            sed -i "s/configV2rayAccessLogFilePath/${configV2rayAccessLogFilePath}/g" ${configV2rayPoseidonPath}/config.json
+            sed -i "s/configV2rayErrorLogFilePath/${configV2rayErrorLogFilePath}/g" ${configV2rayPoseidonPath}/config.json
+        fi
+
+
+        read -p "请输入节点ID (纯数字 默认1):" inputV2boardNodeId
+        inputV2boardNodeId=${inputV2boardNodeId:-1}
+        sed -i "s/1,/${inputV2boardNodeId},/g" ${configV2rayPoseidonPath}/config.json
+
+        ${sudoCmd} systemctl restart v2ray-poseidon.service
+    fi
+
+}
+
+function removeV2rayPoseidon(){
+
+    if [ -f "${configV2rayPoseidonPath}/README.md"  ]; then
+        cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+        docker-compose stop
+        rm -rf ${configV2rayPoseidonPath}
+        echo
+        green " ================================================== "
+        green "  V2ray-Poseidon Docker 运行方式 卸载完毕 !"
+        green " ================================================== "
+
+    elif [ -f "${configV2rayPoseidonPath}/v2ray-poseidon"  ]; then
+        echo
+        green " ================================================== "
+        red "  准备卸载已安装 V2ray-Poseidon "
+        green " ================================================== "
+        echo
+
+        ${sudoCmd} systemctl stop v2ray-poseidon.service
+        ${sudoCmd} systemctl disable v2ray-poseidon.service
+
+        rm -rf ${configV2rayPoseidonPath}
+        rm -f ${osSystemMdPath}v2ray-poseidon.service
+        rm -f ${configV2rayAccessLogFilePath}
+        rm -f ${configV2rayErrorLogFilePath}
+
+        rm -rf /usr/bin/v2ray /etc/init.d/v2ray /lib/systemd/system/v2ray.service /etc/systemd/system/v2ray.service
+
+        ${sudoCmd} systemctl daemon-reload
+     
+        echo
+        green " ================================================== "
+        green "  V2ray-Poseidon 卸载完毕 !"
+        green " ================================================== "
+
+    else
+        green " ================================================== "
+        red "  V2ray-Poseidon 没有安装 退出卸载 "
+        green " ================================================== "
+    fi
+
+
+
+}
+
+
+function manageV2rayPoseidon(){
 
     echo
     green " =================================================="
-    green " 请选择安装方式: (默认为 1 Docker方式)"
     echo
-    green " 1. Install Jitsi Meet by Docker"
-    green " 2. Install Jitsi Meet directly, only support Debian 10 / Ubuntu 20.04"   
+    green " 1. 启动 V2Ray-Poseidon 服务器端, 直接命令行 运行方式"
+    green " 2. 重启 V2Ray-Poseidon 服务器端, 直接命令行 运行方式"
+    green " 3. 停止 V2Ray-Poseidon 服务器端, 直接命令行 运行方式"
+    green " 4. 查看 V2Ray-Poseidon 服务器端运行状态, 直接命令行 运行方式"
+    green " 5. 查看 V2Ray-Poseidon 服务器端日志, 直接命令行 运行方式"
     echo
-    read -r -p "请输入纯数字, 默认为1 Docker方式:" jitsimeetDockerInput
-    
-    case "${jitsimeetDockerInput}" in
+    green " 11. 启动 V2Ray-Poseidon 服务器端, Docker 运行方式"
+    green " 12. 重启 V2Ray-Poseidon 服务器端, Docker 运行方式"
+    green " 13. 停止 V2Ray-Poseidon 服务器端, Docker 运行方式"
+    green " 14. 查看 V2Ray-Poseidon 服务器端日志, Docker 运行方式"
+    green " 15. 清空 V2Ray-Poseidon Docker日志, Docker 运行方式"
+
+    echo
+    green " =================================================="
+    green " 0. 退出脚本"
+    echo
+    read -p "请输入数字:" menuNumberInput
+    case "$menuNumberInput" in
         1 )
-            installJitsiMeetByDocker    
-        ;;
+            systemctl start v2ray-poseidon.service
+        ;;   
         2 )
-            installJitsiMeetOnUbuntu
+            systemctl restart v2ray-poseidon.service
+        ;;
+        3 )
+            systemctl stop v2ray-poseidon.service
         ;;        
-    
+        4 )
+            systemctl status v2ray-poseidon.service
+        ;;        
+        5 )
+            journalctl -n 100 -u v2ray-poseidon
+        ;;       
+        11 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose up -d   
+        ;;   
+        12 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose restart 
+        ;;
+        13 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose stop   
+        ;;        
+        14 )
+            cd ${configV2rayPoseidonPath}/docker/v2board/ws-tls
+            docker-compose logs
+        ;;        
+        15 )
+            truncate -s 0 /var/lib/docker/containers/*/*-json.log
+        ;;   
+
+        6 )
+            echo
+            echo "systemctl status wg-quick@wgcf"
+            systemctl status wg-quick@wgcf
+            red " 请查看上面 Active: 一行信息, 如果文字是绿色 active 则为启动正常, 否则启动失败"
+            checkWireguardBootStatus
+        ;;
+        7 )
+            echo
+            echo "journalctl -n 50 -u wg-quick@wgcf"
+            journalctl -n 50 -u wg-quick@wgcf
+            red " 请查看上面包含 Error 的信息行, 查找启动失败的原因 "
+        ;;        
+        8 )
+            echo
+            echo "systemctl start wg-quick@wgcf"
+            systemctl start wg-quick@wgcf
+            green " Wireguard 已启动 !"
+            checkWireguardBootStatus
+        ;;        
+        5 )
+            echo
+            echo "systemctl stop wg-quick@wgcf"
+            systemctl stop wg-quick@wgcf
+            green " Wireguard 已停止 !"
+        ;;       
+        6 )
+            echo
+            echo "systemctl restart wg-quick@wgcf"
+            systemctl restart wg-quick@wgcf
+            green " Wireguard 已重启 !"
+            checkWireguardBootStatus
+        ;;       
+        7 )
+            echo
+            echo "cat ${configWireGuardConfigFilePath}"
+            cat ${configWireGuardConfigFilePath}
+        ;;       
+        8 )
+            echo
+            echo "vi ${configWireGuardConfigFilePath}"
+            vi ${configWireGuardConfigFilePath}
+        ;; 
+        0 )
+            exit 1
+        ;;
         * )
-            installJitsiMeetByDocker
+            clear
+            red "请输入正确数字 !"
+            sleep 2s
+            checkWireguard
         ;;
     esac
-}
 
-
-function installJitsiMeetByDocker(){
-    echo
-}
-
-
-configJitsiMeetVideoBridgeFilePath="/etc/jitsi/videobridge/sip-communicator.properties"
-configJitsiMeetNginxConfigFolderPath="/etc/nginx/sites-available"
-configJitsiMeetNginxConfigFolder2Path="/etc/nginx/sites-enabled"
-configJitsiMeetNginxConfigOriginalFolderPath="/etc/nginx/conf.d"
-
-
-function installJitsiMeetOnUbuntu(){
-
-    if [ "$osRelease" == "centos" ]; then
-        red " 不支持 CentOS 系统"
-    else
-        sed -i '/packages.prosody.im/d' /etc/apt/sources.list
-
-        ${sudoCmd} apt update -y 
-        ${sudoCmd} apt install -y apt-transport-https
-
-        if [ "$osRelease" == "ubuntu" ]; then
-            ${sudoCmd} apt-add-repository universe -y
-            ${sudoCmd} apt update -y 
-        fi
-    fi
-
-    # Add the Prosody package repository
-    echo "deb http://packages.prosody.im/debian $(lsb_release -sc) main" | ${sudoCmd} tee -a /etc/apt/sources.list
-    wget https://prosody.im/files/prosody-debian-packages.key -O- | ${sudoCmd} apt-key add -
-
-    # Add the Jitsi package repository
-    curl https://download.jitsi.org/jitsi-key.gpg.key | ${sudoCmd} sh -c 'gpg --dearmor > /usr/share/keyrings/jitsi-keyring.gpg'
-    echo "deb [signed-by=/usr/share/keyrings/jitsi-keyring.gpg] https://download.jitsi.org stable/" | ${sudoCmd} tee /etc/apt/sources.list.d/jitsi-stable.list > /dev/null
-    
-    green " =================================================="
-    ${sudoCmd} apt-get -y update
-    green " =================================================="
-    
-    showInfoGreen "Setting firewall rules"
-    ${sudoCmd} ufw allow 80/tcp
-    ${sudoCmd} ufw allow 443/tcp
-    ${sudoCmd} ufw allow 10000/udp
-
-    ${sudoCmd} ufw allow 3478/udp
-    ${sudoCmd} ufw allow 5349/tcp
-
-    echo
-    echo "ufw enable"
-    ${sudoCmd} ufw enable
-    echo
-    echo "ufw status verbose"
-    ${sudoCmd} ufw status verbose
-
-
-    showHeaderGreen " 开始安装 Jitsi Meet"
-
-    mkdir -p ${configJitsiMeetNginxConfigFolderPath}
-    mkdir -p ${configJitsiMeetNginxConfigFolder2Path}
-    
-    # https://jitsi.org/downloads/ubuntu-debian-installations-instructions/    
-    ${sudoCmd} apt-get -y install jitsi-meet
-
-    #sudo apt-get -y install jitsi-videobridge
-    #sudo apt-get -y install jicofo
-    #sudo apt-get -y install jigasi
-
-
-
-
-
-
-
-    showHeaderGreen " Setting up nginx configuration"
-    #echo
-    #read -r -p "请输入域名: " configSSLDomain
-
-    #configJitsiMeetNginxConfigFilePath="${configJitsiMeetNginxConfigFolderPath}/${configSSLDomain}.conf"
-    #sed -i "s|jitsi-meet.example.com|${configSSLDomain}|g" "${configJitsiMeetNginxConfigFilePath}"
-
-    ln -s ${configJitsiMeetNginxConfigFolderPath}/* ${configJitsiMeetNginxConfigOriginalFolderPath}/
-    ${sudoCmd} systemctl restart nginx
-
-
-
-
-    # /etc/jitsi/meet/${configSSLDomain}-config.js
-    showHeaderGreen " install letsencrypt cert"
-    ${sudoCmd} /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
-
-    # configSSLCertPath="${configSSLCertPath}/jitsimeet"
-    # getHTTPSCertificateStep1
-
-    # cp -f ${configSSLCertPath}/fullchain.cer "/etc/jitsi/meet/${configSSLDomain}.crt"
-    # cp -f ${configSSLCertPath}/private.key "/etc/jitsi/meet/${configSSLDomain}.key"
-
-    # /nginxweb/cert/jitsimeet/fullchain.cer
-    # /nginxweb/cert/jitsimeet/private.key
-
-
-    showHeaderGreen " Setting up jitsi meet local IP configuration"
-
-    configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
-    echo
-    read -r -p "请输入本机IP: 直接回车默认为 ${configLocalVPSIp}" jitsimeetVPSIPInput
-    jitsimeetVPSIPInput=${jitsimeetVPSIPInput:-${configLocalVPSIp}}
-
-    sed -i 's|#\?org.ice4j.ice.harvest.STUN_MAPPING_HARVESTER_ADDRESSES|#org.ice4j.ice.harvest.STUN_MAPPING_HARVESTER_ADDRESSES|g' ${configJitsiMeetVideoBridgeFilePath}
-
-    sed -i '/org.ice4j.ice.harvest.NAT_HARVESTER_LOCAL_ADDRESS/d' ${configJitsiMeetVideoBridgeFilePath}
-    sed -i '/org.ice4j.ice.harvest.NAT_HARVESTER_PUBLIC_ADDRESS/d' ${configJitsiMeetVideoBridgeFilePath}
-
-    echo "org.ice4j.ice.harvest.NAT_HARVESTER_LOCAL_ADDRESS=${jitsimeetVPSIPInput}" >> ${configJitsiMeetVideoBridgeFilePath}
-    echo "org.ice4j.ice.harvest.NAT_HARVESTER_PUBLIC_ADDRESS=${jitsimeetVPSIPInput}" >> ${configJitsiMeetVideoBridgeFilePath}
-
-
-    sed -i 's|#\?DefaultLimitNOFILE=|DefaultLimitNOFILE=65000|g' /etc/systemd/system.conf
-    sed -i 's|#\?DefaultLimitNPROC=|DefaultLimitNPROC=65000|g' /etc/systemd/system.conf
-    sed -i 's|#\?DefaultTasksMax=|DefaultTasksMax=65000|g' /etc/systemd/system.conf
-
-
-    echo
-    systemctl show --property DefaultLimitNPROC
-    systemctl show --property DefaultLimitNOFILE
-    systemctl show --property DefaultTasksMax
-
-    ${sudoCmd} systemctl daemon-reload 
-    ${sudoCmd} systemctl restart jitsi-videobridge2
-
-
-    showHeaderGreen " Jitsi Meet installed successfully"
-}
-
-function removeJitsiMeet(){
-    echo
-    green " =================================================="
-    green " 准备卸载 视频会议系统 Jitsi Meet !"
-    green " =================================================="
-    echo
-
-    if [ "$osRelease" == "centos" ]; then
-        red " 不支持 CentOS 系统"
-    else
-        ${sudoCmd} apt purge jigasi jitsi-meet jitsi-meet-web-config jitsi-meet-prosody jitsi-meet-turnserver jitsi-meet-web jicofo jitsi-videobridge2
-    fi
-
-    removeNginx
 }
 
 
 
+function editV2rayPoseidonDockerWSConfig(){
+    vi ${configV2rayPoseidonPath}/docker/v2board/ws-tls/config.json
+}
 
+function editV2rayPoseidonDockerComposeConfig(){
+    vi ${configV2rayPoseidonPath}/docker/v2board/ws-tls/docker-compose.yml
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function editV2rayPoseidonConfig(){
+    vi ${configV2rayPoseidonPath}/config.json
+}
 
 
 
@@ -3890,6 +4062,13 @@ function startMenuOther(){
         green " 22. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
         green " 23. 编辑 XrayR 配置文件 ${configXrayRConfigFilePath}"        
         echo
+        green " 31. 安装 V2Ray-Poseidon 服务器端"
+        red " 32. 卸载 V2Ray-Poseidon"
+        green " 33. 停止, 重启, 查看日志, 管理 V2Ray-Poseidon"
+        green " 35. 编辑 V2Ray-Poseidon 直接命令行 方式运行 配置文件 v2ray-poseidon/config.json"
+        green " 36. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker方式运行 配置文件 v2ray-poseidon/docker/v2board/ws-tls/config.json"
+        green " 37. 编辑 V2Ray-Poseidon Docker WS-TLS 模式 Docker Compose 配置文件 v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml"
+        echo
         green " 41. 安装 Soga 服务器端"
         green " 42. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
         green " 43. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
@@ -3904,6 +4083,13 @@ function startMenuOther(){
         green " 21. Install XrayR server side "
         green " 22. Stop, restart, show log, manage XrayR server side "
         green " 23. Using VI open XrayR config file ${configXrayRConfigFilePath}"        
+        echo
+        green " 31. Install V2Ray-Poseidon server side"
+        red " 32. Remove V2Ray-Poseidon"
+        green " 33. Stop, restart, show log, manage V2Ray-Poseidon"
+        green " 35. Using VI open V2Ray-Poseidon config file v2ray-poseidon/config.json (direct command line running mode)"
+        green " 36. Using VI open V2Ray-Poseidon Docker WS-TLS Mode config file v2ray-poseidon/docker/v2board/ws-tls/config.json (Docker mode)"
+        green " 37. Using VI open V2Ray-Poseidon Docker WS-TLS Mode Docker Compose config file v2ray-poseidon/docker/v2board/ws-tls/docker-compose.yml (Docker mode)"
         echo
         green " 41. Install Soga server side "
         green " 42. Stop, restart, show log, manage Soga server side "
@@ -3929,7 +4115,26 @@ function startMenuOther(){
         23 )
             editXrayRConfig
         ;;    
-
+        31 )
+            setLinuxDateZone
+            installPackage
+            installV2rayPoseidon
+        ;;
+        32 )
+            removeV2rayPoseidon
+        ;;
+        33 )
+            manageV2rayPoseidon
+        ;;
+        35 )
+            editV2rayPoseidonConfig
+        ;;
+        36 )
+            editV2rayPoseidonDockerWSConfig
+        ;;
+        37 )
+            editV2rayPoseidonDockerComposeConfig
+        ;;
 
         41 )
             setLinuxDateZone
@@ -4002,7 +4207,6 @@ function start_menu(){
     red " 22. 卸载 Cloudreve 云盘系统 "
     green " 23. 安装/更新/删除 Alist 云盘文件列表系统 "
 
-    echo
     green " 41. 安装视频会议系统 Jitsi Meet "
     red " 42. 卸载 Jitsi Meet "
 
