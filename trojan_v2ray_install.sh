@@ -7312,7 +7312,7 @@ function replaceAdGuardConfig(){
             yellow " 准备把已申请到的SSL证书填入 AdGuardHome 配置文件"
             yellow " prepare to get SSL certificate and replace AdGuardHome config"
 
-            # 
+            # https://stackoverflow.com/questions/4396974/sed-or-awk-delete-n-lines-following-a-pattern
             sed -i -e '/^tls:/{n;d}' ${configAdGuardPath}/AdGuardHome.yaml
             sed -i "/^tls:/a \  enabled: true" ${configAdGuardPath}/AdGuardHome.yaml
             # sed -i 's/enabled: false/enabled: true/g' ${configAdGuardPath}/AdGuardHome.yaml

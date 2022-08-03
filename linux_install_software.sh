@@ -722,20 +722,37 @@ function toolboxJcnf(){
 function showHeaderGreen(){
     echo
     green " =================================================="
-    green " $1"
+
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
+
     green " =================================================="
     echo
 }
 function showHeaderRed(){
     echo
     green " =================================================="
-    red " $1"
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
     green " =================================================="
     echo
 }
 function showInfoGreen(){
     echo
-    green " $1"
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
     echo
 }
 
@@ -2224,7 +2241,8 @@ configJitsiMeetNginxConfigOriginalFolderPath="/etc/nginx/conf.d"
 function installJitsiMeetOnUbuntu(){
 
     if [ "$osRelease" == "centos" ]; then
-        red " 不支持 CentOS 系统"
+        showHeaderRed "不支持 CentOS 系统!  Not support CentOS!"
+        exit
     else
         sed -i '/packages.prosody.im/d' /etc/apt/sources.list
 
@@ -2265,7 +2283,7 @@ function installJitsiMeetOnUbuntu(){
     ${sudoCmd} ufw status verbose
 
 
-    showHeaderGreen " 开始安装 Jitsi Meet"
+    showHeaderGreen "开始安装 Jitsi Meet"
 
     mkdir -p ${configJitsiMeetNginxConfigFolderPath}
     mkdir -p ${configJitsiMeetNginxConfigFolder2Path}
@@ -2279,13 +2297,7 @@ function installJitsiMeetOnUbuntu(){
 
 
 
-
-
-
-
-    showHeaderGreen " Setting up nginx configuration"
-    #echo
-    #read -r -p "请输入域名: " configSSLDomain
+    showHeaderGreen "Setting up nginx configuration"
 
     #configJitsiMeetNginxConfigFilePath="${configJitsiMeetNginxConfigFolderPath}/${configSSLDomain}.conf"
     #sed -i "s|jitsi-meet.example.com|${configSSLDomain}|g" "${configJitsiMeetNginxConfigFilePath}"
@@ -2296,8 +2308,7 @@ function installJitsiMeetOnUbuntu(){
 
 
 
-    # /etc/jitsi/meet/${configSSLDomain}-config.js
-    showHeaderGreen " install letsencrypt cert"
+    showHeaderGreen "Generate certificate with letsencrypt"
     ${sudoCmd} /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
 
     # configSSLCertPath="${configSSLCertPath}/jitsimeet"
@@ -2310,7 +2321,7 @@ function installJitsiMeetOnUbuntu(){
     # /nginxweb/cert/jitsimeet/private.key
 
 
-    showHeaderGreen " Setting up jitsi meet local IP configuration"
+    showHeaderGreen "Setting up jitsi meet local IP configuration"
 
     configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
     echo
@@ -2326,9 +2337,9 @@ function installJitsiMeetOnUbuntu(){
     echo "org.ice4j.ice.harvest.NAT_HARVESTER_PUBLIC_ADDRESS=${jitsimeetVPSIPInput}" >> ${configJitsiMeetVideoBridgeFilePath}
 
 
-    sed -i 's|#\?DefaultLimitNOFILE=|DefaultLimitNOFILE=65000|g' /etc/systemd/system.conf
-    sed -i 's|#\?DefaultLimitNPROC=|DefaultLimitNPROC=65000|g' /etc/systemd/system.conf
-    sed -i 's|#\?DefaultTasksMax=|DefaultTasksMax=65000|g' /etc/systemd/system.conf
+    sed -i 's|#\?DefaultLimitNOFILE=.*|DefaultLimitNOFILE=65000|g' /etc/systemd/system.conf
+    sed -i 's|#\?DefaultLimitNPROC=.*|DefaultLimitNPROC=65000|g' /etc/systemd/system.conf
+    sed -i 's|#\?DefaultTasksMax=.*|DefaultTasksMax=65000|g' /etc/systemd/system.conf
 
 
     echo
@@ -2337,10 +2348,115 @@ function installJitsiMeetOnUbuntu(){
     systemctl show --property DefaultTasksMax
 
     ${sudoCmd} systemctl daemon-reload 
+
+    secureJitsiMeet "first"
+
+    showHeaderGreen "Jitsi Meet installed successfully!" "Running port 80 443 4443 10000 3478 5349 !" \
+    "重启 Videobridge 命令: systemctl restart jitsi-videobridge2 | Log: /var/log/jitsi/jvb.log" \
+    "重启 jicofo 命令: systemctl restart jicofo | Log: /var/log/jitsi/jicofo.log" \
+    "重启 XMPP 命令: systemctl restart prosody | Log: /var/log/prosody/prosody.log"
+
+}
+
+function secureJitsiMeet(){
+    green " =================================================="
+    echo
+    read -r -p "请输入域名: " configSSLDomain
+    echo
+
+    configJitsiMeetConfigFilePath="/etc/jitsi/meet/${configSSLDomain}-config.js"
+    configJitsiMeetProsodyFilePath="/etc/prosody/conf.avail/${configSSLDomain}.cfg.lua"
+    configJitsiMeetJicofoFilePath="/etc/jitsi/jicofo/jicofo.conf"
+
+    echo
+    green " 是否需要密码才能发起会议? 默认任何人都能发起会议"
+    echo
+    read -r -p "是否需要密码才能发起会议? 直接回复默认为否, 请输入[y/N]:" isJitsiMeetNeedPasswordInput
+    isJitsiMeetNeedPasswordInput=${isJitsiMeetNeedPasswordInput:-N}
+
+    if [[ ${isJitsiMeetNeedPasswordInput} == [Yy] ]]; then
+
+        #sed -i 's|#\?authentication =.*|authentication = "jitsi-anonymous"|g' "${configJitsiMeetProsodyFilePath}"
+        #sed -i 's|#\?authentication =.*|authentication = "internal_plain"|g' "${configJitsiMeetProsodyFilePath}"
+        sed -i 's|#\?authentication =.*|authentication = "internal_hashed"|g' "${configJitsiMeetProsodyFilePath}"
+
+        read -r -d '' configJitsiMeetProsodyVhost << EOM
+VirtualHost "guest.${configSSLDomain}"
+    authentication = "anonymous"
+    c2s_require_encryption = false
+
+EOM
+
+        TEST1="${configJitsiMeetProsodyVhost//\\/\\\\}"
+        TEST1="${TEST1//\//\\/}"
+        TEST1="${TEST1//&/\\&}"
+        TEST1="${TEST1//$'\n'/\\n}"
+
+        sed -i "/muc_lobby_whitelist /a ${TEST1} \ \ " "${configJitsiMeetProsodyFilePath}"
+
+        sed -i "/anonymousdomain/a \        anonymousdomain: 'guest.${configSSLDomain}'," "${configJitsiMeetConfigFilePath}"
+
+
+        read -r -d '' configJitsiMeetJicofoVhost << EOM
+    authentication: {
+        enabled: true
+        type: XMPP
+        login-url: ${configSSLDomain}
+    }
+
+EOM
+
+        TEST3="${configJitsiMeetJicofoVhost//\\/\\\\}"
+        TEST3="${TEST3//\//\\/}"
+        TEST3="${TEST3//&/\\&}"
+        TEST3="${TEST3//$'\n'/\\n}"
+
+        sed -i "/xmpp/i \    ${TEST3} \ \ " "${configJitsiMeetJicofoFilePath}"
+
+    echo
+    read -r -p "请输入发起会议用户名, 直接回车默认为jitsi : " isJitsiMeetUsernameInput
+    isJitsiMeetUsernameInput=${isJitsiMeetUsernameInput:-jitsi}
+    echo
+    read -r -p "请输入用户的密码, 直接回车默认为jitsi :" isJitsiMeetUserPasswordInput
+    isJitsiMeetUserPasswordInput=${isJitsiMeetUserPasswordInput:-jitsi}
+    echo
+
+    ${sudoCmd} prosodyctl register "${isJitsiMeetUsernameInput}" "${configSSLDomain}" "${isJitsiMeetUserPasswordInput}"
+    # User list:  /var/lib/prosody/v%2evr360%2ecf/accounts
+
+    echo 
+    green "Use the following command to add new user: " 
+    yellow "prosodyctl register username domain_name password"
+    green "Docs: https://prosody.im/doc/prosodyctl#user-management"
+    echo
+    echo
+
+    showHeaderGreen "Please manually modify Jigasi configuration if you are using Jigasi" "Docs: https://jitsi.github.io/handbook/docs/devops-guide/secure-domain/"
+
+    else 
+        echo
+        # https://stackoverflow.com/questions/4396974/sed-or-awk-delete-n-lines-following-a-pattern
+
+        if [[ -z "$1" ]]; then
+            sed -i 's|#\?authentication =.*|authentication = "jitsi-anonymous"|g' "${configJitsiMeetProsodyFilePath}"
+            sed -i "/guest.${configSSLDomain}/{N;N;d}" "${configJitsiMeetProsodyFilePath}"
+
+            sed -i "/anonymousdomain: 'guest.${configSSLDomain}/d" "${configJitsiMeetConfigFilePath}"
+
+            sed -i "/authentication:/,+4d" "${configJitsiMeetJicofoFilePath}"
+
+        fi
+
+    fi
+
+
+
+    ${sudoCmd} systemctl daemon-reload 
+    ${sudoCmd} systemctl restart prosody
+    ${sudoCmd} systemctl restart jicofo
     ${sudoCmd} systemctl restart jitsi-videobridge2
+    ${sudoCmd} systemctl restart nginx
 
-
-    showHeaderGreen " Jitsi Meet installed successfully"
 }
 
 function removeJitsiMeet(){
@@ -2353,7 +2469,13 @@ function removeJitsiMeet(){
     if [ "$osRelease" == "centos" ]; then
         red " 不支持 CentOS 系统"
     else
-        ${sudoCmd} apt purge jigasi jitsi-meet jitsi-meet-web-config jitsi-meet-prosody jitsi-meet-turnserver jitsi-meet-web jicofo jitsi-videobridge2
+        ${sudoCmd} apt purge -y jigasi jitsi-meet jitsi-meet-web-config jitsi-meet-prosody jitsi-meet-turnserver jitsi-meet-web jicofo jitsi-videobridge2 prosody
+        ${sudoCmd} apt autoremove -y
+        rm -f /etc/prosody/prosody.cfg.lua
+        rm -rf /etc/letsencrypt/live/*
+        rm -rf /etc/letsencrypt/archive/*
+        rm -f /etc/letsencrypt/renewal/*
+        rm -f /etc/letsencrypt/keys/*
     fi
 
     removeNginx
@@ -4136,6 +4258,9 @@ function start_menu(){
         ;;
         42 )
             removeJitsiMeet
+        ;;
+        45 )
+            secureJitsiMeet
         ;;
 
 
