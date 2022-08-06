@@ -2277,13 +2277,63 @@ function installJitsiMeetByDocker(){
     sed -i "s|#LETSENCRYPT_DOMAIN=meet.example.com|LETSENCRYPT_DOMAIN=${configSSLDomain}|g" "${configJitsiMeetDockerPath}/.env"
     sed -i "s|#LETSENCRYPT_EMAIL=alice@atlanta.net|LETSENCRYPT_EMAIL=${configEmailForSSLDomain}|g" "${configJitsiMeetDockerPath}/.env"
 
+    
 
-    docker-compose up -d
+
+
+    green " =================================================="
+    echo
+    green " 是否需要密码才能发起会议? 默认任何人都能发起会议"
+    echo
+    read -r -p "是否需要密码才能发起会议? 直接回复默认为否, 请输入[y/N]:" isJitsiMeetNeedPasswordInput
+    isJitsiMeetNeedPasswordInput=${isJitsiMeetNeedPasswordInput:-N}
+
+    if [[ ${isJitsiMeetNeedPasswordInput} == [Yy] ]]; then
+
+        sed -i "s|#ENABLE_AUTH=1|ENABLE_AUTH=1|g" "${configJitsiMeetDockerPath}/.env"
+        sed -i "s|#AUTH_TYPE=internal|AUTH_TYPE=internal|g" "${configJitsiMeetDockerPath}/.env"
+
+        sed -i "s|#ENABLE_GUESTS=1|ENABLE_GUESTS=1|g" "${configJitsiMeetDockerPath}/.env"
+
+        docker-compose up -d
+
+        echo
+        read -r -p "请输入发起会议用户名, 直接回车默认为jitsi : " isJitsiMeetUsernameInput
+        isJitsiMeetUsernameInput=${isJitsiMeetUsernameInput:-jitsi}
+        echo
+        read -r -p "请输入用户的密码, 直接回车默认为jitsi :" isJitsiMeetUserPasswordInput
+        isJitsiMeetUserPasswordInput=${isJitsiMeetUserPasswordInput:-jitsi}
+        echo
+
+
+        docker-compose exec prosody prosodyctl --config /config/prosody.cfg.lua register ${isJitsiMeetUsernameInput} meet.jitsi ${isJitsiMeetUserPasswordInput}
+
+        # User list: find /config/data/meet%2ejitsi/accounts -type f -exec basename {} .dat \;
+
+    else
+
+        sed -i "s|#\?ENABLE_AUTH=1|#ENABLE_AUTH=1|g" "${configJitsiMeetDockerPath}/.env"
+        sed -i "s|#\?AUTH_TYPE=internal|#AUTH_TYPE=internal|g" "${configJitsiMeetDockerPath}/.env"
+
+        sed -i "s|#\?ENABLE_GUESTS=1|#ENABLE_GUESTS=1|g" "${configJitsiMeetDockerPath}/.env"
+
+        docker-compose up -d
+    fi
+
+    showHeaderGreen "Check document below for JWT and LDAP authentication" \
+    "Docs: https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker#authentication"
+
+
+    
 
 
     showHeaderGreen "Jitsi Meet installed successfully!" "Visit https://${configSSLDomain} " \
-    "停止命令: docker-compose down | 启动命令: docker-compose up -d " 
+    "停止命令: docker-compose down | 启动命令: docker-compose up -d " \
+    "Jitsi Meet 项目文件路径 ${configJitsiMeetDockerPath} " \
+    "Web 配置文件路径 ${HOME}/.jitsi-meet-cfg/web/config.js "  
 }
+
+
 
 
 configJitsiMeetVideoBridgeFilePath="/etc/jitsi/videobridge/sip-communicator.properties"
@@ -2472,7 +2522,7 @@ EOM
 
         ${sudoCmd} prosodyctl register "${isJitsiMeetUsernameInput}" "${configSSLDomain}" "${isJitsiMeetUserPasswordInput}"
         # User list:  /var/lib/prosody/v%2evr360%2ecf/accounts
-
+   
         echo 
         green "Use the following command to add new user: " 
         yellow "prosodyctl register username domain_name password"
@@ -2505,11 +2555,8 @@ EOM
 }
 
 function removeJitsiMeet(){
-    echo
-    green " =================================================="
-    green " 准备卸载 视频会议系统 Jitsi Meet !"
-    green " =================================================="
-    echo
+
+    showHeaderGreen "准备卸载 视频会议系统 Jitsi Meet !"
 
     if [ "$osRelease" == "centos" ]; then
         red " 不支持 CentOS 系统"
@@ -2524,6 +2571,19 @@ function removeJitsiMeet(){
         rm -rf /etc/letsencrypt/archive/*
         rm -f /etc/letsencrypt/renewal/*
         rm -f /etc/letsencrypt/keys/*
+    fi
+
+   cp -f "${configJitsiMeetDockerPath}/env.example"  "${configJitsiMeetDockerPath}/.env"
+
+    if [ -f "${configJitsiMeetDockerPath}/.env" ]; then
+        showHeaderGreen "准备卸载 Jitsi Meet Docker "
+
+        cd "${configJitsiMeetDockerPath}" || exit
+
+        docker-compose down
+
+        rm -rf "${configJitsiMeetDockerPath}"
+        rm -rf "${HOME}/.jitsi-meet-cfg"
     fi
 
     removeNginx
@@ -4316,7 +4376,7 @@ function start_menu(){
             removeJitsiMeet
         ;;
         45 )
-            secureJitsiMeet
+            secureAddPasswordForJitsiMeet
         ;;
 
 
