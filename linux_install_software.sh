@@ -822,7 +822,7 @@ function getGithubLatestReleaseVersion(){
 }
 function getGithubLatestReleaseVersion2(){
     # https://github.com/p4gefau1t/trojan-go/issues/63
-    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 1-
+    wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | sort -r | head -1 | cut -b 1-
 }
 
 
@@ -877,16 +877,15 @@ function installNodejs(){
 
 
 
-
-configDockerPath="${HOME}/download"
-DOCKER_CONFIG="/usr/local/lib/docker"
+configDockerDownloadPath="${HOME}/download"
+configDockerComposePath="/usr/local/lib/docker/cli-plugins"
 
 function installDocker(){
 
     showHeaderGreen "准备安装 Docker 与 Docker Compose"
 
-    mkdir -p ${configDockerPath}
-    cd ${configDockerPath}
+    mkdir -p ${configDockerDownloadPath}
+    cd ${configDockerDownloadPath}
 
 
     if [[ -s "/usr/bin/docker" ]]; then
@@ -902,9 +901,9 @@ function installDocker(){
  
         else
             # curl -fsSL https://get.docker.com -o get-docker.sh  
-            curl -sSL https://get.daocloud.io/docker -o get-docker.sh  
-            chmod +x ./get-docker.sh
-            sh get-docker.sh
+            curl -sSL https://get.daocloud.io/docker -o ${configDockerDownloadPath}/get-docker.sh  
+            chmod +x ${configDockerDownloadPath}/get-docker.sh
+            ${configDockerDownloadPath}/get-docker.sh
 
         fi
         ${sudoCmd}
@@ -917,29 +916,31 @@ function installDocker(){
     fi
 
 
-
     if [[ -s "/usr/local/bin/docker-compose" ]]; then
         showHeaderRed "已安装过 Docker Compose. Docker Compose already installed!"
     else
 
         versionDockerCompose=$(getGithubLatestReleaseVersion "docker/compose")
 
-        # dockerComposeUrl="https://github.com/docker/compose/releases/download/${versionDockerCompose}/docker-compose-$(uname -s)-$(uname -m)"
+        # dockerComposeUrl="https://github.com/docker/compose/releases/download/v${versionDockerCompose}/docker-compose-$(uname -s)-$(uname -m)"
         dockerComposeUrl="https://github.com/docker/compose/releases/download/v2.9.0/docker-compose-linux-x86_64"
-        dockerComposeUrl="https://get.daocloud.io/docker/compose/releases/download/v2.9.0/docker-compose-linux-x86_64"
+        dockerComposeUrl="https://get.daocloud.io/docker/compose/releases/download/v${versionDockerCompose}/docker-compose-linux-x86_64"
         
         showInfoGreen "Downloading  ${dockerComposeUrl}"
 
 
-        mkdir -p ${DOCKER_CONFIG}/cli-plugins
-        ${sudoCmd} wget -O /usr/local/bin/docker-compose ${dockerComposeUrl}
-        ${sudoCmd} chmod a+x /usr/local/bin/docker-compose
-        cp /usr/local/bin/docker-compose ${DOCKER_CONFIG}/cli-plugins
+        mkdir -p ${configDockerComposePath}
+
+        ${sudoCmd} wget -O ${configDockerComposePath}/docker-compose "${dockerComposeUrl}"
+        ${sudoCmd} chmod a+x ${configDockerComposePath}/docker-compose
+        ${sudoCmd} ln -s ${configDockerComposePath}/docker-compose /usr/local/bin/docker-compose
+        #${sudoCmd} ln -s ${configDockerComposePath}/docker-compose /usr/bin/docker-compose
 
         rm -f "$(which dc)"
-        rm -f "/usr/bin/docker-compose"
-        ${sudoCmd} ln -s /usr/local/bin/docker-compose /usr/bin/dc
-        ${sudoCmd} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        ${sudoCmd} ln -s ${configDockerComposePath}/docker-compose /usr/bin/dc
+        
+        # rm -f "/usr/bin/docker-compose"
+        # ${sudoCmd} ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         
         showHeaderGreen "Docker-Compose installed successfully !"
         docker compose version
@@ -2226,9 +2227,62 @@ function installJitsiMeet(){
     esac
 }
 
+configJitsiMeetProjectPath="${HOME}/jitsi_meet"
+configJitsiMeetDockerPath="${HOME}/jitsi_meet/docker"
+configJitsiMeetDownloadPath="${HOME}/jitsi_meet/download"
 
 function installJitsiMeetByDocker(){
+    
+    if [ -f "${configJitsiMeetDockerPath}/docker-compose.yml" ]; then
+        showHeaderRed "Jitsi Meet already installed !"
+        exit
+    fi
+
+    showHeaderGreen "开始安装 Jitsi Meet by Docker"
+
+    mkdir -p "${configJitsiMeetDownloadPath}"
+
+    versionJitsiMeet=$(getGithubLatestReleaseVersion2 "jitsi/docker-jitsi-meet")
+
+    downloadAndUnzip "https://github.com/jitsi/docker-jitsi-meet/archive/refs/tags/${versionJitsiMeet}.zip" "${configJitsiMeetProjectPath}" "${versionJitsiMeet}.zip"
+
+    # https://github.com/jitsi/docker-jitsi-meet/archive/refs/tags/stable-7439-2.zip
+
+    mv -f "${configJitsiMeetProjectPath}/docker-jitsi-meet-${versionJitsiMeet}" "${configJitsiMeetProjectPath}/docker"
+
+    cd "${configJitsiMeetDockerPath}" || exit
+    cp -f "${configJitsiMeetDockerPath}/env.example"  "${configJitsiMeetDockerPath}/.env"
+
+    "${configJitsiMeetDockerPath}/gen-passwords.sh"
+
+    mkdir -p ~/.jitsi-meet-cfg/{web,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri}
+
+    configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
+
+    green " =================================================="
     echo
+    read -r -p "请输入已解析到本机的域名: " configSSLDomain
+    echo
+    read -r -p "请输入邮箱用于申请SSL域名证书: " configEmailForSSLDomain
+    echo
+
+    sed -i "s|HTTP_PORT=8000|HTTP_PORT=80|g" "${configJitsiMeetDockerPath}/.env"
+    sed -i "s|HTTPS_PORT=8443|HTTPS_PORT=443|g" "${configJitsiMeetDockerPath}/.env"
+    sed -i "/HTTPS_PORT=443/a \ \nENABLE_HTTP_REDIRECT=1 \n " "${configJitsiMeetDockerPath}/.env"
+
+    sed -i "s|#PUBLIC_URL=https:\/\/meet.example.com|PUBLIC_URL=https:\/\/${configSSLDomain}|g" "${configJitsiMeetDockerPath}/.env"
+    sed -i "s|#DOCKER_HOST_ADDRESS=192.168.1.1|DOCKER_HOST_ADDRESS=${configLocalVPSIp}|g" "${configJitsiMeetDockerPath}/.env"
+    
+    sed -i "s|#ENABLE_LETSENCRYPT=1|ENABLE_LETSENCRYPT=1|g" "${configJitsiMeetDockerPath}/.env"
+    sed -i "s|#LETSENCRYPT_DOMAIN=meet.example.com|LETSENCRYPT_DOMAIN=${configSSLDomain}|g" "${configJitsiMeetDockerPath}/.env"
+    sed -i "s|#LETSENCRYPT_EMAIL=alice@atlanta.net|LETSENCRYPT_EMAIL=${configEmailForSSLDomain}|g" "${configJitsiMeetDockerPath}/.env"
+
+
+    docker-compose up -d
+
+
+    showHeaderGreen "Jitsi Meet installed successfully!" "Visit https://${configSSLDomain} " \
+    "停止命令: docker-compose down | 启动命令: docker-compose up -d " 
 }
 
 
@@ -2236,7 +2290,6 @@ configJitsiMeetVideoBridgeFilePath="/etc/jitsi/videobridge/sip-communicator.prop
 configJitsiMeetNginxConfigFolderPath="/etc/nginx/sites-available"
 configJitsiMeetNginxConfigFolder2Path="/etc/nginx/sites-enabled"
 configJitsiMeetNginxConfigOriginalFolderPath="/etc/nginx/conf.d"
-
 
 function installJitsiMeetOnUbuntu(){
 
@@ -2276,8 +2329,8 @@ function installJitsiMeetOnUbuntu(){
     ${sudoCmd} ufw allow 5349/tcp
 
     echo
-    echo "ufw enable"
-    ${sudoCmd} ufw enable
+    #echo "ufw enable"
+    #${sudoCmd} ufw enable
     echo
     echo "ufw status verbose"
     ${sudoCmd} ufw status verbose
@@ -2291,10 +2344,7 @@ function installJitsiMeetOnUbuntu(){
     # https://jitsi.org/downloads/ubuntu-debian-installations-instructions/    
     ${sudoCmd} apt-get -y install jitsi-meet
 
-    #sudo apt-get -y install jitsi-videobridge
-    #sudo apt-get -y install jicofo
     #sudo apt-get -y install jigasi
-
 
 
     showHeaderGreen "Setting up nginx configuration"
@@ -2304,8 +2354,6 @@ function installJitsiMeetOnUbuntu(){
 
     ln -s ${configJitsiMeetNginxConfigFolderPath}/* ${configJitsiMeetNginxConfigOriginalFolderPath}/
     ${sudoCmd} systemctl restart nginx
-
-
 
 
     showHeaderGreen "Generate certificate with letsencrypt"
@@ -2349,7 +2397,7 @@ function installJitsiMeetOnUbuntu(){
 
     ${sudoCmd} systemctl daemon-reload 
 
-    secureJitsiMeet "first"
+    secureAddPasswordForJitsiMeet "first"
 
     showHeaderGreen "Jitsi Meet installed successfully!" "Running port 80 443 4443 10000 3478 5349 !" \
     "重启 Videobridge 命令: systemctl restart jitsi-videobridge2 | Log: /var/log/jitsi/jvb.log" \
@@ -2358,10 +2406,10 @@ function installJitsiMeetOnUbuntu(){
 
 }
 
-function secureJitsiMeet(){
+function secureAddPasswordForJitsiMeet(){
     green " =================================================="
     echo
-    read -r -p "请输入域名: " configSSLDomain
+    read -r -p "请输入已解析到本机的域名: " configSSLDomain
     echo
 
     configJitsiMeetConfigFilePath="/etc/jitsi/meet/${configSSLDomain}-config.js"
@@ -2413,25 +2461,26 @@ EOM
 
         sed -i "/xmpp/i \    ${TEST3} \ \ " "${configJitsiMeetJicofoFilePath}"
 
-    echo
-    read -r -p "请输入发起会议用户名, 直接回车默认为jitsi : " isJitsiMeetUsernameInput
-    isJitsiMeetUsernameInput=${isJitsiMeetUsernameInput:-jitsi}
-    echo
-    read -r -p "请输入用户的密码, 直接回车默认为jitsi :" isJitsiMeetUserPasswordInput
-    isJitsiMeetUserPasswordInput=${isJitsiMeetUserPasswordInput:-jitsi}
-    echo
 
-    ${sudoCmd} prosodyctl register "${isJitsiMeetUsernameInput}" "${configSSLDomain}" "${isJitsiMeetUserPasswordInput}"
-    # User list:  /var/lib/prosody/v%2evr360%2ecf/accounts
+        echo
+        read -r -p "请输入发起会议用户名, 直接回车默认为jitsi : " isJitsiMeetUsernameInput
+        isJitsiMeetUsernameInput=${isJitsiMeetUsernameInput:-jitsi}
+        echo
+        read -r -p "请输入用户的密码, 直接回车默认为jitsi :" isJitsiMeetUserPasswordInput
+        isJitsiMeetUserPasswordInput=${isJitsiMeetUserPasswordInput:-jitsi}
+        echo
 
-    echo 
-    green "Use the following command to add new user: " 
-    yellow "prosodyctl register username domain_name password"
-    green "Docs: https://prosody.im/doc/prosodyctl#user-management"
-    echo
-    echo
+        ${sudoCmd} prosodyctl register "${isJitsiMeetUsernameInput}" "${configSSLDomain}" "${isJitsiMeetUserPasswordInput}"
+        # User list:  /var/lib/prosody/v%2evr360%2ecf/accounts
 
-    showHeaderGreen "Please manually modify Jigasi configuration if you are using Jigasi" "Docs: https://jitsi.github.io/handbook/docs/devops-guide/secure-domain/"
+        echo 
+        green "Use the following command to add new user: " 
+        yellow "prosodyctl register username domain_name password"
+        green "Docs: https://prosody.im/doc/prosodyctl#user-management"
+        echo
+        echo
+
+        showHeaderGreen "Please manually modify Jigasi configuration if you are using Jigasi" "Docs: https://jitsi.github.io/handbook/docs/devops-guide/secure-domain/"
 
     else 
         echo
@@ -2444,12 +2493,8 @@ EOM
             sed -i "/anonymousdomain: 'guest.${configSSLDomain}/d" "${configJitsiMeetConfigFilePath}"
 
             sed -i "/authentication:/,+4d" "${configJitsiMeetJicofoFilePath}"
-
         fi
-
     fi
-
-
 
     ${sudoCmd} systemctl daemon-reload 
     ${sudoCmd} systemctl restart prosody
@@ -2471,6 +2516,9 @@ function removeJitsiMeet(){
     else
         ${sudoCmd} apt purge -y jigasi jitsi-meet jitsi-meet-web-config jitsi-meet-prosody jitsi-meet-turnserver jitsi-meet-web jicofo jitsi-videobridge2 prosody
         ${sudoCmd} apt autoremove -y
+        ${sudoCmd} apt purge -y jicofo jitsi-videobridge2 
+        ${sudoCmd} apt autoremove -y
+
         rm -f /etc/prosody/prosody.cfg.lua
         rm -rf /etc/letsencrypt/live/*
         rm -rf /etc/letsencrypt/archive/*
@@ -2480,6 +2528,14 @@ function removeJitsiMeet(){
 
     removeNginx
 }
+
+
+
+
+
+
+
+
 
 
 
