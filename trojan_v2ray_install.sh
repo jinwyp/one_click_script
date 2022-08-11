@@ -4076,13 +4076,13 @@ EOM
             V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:youtube\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "7" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:spotify\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:disney\", \"geosite:spotify\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "8" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:spotify\", \"geosite:youtube\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:disney\", \"geosite:spotify\", \"geosite:youtube\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:pornhub\""
 
         elif [[ $isV2rayUnlockVideoSiteInput == "9" ]]; then
-            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:spotify\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:disney\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
+            V2rayUnlockVideoSiteRuleText="\"geosite:netflix\", \"geosite:disney\", \"geosite:spotify\", \"geosite:youtube\", \"geosite:bahamut\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\", \"geosite:pornhub\""
 
         fi
 
@@ -4104,11 +4104,13 @@ EOM
     else
         removeString="\"geosite:netflix\", "
         V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString"}
+        removeString2="\"geosite:disney\", "
+        V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString2"}
         read -r -d '' v2rayConfigRouteGoNetflixInput << EOM
             {
                 "type": "field",
                 "outboundTag": "GoNetflix",
-                "domain": [ "geosite:netflix" ] 
+                "domain": [ "geosite:netflix", "geosite:disney" ] 
             },
 EOM
 
@@ -4132,7 +4134,7 @@ EOM
             },
             "settings": {
                 "vnext": [{
-                    "address": "free-sg-01.gonetflix.xyz",
+                    "address": "free-sg-01.unblocknetflix.cf",
                     "port": 443,
                     "users": [
                         { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }

@@ -217,6 +217,7 @@ function testNetflixOneMethod(){
         result4=$($1 -S "https://www.netflix.com/title/70283261" 2>&1)
         result5=$($1 -S "https://www.netflix.com/title/70143860" 2>&1)
         result6=$($1 -S "https://www.netflix.com/title/70202589" 2>&1)
+        result7=$($1 -S "https://www.netflix.com/title/70305903" 2>&1)
 
         if [[ "$result1" == *"page-404"* ]] && [[ "$result2" == *"page-404"* ]] && [[ "$result3" == *"page-404"* ]] && [[ "$result4" == *"page-404"* ]] && [[ "$result5" == *"page-404"* ]] && [[ "$result6" == *"page-404"* ]]; then
             yellow " 本机 $2 仅解锁 Netflix 自制剧, 无法播放非自制剧. 区域: ${netflixRegion}"
