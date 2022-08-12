@@ -2202,7 +2202,8 @@ function removeNginx(){
 
 function installJitsiMeet(){
 
-    showHeaderGreen "准备安装 视频会议系统 Jitsi Meet !"
+    showHeaderGreen "准备安装 视频会议系统 Jitsi Meet !" \
+    "Minimum Requirements: 4 GB RAM + 2 core CPU "
 
     echo
     green " =================================================="
