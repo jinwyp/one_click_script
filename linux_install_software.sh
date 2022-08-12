@@ -2280,12 +2280,37 @@ function installJitsiMeetByDocker(){
     
 
 
+    addPasswordForJitsiMeetDocker "first"
+
+
+    showHeaderGreen "Jitsi Meet installed successfully!" "Visit https://${configSSLDomain} " \
+    "停止命令: docker-compose down | 启动命令: docker-compose up -d " \
+    "Jitsi Meet 项目文件路径 ${configJitsiMeetDockerPath} " \
+    "Web 配置文件路径 ${HOME}/.jitsi-meet-cfg/web/config.js " \
+    "查看日志 web: docker-compose logs -t -f web" \
+    "查看日志 prosody: docker-compose logs -t -f prosody" \
+    "查看日志 jvb: docker-compose logs -t -f jvb" \
+    "查看日志 jicofo: docker-compose logs -t -f jicofo" 
+
+
+}
+
+function addPasswordForJitsiMeetDocker(){
+
+    cd "${configJitsiMeetDockerPath}" || exit
+
+    if [[ -z "$1" ]]; then
+        
+        docker-compose down
+    else
+        echo
+    fi
 
     green " =================================================="
     echo
-    green " 是否需要密码才能发起会议? 默认任何人都能发起会议"
+    green " 是否需要密码才能发起会议? 默认为否 任何人都能发起会议"
     echo
-    read -r -p "是否需要密码才能发起会议? 直接回复默认为否, 请输入[y/N]:" isJitsiMeetNeedPasswordInput
+    read -r -p "是否需要密码才能发起会议? 直接回车默认为否, 请输入[y/N]:" isJitsiMeetNeedPasswordInput
     isJitsiMeetNeedPasswordInput=${isJitsiMeetNeedPasswordInput:-N}
 
     if [[ ${isJitsiMeetNeedPasswordInput} == [Yy] ]]; then
@@ -2323,16 +2348,7 @@ function installJitsiMeetByDocker(){
     showHeaderGreen "Check document below for JWT and LDAP authentication" \
     "Docs: https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-docker#authentication"
 
-
-    
-
-
-    showHeaderGreen "Jitsi Meet installed successfully!" "Visit https://${configSSLDomain} " \
-    "停止命令: docker-compose down | 启动命令: docker-compose up -d " \
-    "Jitsi Meet 项目文件路径 ${configJitsiMeetDockerPath} " \
-    "Web 配置文件路径 ${HOME}/.jitsi-meet-cfg/web/config.js "  
 }
-
 
 
 
@@ -2457,6 +2473,11 @@ function installJitsiMeetOnUbuntu(){
 }
 
 function secureAddPasswordForJitsiMeet(){
+    if [ -f "${configJitsiMeetDockerPath}/.env" ]; then
+        addPasswordForJitsiMeetDocker
+        exit
+    fi
+    
     green " =================================================="
     echo
     read -r -p "请输入已解析到本机的域名: " configSSLDomain
@@ -2467,9 +2488,9 @@ function secureAddPasswordForJitsiMeet(){
     configJitsiMeetJicofoFilePath="/etc/jitsi/jicofo/jicofo.conf"
 
     echo
-    green " 是否需要密码才能发起会议? 默认任何人都能发起会议"
+    green " 是否需要密码才能发起会议? 默认为否 任何人都能发起会议"
     echo
-    read -r -p "是否需要密码才能发起会议? 直接回复默认为否, 请输入[y/N]:" isJitsiMeetNeedPasswordInput
+    read -r -p "是否需要密码才能发起会议? 直接回车默认为否, 请输入[y/N]:" isJitsiMeetNeedPasswordInput
     isJitsiMeetNeedPasswordInput=${isJitsiMeetNeedPasswordInput:-N}
 
     if [[ ${isJitsiMeetNeedPasswordInput} == [Yy] ]]; then
@@ -2556,25 +2577,7 @@ EOM
 
 function removeJitsiMeet(){
 
-    showHeaderGreen "准备卸载 视频会议系统 Jitsi Meet !"
-
-    if [ "$osRelease" == "centos" ]; then
-        red " 不支持 CentOS 系统"
-    else
-        ${sudoCmd} apt purge -y jigasi jitsi-meet jitsi-meet-web-config jitsi-meet-prosody jitsi-meet-turnserver jitsi-meet-web jicofo jitsi-videobridge2 prosody
-        ${sudoCmd} apt autoremove -y
-        ${sudoCmd} apt purge -y jicofo jitsi-videobridge2 
-        ${sudoCmd} apt autoremove -y
-
-        rm -f /etc/prosody/prosody.cfg.lua
-        rm -rf /etc/letsencrypt/live/*
-        rm -rf /etc/letsencrypt/archive/*
-        rm -f /etc/letsencrypt/renewal/*
-        rm -f /etc/letsencrypt/keys/*
-    fi
-
-   cp -f "${configJitsiMeetDockerPath}/env.example"  "${configJitsiMeetDockerPath}/.env"
-
+    
     if [ -f "${configJitsiMeetDockerPath}/.env" ]; then
         showHeaderGreen "准备卸载 Jitsi Meet Docker "
 
@@ -2584,9 +2587,35 @@ function removeJitsiMeet(){
 
         rm -rf "${configJitsiMeetDockerPath}"
         rm -rf "${HOME}/.jitsi-meet-cfg"
+
+        showHeaderGreen "已成功卸载 Jitsi Meet Docker 版本 !"
+    else
+        showHeaderRed "没有发现 Jitsi Meet Docker !"
+
+        showHeaderGreen "准备卸载 视频会议系统 Jitsi Meet 非Docker 安装版本 !"
+
+        if [ "$osRelease" == "centos" ]; then
+            showHeaderRed " 不支持 CentOS 系统"
+        else
+
+            ${sudoCmd} apt purge -y jigasi jitsi-meet jitsi-meet-web-config jitsi-meet-prosody jitsi-meet-turnserver jitsi-meet-web jicofo jitsi-videobridge2 prosody
+            ${sudoCmd} apt autoremove -y
+            ${sudoCmd} apt purge -y jicofo jitsi-videobridge2 
+            ${sudoCmd} apt autoremove -y
+
+            rm -f /etc/prosody/prosody.cfg.lua
+            rm -rf /etc/letsencrypt/live/*
+            rm -rf /etc/letsencrypt/archive/*
+            rm -f /etc/letsencrypt/renewal/*
+            rm -f /etc/letsencrypt/keys/*
+
+            showHeaderGreen "已成功卸载 Jitsi Meet 非Docker 安装版本 !"
+        fi
+
+        removeNginx    
     fi
 
-    removeNginx
+    
 }
 
 
@@ -4245,6 +4274,7 @@ function start_menu(){
     echo
     green " 41. 安装视频会议系统 Jitsi Meet "
     red " 42. 卸载 Jitsi Meet "
+    green " 45. Jitsi Meet 发起会议是否需要密码验证"
 
     echo
     green " 51. 安装 Air-Universe 服务器端"
@@ -4290,6 +4320,11 @@ function start_menu(){
     green " 21. Install Cloudreve cloud storage system"
     red " 22. Remove Cloudreve cloud storage system"
     green " 23. Install/Update/Remove Alist file list storage system "
+    echo
+
+    green " 41. Install Jitsi Meet video conference system"
+    red " 42. Remove Jitsi Meet video conference system"
+    green " 45. Modify Jitsi Meet whether to Start a meeting requires password authentication"
 
     echo
     green " 51. Install Air-Universe server side "
