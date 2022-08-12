@@ -852,6 +852,7 @@ function vps_mtrTrace(){
 function vps_returnroute(){
     # https://www.zhujizixun.com/6216.html
     # https://91ai.net/thread-1015693-5-1.html
+    # https://github.com/zhucaidan/mtr_trace
     wget --no-check-certificate -O route https://tutu.ovh/bash/returnroute/route  && chmod +x route && ./route
 }
 function vps_returnroute2(){
