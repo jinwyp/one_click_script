@@ -381,7 +381,7 @@ function setLinuxDateZone(){
             systemctl restart ntpd
             ntpdate -u  pool.ntp.org
 
-        elif  [[ ${osReleaseVersionNoShort} == "8" ]]; then
+        elif  [[ ${osReleaseVersionNoShort} == "8" || ${osReleaseVersionNoShort} == "9" ]]; then
             $osSystemPackage -y install chrony
             systemctl enable chronyd
             systemctl restart chronyd
@@ -509,7 +509,7 @@ function installPackage(){
         if ! rpm -qa | grep -qw iperf3; then
 			${sudoCmd} ${osSystemPackage} install -y epel-release
 
-            ${osSystemPackage} install -y curl wget git unzip zip tar bind-utils
+            ${osSystemPackage} install -y curl wget git unzip zip tar bind-utils htop net-tools
             ${osSystemPackage} install -y xz jq redhat-lsb-core 
             ${osSystemPackage} install -y iputils
             ${osSystemPackage} install -y iperf3
@@ -519,7 +519,7 @@ function installPackage(){
 
 
         # https://www.cyberciti.biz/faq/how-to-install-and-use-nginx-on-centos-8/
-        if  [[ ${osReleaseVersionNoShort} == "8" ]]; then
+        if  [[ ${osReleaseVersionNoShort} == "8" || ${osReleaseVersionNoShort} == "9" ]]; then
             ${sudoCmd} yum module -y reset nginx
             ${sudoCmd} yum module -y enable nginx:1.20
             ${sudoCmd} yum module list nginx
@@ -554,7 +554,7 @@ EOF
 
         if ! dpkg -l | grep -qw iperf3; then
             ${sudoCmd} ${osSystemPackage} install -y software-properties-common
-            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y curl wget git unzip zip tar htop
             ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
             ${osSystemPackage} install -y iputils-ping
             ${osSystemPackage} install -y iperf3
@@ -582,7 +582,7 @@ EOF
         ${osSystemPackage} update -y
 
         if ! dpkg -l | grep -qw iperf3; then
-            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y curl wget git unzip zip tar htop
             ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
             ${osSystemPackage} install -y iputils-ping
             ${osSystemPackage} install -y iperf3
@@ -839,19 +839,17 @@ function installNodejs(){
 
     if [ "$osRelease" == "centos" ] ; then
 
-        if [ "$osReleaseVersion" == "8" ]; then
-            ${sudoCmd} dnf module list nodejs
-            ${sudoCmd} dnf module enable nodejs:14
-            ${sudoCmd} dnf install nodejs
-        fi
-
         if [ "$osReleaseVersion" == "7" ]; then
             curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
             ${sudoCmd} yum install -y nodejs
+        else
+            ${sudoCmd} dnf module list nodejs
+            ${sudoCmd} dnf module enable nodejs:16
+            ${sudoCmd} dnf install -y nodejs
         fi
 
     else 
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
         echo 'export NVM_DIR="$HOME/.nvm"' >> ${HOME}/.zshrc
         echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> ${HOME}/.zshrc
         source ${HOME}/.zshrc
