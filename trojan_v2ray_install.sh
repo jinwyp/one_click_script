@@ -6970,7 +6970,7 @@ plugins:
   - tag: cache
     type: cache
     args:
-      size: 4096
+      size: 2048
       lazy_cache_ttl: 86400 
       cache_everything: true
 
@@ -7005,8 +7005,8 @@ plugins:
       upstream:
 ${addNewDNSServerIPText}
 ${addNewDNSServerDomainText}
-        - addr: "tls://8.8.4.4:853"
-          enable_pipeline: true
+        #- addr: "tls://8.8.4.4:853"
+        #  enable_pipeline: true
         - addr: "udp://208.67.222.222"
           trusted: true
         - addr: "208.67.220.220:443"
@@ -7021,27 +7021,30 @@ ${addNewDNSServerDomainText}
 
         - addr: "udp://1.0.0.1"
           trusted: true
-        # - addr: "tls://1dot1dot1dot1.cloudflare-dns.com"
-        - addr: "https://dns.cloudflare.com/dns-query"
+        #- addr: "tls://1dot1dot1dot1.cloudflare-dns.com"
+        #- addr: "https://dns.cloudflare.com/dns-query"
+        
+        - addr: "https://doh.apad.pro/dns-query"
           idle_timeout: 400
           trusted: true
 
+        
         - addr: "udp://185.121.177.177"
           idle_timeout: 400
           trusted: true        
-        # - addr: "udp://169.239.202.202"
+        #- addr: "udp://169.239.202.202"
 
 
         - addr: "udp://94.130.180.225"
           idle_timeout: 400
-          trusted: true        
+          trusted: true  
         - addr: "udp://78.47.64.161"
           idle_timeout: 400
-          trusted: true 
-        # - addr: "tls://dns-dot.dnsforfamily.com"
-        # - addr: "https://dns-doh.dnsforfamily.com/dns-query"
-        #   dial_addr: "94.130.180.225:443"
-        #   idle_timeout: 400
+          trusted: true
+        #- addr: "tls://dns-dot.dnsforfamily.com"
+        #- addr: "https://dns-doh.dnsforfamily.com/dns-query"
+        #  dial_addr: "94.130.180.225:443"
+        #  idle_timeout: 400
 
         #- addr: "udp://101.101.101.101"
         #  idle_timeout: 400
@@ -7050,26 +7053,26 @@ ${addNewDNSServerDomainText}
         #  idle_timeout: 400
         #  trusted: true 
         #- addr: "tls://101.101.101.101"
-        # - addr: "https://dns.twnic.tw/dns-query"
+        #- addr: "https://dns.twnic.tw/dns-query"
         #  idle_timeout: 400
 
-        # - addr: "udp://172.104.237.57"
+        #- addr: "udp://172.104.237.57"
 
         - addr: "udp://51.38.83.141"          
-        - addr: "tls://dns.oszx.co"
-        # - addr: "https://dns.oszx.co/dns-query"
-        #   idle_timeout: 400 
+        #- addr: "tls://dns.oszx.co"
+        #- addr: "https://dns.oszx.co/dns-query"
+        #  idle_timeout: 400 
 
         - addr: "udp://176.9.93.198"
         - addr: "udp://176.9.1.117"                  
-        - addr: "tls://dnsforge.de"
+        #- addr: "tls://dnsforge.de"
         #- addr: "https://dnsforge.de/dns-query"
-          idle_timeout: 400
+        #  idle_timeout: 400
 
         - addr: "udp://88.198.92.222"                  
         #- addr: "tls://dot.libredns.gr"
-        - addr: "https://doh.libredns.gr/dns-query"
-          idle_timeout: 400 
+        #- addr: "https://doh.libredns.gr/dns-query"
+        #  idle_timeout: 400 
 
   # 匹配本地域名的插件
   - tag: query_is_local_domain
