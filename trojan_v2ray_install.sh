@@ -6247,7 +6247,7 @@ function removeV2ray(){
                 isXray="yes"
             fi
 
-            tempIsXrayService=$(ls /usr/lib/systemd/system | grep xray- )
+            tempIsXrayService=$(ls ${osSystemMdPath} | grep xray- )
             if [[ -z "${tempIsXrayService}" ]]; then
                 promptInfoXrayNameServiceName=""
 
@@ -6301,11 +6301,19 @@ function upgradeV2ray(){
             isXray="yes"
         fi
 
-        if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service " ]; then
-            promptInfoXrayNameServiceName="-jin"
-        else
+        tempIsXrayService=$(ls ${osSystemMdPath} | grep xray- )
+        if [[ -z "${tempIsXrayService}" ]]; then
             promptInfoXrayNameServiceName=""
+
+        else
+            if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service" ]; then
+                promptInfoXrayNameServiceName="-jin"
+            else
+                tempFilelist=$(ls ${osSystemMdPath} | grep xray | awk -F '-' '{ print $2 }' )
+                promptInfoXrayNameServiceName="-${tempFilelist%.*}"
+            fi
         fi
+        
 
         if [ "$isXray" = "no" ] ; then
             getTrojanAndV2rayVersion "v2ray"
@@ -7695,7 +7703,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-7-25 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-8-15 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -7743,7 +7751,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray Installation | 2022-7-25 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray Installation | 2022-8-15 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo

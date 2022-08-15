@@ -1188,7 +1188,7 @@ function installCentosKernelManual(){
         if [ "${kernelVersionFirstletter}" = "5" ]; then 
             linuxKernelByUser="elrepo"
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.17" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.18" ]]; then 
                 linuxKernelByUserTeddysun="Teddysun"
             fi
         else
@@ -3096,7 +3096,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2022-7-25 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2022-8-15 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " 在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -3143,7 +3143,7 @@ function start_menu(){
     echo
     green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
     green " 37. 安装 内核 5.15 LTS, Teddysun 编译 推荐安装此内核"
-    green " 38. 安装 内核 5.17, 下载安装. (安装最新版内核 可能会高于5.17) "
+    green " 38. 安装 内核 5.18, 下载安装. (安装最新版内核 可能会高于5.18) "
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
@@ -3181,7 +3181,7 @@ function start_menu(){
     else
 
     green " =================================================="
-    green " Linux kernel install script | 2022-7-25 | OS support：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux kernel install script | 2022-8-15 | OS support：centos7+ / debian10+ / ubuntu16.04+"
     green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
     red " Please use this script with caution in production. Backup your data first! Upgrade linux kernel will cause VPS unable to boot sometimes."
     green " =================================================="
@@ -3228,7 +3228,7 @@ function start_menu(){
     echo
     green " 36. Install linux kernel 5.10 LTS, compile by Teddysun. Recommended"
     green " 37. Install linux kernel 5.15 LTS, compile by Teddysun. Recommended"
-    green " 38. Install linux latest kernel 5.17 elrepo, download from Teddysun ftp"
+    green " 38. Install linux latest kernel 5.18 elrepo, download from Teddysun ftp"
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
@@ -3356,7 +3356,7 @@ function start_menu(){
             installKernel
         ;; 
         38 )
-            linuxKernelToInstallVersion="5.17"
+            linuxKernelToInstallVersion="5.18"
             installKernel
         ;;
         41 )
