@@ -7943,6 +7943,10 @@ function start_menu(){
             sleep 3s
             start_menu
         ;;
+        76 )
+            vps_returnroute
+            vps_returnroute2
+        ;;
         77 )
             vps_netflixgo
             vps_netflix_jin
