@@ -7499,8 +7499,9 @@ function startMenuOther(){
     green " =================================================="
     green " 51. 测试VPS 是否支持 Netflix 非自制剧解锁 支持 WARP sock5 测试, 推荐使用 "
     green " 52. 测试VPS 是否支持 Netflix, Go语言版本 推荐使用 by sjlleo, 推荐使用"
-    green " 53. 测试VPS 是否支持 Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
-    green " 54. 测试VPS 是否支持 Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
+    green " 53. 测试VPS 是否支持 Netflix, Disney, Hulu 等等更多流媒体平台, 新版 by lmc999"
+    #green " 54. 测试VPS 是否支持 Netflix, 检测IP解锁范围及对应所在的地区, 原版 by CoiaPrant"
+
     echo
     green " 61. 安装 官方宝塔面板"
     green " 62. 安装 宝塔面板纯净版 by hostcli.com"
@@ -7546,8 +7547,8 @@ function startMenuOther(){
     green " =================================================="
     green " 51. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
     green " 52. Netflix region and non-self produced drama unlock test by sjlleo using go language."
-    green " 53. Netflix region and non-self produced drama unlock test by CoiaPrant"
-    green " 54. Netflix, Disney, Hulu etc unlock test by by lmc999"
+    green " 53. Netflix, Disney, Hulu etc unlock test by by lmc999"
+    #green " 54. Netflix region and non-self produced drama unlock test by CoiaPrant"
     echo
     green " 61. install official bt panel (aa panel)"
     green " 62. install modified bt panel (aa panel) by hostcli.com"
@@ -7636,7 +7637,7 @@ function startMenuOther(){
             vps_netflixgo
         ;;
         53 )
-            vps_netflix
+            vps_netflix2
         ;;
         54 )
             vps_netflix2
