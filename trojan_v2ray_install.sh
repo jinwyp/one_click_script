@@ -481,7 +481,7 @@ function installSoftDownload(){
 
 	elif [[ "${osRelease}" == "centos" ]]; then
 
-        if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" || ${osReleaseVersion} == "8.0.1905" ]]; then
+        if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" || ${osReleaseVersion} == "8.0.1905" || ${osReleaseVersion} == "8.5.2111" ]]; then
 
             # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
 

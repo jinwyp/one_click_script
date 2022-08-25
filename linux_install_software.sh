@@ -2242,6 +2242,7 @@ function installJitsiMeetByDocker(){
     mkdir -p "${configJitsiMeetDownloadPath}"
 
     versionJitsiMeet=$(getGithubLatestReleaseVersion2 "jitsi/docker-jitsi-meet")
+    #versionJitsiMeet="stable-7648-1"
 
     downloadAndUnzip "https://github.com/jitsi/docker-jitsi-meet/archive/refs/tags/${versionJitsiMeet}.zip" "${configJitsiMeetProjectPath}" "${versionJitsiMeet}.zip"
 
