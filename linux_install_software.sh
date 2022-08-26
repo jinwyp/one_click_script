@@ -313,10 +313,13 @@ function changeLinuxSSHPort(){
             fi
 
             # semanage port -l
-            semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
-            firewall-cmd --reload
-    
+            semanage port -a -t ssh_port_t -p tcp ${osSSHLoginPortInput}
+            if command -v firewall-cmd &> /dev/null; then
+                firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
+                firewall-cmd --reload
+            fi
+
+
             ${sudoCmd} systemctl restart sshd.service
 
         fi
@@ -386,8 +389,10 @@ function setLinuxDateZone(){
             systemctl enable chronyd
             systemctl restart chronyd
 
-            firewall-cmd --permanent --add-service=ntp
-            firewall-cmd --reload    
+            if command -v firewall-cmd &> /dev/null; then
+                firewall-cmd --permanent --add-service=ntp
+                firewall-cmd --reload
+            fi
 
             chronyc sources
 
