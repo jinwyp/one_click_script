@@ -3885,6 +3885,8 @@ function removeAirUniverse(){
     rm -rf /usr/local/etc/xray
     /root/airu_install.sh uninstall
     rm -f /usr/bin/airu 
+    rm -f /usr/local/bin/au
+    rm -f /usr/local/bin/xray
     crontab -r 
     green " crontab 定时任务 已清除!"
     echo
