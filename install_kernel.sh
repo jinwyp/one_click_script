@@ -2070,7 +2070,10 @@ function removeDebianKernel(){
 
 
 
-
+function installWARPGO(){
+    # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
+	wget -qN --no-check-certificate -O ./warp-go.sh https://raw.githubusercontent.com/fscarmen/warp/main/warp-go.sh && chmod +x ./warp-go.sh && ./warp-go.sh
+}
 
 
 function vps_netflix_jin(){
@@ -3128,8 +3131,9 @@ function start_menu(){
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
     green " 13. 同时安装 官方 Cloudflare WARP Client, WireGuard 和 命令行工具 Wgcf, 不推荐 "
     red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client"
-    green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
-    green " 16. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
+    green " 15. 安装 warp-go 脚本 by fscarmen"
+    green " 16. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
+    green " 17. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
     green " 21. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
     green " 22. 自动刷新WARP IP 检测支持 Netflix 非自制剧解锁 "
     echo
@@ -3314,9 +3318,12 @@ function start_menu(){
            removeWARP
         ;;
         15 )
+           installWARPGO
+        ;;        
+        16 )
            enableWireguardIPV6OrIPV4 "redo"
         ;;
-        16 )
+        17 )
            preferIPV4 "redo"
         ;;
         21 )
