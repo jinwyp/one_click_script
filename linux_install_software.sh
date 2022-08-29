@@ -1051,6 +1051,22 @@ function installPortainer(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 acmeSSLRegisterEmailInput=""
 isDomainSSLGoogleEABKeyInput=""
 isDomainSSLGoogleEABIdInput=""
@@ -1490,6 +1506,47 @@ function getHTTPSCertificateStep1(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 configAlistPort="$(($RANDOM + 4000))"
 configAlistPort="5244"
 configAlistSystemdServicePath="/etc/systemd/system/alist.service"
@@ -1788,6 +1845,18 @@ function removeCloudreve(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 configWebsitePath="${configWebsiteFatherPath}/html"
 nginxAccessLogFilePath="${configWebsiteFatherPath}/nginx-access.log"
 nginxErrorLogFilePath="${configWebsiteFatherPath}/nginx-error.log"
@@ -2014,7 +2083,93 @@ EOF
     }
 
 EOF
+    elif [[ "${configInstallNginxMode}" == "grist" ]]; then
 
+        cat > "${nginxConfigSiteConfPath}/grist_site.conf" <<-EOF
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:8484;
+
+        }
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+EOF
+
+    elif [[ "${configInstallNginxMode}" == "nocodb" ]]; then
+
+        cat > "${nginxConfigSiteConfPath}/nocodb_site.conf" <<-EOF
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:8080;
+
+        }
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+EOF
     else
         echo
     fi
@@ -2024,7 +2179,7 @@ EOF
 
 include /etc/nginx/modules-enabled/*.conf;
 
-user  ${nginxUser};
+user  root;
 worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -2203,6 +2358,216 @@ function removeNginx(){
 
 
 
+
+
+configNocoDBProjectPath="${HOME}/nocodb"
+configNocoDBDockerPath="${HOME}/nocodb/docker"
+
+# Online Spreadsheet
+function installNocoDB(){
+
+    if [[ -d "${configNocoDBDockerPath}" ]]; then
+        showHeaderRed " NocoDB already installed !"
+        exit
+    fi
+    showHeaderGreen "开始 使用Docker方式 安装 NocoDB "
+
+    ${sudoCmd} mkdir -p "${configNocoDBDockerPath}/data"
+    cd "${configNocoDBDockerPath}" || exit
+
+    docker pull nocodb/nocodb:latest
+
+
+    green " ================================================== "
+    echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+    echo
+    echo "docker run -d --name nocodb -p 8080:8080  -v ${configNocoDBDockerPath}/data:/usr/app/data/ nocodb/nocodb:latest"
+    echo
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/nocodb"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="nocodb"
+        installWebServerNginx
+
+        docker run -d --name nocodb -p 8080:8080 -v ${configNocoDBDockerPath}/data:/usr/app/data/ nocodb/nocodb:latest
+
+        ${sudoCmd} systemctl restart nginx.service
+    else
+        docker run -d --name nocodb -p 8080:8080 -v ${configNocoDBDockerPath}/data:/usr/app/data/ nocodb/nocodb:latest
+
+        showHeaderGreen "NocoDB install success !  http://your_ip:8080/dashboard" 
+    fi
+
+}
+function removeNocoDB(){
+    echo
+    read -r -p "是否确认卸载NocoDB? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNocoDBInput
+    isRemoveNocoDBInput=${isRemoveNocoDBInput:-Y}
+
+    if [[ "${isRemoveNocoDBInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configNocoDBDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 NocoDB"
+
+            dockerIDNocoDB=$(docker ps -a -q --filter ancestor=nocodb/nocodb --format="{{.ID}}")
+            if [[ -n "${dockerIDNocoDB}" ]]; then
+                ${sudoCmd} docker stop "${dockerIDNocoDB}"
+                ${sudoCmd} docker rm "${dockerIDNocoDB}"
+            fi
+
+            rm -rf "${configNocoDBProjectPath}"
+            
+            showHeaderGreen "已成功卸载 NocoDB Docker 版本 !"
+        else
+            showHeaderRed "系统没有安装 NocoDB, 退出卸载"
+        fi
+
+    fi    
+}
+
+
+
+configGristProjectPath="${HOME}/grist"
+configGristDockerPath="${HOME}/grist/docker"
+configGristSecretKey="$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 32 | head -c 12)"
+
+# Online Spreadsheet
+function installGrist(){
+
+    if [[ -d "${configGristDockerPath}" ]]; then
+        showHeaderRed " Grist already installed !"
+        exit
+    fi
+    showHeaderGreen "开始 使用Docker方式 安装 Grist "
+
+    ${sudoCmd} mkdir -p ${configGristDockerPath}/persist
+    cd "${configGristDockerPath}" || exit
+
+    docker pull gristlabs/grist
+
+    echo
+    green " GRIST_SESSION_SECRET:  ${configGristSecretKey}"
+    echo
+
+    read -r -p "请输入邮箱:" configGristEmailInput
+    configGristEmailInput=${configGristEmailInput:-you@example.com}
+    echo
+
+    read -r -p "请输入Team名称:" configGristTeamInput
+    configGristTeamInput=${configGristTeamInput:-singleteam}
+    echo
+
+
+    green " ================================================== "
+    echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+    echo
+    echo "docker run -d -p 8484:8484 -v ${configGristDockerPath}/persist:/persist -e GRIST_SANDBOX_FLAVOR=gvisor -e GRIST_SINGLE_ORG=${configGristTeamInput} -e GRIST_SESSION_SECRET=${configGristSecretKey} --env GRIST_DEFAULT_EMAIL=${configGristEmailInput} gristlabs/grist"
+    echo
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/grist"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="grist"
+        installWebServerNginx
+
+        docker run -d --name grist -p 8484:8484 -v ${configGristDockerPath}/persist:/persist -e GRIST_SANDBOX_FLAVOR=gvisor -e GRIST_SINGLE_ORG=${configGristTeamInput} \
+        -e GRIST_SESSION_SECRET=${configGristSecretKey} --env GRIST_DEFAULT_EMAIL=${configGristEmailInput} -e APP_HOME_URL="https://${configSSLDomain}"  gristlabs/grist
+
+        ${sudoCmd} systemctl restart nginx.service
+        showHeaderGreen "Grist install success !  https://${configSSLDomain}" 
+    else
+        docker run -d --name grist -p 8484:8484 -v ${configGristDockerPath}/persist:/persist -e GRIST_SANDBOX_FLAVOR=gvisor -e GRIST_SINGLE_ORG=${configGristTeamInput} \
+        -e GRIST_SESSION_SECRET=${configGristSecretKey} --env GRIST_DEFAULT_EMAIL=${configGristEmailInput} gristlabs/grist
+
+        showHeaderGreen "Grist install success !  http://your_ip:8484" 
+    fi
+
+    
+
+}
+function removeGrist(){
+    echo
+    read -r -p "是否确认卸载Grist? 直接回车默认卸载, 请输入[Y/n]:" isRemoveGristInput
+    isRemoveGristInput=${isRemoveGristInput:-Y}
+
+    if [[ "${isRemoveGristInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configGristDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Grist"
+
+            dockerIDGrist=$(docker ps -a -q --filter ancestor=gristlabs/grist --format="{{.ID}}")
+            if [[ -n "${dockerIDGrist}" ]]; then
+                ${sudoCmd} docker stop "${dockerIDGrist}"
+                ${sudoCmd} docker rm "${dockerIDGrist}"
+            fi
+
+
+            rm -rf "${configGristProjectPath}"
+            
+            showHeaderGreen "已成功卸载 Grist Docker 版本 !"
+
+        else
+            showHeaderRed "系统没有安装 Grist, 退出卸载"
+        fi
+
+    fi    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Video Conference System 视频会议系统 安装
 function installJitsiMeet(){
 
     showHeaderGreen "准备安装 视频会议系统 Jitsi Meet !" \
@@ -2622,6 +2987,29 @@ function removeJitsiMeet(){
 
     
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4155,7 +4543,7 @@ function runOpenVPNSocks(){
  
     curl --proxy socks5h://localhost:10808 ipinfo.io
     curl --proxy socks5h://localhost:10808 http://ip111.cn/
- }
+}
 
 
 
@@ -4285,8 +4673,14 @@ function start_menu(){
     green " 21. 安装 Cloudreve 云盘系统 "
     red " 22. 卸载 Cloudreve 云盘系统 "
     green " 23. 安装/更新/删除 Alist 云盘文件列表系统 "
-
     echo
+    green " 31. 安装 Grist 在线Excel表格(类似 Airtable)  "
+    red " 32. 卸载 Grist 在线Excel表格 " 
+    green " 33. 安装 NocoDB 在线Excel表格(类似 Airtable)  "
+    red " 34. 卸载 NocoDB 在线Excel表格 " 
+    echo
+
+
     green " 41. 安装视频会议系统 Jitsi Meet "
     red " 42. 卸载 Jitsi Meet "
     green " 45. Jitsi Meet 发起会议是否需要密码验证"
@@ -4336,7 +4730,11 @@ function start_menu(){
     red " 22. Remove Cloudreve cloud storage system"
     green " 23. Install/Update/Remove Alist file list storage system "
     echo
-
+    green " 31. Install Grist Online Spreadsheet (Airtable alternative)"
+    red " 32. Remove Grist Online Spreadsheet (Airtable alternative)"
+    green " 33. Install NocoDB Online Spreadsheet (Airtable alternative)"
+    red " 34. Remove NocoDB Online Spreadsheet (Airtable alternative)"
+    echo
     green " 41. Install Jitsi Meet video conference system"
     red " 42. Remove Jitsi Meet video conference system"
     green " 45. Modify Jitsi Meet whether to Start a meeting requires password authentication"
@@ -4421,6 +4819,18 @@ function start_menu(){
             installAlist
         ;;
 
+        31 )
+            installGrist
+        ;;
+        32 )
+            removeGrist
+        ;;
+        33 )
+            installNocoDB
+        ;;
+        34 )
+            removeNocoDB
+        ;;        
         41 )
             installJitsiMeet
         ;;
