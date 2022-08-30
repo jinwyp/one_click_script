@@ -1866,6 +1866,7 @@ nginxConfigSiteConfPath="/etc/nginx/conf.d"
 nginxCloudreveStoragePath="${configWebsitePath}/cloudreve_storage"
 nginxAlistStoragePath="${configWebsitePath}/alist_storage"
 nginxTempPath="/var/lib/nginx/tmp"
+nginxProxyTempPath="/var/lib/nginx/proxy_temp"
 isInstallNginx="false"
 
 function installWebServerNginx(){
@@ -2047,19 +2048,6 @@ EOF
         root $configWebsitePath;
         index index.php index.html index.htm;
 
-        location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$ {
-            expires     1d;
-            error_log /dev/null;
-            access_log /dev/null;
-        }
-        
-        location ~ .*\.(js|css)?$ {
-            expires      4h;
-            error_log /dev/null;
-            access_log /dev/null; 
-        }
-        
-
         location / {
 
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -2179,7 +2167,7 @@ EOF
 
 include /etc/nginx/modules-enabled/*.conf;
 
-user  root;
+user  ${nginxUser};
 worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -2205,6 +2193,8 @@ http {
     keepalive_timeout  120;
     client_max_body_size 10m;
     gzip  on;
+    proxy_temp_path ${nginxProxyTempPath} 1 2;
+    client_body_temp_path ${nginxTempPath}/client_body 1 2;
 
     ${nginxConfigServerHttpInput}
     
@@ -2221,13 +2211,16 @@ EOF
     # /var/lib/nginx/tmp/client_body /var/lib/nginx/tmp/proxy 权限问题
     mkdir -p "${nginxTempPath}/client_body"
     mkdir -p "${nginxTempPath}/proxy"
+    mkdir -p "${nginxProxyTempPath}"
+
     
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxTempPath}
-    ${sudoCmd} chmod -R 771 ${nginxTempPath}
+    ${sudoCmd} chmod -R 775 ${nginxTempPath}
 
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxProxyTempPath}
+    ${sudoCmd} chmod -R 775 ${nginxProxyTempPath}
+    
     ${sudoCmd} systemctl start nginx.service
-
-    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxTempPath}
 
     echo
     green " ================================================== "
@@ -2400,6 +2393,7 @@ function installNocoDB(){
         docker run -d --name nocodb -p 8080:8080 -v ${configNocoDBDockerPath}/data:/usr/app/data/ nocodb/nocodb:latest
 
         ${sudoCmd} systemctl restart nginx.service
+        showHeaderGreen "NocoDB install success !  https://${configSSLDomain}" 
     else
         docker run -d --name nocodb -p 8080:8080 -v ${configNocoDBDockerPath}/data:/usr/app/data/ nocodb/nocodb:latest
 
@@ -2428,10 +2422,12 @@ function removeNocoDB(){
             rm -rf "${configNocoDBProjectPath}"
             
             showHeaderGreen "已成功卸载 NocoDB Docker 版本 !"
+            removeNginx
         else
             showHeaderRed "系统没有安装 NocoDB, 退出卸载"
         fi
 
+        
     fi    
 }
 
@@ -2524,11 +2520,12 @@ function removeGrist(){
             rm -rf "${configGristProjectPath}"
             
             showHeaderGreen "已成功卸载 Grist Docker 版本 !"
-
+            removeNocoDB
         else
             showHeaderRed "系统没有安装 Grist, 退出卸载"
         fi
 
+        
     fi    
 }
 
