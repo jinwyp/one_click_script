@@ -29,7 +29,16 @@ bold(){
 }
 
 
+function promptContinueOpeartion(){
+	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
+	isContinueInput=${isContinueInput:-Y}
 
+	if [[ $isContinueInput == [Yy] ]]; then
+		echo ""
+	else 
+		exit
+	fi
+}
 
 
 
@@ -1016,7 +1025,7 @@ function installPortainer(){
     echo
     docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
 
-    showHeaderGreen "   Portainer 安装成功. Running at port 8000 !"
+    showHeaderGreen " Portainer 安装成功. Running at port 8000 !"
 }
 
 
@@ -1650,13 +1659,18 @@ function installAlistCert(){
 
 wwwUsername="www-data"
 function createUserWWW(){
-	isHaveWwwUser=$(cat /etc/passwd|cut -d ":" -f 1|grep ^www-data$)
+	isHaveWwwUser=$(cat /etc/passwd | cut -d ":" -f 1 | grep ^${wwwUsername}$)
 	if [ "${isHaveWwwUser}" != "${wwwUsername}" ]; then
 		${sudoCmd} groupadd ${wwwUsername}
 		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
 	fi
 }
-
+function createNewUser(){
+    newUsername=${1:-etherpad}
+    if [[ -z $(cat /etc/passwd | grep ${newUsername}) ]]; then
+        ${sudoCmd} useradd -M -s /sbin/nologin ${newUsername}
+    fi
+}
 
 
 configCloudrevePath="/usr/local/cloudreve"
@@ -1879,66 +1893,70 @@ function installWebServerNginx(){
 
     if test -s ${nginxConfigPath}; then
         green " ================================================== "
-        red "     Nginx 已存在, 退出安装!"
+        red "     Nginx 已存在, 是否退出安装?"
         green " ================================================== "
-        exit
-    fi
+        promptContinueOpeartion
 
-    isInstallNginx="true"
-
-    createUserWWW
-
-    nginxUser="${wwwUsername} ${wwwUsername}"
-
-    
-    if [ "$osRelease" == "centos" ]; then
-        ${osSystemPackage} install -y nginx-mod-stream
+        ${sudoCmd} systemctl stop nginx.service
     else
-        echo
-        groupadd -r -g 4 adm
 
-        apt autoremove -y
-        apt-get remove --purge -y nginx-common
-        apt-get remove --purge -y nginx-core
-        apt-get remove --purge -y libnginx-mod-stream
-        apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+        isInstallNginx="true"
 
-        apt autoremove -y --purge nginx nginx-common nginx-core
-        apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
+        createUserWWW
+        nginxUser="${wwwUsername} ${wwwUsername}"
+        
+        if [ "$osRelease" == "centos" ]; then
+            ${osSystemPackage} install -y nginx-mod-stream
+        else
+            echo
+            groupadd -r -g 4 adm
 
-        #${osSystemPackage} install -y libnginx-mod-stream
+            apt autoremove -y
+            apt-get remove --purge -y nginx-common
+            apt-get remove --purge -y nginx-core
+            apt-get remove --purge -y libnginx-mod-stream
+            apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+
+            apt autoremove -y --purge nginx nginx-common nginx-core
+            apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
+
+            #${osSystemPackage} install -y libnginx-mod-stream
+        fi
+
+        ${osSystemPackage} install -y nginx
+        ${sudoCmd} systemctl enable nginx.service
+        ${sudoCmd} systemctl stop nginx.service
+
+        # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
+        # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
+        
+        mkdir -p /etc/systemd/system/nginx.service.d
+        printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+        
+        ${sudoCmd} systemctl daemon-reload
+
     fi
 
-    ${osSystemPackage} install -y nginx
-    ${sudoCmd} systemctl enable nginx.service
-    ${sudoCmd} systemctl stop nginx.service
 
-    # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
-    # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
-    
-    mkdir -p /etc/systemd/system/nginx.service.d
-    printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
-    
-    ${sudoCmd} systemctl daemon-reload
-    
+
+
     mkdir -p ${configWebsitePath}
     mkdir -p "${nginxConfigSiteConfPath}"
-
 
     nginxConfigServerHttpInput=""
 
 
     if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        cat > "${nginxConfigSiteConfPath}/default_site.conf" <<-EOF
     server {
         listen       80;
         server_name  $configSSLDomain;
         root $configWebsitePath;
         index index.php index.html index.htm;
 
-        location /$configV2rayWebSocketPath {
-            proxy_pass http://127.0.0.1:$configV2rayPort;
+        location / {
+            proxy_pass http://127.0.0.1:8888;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection "upgrade";
@@ -1947,10 +1965,9 @@ function installWebServerNginx(){
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
-
     }
 
-EOM
+EOF
 
     elif [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
         mkdir -p ${configWebsitePath}/static
@@ -2158,16 +2175,65 @@ EOF
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
+
+    elif [[ "${configInstallNginxMode}" == "etherpad" ]]; then
+
+        cat > "${nginxConfigSiteConfPath}/etherpad_site.conf" <<-EOF
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:9001;
+
+        }
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+EOF
+
     else
         echo
     fi
 
 
+    if test -s ${nginxConfigPath}; then
+        echo
+    else
         cat > "${nginxConfigPath}" <<-EOF
 
 include /etc/nginx/modules-enabled/*.conf;
 
-user  ${nginxUser};
+# user  ${nginxUser};
+user root;
 worker_processes  auto;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -2175,7 +2241,6 @@ pid        /var/run/nginx.pid;
 events {
     worker_connections  1024;
 }
-
 
 
 
@@ -2203,6 +2268,9 @@ http {
 
 
 EOF
+
+    fi
+
 
 
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
@@ -2341,12 +2409,93 @@ function removeNginx(){
 
 
 
+configEtherpadProjectPath="${HOME}/etherpad"
+configEtherpadDockerPath="${HOME}/etherpad/docker"
+
+# Online collaborative Document
+function installEtherpad(){
+    if [[ -d "${configEtherpadDockerPath}" ]]; then
+        showHeaderRed " Etherpad already installed !"
+        exit
+    fi
+    showHeaderGreen "开始 使用Docker方式 安装 Etherpad "
+
+    createNewUser "etherpad"
+    ${sudoCmd} mkdir -p "${configEtherpadDockerPath}/data"
+    cd "${configEtherpadDockerPath}" || exit
+
+    ${sudoCmd} chown -R etherpad:root "${configEtherpadDockerPath}"
+    ${sudoCmd} chmod -R 774 "${configEtherpadDockerPath}"
+
+    docker pull etherpad/etherpad
 
 
 
+    read -r -p "请输入Admin的密码 (默认为admin):" configEtherpadPasswordInput
+    configEtherpadPasswordInput=${configEtherpadPasswordInput:-admin}
+    echo
 
+    green " ================================================== "
+    echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
 
+    echo
+    echo "docker run -d -p 9001:9001 -e ADMIN_PASSWORD=${configEtherpadPasswordInput} --name etherpad etherpad/etherpad"
+    echo
 
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/etherpad"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="etherpad"
+        installWebServerNginx
+
+        docker run -d -p 9001:9001 -e 'ADMIN_PASSWORD=${configEtherpadPasswordInput}' -e TRUST_PROXY=true -v ${configEtherpadDockerPath}/data:/opt/etherpad-lite/var --name etherpad etherpad/etherpad
+
+        ${sudoCmd} systemctl restart nginx.service
+        showHeaderGreen "Etherpad install success !  https://${configSSLDomain}" \
+        "Admin panel: https://${configSSLDomain}/admin   User: admin, Password: ${configEtherpadPasswordInput}" 
+    else
+        docker run -d -p 9001:9001 -e 'ADMIN_PASSWORD=${configEtherpadPasswordInput}' -v ${configEtherpadDockerPath}/data:/opt/etherpad-lite/var --name etherpad etherpad/etherpad
+
+        showHeaderGreen "Etherpad install success !  http://your_ip:9001/" \
+        "Admin panel: http://your_ip:9001/admin  User: admin, Password: ${configEtherpadPasswordInput}" 
+    fi
+}
+
+function removeEtherpad(){
+    echo
+    read -r -p "是否确认卸载Etherpad? 直接回车默认卸载, 请输入[Y/n]:" isRemoveEtherpadInput
+    isRemoveEtherpadInput=${isRemoveEtherpadInput:-Y}
+
+    if [[ "${isRemoveEtherpadInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configEtherpadDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Etherpad"
+
+            dockerIDEtherpad=$(docker ps -a -q --filter ancestor=etherpad/etherpad --format="{{.ID}}")
+            if [[ -n "${dockerIDEtherpad}" ]]; then
+                ${sudoCmd} docker stop "${dockerIDEtherpad}"
+                ${sudoCmd} docker rm "${dockerIDEtherpad}"
+            fi
+
+            rm -rf "${configEtherpadProjectPath}"
+            
+            showHeaderGreen "已成功卸载 Etherpad Docker 版本 !"
+            removeNginx
+        else
+            showHeaderRed "系统没有安装 Etherpad, 退出卸载"
+        fi
+
+        
+    fi    
+}
 
 
 
@@ -4675,6 +4824,8 @@ function start_menu(){
     red " 32. 卸载 Grist 在线Excel表格 " 
     green " 33. 安装 NocoDB 在线Excel表格(类似 Airtable)  "
     red " 34. 卸载 NocoDB 在线Excel表格 " 
+    green " 35. 安装 Etherpad 多人协作文档(类似 Word)  "
+    red " 36. 卸载 Etherpad 多人协作文档 "     
     echo
 
 
@@ -4731,6 +4882,8 @@ function start_menu(){
     red " 32. Remove Grist Online Spreadsheet (Airtable alternative)"
     green " 33. Install NocoDB Online Spreadsheet (Airtable alternative)"
     red " 34. Remove NocoDB Online Spreadsheet (Airtable alternative)"
+    green " 35. Install Etherpad collaborative editor (Word alternative)"
+    red " 36. Remove Etherpad collaborative editor (Word alternative)"
     echo
     green " 41. Install Jitsi Meet video conference system"
     red " 42. Remove Jitsi Meet video conference system"
@@ -4827,7 +4980,13 @@ function start_menu(){
         ;;
         34 )
             removeNocoDB
-        ;;        
+        ;;
+        35 )
+            installEtherpad
+        ;;
+        36 )
+            removeEtherpad
+        ;;
         41 )
             installJitsiMeet
         ;;
