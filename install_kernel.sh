@@ -1739,9 +1739,10 @@ function installDebianUbuntuKernel(){
         else
 
             if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
-                debianKernelVersion="5.10.0-15"
+                debianKernelVersion="5.10.0-0"
+                # linux-image-5.10.0-0.bpo.15-amd64
             elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then
-                debianKernelVersion="4.19.0-0"
+                debianKernelVersion="4.19.0-21"
             else
                 debianKernelVersion="5.16.0-0"
                 if [ "${osReleaseVersionNo}" = "11" ]; then
@@ -1781,7 +1782,7 @@ function installDebianUbuntuKernel(){
             echo
             echo "dpkg --get-selections | grep linux-image-${debianKernelVersion} | awk '/linux-image-[4-9]./{print \$1}' | awk -F'linux-image-' '{print \$2}' "
             #debianKernelVersionPackageName=$(dpkg --get-selections | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk -F'linux-image-' '{print $2}')
-            debianKernelVersionPackageName=$(apt-cache search linux-image | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk '/[0-9]-amd64$/{print $1}' | awk -F'linux-image-' '{print $2}')
+            debianKernelVersionPackageName=$(apt-cache search linux-image | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk '/[0-9]-amd64$/{print $1}' | awk -F'linux-image-' '{print $2}' | tail -1)
             
 
             echo
@@ -3375,7 +3376,7 @@ function start_menu(){
             linuxKernelToInstallVersion="5.16"
             isInstallFromRepo="yes"
             installKernel
-        ;;        
+        ;; 
         43 )
             linuxKernelToInstallVersion="4.19"
             isInstallFromRepo="yes"

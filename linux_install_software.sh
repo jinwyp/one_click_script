@@ -691,6 +691,14 @@ function toolboxJcnf(){
 }
 
 
+function installCasaOS(){
+    wget -O- https://get.casaos.io | bash
+}
+function removeCasaOS(){
+    casaos-uninstall
+}
+
+
 
 
 
@@ -1561,33 +1569,16 @@ configAlistPort="5244"
 configAlistSystemdServicePath="/etc/systemd/system/alist.service"
 
 
-function installAlistWithNginx(){
-    green " ================================================== "
-    echo
-    green "是否继续安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
-    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
-    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxAlistInstallInput
-    isNginxAlistInstallInput=${isNginxAlistInstallInput:-Y}
-
-    if [[ "${isNginxAlistInstallInput}" == [Yy] ]]; then
-        isInstallNginx="true"
-        configSSLCertPath="${configSSLCertPath}/alist"
-        getHTTPSCertificateStep1
-        configInstallNginxMode="alist"
-        installWebServerNginx
-    fi
-}
-
 function installAlist(){
     echo
     green " =================================================="
     green " 请选择 安装/更新/删除 Alist "
     green " 1. 安装 Alist "
     green " 2. 安装 Alist + Nginx (需要域名 并已解析到本机IP)"
-    green " 4. 更新"  
-    green " 5. 删除"     
+    green " 3. 更新 Alist"  
+    red " 4. 删除 Alist"     
     echo
-    read -p "请输入纯数字, 默认为安装:" languageInput
+    read -r -p "请输入纯数字, 默认为安装:" languageInput
     
     createUserWWW
 
@@ -1604,14 +1595,27 @@ function installAlist(){
             ${sudoCmd} systemctl daemon-reload
             ${sudoCmd} systemctl restart alist    
 
-            installAlistWithNginx
+            green " ================================================== "
+            echo
+            green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+            green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+            read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxAlistInstallInput
+            isNginxAlistInstallInput=${isNginxAlistInstallInput:-Y}
+
+            if [[ "${isNginxAlistInstallInput}" == [Yy] ]]; then
+                isInstallNginx="true"
+                configSSLCertPath="${configSSLCertPath}/alist"
+                getHTTPSCertificateStep1
+                configInstallNginxMode="alist"
+                installWebServerNginx
+            fi
         ;;        
-        4 )
+        3 )
             curl -fsSL "https://nn.ci/alist.sh" | bash -s update
         ;;
-        5 )
+        4 )
             curl -fsSL "https://nn.ci/alist.sh" | bash -s uninstall
-        ;;        
+        ;;
         * )
             exit
         ;;
@@ -4711,7 +4715,12 @@ function startMenuOther(){
         green " 41. 安装 Soga 服务器端"
         green " 42. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
         green " 43. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
-        
+        echo
+        green " 62. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
+        red " 63. 卸载共享Netflix账号服务器端"
+        echo
+        green " 71. 工具脚本合集 by BlueSkyXN "
+        green " 72. 工具脚本合集 by jcnf "
         echo
         green " 9. 返回上级菜单"
         green " 0. 退出脚本"    
@@ -4726,7 +4735,12 @@ function startMenuOther(){
         green " 41. Install Soga server side "
         green " 42. Stop, restart, show log, manage Soga server side "
         green " 43. Using VI open Soga config file ${configSogaConfigFilePath}"
-
+        echo
+        green " 62. Install Netflix account share service server, Play Netflix without Netflix account"
+        red " 63. Remove Netflix account share service server"    
+        echo
+        green " 71. toolkit by BlueSkyXN "
+        green " 72. toolkit by jcnf "
         echo
         green " 9. Back to main menu"
         green " 0. exit"
@@ -4747,8 +4761,6 @@ function startMenuOther(){
         23 )
             editXrayRConfig
         ;;    
-
-
         41 )
             setLinuxDateZone
             installSoga 
@@ -4758,7 +4770,19 @@ function startMenuOther(){
         ;;                                        
         43 )
             editSogaConfig
-        ;; 
+        ;;
+        62 )
+            installShareNetflixAccount
+        ;;
+        63 )
+            removeShareNetflixAccount
+        ;;
+        71 )
+            toolboxSkybox
+        ;;
+        72 )
+            toolboxJcnf
+        ;;        
         9)
             start_menu
         ;;
@@ -4820,6 +4844,9 @@ function start_menu(){
     red " 22. 卸载 Cloudreve 云盘系统 "
     green " 23. 安装/更新/删除 Alist 云盘文件列表系统 "
     echo
+    green " 28. 安装 CasaOS 系统(包括 Nextcloud 云盘 和 AdGuard DNS 等)  "
+    red " 29. 卸载 CasaOS 系统 " 
+    echo    
     green " 31. 安装 Grist 在线Excel表格(类似 Airtable)  "
     red " 32. 卸载 Grist 在线Excel表格 " 
     green " 33. 安装 NocoDB 在线Excel表格(类似 Airtable)  "
@@ -4844,12 +4871,6 @@ function start_menu(){
     green " 58. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     echo 
     green " 61. 单独申请域名SSL证书"
-    echo
-    green " 62. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
-    red " 63. 卸载共享Netflix账号服务器端"
-    echo
-    green " 71. 工具脚本合集 by BlueSkyXN "
-    green " 72. 工具脚本合集 by jcnf "
     echo
     green " 77. 子菜单 安装 V2board 服务器端 XrayR, V2Ray-Poseidon, Soga"
     echo
@@ -4878,6 +4899,9 @@ function start_menu(){
     red " 22. Remove Cloudreve cloud storage system"
     green " 23. Install/Update/Remove Alist file list storage system "
     echo
+    green " 28. Install CasaOS(Including Nextcloud, AdGuard DNS )  "
+    red " 29. Remove CasaOS "     
+    echo
     green " 31. Install Grist Online Spreadsheet (Airtable alternative)"
     red " 32. Remove Grist Online Spreadsheet (Airtable alternative)"
     green " 33. Install NocoDB Online Spreadsheet (Airtable alternative)"
@@ -4900,12 +4924,6 @@ function start_menu(){
     green " 58. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
     echo 
     green " 61. Get a free SSL certificate for domain name only"
-    echo
-    green " 62. Install Netflix account share service server, Play Netflix without Netflix account"
-    red " 63. Remove Netflix account share service server"    
-    echo
-    green " 71. toolkit by BlueSkyXN "
-    green " 72. toolkit by jcnf "
     echo
     green " 77. Submenu. install XrayR, V2Ray-Poseidon, Soga for V2board panel"
     echo
@@ -4968,7 +4986,12 @@ function start_menu(){
         23 )
             installAlist
         ;;
-
+        28 )
+            installCasaOS
+        ;;
+        29 )
+            removeCasaOS
+        ;;
         31 )
             installGrist
         ;;
@@ -5026,19 +5049,6 @@ function start_menu(){
         61 )
             getHTTPSCertificateStep1
         ;;
-        62 )
-            installShareNetflixAccount
-        ;;
-        63 )
-            removeShareNetflixAccount
-        ;;
-        71 )
-            toolboxSkybox
-        ;;
-        72 )
-            toolboxJcnf
-        ;;
-        
         77 )
             startMenuOther
         ;;
