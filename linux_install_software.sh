@@ -1252,10 +1252,10 @@ function getHTTPSCertificateWithAcme(){
             echo
             read -r -p "请输入Web服务器的html网站根目录路径? 例如/usr/share/nginx/html:" isDomainSSLNginxWebrootFolderInput
             echo " 您输入的网站根目录路径为 ${isDomainSSLNginxWebrootFolderInput}"
+            
 
-            if [ -z ${isDomainSSLNginxWebrootFolderInput} ]; then
+            if [ -z "${isDomainSSLNginxWebrootFolderInput}" ]; then
                 red " 输入的Web服务器的 html网站根目录路径不能为空, 网站根目录将默认设置为 ${configWebsitePath}, 请修改你的web服务器配置后再申请证书!"
-                
             else
                 configWebsitePath="${isDomainSSLNginxWebrootFolderInput}"
             fi
@@ -1831,14 +1831,13 @@ function removeCloudreve(){
 
             rm -rf ${configCloudrevePath}
             rm -f ${osSystemMdPath}cloudreve.service
-
-            echo
-            green " ================================================== "
-            green "  Cloudreve removed !"
-            green " ================================================== "
+            rm -f "${nginxConfigSiteConfPath}/cloudreve_site.conf"
+            
+            systemctl restart nginx.service
+            showHeaderGreen "  Cloudreve removed !"
             
         else
-            red " Cloudreve not found !"
+            showHeaderRed " Cloudreve not found !"
         fi
 
     fi
@@ -2490,15 +2489,17 @@ function removeEtherpad(){
             fi
 
             rm -rf "${configEtherpadProjectPath}"
+            rm -f "${nginxConfigSiteConfPath}/etherpad_site.conf"
             
+            systemctl restart nginx.service
             showHeaderGreen "已成功卸载 Etherpad Docker 版本 !"
-            removeNginx
+            
         else
             showHeaderRed "系统没有安装 Etherpad, 退出卸载"
         fi
 
-        
-    fi    
+    fi
+    removeNginx
 }
 
 
@@ -2573,15 +2574,17 @@ function removeNocoDB(){
             fi
 
             rm -rf "${configNocoDBProjectPath}"
+            rm -f "${nginxConfigSiteConfPath}/nocodb_site.conf"
             
+            systemctl restart nginx.service
             showHeaderGreen "已成功卸载 NocoDB Docker 版本 !"
-            removeNginx
+            
         else
             showHeaderRed "系统没有安装 NocoDB, 退出卸载"
         fi
 
-        
-    fi    
+    fi
+    removeNginx
 }
 
 
@@ -2648,8 +2651,6 @@ function installGrist(){
         showHeaderGreen "Grist install success !  http://your_ip:8484" 
     fi
 
-    
-
 }
 function removeGrist(){
     echo
@@ -2671,15 +2672,16 @@ function removeGrist(){
 
 
             rm -rf "${configGristProjectPath}"
+            rm -f "${nginxConfigSiteConfPath}/grist_site.conf"
             
+            systemctl restart nginx.service
             showHeaderGreen "已成功卸载 Grist Docker 版本 !"
-            removeNocoDB
         else
             showHeaderRed "系统没有安装 Grist, 退出卸载"
         fi
+    fi
 
-        
-    fi    
+    removeNginx
 }
 
 
