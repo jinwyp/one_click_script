@@ -162,13 +162,14 @@ function getLinuxOSRelease(){
         fi
 	fi
 
-
+	pveVersion=$(pveversion | grep pve-manager | awk -F '/' '{print $2}')
+	pveVersionShort=$(pveversion | grep pve-manager | awk -F '/' '{print $2}' | awk -F '.' '{print $1}')
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
 	checkArchitecture
 	checkCPU
-    green " Status 系统信息:  ${osRelease}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}, ${osSystemPackage}, ${osCPU} CPU ${osArchitecture}"
+    green " Status 系统信息:  ${osRelease}, ${osReleaseVersionNo}, ${osReleaseVersionCodeName}, ${osSystemShell}, ${osSystemPackage}, ${osCPU} CPU ${osArchitecture}, PVE ${pveVersion}"
 }
 
 
@@ -431,11 +432,18 @@ function updatePVEAptSource(){
 	if [[ -n "${isPVESystem}" ]]; then 
 		green " 准备关闭企业更新源, 添加非订阅版更新源 "
 		${sudoCmd} sed -i 's|deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise|g' /etc/apt/sources.list.d/pve-enterprise.list
+		${sudoCmd} sed -i 's|deb https://enterprise.proxmox.com/debian/pve bullseye pve-enterprise|#deb https://enterprise.proxmox.com/debian/pve bullseye pve-enterprise|g' /etc/apt/sources.list.d/pve-enterprise.list
 
 		#echo 'deb http://download.proxmox.com/debian/pve buster pve-no-subscription' > /etc/apt/sources.list.d/pve-no-subscription.list
-		echo "deb https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian buster pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+		echo "deb https://mirrors.tuna.tsinghua.edu.cn/proxmox/debian ${osReleaseVersionCodeName} pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
 
-		wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+		if [[ "${pveVersionShort}" == "6" ]] ; then
+			wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+		else
+			wget https://enterprise.proxmox.com/debian/proxmox-release-bullseye.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bullseye.gpg
+		fi
+		
+		
 	fi
 
 
@@ -444,17 +452,17 @@ function updatePVEAptSource(){
 
 	cat > /etc/apt/sources.list <<-EOF
 
-deb http://mirrors.aliyun.com/debian/ buster main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ buster main contrib non-free
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
 
-deb http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ buster-updates main contrib non-free
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
 
-deb http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ buster-backports main contrib non-free
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
 
-deb http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
-deb-src http://mirrors.aliyun.com/debian-security buster/updates main contrib non-free
+deb http://mirrors.aliyun.com/debian-security ${osReleaseVersionCodeName}/updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian-security ${osReleaseVersionCodeName}/updates main contrib non-free
 
 EOF
 
@@ -586,8 +594,9 @@ sed -i -e "s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}/${IPInput}/g
 
  
 function lvextendDevRoot(){
-	echo "准备把剩余空间扩容给 /dev/pve/root 或 /dev/pve/data"
-
+	echo
+	green "准备把剩余空间扩容给 /dev/pve/root 或 /dev/pve/data"
+	echo
 	read -p "是否把剩余空间都扩容到/dev/pve/root 或 /dev/pve/data, 否为不处理扩容空间. 直接回车默认为是, 请输入[Y/n]:" isExtendDevRootInput
 	isExtendDevRootInput=${isExtendDevRootInput:-Y}
 	
@@ -657,7 +666,7 @@ function deleteVGLVPVEData(){
 
 	cp /etc/pve/storage.cfg /etc/pve/storage.cfg.bak
 
-	${sudoCmd} sed -i 's|content iso,vztmpl,backup|content backup,vztmpl,snippets,iso,images,rootdir|g' /etc/pve/storage.cfg
+	${sudoCmd} sed -i 's|content iso,vztmpl,backup|content iso,vztmpl,backup,snippets,images,rootdir|g' /etc/pve/storage.cfg
 
 	${sudoCmd} sed -i '/lvmthin/d' /etc/pve/storage.cfg
 	${sudoCmd} sed -i '/thinpool data/d' /etc/pve/storage.cfg
@@ -665,8 +674,14 @@ function deleteVGLVPVEData(){
 	${sudoCmd} sed -i '/content rootdir,images/d' /etc/pve/storage.cfg
 
 
-	green " 请重启后 继续运行本脚本选择 第2项 继续完成删除"
-	lvremove /dev/pve/data
+	green " 请重启后 继续运行本脚本选择 第3项 继续完成删除"
+
+	read -p "是否立即重启? 请输入[Y/n]:" isRebootInput
+	isRebootInput=${isRebootInput:-Y}
+
+	if [[ $isRebootInput == [Yy] ]]; then
+		${sudoCmd} reboot
+	fi
 
 	echo "free"
 	free

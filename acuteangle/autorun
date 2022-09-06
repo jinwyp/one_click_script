@@ -43,7 +43,7 @@ function setup_env() {
 	USERNAME="autoback"
 	DIRECTORY_BASE="/fab/office/imaging/other/autoback"
 	SERVER="storage.nanofab.utah.edu"
-	DATE=`date +%Y-%m-%d_%H_%M_%S`
+	DATE=$(date +%Y-%m-%d_%H_%M_%S)
 	MACADDR=$(ls /sys/class/net/*/address | grep -v lo | sort | head -1 | xargs cat | perl -pe 's/:/-/g')
 	BACKUPDIR="/mnt/backup/$MACADDR/$DATE"
 
@@ -62,7 +62,10 @@ function setup_env() {
 
 	PVEIMGFilenamePath1="/mnt/usb1/proxmox.img.gz"
 	PVEIMGFilenamePath2="/mnt/usb2/proxmox.img.gz"
+	PVEIMGFilenamePath3="/mnt/usb1/proxmox-ve.iso"
+	PVEIMGFilenamePath4="/mnt/usb2/proxmox-ve.iso"	
 	PVEIMGFilenameReal="proxmox.img.gz"
+	PVEIMGFilenameRealISO="proxmox-ve.iso"
 
 
 	HARDDISK=$(ls ${HDDP1} 2> /dev/null || true)
@@ -151,16 +154,25 @@ function mount_usb() {
 
 	if [ -f "$PVEIMGFilenamePath1" ]; then
 		PVEIMGFilenameReal=$PVEIMGFilenamePath1
-    	installpve $PVEIMGFilenameReal
+    	installpve $PVEIMGFilenameReal "gz"
 	elif [ -f "$PVEIMGFilenamePath2" ]; then
 		echo "$PVEIMGFilenamePath1 does not exist !"
 		PVEIMGFilenameReal=$PVEIMGFilenamePath2
-		installpve $PVEIMGFilenameReal
-	else
+		installpve $PVEIMGFilenameReal "gz"
+	elif [ -f "$PVEIMGFilenamePath3" ]; then
 		echo "$PVEIMGFilenamePath2 does not exist !"
+		PVEIMGFilenameReal=$PVEIMGFilenamePath3
+		installpve $PVEIMGFilenameReal "iso"
+	elif [ -f "$PVEIMGFilenamePath4" ]; then
+		echo "$PVEIMGFilenamePath3 does not exist !"
+		PVEIMGFilenameReal=$PVEIMGFilenamePath4
+		installpve $PVEIMGFilenameReal "iso"
+	else
+		echo "$PVEIMGFilenamePath4 does not exist !"
 	fi
 
 }
+
 
 
 function installpve(){
@@ -171,10 +183,20 @@ function installpve(){
     isInstallPVEInput=${isInstallPVEInput:-Y}
 
     if [[ $isInstallPVEInput == [Yy] ]]; then
-        echo "Running Command: $1 | gunzip | dd of=/dev/mmcblk1 && reboot"
-        red "Do Not Turn off the Power! Wait for a long time please.  "
-        green "It will reboot after finish !"
-        cat $1 | gunzip | dd of=/dev/mmcblk1 && reboot
+
+		if [ "$2" == "gz" ]; then
+			echo "Running Command: $1 | gunzip | dd of=/dev/mmcblk1 && reboot"
+			red "Do Not Turn off the Power! Wait for a long time please.  "
+			green "It will reboot after finish !"
+			cat $1 | gunzip | dd of=/dev/mmcblk1 && reboot
+		else
+			echo "Running Command:  dd if=$1 of=/dev/mmcblk1 && reboot"
+			red "Do Not Turn off the Power! Wait for a long time please.  "
+			green "It will reboot after finish !"
+			dd if=$1 of=/dev/mmcblk1
+            reboot
+		fi
+
     else
         red "============================================================ "
         red " Exit PVE Installation !"
