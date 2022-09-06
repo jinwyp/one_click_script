@@ -7,8 +7,6 @@
 3. 下载 autorun 脚本 https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/autorun , 页面打开后另存为autorun. 注意不要有扩展名 (autorun.txt 这种是错误的)
 4. 下载初始化脚本 https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/date.sh, 页面打开后另存为date.sh 扩展名是.sh
 
-![zip1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/zip1.png?raw=true)
-
 
 
 ### 开始制作启动盘和安装PVE
@@ -59,7 +57,10 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ![pve1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve1.jpg?raw=true)
 
 
-4. 继续安装过程, 在第二次提示你可以输入命令的时候输入命令 vi /usr/bin/proxinstall. 编辑文件（或者使用其他文字编辑器如 nano）. 输入 /unable to get device 定位到对应位置 , 找到如下代码:
+4. 继续安装过程, 在第二次提示你可以输入命令的时候输入命令 vi /usr/bin/proxinstall. 编辑文件（或者使用其他文字编辑器如 nano）. 
+![pve2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve2.jpg?raw=true)
+
+5. 输入 /unable to get device 定位到对应位置 , 找到如下代码:
 ```
 
     } elsif ($dev =~ m|^/dev/[^/]+/hd[a-z]$|) {
@@ -91,15 +92,19 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 输入:wq, 保存退出后, 然后输入 Ctrl-D ，继续安装过程. 此时应该进入了正常的安装程序，
 
-![pve2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve2.jpg?raw=true)
-
 ![pve3](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve3.jpg?raw=true)
 
 
 
-4. 硬盘选择的时候选择 /dev/mmcblk1 (没有 bootX 后缀). 点击下图 options (建议关闭 swap, swapsize设置为0, 延长EMMC寿命. maxvz 也推荐设置为0, 毕竟只有64G, 不需要分太多卷). 最后安装完成后输入 Ctrl-D ，重启系统.
+6. 硬盘选择的时候选择 /dev/mmcblk1 (没有 bootX 后缀). 点击下图 options (建议关闭 swap, swapsize设置为0, 延长EMMC寿命. maxvz 也推荐设置为0, 毕竟只有64G, 不需要分太多卷). 最后安装完成后输入 Ctrl-D ，重启系统. 完成后访问 http://IP:8006 进入后台
 ![pve9](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve9.jpg?raw=true)
 
+7. 后续操作 运行以下脚本, 更新软件院,删除逻辑卷 /pve/data 合并磁盘等操作.
+
+```bash
+wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
+
+```
 
 #### 注意 解决 Proxmox VE 无法安装到 eMMC 上的问题
 
