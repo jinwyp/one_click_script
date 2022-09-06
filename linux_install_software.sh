@@ -858,6 +858,8 @@ function getGithubLatestReleaseVersion2(){
 
 
 function installNodejs(){
+    
+    showHeaderGreen "Prepare to install Nodejs"
 
     if [ "$osRelease" == "centos" ] ; then
 
@@ -866,7 +868,9 @@ function installNodejs(){
             ${sudoCmd} yum install -y nodejs
         else
             ${sudoCmd} dnf module list nodejs
-            ${sudoCmd} dnf module enable nodejs:16
+            ${sudoCmd} dnf module switch-to nodejs:16 -y
+            ${sudoCmd} dnf module enable nodejs:16 -y
+            ${sudoCmd} dnf module list nodejs
             ${sudoCmd} dnf install -y nodejs
         fi
 
@@ -883,8 +887,10 @@ function installNodejs(){
 
     fi
 
+    echo
     green " Nodejs 版本:"
     node --version 
+    echo
     green " NPM 版本:"
     npm --version  
 
@@ -1669,13 +1675,23 @@ function createUserWWW(){
 		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
 	fi
 }
-function createNewUser(){
+function createNewUserNologin(){
     newUsername=${1:-etherpad}
     if [[ -z $(cat /etc/passwd | grep ${newUsername}) ]]; then
         ${sudoCmd} useradd -M -s /sbin/nologin ${newUsername}
     fi
 }
-
+function createNewUser(){
+    newUsername=${1:-etherpad}
+    if [[ -z $(cat /etc/passwd | grep ${newUsername}) ]]; then
+        ${sudoCmd} useradd -rm ${newUsername} -U
+        if [ "$osRelease" == "centos" ]; then
+            usermod -aG wheel ${newUsername}
+        else
+            usermod -aG sudo ${newUsername} 
+        fi
+    fi
+}
 
 configCloudrevePath="/usr/local/cloudreve"
 configCloudreveDownloadCodeFolder="${configCloudrevePath}/download"
@@ -1949,26 +1965,64 @@ function installWebServerNginx(){
     nginxConfigServerHttpInput=""
 
 
-    if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
+    if [[ "${configInstallNginxMode}" == "ghost" ]]; then
 
-        cat > "${nginxConfigSiteConfPath}/default_site.conf" <<-EOF
+        cat > "${nginxConfigSiteConfPath}/ghost_site.conf" <<-EOF
+
     server {
-        listen       80;
+        listen 443 ssl http2;
+        listen [::]:443 http2;
         server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
         root $configWebsitePath;
         index index.php index.html index.htm;
 
         location / {
-            proxy_pass http://127.0.0.1:8888;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$http_host;
-
-            proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_pass http://127.0.0.1:3468;
+
+            # 如果您要使用本地存储策略，请将下一行注释符删除，并更改大小为理论最大文件尺寸
+            client_max_body_size  7000m;
         }
     }
+
+    server {
+        listen 80;
+        listen [::]:80;
+
+        server_name  $configSSLDomain;
+        root ${configGhostSitePath}/system/nginx-root; # Used for acme.sh SSL verification (https://acme.sh)
+        index index.php index.html index.htm;
+
+        location / {
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_pass http://127.0.0.1:3468;
+        }
+
+        location ~ /.well-known {
+            allow all;
+        }
+
+        client_max_body_size 50m;
+    }
+
 
 EOF
 
@@ -2412,6 +2466,41 @@ function removeNginx(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 configEtherpadProjectPath="${HOME}/etherpad"
 configEtherpadDockerPath="${HOME}/etherpad/docker"
 
@@ -2423,7 +2512,7 @@ function installEtherpad(){
     fi
     showHeaderGreen "开始 使用Docker方式 安装 Etherpad "
 
-    createNewUser "etherpad"
+    createNewUserNologin "etherpad"
     ${sudoCmd} mkdir -p "${configEtherpadDockerPath}/data"
     cd "${configEtherpadDockerPath}" || exit
 
@@ -3199,6 +3288,145 @@ function removeJitsiMeet(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+configGhostProjectPath="/opt/ghost"
+configGhostDockerPath="/opt/ghost/docker"
+configGhostSitePath="/opt/ghost/site"
+ghostUser="ghostsite"
+
+function installCMSGhost(){
+    if [[ -d "${configGhostDownloadPath}" ]]; then
+        showHeaderRed "Ghost already installed !"
+        exit
+    fi
+    showHeaderGreen "Prepare to install Ghost !"
+
+    if ! command -v npm &> /dev/null ; then
+        showHeaderRed "Npm could not be found, Please install Nodejs first !"
+        exit
+    fi
+
+    isInstallNginx="true"
+    configSSLCertPath="${configSSLCertPath}/ghost"
+    getHTTPSCertificateStep1
+    configInstallNginxMode="ghost"
+    installWebServerNginx
+
+
+    
+    createNewUser "${ghostUser}"
+    # passwd "${ghostUser}" ghost2022user
+
+    # https://stackoverflow.com/questions/714915/using-the-passwd-command-from-within-a-shell-script
+    echo "ghost2022user" | passwd "${ghostUser}" --stdin
+    red " Password for linux user ghostsite: ghost2022user"
+    echo
+
+    ${sudoCmd} mkdir -p "${configGhostSitePath}"
+
+    ${sudoCmd} chown -R ${ghostUser}:${ghostUser} "${configGhostProjectPath}"
+    ${sudoCmd} chmod -R 775  "${configGhostProjectPath}"
+
+    cd "${configGhostSitePath}" || exit
+    ${sudoCmd} npm install ghost-cli@latest -g
+    
+    # su - "ghost" -c cd "${configGhostSitePath}"
+
+    su - ${ghostUser} << EOF
+    echo "--------------------"
+    echo "Current user:"
+    whoami
+    echo
+    cd "${configGhostSitePath}"
+    ghost install --port 3468 --db=sqlite3 --no-setup-nginx --no-setup-ssl --no-setup-mysql --no-stack --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
+    echo "--------------------"
+EOF
+
+    echo
+    echo "Current user: $(whoami)"
+    echo
+
+    showHeaderGreen "Ghost installed successfully! " \
+    "Ghost Admin panel:  http://localhost:3468/ghost" \
+    "The SQLite3 database located in ${configGhostSitePath}/content/data"
+
+    showHeaderGreen " Please manually run following command if installation failed: " \
+    "su - ${ghostUser}" \
+    "cd ${configGhostSitePath}" \
+    "ghost install --port 3468 --db=sqlite3 --no-setup-nginx --no-setup-ssl --no-setup-mysql --no-stack --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}"
+    red "Input password 'ghost2022user' when ask for linux user 'ghostsite' password"
+
+
+        read -r -d '' ghostConfigEmailInput << EOM
+    "mail": {
+      "from": "annajscool@freair.com",
+      "transport": "SMTP",
+      "options": {
+        "host": "smtp.gmail.com",
+        "service": "Gmail",
+        "port": "465",
+        "secure": true,
+        "auth": {
+          "user": "jinwyp2@gmail.com",
+          "pass": "aslgotjzmwrkuvto"
+        }
+      }
+    },
+EOM
+
+
+}
+
+
+function removeCMSGhost(){
+    echo
+    read -r -p "是否确认卸载Ghost? 直接回车默认卸载, 请输入[Y/n]:" isRemoveGhostInput
+    isRemoveGhostInput=${isRemoveGhostInput:-Y}
+
+    if [[ "${isRemoveGhostInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configGhostSitePath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Ghost"
+
+    su - ${ghostUser} << EOF
+    echo "--------------------"
+    echo "Current user:"
+    whoami
+    echo
+    cd "${configGhostSitePath}"
+    ghost stop
+    ghost uninstall
+    echo "--------------------"
+EOF
+
+            userdel -r "${ghostUser}"
+
+            rm -rf "${configGhostSitePath}"
+            rm -f "${nginxConfigSiteConfPath}/ghost_site.conf"
+            
+            systemctl restart nginx.service
+            showHeaderGreen "已成功卸载 Ghost !"
+        else
+            showHeaderRed "系统没有安装 Ghost, 退出卸载"
+        fi
+
+    fi
+    removeNginx
+
+}
 
 
 
@@ -4427,6 +4655,9 @@ function removeAirUniverse(){
     rm -f /usr/bin/airu 
     rm -f /usr/local/bin/au
     rm -f /usr/local/bin/xray
+    
+    rm -rf ${configSSLCertPathV2board}
+
     crontab -r 
     green " crontab 定时任务 已清除!"
     echo
@@ -4856,11 +5087,13 @@ function start_menu(){
     green " 35. 安装 Etherpad 多人协作文档(类似 Word)  "
     red " 36. 卸载 Etherpad 多人协作文档 "     
     echo
+    green " 41. 安装 Ghost Blog 博客系统 "
+    red " 42. 卸载 Ghost Blog 博客系统 "     
+    echo
 
-
-    green " 41. 安装视频会议系统 Jitsi Meet "
-    red " 42. 卸载 Jitsi Meet "
-    green " 45. Jitsi Meet 发起会议是否需要密码验证"
+    green " 47. 安装视频会议系统 Jitsi Meet "
+    red " 48. 卸载 Jitsi Meet "
+    green " 49. Jitsi Meet 发起会议是否需要密码验证"
 
     echo
     green " 51. 安装 Air-Universe 服务器端"
@@ -4911,9 +5144,12 @@ function start_menu(){
     green " 35. Install Etherpad collaborative editor (Word alternative)"
     red " 36. Remove Etherpad collaborative editor (Word alternative)"
     echo
-    green " 41. Install Jitsi Meet video conference system"
-    red " 42. Remove Jitsi Meet video conference system"
-    green " 45. Modify Jitsi Meet whether to Start a meeting requires password authentication"
+    green " 41. Install Ghost Blog "
+    red " 42. Remove Ghost Blog "     
+    echo    
+    green " 47. Install Jitsi Meet video conference system"
+    red " 48. Remove Jitsi Meet video conference system"
+    green " 49. Modify Jitsi Meet whether to Start a meeting requires password authentication"
 
     echo
     green " 51. Install Air-Universe server side "
@@ -5013,12 +5249,18 @@ function start_menu(){
             removeEtherpad
         ;;
         41 )
-            installJitsiMeet
+            installCMSGhost
         ;;
         42 )
+            removeCMSGhost
+        ;;
+        47 )
+            installJitsiMeet
+        ;;
+        48 )
             removeJitsiMeet
         ;;
-        45 )
+        49 )
             secureAddPasswordForJitsiMeet
         ;;
 
@@ -5056,6 +5298,23 @@ function start_menu(){
         ;;
         88 )
             upgradeScript
+        ;;
+        89 )
+                su - ghostsite << EOF
+    echo "--------------------"
+    echo "Current user: $(whoami)"
+    whoami
+    $(whoami)
+    # ghost install --port 3468 --db=sqlite3 --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
+    echo "--------------------"
+EOF
+whoami
+sudo -u ghostsite bash << EOF
+echo "In"
+whoami
+EOF
+echo "Out"
+whoami
         ;;
         0 )
             exit 1
