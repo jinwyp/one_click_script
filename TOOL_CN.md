@@ -1,10 +1,10 @@
-# Linux toolkit Easily install V2Ray-Poseidon, Soga, XrayR, Air-Universe shell script for V2board panel
+# Linux toolkit Easily install shell script for panel
 
-## 安装 Linux 软件 和 V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键脚本
+## 安装 Linux 软件 和 服务器端  一键脚本
 
 ## 目录 Table of Contents
 
-* [V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键安装脚本](#installation)
+* [V2board 服务器端 一键安装脚本](#installation)
 
 
 ## Installation

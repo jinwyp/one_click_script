@@ -1,6 +1,6 @@
 # Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)
 
-## [中文文档](/README_CN.md) 
+### [中文文档](/README_CN.md) 
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fjinwyp%2Fone_click_script&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
 
@@ -14,7 +14,6 @@ Thanks for support this project. Check on [patreon](https://www.patreon.com/linu
 * [Linux Kernel switcher, including all LTS kernel and latest kernel, enable BBR or BBR Plus to speed up network](/KERNEL.md)
 * [Install wireguard and Cloudflare WARP, unlock Netflix restriction and avoid Google reCAPTCHA](/KERNEL.md)
 * [Netflix available region testing shell script, support for testing through IPv6 and WARP Sock5 proxy](#netflix-check)
-* [Install V2Ray-Poseidon, Soga, XrayR, Air-Universe shell script for V2board panel](/TOOL.md)
 * [PVE Proxmox VE and Synology DiskStation Manager NAS Toolkit](/dsm/readme.md)
 * [Install FRP shell script (expose local server behind a NAT or firewall to the Internet tool)](/dsm/readme.md)
 * [How to enable DOH for DNS](/DNS.md)

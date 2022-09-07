@@ -1,4 +1,4 @@
-# Linux toolkit Easily install V2Ray-Poseidon, Soga, XrayR, Air-Universe shell script for V2board panel
+# Linux toolkit Easily install shell script for panel
 
 
 ## [中文文档](/TOOL_CN.md)

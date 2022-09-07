@@ -7,7 +7,6 @@
 * [安装 最新版和LTS Linux 内核, BBR 和 BBR Plus 内核](#installation-linux-kernel-wireguard)
 * [安装 wireguard 和 Cloudflare WARP, 解锁 Netflix 区域限制 和 避免弹出Google人机验证](#installation-linux-kernel-wireguard)
 * [Netflix 非自制剧检测脚本 支持IPv6和 WARP Sock5 代理检测](#netflix-check)
-* [V2board 服务器端 V2Ray-Poseidon, Soga, XrayR, Air-Universe 一键安装脚本](#installation-xrayr)
 * [PVE Proxmox VE虚拟机 群晖NAS 安装工具脚本](/dsm/readme.md)
 * [FRP 内网穿透工具 一键安装脚本](/dsm/readme.md)
 * [锐角云 自动安装PVE 工具脚本](/acuteangle/readme.md)
