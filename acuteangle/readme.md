@@ -118,10 +118,11 @@ wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/on
 1. 如果不能联网, 因为PVE是基于 Debian系统的, 对linux 熟悉的可以直接 修改 /etc/network/interfaces 文件. 同时也要想要修改/etc/issue 和 /etc/hosts. 不熟悉linux的可以用上面的date.sh 脚本修改.
 
 2. PVE的硬盘盘符. 因为锐角云只有一个64G的EMMC硬盘 物理设备为 /dev/mmcblk1. 安装完PVE后会建立3个物理分区 /dev/mmcblk1p1 /dev/mmcblk1p2 /dev/mmcblk1p3, 其中前2个为系统引导分区 不要修改, PVE的主要文件都在 /dev/mmcblk1p3 分区上. 可以运行命令 lsblk 或 blkid 查看
+![local1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/local1.jpg?raw=true)
 
 3. PVE的LVM LVM逻辑卷. 首先科普一下 [linix的 LVM 磁盘管理](https://www.yisu.com/zixun/3865.html) [LVM 科普文章2](https://zhuanlan.zhihu.com/p/62597195). 简单来讲就是物理卷PV(就是/dev/mmcblk1p3分区), 逻辑卷组VG 和 逻辑卷LV. PVE正常通过官方ISO安装 就是用上面的第二种方法安装, 默认会有3个LV: /dev/pve/root /dev/pve/data /dev/pve/swap . 如果安装过成功中swap设置为0 就不没有第三个 /dev/pve/swap 了. 通过运行 命令 lvdisplay 可以查看这3个LV的信息. 在PVE的概念里面 通过 数据中心-> 存储 里面可以看到有local (对应 /dev/pve/root) 和 local-lvm (对应 /dev/pve/data) 两个储存盘. 
 
-![pve1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve1.jpg?raw=true)
+![local2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/local2.jpg?raw=true)
 
 
 由于锐角云只有64G, 建议合并成只有一个LV 都是/dev/pve/root. 运行下面脚本选择3 合并逻辑卷. 合并完成后就只有一个 local (对应 /dev/pve/root) 储存盘了 如上图
