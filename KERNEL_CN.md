@@ -1,8 +1,10 @@
 # Easy install latest or LTS linux kernel and enable BBR or BBR plus
 
+### [其他脚本安装](/README2_CN.md)
 
 ## 目录 Table of Contents
 
+* [Trojan 或 Trojan-go 和 V2ray 或 xray 一键安装脚本](#README2_CN.md)
 * [安装 Linux 最新版内核或 LTS 内核, 安装支持 BBR Plus 内核](#kernel)
 * [开启BBR 或 BBR plus 网络加速](#kernel)
 * [安装 wireguard 和 Cloudflare WARP, 解锁 Netflix 区域限制 和 避免弹出Google人机验证](#Wireguard)

@@ -664,7 +664,7 @@ function deleteVGLVPVEData(){
 	green " ================================================== "
 	green " 准备删除 /dev/pve/data 逻辑卷, 得到的空间都会增加给/dev/pve/root "
 
-	cp /etc/pve/storage.cfg /etc/pve/storage.cfg.bak
+	${sudoCmd} cp -f /etc/pve/storage.cfg /etc/pve/storage.cfg.bak2
 
 	${sudoCmd} sed -i 's|content iso,vztmpl,backup|content iso,vztmpl,backup,snippets,images,rootdir|g' /etc/pve/storage.cfg
 

@@ -44,6 +44,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
+
 ## 方法2 修改代码方法让PVE 安装到EMMC 硬盘上
 
 ### 准备工作
@@ -60,7 +61,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 4. 继续安装过程, 在第二次提示你可以输入命令的时候输入命令 vi /usr/bin/proxinstall. 编辑文件（或者使用其他文字编辑器如 nano）. 
 ![pve2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve2.jpg?raw=true)
 
-5. 输入 /unable to get device 定位到对应位置 , 找到如下代码:
+5. 输入 /unable to get device 回车后 定位到对应位置, 输入i进入编辑模式 , 找到如下代码: (这里对VIM编辑器不熟悉的建议去学一下VIM的基本操作. VIM默认有两种模式 打开文件后默认是普通模式 可以控制光标移动,搜索但不能编辑, 输入i 进入编辑模式 可以编辑文件但无法保存, 按ESC键返回到普通模式. 普通模式输入/是搜索, 输入:wq是保存退出)
 ```
 
     } elsif ($dev =~ m|^/dev/[^/]+/hd[a-z]$|) {
@@ -73,7 +74,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ```
 
-修改为下面代码 (增加  elsif ($dev =~ m|^/dev/mmcblk\d+$|)  部分代码 )
+修改为下面代码 (增加  elsif ($dev =~ m|^/dev/mmcblk\d+$|)  部分代码 )  
 
 ```
     } elsif ($dev =~ m|^/dev/[^/]+/hd[a-z]$|) {
@@ -90,7 +91,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ```
 
-输入:wq, 保存退出后, 然后输入 Ctrl-D ，继续安装过程. 此时应该进入了正常的安装程序，
+具体操作如下在普通模式移动到/dev/nvme那行输入2yy 就是复制2行的意思, 然后移动光标到else行 键入p 就是粘贴, 然后输入i 进入编辑模式 编辑成/dev/mmcblk\d+$, 然后按ESC返回到普通模式, 输入:wq, 保存退出后. 然后输入 Ctrl-D ，继续安装过程. 此时应该进入了正常的安装程序，
 
 ![pve3](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve3.jpg?raw=true)
 
@@ -111,4 +112,80 @@ wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/on
 1. 如果使用PVE官方6.4的iso安装 默认无法安装到EMMC存储上 需要 修改代码 可以参考这篇文章 https://lookas2001.com/%E8%A7%A3%E5%86%B3-proxmox-ve-%E6%97%A0%E6%B3%95%E5%AE%89%E8%A3%85%E5%88%B0-emmc-%E4%B8%8A%E7%9A%84%E9%97%AE%E9%A2%98/
 
 
+
+## 其他工作
+
+1. 如果不能联网, 因为PVE是基于 Debian系统的, 对linux 熟悉的可以直接 修改 /etc/network/interfaces 文件. 同时也要想要修改/etc/issue 和 /etc/hosts. 不熟悉linux的可以用上面的date.sh 脚本修改.
+
+2. PVE的硬盘盘符. 因为锐角云只有一个64G的EMMC硬盘 物理设备为 /dev/mmcblk1. 安装完PVE后会建立3个物理分区 /dev/mmcblk1p1 /dev/mmcblk1p2 /dev/mmcblk1p3, 其中前2个为系统引导分区 不要修改, PVE的主要文件都在 /dev/mmcblk1p3 分区上. 可以运行命令 lsblk 或 blkid 查看
+
+3. PVE的LVM LVM逻辑卷. 首先科普一下 [linix的 LVM 磁盘管理](https://www.yisu.com/zixun/3865.html) [LVM 科普文章2](https://zhuanlan.zhihu.com/p/62597195). 简单来讲就是物理卷PV(就是/dev/mmcblk1p3分区), 逻辑卷组VG 和 逻辑卷LV. PVE正常通过官方ISO安装 就是用上面的第二种方法安装, 默认会有3个LV: /dev/pve/root /dev/pve/data /dev/pve/swap . 如果安装过成功中swap设置为0 就不没有第三个 /dev/pve/swap 了. 通过运行 命令 lvdisplay 可以查看这3个LV的信息. 在PVE的概念里面 通过 数据中心-> 存储 里面可以看到有local (对应 /dev/pve/root) 和 local-lvm (对应 /dev/pve/data) 两个储存盘. 
+
+![pve1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve1.jpg?raw=true)
+
+
+由于锐角云只有64G, 建议合并成只有一个LV 都是/dev/pve/root. 运行下面脚本选择3 合并逻辑卷. 合并完成后就只有一个 local (对应 /dev/pve/root) 储存盘了 如上图
+
+
+```bash
+wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
+
+```
+
+4. 通过再次运行上面脚本 选择1 更新软件源
+
+
+
+## 在 PVE中 安装Openwrt 
+
+### 准备工作
+1. 下载 openwrt X86的 镜像 可以使用esir的版本 这里选择的是 Stable v21.02.3 0818 [官方下载地址](https://drive.google.com/drive/folders/1amWhdhq0XhQR4tNyFcouB49-Uf4VsUrL)
+
+2. 一般 openwrt X86 镜像有2种 uefi 引导和 传统的legacy引导. 如果不使用PVE直接把openwrt安装到锐角云上必须使用UEFI版本,  由于锐角云只支持UEFI引导, 使用legacy版本直接安装会导致锐角云变砖.   而这里如果用PVE创建虚拟机安装openwrt, 虚拟机的bios是支持legacy的, 所以2种引导都可以,这里选择legacy版本. 下载文件 openwrt-21.02.3-x86-64-generic-squashfs-legacy.img.gz 
+
+3. 开始创建虚拟机. 点击右上角 "创建虚拟机" 按钮 输入名称 例如OpenWRTX86. 点击勾选 下面的高级选项, 勾选开机自启动.  点击 下一步.  选择不使用任何介质, 因为.img.gz的格式PVE无法直接使用需要转换. 客户机操作系统不用改动,点击下一步. 然后系统菜单直接点击下一步. 然后磁盘菜单 删除已有的磁盘 不需要任何磁盘. 因为稍后会导入img.gz镜像. 点击下一步进入CPU菜单
+
+![vm1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/vm1.jpg?raw=true)
+
+![vm2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/vm2.jpg?raw=true)
+
+4. CPU菜单 可以选择2核, 也可以根据情况添加更多的核. 锐角云是4核8G内存. 如果需要在openwrt里面安装docker 可以增加CPU核数或内容, 但不建议, 如果要使用docker建议在创建另外的linux虚拟机. 类别选host. 点击勾选 下面的高级选项, 开启 aes.  点击下一步 内存设置为1024 除非要在openwrt里面跑docker, 否则1024(1G) 已经够用了. 点击下一步进入网络, 一切都默认后继续点击直到完成.
+
+![vm3](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/vm3.jpg?raw=true)
+
+5. 把之前下载的 openwrt-21.02.3-x86-64-generic-squashfs-legacy.img.gz 解压出来改名为 openwrt.img (原文件名太长了,改名后方便以后打字输入). 点击 PVE 节点 -> local (PVE) 储存盘 -> ISO镜像 点击上传按钮 在弹出选择文件框 选择 openwrt.img文件上传.  上传成功后会弹出信息提示 记住上传的文件路径 例如  target file: /var/lib/vz/template/iso/openwrt.img
+
+![img1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/img1.jpg?raw=true)
+
+![img2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/img2.jpg?raw=true)
+
+6. 把镜像转成虚拟磁盘并导入到虚拟机. 选择“pve”节点 > shell > 输入以下命令并回车：qm importdisk 100 /var/lib/vz/template/iso/openwrt.img local-lvm 
+这里注意 100 是相应的虚拟机的ID 需要修改成对应的ID. local-lvm 是PVE储存盘, 也有可能是local. 如果弄不明白, 直接用我下面的脚本 选择15 使用 qm importdisk 命令导入. 运行脚本选择15后 根据提示输入文件名 openwrt.img 和 虚拟机ID 100 然后回车 完成导入。
+
+```bash
+wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
+
+```
+
+7. 导入成功后在 Openwrt 虚拟机的“硬件”选项卡就能看到一个“未使用的磁盘0”，选中它 双击弹出配置窗口，总线/设备类型选“sata”，最后点击添加。
+
+![img3](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/img3.jpg?raw=true)
+
+8. 切换到虚拟机的“选项”选项卡，双击“引导顺序”，第一引导项拖拽选‘sata0’ 勾选 已启用 点击 OK
+![img4](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/img4.jpg?raw=true)
+
+
+9. 启动虚拟机, 点击 openwrt 虚拟机 “控制台”查看启动状态. 按一下回车 显示 Openwrt 的图标表明启动正常. esir固件默认后台地址：192.168.5.1 密码：空 
+![boot1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/boot1.jpg?raw=true)
+
+10. 不知道openwrt IP地址的也可以 输入命令 ip addr 查看. 
+![boot2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/boot2.jpg?raw=true)
+
+
+11. 下一步就是改电脑的IP为192.168.5.2,让电脑和openwrt 在同一个网段. 或者觉得改电脑IP麻烦可以修改openwrt的IP. 在“控制台” 输入命令 vi /etc/config/network 编辑openwrt的IP 192.168.5.1 那行, 改为你想要的IP  输入:wq 保存后 重启openwrt虚拟机
+![boot3](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/boot3.jpg?raw=true)
+
+12. 重启后就可以在电脑浏览器上打开ip 例如 http://192.168.1.6/ 密码：空 进入管理openwrt了.
+
+13. 后续操作: 由于锐角云只有一个网卡, 可以在 网络 -> 接口 里面删除WAN. 具体单臂网关服务器如何设置可以参考 (DNS设置方法)[https://github.com/jinwyp/one_click_script/blob/master/DNS.md#mosdns]. 建议使用锐角云做DHCP(高优先级 在DHCP勾选 强制), 并保留原路由器的DHCP功能. 这样即使锐角云挂了也可以正常上网.
 
