@@ -91,7 +91,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ```
 
-具体操作如下在普通模式移动到/dev/nvme那行输入2yy 就是复制2行的意思, 然后移动光标到else行 键入p 就是粘贴, 然后输入i 进入编辑模式 编辑成/dev/mmcblk\d+$, 然后按ESC返回到普通模式, 输入:wq, 保存退出后. 然后输入 Ctrl-D ，继续安装过程. 此时应该进入了正常的安装程序，
+具体操作如下: 在普通模式移动到/dev/nvme那行输入2yy 就是复制2行的意思, 然后移动光标到else行 键入p 就是粘贴, 然后输入i 进入编辑模式 编辑成/dev/mmcblk\d+$, 然后按ESC返回到普通模式, 输入:wq, 保存退出后. 然后输入 Ctrl-D ，继续安装过程. 此时应该进入了正常的安装程序，
 
 ![pve3](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve3.jpg?raw=true)
 
@@ -187,5 +187,5 @@ wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/on
 
 12. 重启后就可以在电脑浏览器上打开ip 例如 http://192.168.1.6/ 密码：空 进入管理openwrt了.
 
-13. 后续操作: 由于锐角云只有一个网卡, 可以在 网络 -> 接口 里面删除WAN. 具体单臂网关服务器如何设置可以参考 (DNS设置方法)[https://github.com/jinwyp/one_click_script/blob/master/DNS.md#mosdns]. 建议使用锐角云做DHCP(高优先级 在DHCP勾选 强制), 并保留原路由器的DHCP功能. 这样即使锐角云挂了也可以正常上网.
+13. 后续操作: 由于锐角云只有一个网卡, 可以在 网络 -> 接口 里面删除WAN. 具体单臂网关服务器如何设置可以参考 [DNS设置方法](https://github.com/jinwyp/one_click_script/blob/master/DNS.md#mosdns). 建议使用锐角云做DHCP(高优先级 在DHCP勾选 强制), 并保留原路由器的DHCP功能. 这样即使锐角云挂了也可以正常上网.
 
