@@ -972,7 +972,7 @@ downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 versionV2ray="4.45.2"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.5.2"
+versionXray="1.5.5"
 downloadFilenameXray="Xray-linux-64.zip"
 
 versionTrojanWeb="2.10.5"
@@ -1093,14 +1093,45 @@ function getTrojanAndV2rayVersion(){
     fi
 
     if [[ $1 == "v2ray" ]] ; then
-        # versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
+        echo
+        green " ================================================== "
+        green " 请选择 V2ray 的版本, 默认直接回车为 稳定版4.45.2 (推荐)"
+        green " 选否则安装最新版的 V2ray 5.1.0 User Preview"
+        echo
+        read -r -p "是否安装稳定版V2ray? 默认直接回车为稳定版4.45.2, 请输入[Y/n]:" isInstallXrayVersionInput
+        isInstallXrayVersionInput=${isInstallXrayVersionInput:-Y}
+        echo
+
+        if [[ $isInstallXrayVersionInput == [Yy] ]]; then
+            versionV2ray="4.45.2"
+        else
+            versionV2ray=$(getGithubLatestReleaseVersion "v2fly/v2ray-core")
+        fi
         echo "versionV2ray: ${versionV2ray}"
     fi
 
     if [[ $1 == "xray" ]] ; then
-        versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
+        echo
+        green " ================================================== "
+        green " 请选择 Xray 的版本, 默认直接回车为 稳定版1.5.5 (推荐)"
+        green " 选否则安装最新版的Xray Pre-release 1.5.10"
+        echo
+        read -r -p "是否安装稳定版Xray? 默认直接回车为稳定版1.5.5, 请输入[Y/n]:" isInstallXrayVersionInput
+        isInstallXrayVersionInput=${isInstallXrayVersionInput:-Y}
+        echo
+
+        if [[ $isInstallXrayVersionInput == [Yy] ]]; then
+            versionXray="1.5.5"
+        else
+            versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
+        fi
         echo "versionXray: ${versionXray}"
     fi
+
+
+
+
+
 
     if [[ $1 == "trojan-web" ]] ; then
         versionTrojanWeb=$(getGithubLatestReleaseVersion "Jrohy/trojan")
@@ -3787,7 +3818,7 @@ function installV2ray(){
             fi        
         fi
     else
-        read -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayCoreInput
+        read -r -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayCoreInput
         isV2rayOrXrayCoreInput=${isV2rayOrXrayCoreInput:-n}
 
         if [[ $isV2rayOrXrayCoreInput == [Yy] ]]; then
@@ -6355,7 +6386,6 @@ function upgradeV2ray(){
             green "     升级成功 V2ray Version: ${versionV2ray} !"
             green " ================================================== "
         else
-            getTrojanAndV2rayVersion "xray"
             green " =================================================="
             green "     升级成功 Xray Version: ${versionXray} !"
             green " =================================================="

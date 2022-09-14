@@ -5079,7 +5079,7 @@ function start_menu(){
     echo
     green " 28. 安装 CasaOS 系统(包括 Nextcloud 云盘 和 AdGuard DNS 等)  "
     red " 29. 卸载 CasaOS 系统 " 
-    echo    
+    echo
     green " 31. 安装 Grist 在线Excel表格(类似 Airtable)  "
     red " 32. 卸载 Grist 在线Excel表格 " 
     green " 33. 安装 NocoDB 在线Excel表格(类似 Airtable)  "

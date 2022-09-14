@@ -1081,26 +1081,34 @@ function genPVEVMDiskWithQM(){
 	img2kvmPath="./img2kvm"
 	img2kvmRealPath="./img2kvm"
 
-	if [ -z $1 ]; then
+	importFile="synoboot.img"
+	importTextPrompt="群晖"
+
+	if [[ $2 == "openwrt" ]]; then
+		importFile="openwrt.img"
+		importTextPrompt="OpenWRT"
+	fi
+
+	if [[ $1 == "qm" ]]; then
 		green " ================================================== "
-		green " 准备使用 qm importdisk 命令 导入群晖引导镜像文件 synoboot.img "
-		red " 请先通过 PVE网页上传 群晖引导镜像文件syboboot.img 到local存储盘"
-		red " 通过 PVE 网页上传成功后 文件路径一般为 /var/lib/vz/template/iso/synoboot.img"
+		green " 准备使用 qm importdisk 命令 导入${importTextPrompt}引导镜像文件 ${importFile} "
+		red " 请先通过 PVE网页上传 ${importTextPrompt}引导镜像文件 ${importFile} 到local存储盘"
+		red " 通过 PVE 网页上传成功后 文件路径一般为 /var/lib/vz/template/iso/${importFile}"
 		echo
-		red " 或者通过SSH WinSCP等软件上传 群晖引导镜像文件syboboot.img 到 /root 目录或用户指定目录下"
+		red " 或者通过SSH WinSCP等软件上传 ${importTextPrompt}引导镜像文件 ${importFile} 到 /root 目录或用户指定目录下"
 		green " ================================================== "
 
 		promptTextDefaultDsmBootImgFilePath="/var/lib/vz/template/iso"
 		promptTextFailureCommand="img2kvm"
 	else 
 		green " ================================================== "
-		green " 准备使用 img2kvm 命令 导入群晖引导镜像文件 synoboot.img "
+		green " 准备使用 img2kvm 命令 导入${importTextPrompt}引导镜像文件 synoboot.img "
 		green " 可通过SSH WinSCP等软件上传 img2kvm 工具到当前目录下或/root目录下, 如果用户没有上传会自动从网上下载该命令 "
 		echo
-		red " 请先通过通过SSH WinSCP等软件上传 群晖引导镜像文件syboboot.img 到 /root 目录或用户指定目录下"
+		red " 请先通过通过SSH WinSCP等软件上传 ${importTextPrompt}引导镜像文件 ${importFile} 到 /root 目录或用户指定目录下"
 		echo
-		red " 或者通过PVE 网页上传 群晖引导镜像文件syboboot.img 到local存储盘"
-		red " 通过 PVE 网页上传成功后 文件路径一般为 /var/lib/vz/template/iso/synoboot.img"
+		red " 或者通过PVE 网页上传 ${importTextPrompt}引导镜像文件 ${importFile} 到local存储盘"
+		red " 通过 PVE 网页上传成功后 文件路径一般为 /var/lib/vz/template/iso/${importFile}"
 		green " ================================================== "	
 
 		promptTextDefaultDsmBootImgFilePath="/root"
@@ -1124,11 +1132,11 @@ function genPVEVMDiskWithQM(){
 
 
 
-	read -p "请输入已上传的群晖引导镜像文件名, 直接回车默认为 synoboot.img :" dsmBootImgFilenameInput
-	dsmBootImgFilenameInput=${dsmBootImgFilenameInput:-"synoboot.img"}
+	read -p "请输入已上传的${importTextPrompt}引导镜像文件名, 直接回车默认为 ${importFile} :" dsmBootImgFilenameInput
+	dsmBootImgFilenameInput=${dsmBootImgFilenameInput:-"${importFile}"}
 
-	read -p "请输入虚拟机ID, 直接回车默认为101 请输入:" dsmBootImgVMIdInput
-	dsmBootImgVMIdInput=${dsmBootImgVMIdInput:-101}
+	read -p "请输入虚拟机ID, 直接回车默认为100 请输入:" dsmBootImgVMIdInput
+	dsmBootImgVMIdInput=${dsmBootImgVMIdInput:-100}
 
 	if [[ -f "/root/${dsmBootImgFilenameInput}" ]]; then
         dsmBootImgFileRealPath="/root/${dsmBootImgFilenameInput}"
@@ -1137,22 +1145,23 @@ function genPVEVMDiskWithQM(){
         dsmBootImgFileRealPath="/var/lib/vz/template/iso/${dsmBootImgFilenameInput}"
 
 	else
-		read -p "请输入已上传的群晖引导镜像的路径, 直接回车默认为${promptTextDefaultDsmBootImgFilePath} : (末尾不要有/)" dsmBootImgFilePathInput
+		read -p "请输入已上传的${importTextPrompt}引导镜像的路径, 直接回车默认为${promptTextDefaultDsmBootImgFilePath} : (末尾不要有/)" dsmBootImgFilePathInput
 		dsmBootImgFilePathInput=${dsmBootImgFilePathInput:-"${promptTextDefaultDsmBootImgFilePath}"}
 
 		if [[ -f "${dsmBootImgFilePathInput}/${dsmBootImgFilenameInput}" ]]; then
 			dsmBootImgFileRealPath="${dsmBootImgFilePathInput}/${dsmBootImgFilenameInput}"
 		else
 			green " ================================================== "
-			red " 没有找到已上传的群晖引导镜像文件 ${dsmBootImgFilePathInput}/${dsmBootImgFilenameInput}"
+			red " 没有找到已上传的${importTextPrompt}引导镜像文件 ${dsmBootImgFilePathInput}/${dsmBootImgFilenameInput}"
 			green " ================================================== "
 			exit
 		fi
     fi   
 
-
-	green " 开始导入群晖引导镜像文件 ${dsmBootImgFileRealPath} "
-	green " 引导镜像导入后, 默认储存在名称为local-lvm磁盘, 如果没有local-lvm盘 依次会导入到local盘储存, 也可储存在用户指定的磁盘 "
+	echo
+	echo
+	green " 开始导入${importTextPrompt}引导镜像文件 ${dsmBootImgFileRealPath} "
+	green " 引导镜像导入后, 默认储存在名称为local-lvm逻辑盘, 如果没有local-lvm盘 依次会导入到local盘储存, 也可储存在用户指定的逻辑盘 "
 
 	isHaveStorageLocalLvm=$(cat /etc/pve/storage.cfg | grep local-lvm) 
 	isHaveStorageLocal=$(cat /etc/pve/storage.cfg | grep local) 
@@ -1160,49 +1169,57 @@ function genPVEVMDiskWithQM(){
 
 	echo
 	echo "cat /etc/pve/storage.cfg"
+	echo
 	cat /etc/pve/storage.cfg
-	read -p "根据上面已有的磁盘信息, 输入要导入后储存到的磁盘名称, 直接回车默认为local-lvm,  请输入:" dsmBootImgStoragePathInput
+	echo
+	read -r -p "根据上面已有的逻辑盘信息, 输入要导入后储存到的逻辑盘名称, 直接回车默认为local-lvm, 请输入:" dsmBootImgStoragePathInput
 	dsmBootImgStoragePathInput=${dsmBootImgStoragePathInput:-"local-lvm"}
 
+	echo
+	echo
 	isHaveStorageUserInput=$(cat /etc/pve/storage.cfg | grep ${dsmBootImgStoragePathInput}) 
 
 	if [[ -n "$isHaveStorageUserInput" ]]; then	
-		green " 状态显示--系统有 储存盘 ${isHaveStorageUserInput}"
+		green " 状态显示--系统有 逻辑盘 ${isHaveStorageUserInput}"
 
 	elif [[ -n "$isHaveStorageLocalLvm" ]]; then	
-		green " 状态显示--系统没有 储存盘 ${isHaveStorageUserInput} 使用储存盘 local-lvm 代替"
+		green " 状态显示--系统没有 逻辑盘 ${isHaveStorageUserInput} 使用逻辑盘 local-lvm 代替"
 		dsmBootImgStoragePathInput="local-lvm"
 
 	elif [[ -n "$isHaveStorageLocal" ]]; then	
-		green " 状态显示--系统没有 储存盘 local-lvm, 使用储存盘 local 代替"
+		green " 状态显示--系统没有 逻辑盘 local-lvm, 使用逻辑盘 local 代替"
 		dsmBootImgStoragePathInput="local"
 	fi
 
 
-
+	echo
 	if [[ -f ${dsmBootImgFileRealPath} ]]; then
 		
 		dsmBootImgResult=""
 		
-		if [ -z $1 ]; then
+		if [[ $1 == "qm" ]]; then
 			echo "qm importdisk ${dsmBootImgVMIdInput} ${dsmBootImgFileRealPath} ${dsmBootImgStoragePathInput}"
+			echo
 			dsmBootImgResult=$(qm importdisk ${dsmBootImgVMIdInput} ${dsmBootImgFileRealPath} ${dsmBootImgStoragePathInput})
 
 		else
 			echo " ${img2kvmRealPath} ${dsmBootImgFileRealPath} ${dsmBootImgVMIdInput} ${dsmBootImgStoragePathInput}"
+			echo
 			dsmBootImgResult=$(${img2kvmRealPath} ${dsmBootImgFileRealPath} ${dsmBootImgVMIdInput} ${dsmBootImgStoragePathInput})
 
 		fi
 
+		echo
 		echo "${dsmBootImgResult}"
-
+		echo
+		
 		isImportStorageSuccess=$(echo ${dsmBootImgResult} | grep "Successfully") 
 
 		if [[ -n "$isImportStorageSuccess" ]]; then	
-			green " 成功导入 群晖引导镜像文件! 请运行虚拟机继续安装群晖! "
+			green " 成功导入 ${importTextPrompt}镜像文件! 请运行虚拟机继续安装${importTextPrompt}! "
 		else 
 			green " ================================================== "
-			red " 导入失败 请重新导入群晖引导镜像文件 ${dsmBootImgFileRealPath}"
+			red " 导入失败 请重新导入${importTextPrompt}镜像文件 ${dsmBootImgFileRealPath}"
 			red " 导入失败 或尝试用 ${promptTextFailureCommand} 命令重新导入"
 			green " ================================================== "
 			exit
@@ -2611,6 +2628,7 @@ function start_menu(){
     green " 9. 检测系统是否开启显卡直通"
     green " 10. 显示系统信息 用于查看直通设备"
 	echo
+	green " 14. PVE安装OpenWRT 使用 qm importdisk 命令导入镜像文件openwrt.img, 生成硬盘设备"
 	green " 15. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 16. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 17. PVE安装群晖 使用 qm set 命令添加整个硬盘(直通) 生成硬盘设备"
@@ -2660,11 +2678,14 @@ function start_menu(){
         10 )
             displayIOMMUInfo
         ;;
+        14)
+            genPVEVMDiskWithQM "qm" "openwrt"
+        ;;		
         15 )
-            genPVEVMDiskWithQM
+            genPVEVMDiskWithQM "qm"
         ;;
         16 )
-            genPVEVMDiskWithQM "Img2kvm"
+            genPVEVMDiskWithQM "img2kvm"
         ;;
         17 )
             genPVEVMDiskPT
