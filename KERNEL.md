@@ -1,7 +1,7 @@
 # Easy install latest or LTS linux kernel and enable BBR or BBR plus
 
-## [中文文档](/KERNEL_CN.md)
-
+### [中文文档](/KERNEL_CN.md)
+### [其他脚本安装](/README2.md)
 
 ## Sponsors
 Thanks for support this project. Check on [patreon](https://www.patreon.com/linuxkernel)
@@ -9,6 +9,7 @@ Thanks for support this project. Check on [patreon](https://www.patreon.com/linu
 
 ## Table of Contents
 
+* [Easy install v2ray (xray) and trojan (trojan-go) script (ultimate script for all condition)](/README2.md)
 * [Install linux latest and LTS kernel. Install BBR Plus kernel](#kernel)
 * [Enable BBR or BBR plus or BBR2 congestion control algorithm with FQ or CAKE](#kernel)
 * [Install wireguard and Cloudflare WARP. Unlock Netflix ip geo-restriction. Avoid Google reCAPTCHA human verification](#Wireguard)

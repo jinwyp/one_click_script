@@ -37,6 +37,45 @@ bold(){
 
 
 
+function showHeaderGreen(){
+    echo
+    green " =================================================="
+
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
+
+    green " =================================================="
+    echo
+}
+function showHeaderRed(){
+    echo
+    green " =================================================="
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
+    green " =================================================="
+    echo
+}
+function showInfoGreen(){
+    echo
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
+    echo
+}
+
+
+
 
 osCPU=""
 osArchitecture="arm"
@@ -999,6 +1038,7 @@ configTrojanWebPort="$(($RANDOM + 10000))"
 
 configInstallNginxMode=""
 nginxConfigPath="/etc/nginx/nginx.conf"
+nginxConfigSiteConfPath="/etc/nginx/conf.d"
 
 
 promptInfoXrayInstall="V2ray"
@@ -1628,7 +1668,14 @@ function getHTTPSCertificateStep1(){
 
 
 
-
+wwwUsername="www-data"
+function createUserWWW(){
+	isHaveWwwUser=$(cat /etc/passwd | cut -d ":" -f 1 | grep ^${wwwUsername}$)
+	if [ "${isHaveWwwUser}" != "${wwwUsername}" ]; then
+		${sudoCmd} groupadd ${wwwUsername}
+		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
+	fi
+}
 
 function stopServiceNginx(){
     serviceNginxStatus=$(ps -aux | grep "nginx: worker" | grep -v "grep")
@@ -1644,6 +1691,7 @@ function stopServiceV2ray(){
 }
 
 
+
 function installWebServerNginx(){
 
     echo
@@ -1653,23 +1701,15 @@ function installWebServerNginx(){
     echo
 
     if test -s ${nginxConfigPath}; then
-        green " ================================================== "
-        red "     Nginx 已存在, 退出安装!"
-        green " ================================================== "
+        showHeaderRed "Nginx 已存在, 退出安装!"
         exit
     fi
 
     stopServiceV2ray
 
-	wwwUsername="www-data"
-	isHaveWwwUser=$(cat /etc/passwd|cut -d ":" -f 1|grep ^www-data$)
-	if [ "${isHaveWwwUser}" != "${wwwUsername}" ]; then
-		${sudoCmd} groupadd ${wwwUsername}
-		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
-	fi
+    createUserWWW
+    nginxUser="${wwwUsername} ${wwwUsername}"
 
-    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
-    ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
 
     if [ "$osRelease" == "centos" ]; then
         ${osSystemPackage} install -y nginx-mod-stream
@@ -1702,9 +1742,11 @@ function installWebServerNginx(){
     ${sudoCmd} systemctl daemon-reload
     
 
+    mkdir -p "${nginxConfigSiteConfPath}"
 
 
     nginxConfigServerHttpInput=""
+    nginxConfigServerHttpGrpcInput=""
     nginxConfigStreamConfigInput=""
     nginxConfigNginxModuleInput=""
 
@@ -1714,23 +1756,7 @@ function installWebServerNginx(){
         fi
 
         if [[ "${configV2rayStreamSetting}" == "grpc" || "${configV2rayStreamSetting}" == "wsgrpc" ]]; then
-            read -r -d '' nginxConfigServerHttpInput << EOM
-    server {
-        listen       80;
-        server_name  $configSSLDomain;
-        root $configWebsitePath;
-        index index.php index.html index.htm;
-
-        location /$configV2rayWebSocketPath {
-            proxy_pass http://127.0.0.1:$configV2rayPort;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$http_host;
-
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        }
+            read -r -d '' nginxConfigServerHttpGrpcInput << EOM
 
         location /$configV2rayGRPCServiceName {
             grpc_pass grpc://127.0.0.1:$configV2rayGRPCPort;
@@ -1739,13 +1765,13 @@ function installWebServerNginx(){
             grpc_send_timeout 720m;
             grpc_set_header X-Real-IP \$remote_addr;
             grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        }  
-    }
+        }
 
 EOM
 
-        else
-            read -r -d '' nginxConfigServerHttpInput << EOM
+        fi
+
+        cat > "${nginxConfigSiteConfPath}/nossl_site.conf" <<-EOF
     server {
         listen       80;
         server_name  $configSSLDomain;
@@ -1762,18 +1788,17 @@ EOM
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
+
+        ${nginxConfigServerHttpGrpcInput}
     }
 
-EOM
-
-        fi
-
+EOF
 
 
     elif [[ "${configInstallNginxMode}" == "v2raySSL" ]]; then
         inputV2rayStreamSettings
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        cat > "${nginxConfigSiteConfPath}/v2rayssl_site.conf" <<-EOF
     server {
         listen 443 ssl http2;
         listen [::]:443 http2;
@@ -1820,7 +1845,8 @@ EOM
         return 301 https://$configSSLDomain\$request_uri;
     }
 
-EOM
+EOF
+
 
     elif [[ "${configInstallNginxMode}" == "sni" ]]; then
 
@@ -1918,7 +1944,7 @@ EOM
         fi
 
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        cat > "${nginxConfigSiteConfPath}/sni_site.conf" <<-EOF
     server {
         listen       80;
         server_name  $nginxConfigStreamFakeWebsiteDomainInput;
@@ -1929,7 +1955,7 @@ EOM
 
     ${nginxConfigStreamOwnWebsiteInput}
 
-EOM
+EOF
 
 
         read -r -d '' nginxConfigStreamConfigInput << EOM
@@ -1961,7 +1987,7 @@ EOM
 
     elif [[ "${configInstallNginxMode}" == "trojanWeb" ]]; then
 
-        read -r -d '' nginxConfigServerHttpInput << EOM
+        cat > "${nginxConfigSiteConfPath}/trojanweb_site.conf" <<-EOF
     server {
         listen       80;
         server_name  $configSSLDomain;
@@ -1988,20 +2014,22 @@ EOM
         }
     }
 
-EOM
+EOF
 
     else
-
         echo
-
     fi
 
 
+    if test -s ${nginxConfigPath}; then
+        echo
+    else
         cat > "${nginxConfigPath}" <<-EOF
 
 ${nginxConfigNginxModuleInput}
 
-user  ${wwwUsername} ${wwwUsername};
+# user  ${nginxUser};
+user root;
 worker_processes  1;
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -2009,6 +2037,8 @@ pid        /var/run/nginx.pid;
 events {
     worker_connections  1024;
 }
+
+
 
 
 ${nginxConfigStreamConfigInput}
@@ -2030,13 +2060,12 @@ http {
     gzip  on;
 
 
-    ${nginxConfigServerHttpInput}
-
+    include ${nginxConfigSiteConfPath}/*.conf; 
 }
-
 
 EOF
 
+    fi
 
 
 
@@ -2045,7 +2074,6 @@ EOF
     mkdir -p ${configWebsiteDownloadPath}
 
     downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/website2.zip" "${configWebsitePath}" "website2.zip"
-
 
     if [ "${configInstallNginxMode}" != "trojanWeb" ] ; then
         wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/trojan-mac.zip"
@@ -2129,17 +2157,16 @@ EOF
 function removeNginx(){
 
     echo
-    read -p "是否确认卸载Nginx? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNginxServerInput
+    read -r -p "是否确认卸载Nginx? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNginxServerInput
     isRemoveNginxServerInput=${isRemoveNginxServerInput:-Y}
 
     if [[ "${isRemoveNginxServerInput}" == [Yy] ]]; then
 
         echo
         if [[ -f "${nginxConfigPath}" ]]; then
-            green " ================================================== "
-            red " 准备卸载已安装的nginx"
-            green " ================================================== "
-            echo
+
+            showHeaderRed "准备卸载已安装的nginx"
+
 
             ${sudoCmd} systemctl stop nginx.service
             ${sudoCmd} systemctl disable nginx.service
@@ -2162,14 +2189,16 @@ function removeNginx(){
             rm -f ${nginxAccessLogFilePath}
             rm -f ${nginxErrorLogFilePath}
             rm -f ${nginxConfigPath}
+            rm -rf ${nginxConfigSiteConfPath}
 
             rm -f ${configReadme}
+
             rm -rf "/etc/nginx"
             
             rm -rf ${configDownloadTempPath}
 
             echo
-            read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
+            read -r -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
             isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
 
             
@@ -2177,20 +2206,16 @@ function removeNginx(){
                 rm -rf ${configWebsiteFatherPath}
                 ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
                 
-                echo
-                green " ================================================== "
-                green "  Nginx 卸载完毕, SSL 证书文件已删除!"
+                showHeaderGreen "Nginx 卸载完毕, SSL 证书文件已删除!"
                 
             else
                 rm -rf ${configWebsitePath}
-                echo
-                green " ================================================== "
-                green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
+
+                showHeaderGreen "Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
             fi
 
-            green " ================================================== "
         else
-            red " 系统没有安装 nginx, 退出卸载"
+            showHeaderRed "系统没有安装 Nginx, 退出卸载"
         fi
         echo
 
@@ -5932,20 +5957,21 @@ EOF
 function removeV2ray(){
 
     echo
-    read -p "是否确认卸载 V2ray 或 Xray? 直接回车默认卸载, 请输入[Y/n]:" isRemoveV2rayServerInput
+    read -r -p "是否确认卸载 V2ray 或 Xray? 直接回车默认卸载, 请输入[Y/n]:" isRemoveV2rayServerInput
     isRemoveV2rayServerInput=${isRemoveV2rayServerInput:-Y}
 
     if [[ "${isRemoveV2rayServerInput}" == [Yy] ]]; then
 
-
         if [[ -f "${configV2rayPath}/xray" || -f "${configV2rayPath}/v2ray" ]]; then
+
+            tempIsXrayService=$(ls ${osSystemMdPath} | grep v2ray- )
 
             if [ -f "${configV2rayPath}/xray" ]; then
                 promptInfoXrayName="xray"
                 isXray="yes"
+                tempIsXrayService=$(ls ${osSystemMdPath} | grep xray- )
             fi
 
-            tempIsXrayService=$(ls ${osSystemMdPath} | grep xray- )
             if [[ -z "${tempIsXrayService}" ]]; then
                 promptInfoXrayNameServiceName=""
 
@@ -5953,17 +5979,14 @@ function removeV2ray(){
                 if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service" ]; then
                     promptInfoXrayNameServiceName="-jin"
                 else
-                    tempFilelist=$(ls /usr/lib/systemd/system | grep xray | awk -F '-' '{ print $2 }' )
+                    tempFilelist=$(ls /usr/lib/systemd/system | grep ${promptInfoXrayName} | awk -F '-' '{ print $2 }' )
                     promptInfoXrayNameServiceName="-${tempFilelist%.*}"
                 fi
             fi
 
 
-            echo
-            green " ================================================== "
-            red " 准备卸载已安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName} "
-            green " ================================================== "
-            echo
+            showHeaderRed "准备卸载已安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName} "
+
 
             ${sudoCmd} systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
             ${sudoCmd} systemctl disable ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
@@ -5976,13 +5999,11 @@ function removeV2ray(){
 
             crontab -l | grep -v "${promptInfoXrayName}${promptInfoXrayNameServiceName}" | crontab -
 
-            echo
-            green " ================================================== "
-            green "  ${promptInfoXrayName}${promptInfoXrayNameServiceName} 卸载完毕 !"
-            green " ================================================== "
+
+            showHeaderGreen " ${promptInfoXrayName}${promptInfoXrayNameServiceName} 卸载完毕 !"
             
         else
-            red " 系统没有安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName}, 退出卸载"
+            showHeaderRed " 系统没有安装 ${promptInfoXrayName}${promptInfoXrayNameServiceName}, 退出卸载"
         fi
         echo
 

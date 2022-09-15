@@ -29,6 +29,45 @@ bold(){
 }
 
 
+
+function showHeaderGreen(){
+    echo
+    green " =================================================="
+
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
+
+    green " =================================================="
+    echo
+}
+function showHeaderRed(){
+    echo
+    green " =================================================="
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
+    green " =================================================="
+    echo
+}
+function showInfoGreen(){
+    echo
+    for parameter in "$@"
+    do
+        if [[ -n "${parameter}" ]]; then
+            green " ${parameter}"
+        fi
+    done
+    echo
+}
+
+
 function promptContinueOpeartion(){
 	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
 	isContinueInput=${isContinueInput:-Y}
@@ -741,42 +780,6 @@ function removeCasaOS(){
 
 
 
-function showHeaderGreen(){
-    echo
-    green " =================================================="
-
-    for parameter in "$@"
-    do
-        if [[ -n "${parameter}" ]]; then
-            green " ${parameter}"
-        fi
-    done
-
-    green " =================================================="
-    echo
-}
-function showHeaderRed(){
-    echo
-    green " =================================================="
-    for parameter in "$@"
-    do
-        if [[ -n "${parameter}" ]]; then
-            green " ${parameter}"
-        fi
-    done
-    green " =================================================="
-    echo
-}
-function showInfoGreen(){
-    echo
-    for parameter in "$@"
-    do
-        if [[ -n "${parameter}" ]]; then
-            green " ${parameter}"
-        fi
-    done
-    echo
-}
 
 
 
@@ -1911,9 +1914,7 @@ function installWebServerNginx(){
     echo
 
     if test -s ${nginxConfigPath}; then
-        green " ================================================== "
-        red "     Nginx 已存在, 是否退出安装?"
-        green " ================================================== "
+        showHeaderRed "Nginx 已存在, 是否退出安装?"
         promptContinueOpeartion
 
         ${sudoCmd} systemctl stop nginx.service
@@ -2313,7 +2314,7 @@ http {
     sendfile        on;
     #tcp_nopush     on;
     keepalive_timeout  120;
-    client_max_body_size 10m;
+    client_max_body_size 20m;
     gzip  on;
     proxy_temp_path ${nginxProxyTempPath} 1 2;
     client_body_temp_path ${nginxTempPath}/client_body 1 2;
@@ -2322,7 +2323,6 @@ http {
     
     include ${nginxConfigSiteConfPath}/*.conf; 
 }
-
 
 EOF
 
@@ -2388,17 +2388,15 @@ EOF
 function removeNginx(){
 
     echo
-    read -p "是否确认卸载Nginx? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNginxServerInput
+    read -r -p "是否确认卸载Nginx? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNginxServerInput
     isRemoveNginxServerInput=${isRemoveNginxServerInput:-Y}
 
     if [[ "${isRemoveNginxServerInput}" == [Yy] ]]; then
 
         echo
         if [[ -f "${nginxConfigPath}" ]]; then
-            green " ================================================== "
-            red " 准备卸载已安装的nginx"
-            green " ================================================== "
-            echo
+        
+            showHeaderRed "准备卸载已安装的nginx"
 
             ${sudoCmd} systemctl stop nginx.service
             ${sudoCmd} systemctl disable nginx.service
@@ -2407,7 +2405,12 @@ function removeNginx(){
                 yum remove -y nginx-mod-stream
                 yum remove -y nginx
             else
+                apt autoremove -y
+                apt-get remove --purge -y nginx-common
+                apt-get remove --purge -y nginx-core
                 apt-get remove --purge -y libnginx-mod-stream
+                apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+
                 apt autoremove -y --purge nginx nginx-common nginx-core
                 apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
             fi
@@ -2416,13 +2419,14 @@ function removeNginx(){
             rm -f ${nginxAccessLogFilePath}
             rm -f ${nginxErrorLogFilePath}
             rm -f ${nginxConfigPath}
+            rm -rf ${nginxConfigSiteConfPath}
 
             rm -rf "/etc/nginx"
             
             rm -rf ${configDownloadTempPath}
 
             echo
-            read -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
+            read -r -p "是否删除证书 和 卸载acme.sh申请证书工具, 由于一天内申请证书有次数限制, 默认建议不删除证书,  请输入[y/N]:" isDomainSSLRemoveInput
             isDomainSSLRemoveInput=${isDomainSSLRemoveInput:-n}
 
             
@@ -2430,20 +2434,15 @@ function removeNginx(){
                 rm -rf ${configWebsiteFatherPath}
                 ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
                 
-                echo
-                green " ================================================== "
-                green "  Nginx 卸载完毕, SSL 证书文件已删除!"
-                
+                showHeaderGreen "Nginx 卸载完毕, SSL 证书文件已删除!"
+
             else
                 rm -rf ${configWebsitePath}
-                echo
-                green " ================================================== "
-                green "  Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
+                showHeaderGreen "Nginx 卸载完毕, 已保留 SSL 证书文件 到 ${configSSLCertPath} "
             fi
 
-            green " ================================================== "
         else
-            red " 系统没有安装 nginx, 退出卸载"
+            showHeaderRed "系统没有安装 Nginx, 退出卸载"
         fi
         echo
 
