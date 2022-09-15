@@ -5266,8 +5266,10 @@ EOF
 
 
 
-
-
+    systemmdServiceFixV2ray5="run"
+    if [[ $versionV2ray == "4.45.2" ]]; then
+        systemmdServiceFixV2ray5=""
+    fi
 
 
 
@@ -5289,7 +5291,7 @@ User=root
 #User=nobody
 #CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
-ExecStart=${configV2rayPath}/v2ray -config ${configV2rayPath}/config.json
+ExecStart=${configV2rayPath}/v2ray ${systemmdServiceFixV2ray5} -config ${configV2rayPath}/config.json
 Restart=on-failure
 RestartPreventExitStatus=23
 
@@ -5664,7 +5666,7 @@ ${v2rayVlessLinkQR1}
 }
 
 导入链接 Vless 格式:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_tls
 
 EOF
 
@@ -5708,7 +5710,7 @@ ${v2rayVlessLinkQR1}
 }
 
 导入链接 Vless 格式:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_tls
 
 
 =========== ${promptInfoXrayInstall}客户端 VLess-gRPC-TLS 配置参数 支持CDN =============
@@ -5727,7 +5729,7 @@ vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo
 }
 
 导入链接 Vless 格式:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=tls&type=grpc&serviceName=${configV2rayGRPCServiceName}&host=${configSSLDomain}#${configSSLDomain}+gRPC_tls
 
 EOF
 
@@ -5770,7 +5772,7 @@ ${v2rayVlessLinkQR1}
 }
 
 导入链接:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_tls
 
 
 =========== Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayPort
@@ -5833,7 +5835,7 @@ ${v2rayVlessLinkQR1}
 }
 
 导入链接:
-vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_protocol
+vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryption=none&security=tls&type=ws&host=${configSSLDomain}&path=%2f${configV2rayWebSocketPath}#${configSSLDomain}+ws_tls
 
 
 =========== Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: $configV2rayTrojanPort
@@ -6011,12 +6013,15 @@ function removeV2ray(){
 function upgradeV2ray(){
 
     if [[ -f "${configV2rayPath}/xray" || -f "${configV2rayPath}/v2ray" ]]; then
+
+        tempIsXrayService=$(ls ${osSystemMdPath} | grep v2ray- )
+
         if [ -f "${configV2rayPath}/xray" ]; then
             promptInfoXrayName="xray"
             isXray="yes"
+            tempIsXrayService=$(ls ${osSystemMdPath} | grep xray- )
         fi
 
-        tempIsXrayService=$(ls ${osSystemMdPath} | grep xray- )
         if [[ -z "${tempIsXrayService}" ]]; then
             promptInfoXrayNameServiceName=""
 
@@ -6024,12 +6029,12 @@ function upgradeV2ray(){
             if [ -f "${osSystemMdPath}${promptInfoXrayName}-jin.service" ]; then
                 promptInfoXrayNameServiceName="-jin"
             else
-                tempFilelist=$(ls ${osSystemMdPath} | grep xray | awk -F '-' '{ print $2 }' )
+                tempFilelist=$(ls /usr/lib/systemd/system | grep ${promptInfoXrayName} | awk -F '-' '{ print $2 }' )
                 promptInfoXrayNameServiceName="-${tempFilelist%.*}"
             fi
         fi
-        
 
+        
         if [ "$isXray" = "no" ] ; then
             getTrojanAndV2rayVersion "v2ray"
             green " =================================================="
@@ -6058,6 +6063,18 @@ function upgradeV2ray(){
         mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
 
         ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
+
+        systemmdServiceFixV2ray5="run"
+        if [[ $versionV2ray == "4.45.2" ]]; then
+            systemmdServiceFixV2ray5=""
+            sed -i 's/run -config/-config/g' ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+        else
+            sed -i 's/run -config/-config/g' ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+            sed -i 's/-config/run -config/g' ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
+        fi
+
+        
+        ${sudoCmd} systemctl daemon-reload
         ${sudoCmd} systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service
 
 
