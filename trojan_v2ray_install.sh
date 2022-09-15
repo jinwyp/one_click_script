@@ -2021,10 +2021,8 @@ EOF
     fi
 
 
-    if test -s ${nginxConfigPath}; then
-        echo
-    else
-        cat > "${nginxConfigPath}" <<-EOF
+
+    cat > "${nginxConfigPath}" <<-EOF
 
 ${nginxConfigNginxModuleInput}
 
@@ -2037,8 +2035,6 @@ pid        /var/run/nginx.pid;
 events {
     worker_connections  1024;
 }
-
-
 
 
 ${nginxConfigStreamConfigInput}
@@ -2065,7 +2061,7 @@ http {
 
 EOF
 
-    fi
+
 
 
 

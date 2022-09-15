@@ -2283,10 +2283,8 @@ EOF
     fi
 
 
-    if test -s ${nginxConfigPath}; then
-        echo
-    else
-        cat > "${nginxConfigPath}" <<-EOF
+
+    cat > "${nginxConfigPath}" <<-EOF
 
 include /etc/nginx/modules-enabled/*.conf;
 
@@ -2326,7 +2324,6 @@ http {
 
 EOF
 
-    fi
 
 
 
