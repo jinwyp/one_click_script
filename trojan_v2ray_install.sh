@@ -2586,7 +2586,7 @@ function installTrojanServer(){
         echo
         green " =================================================="
         green " 请选择安装 trojan-go 还是 原版trojan, 选Y为安装trojan-go, 选N为安装原版trojan"
-        read -p "请选择安装trojan-go 还是 原版trojan? 直接回车默认为trojan-go, 请输入[Y/n]:" isInstallTrojanTypeInput
+        read -r -p "请选择安装trojan-go 还是 原版trojan? 直接回车默认为trojan-go, 请输入[Y/n]:" isInstallTrojanTypeInput
         isInstallTrojanTypeInput=${isInstallTrojanTypeInput:-Y}
 
         if [[ "${isInstallTrojanTypeInput}" == [Yy] ]]; then
@@ -2617,7 +2617,7 @@ function installTrojanServer(){
     echo
     yellow " 请输入 trojan${promptInfoTrojanName} 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     
-    read -p "请输入密码的前缀, 直接回车默认随机生成前缀:" configTrojanPasswordPrefixInput
+    read -r -p "请输入密码的前缀, 直接回车默认随机生成前缀:" configTrojanPasswordPrefixInput
     configTrojanPasswordPrefixInput=${configTrojanPasswordPrefixInput:-${configTrojanPasswordPrefixInputDefault}}
 
 
@@ -2639,7 +2639,7 @@ function installTrojanServer(){
 
     rm -rf "${configTrojanBasePath}"
     mkdir -p "${configTrojanBasePath}"
-    cd ${configTrojanBasePath}
+    cd "${configTrojanBasePath}" || exit
 
 
     downloadTrojanBin
@@ -2656,26 +2656,16 @@ function installTrojanServer(){
         "${trojanPassword8}",
         "${trojanPassword9}",
         "${trojanPassword10}",
-        "${configTrojanPasswordPrefixInput}202001",
-        "${configTrojanPasswordPrefixInput}202002",
-        "${configTrojanPasswordPrefixInput}202003",
-        "${configTrojanPasswordPrefixInput}202004",
-        "${configTrojanPasswordPrefixInput}202005",
-        "${configTrojanPasswordPrefixInput}202006",
-        "${configTrojanPasswordPrefixInput}202007",
-        "${configTrojanPasswordPrefixInput}202008",
-        "${configTrojanPasswordPrefixInput}202009",
-        "${configTrojanPasswordPrefixInput}202010",
-        "${configTrojanPasswordPrefixInput}202011",
-        "${configTrojanPasswordPrefixInput}202012",
-        "${configTrojanPasswordPrefixInput}202013",
-        "${configTrojanPasswordPrefixInput}202014",
-        "${configTrojanPasswordPrefixInput}202015",
-        "${configTrojanPasswordPrefixInput}202016",
-        "${configTrojanPasswordPrefixInput}202017",
-        "${configTrojanPasswordPrefixInput}202018",
-        "${configTrojanPasswordPrefixInput}202019",
-        "${configTrojanPasswordPrefixInput}202020"
+        "${configTrojanPasswordPrefixInput}202201",
+        "${configTrojanPasswordPrefixInput}202202",
+        "${configTrojanPasswordPrefixInput}202203",
+        "${configTrojanPasswordPrefixInput}202204",
+        "${configTrojanPasswordPrefixInput}202205",
+        "${configTrojanPasswordPrefixInput}202206",
+        "${configTrojanPasswordPrefixInput}202207",
+        "${configTrojanPasswordPrefixInput}202208",
+        "${configTrojanPasswordPrefixInput}202209",
+        "${configTrojanPasswordPrefixInput}202210"
 EOM
 
     else
@@ -2691,106 +2681,106 @@ EOM
         "${trojanPassword8}",
         "${trojanPassword9}",
         "${trojanPassword10}",
-        "${configTrojanPasswordPrefixInput}202000",
-        "${configTrojanPasswordPrefixInput}202001",
-        "${configTrojanPasswordPrefixInput}202002",
-        "${configTrojanPasswordPrefixInput}202003",
-        "${configTrojanPasswordPrefixInput}202004",
-        "${configTrojanPasswordPrefixInput}202005",
-        "${configTrojanPasswordPrefixInput}202006",
-        "${configTrojanPasswordPrefixInput}202007",
-        "${configTrojanPasswordPrefixInput}202008",
-        "${configTrojanPasswordPrefixInput}202009",
-        "${configTrojanPasswordPrefixInput}202010",
-        "${configTrojanPasswordPrefixInput}202011",
-        "${configTrojanPasswordPrefixInput}202012",
-        "${configTrojanPasswordPrefixInput}202013",
-        "${configTrojanPasswordPrefixInput}202014",
-        "${configTrojanPasswordPrefixInput}202015",
-        "${configTrojanPasswordPrefixInput}202016",
-        "${configTrojanPasswordPrefixInput}202017",
-        "${configTrojanPasswordPrefixInput}202018",
-        "${configTrojanPasswordPrefixInput}202019",
-        "${configTrojanPasswordPrefixInput}202020",
-        "${configTrojanPasswordPrefixInput}202021",
-        "${configTrojanPasswordPrefixInput}202022",
-        "${configTrojanPasswordPrefixInput}202023",
-        "${configTrojanPasswordPrefixInput}202024",
-        "${configTrojanPasswordPrefixInput}202025",
-        "${configTrojanPasswordPrefixInput}202026",
-        "${configTrojanPasswordPrefixInput}202027",
-        "${configTrojanPasswordPrefixInput}202028",
-        "${configTrojanPasswordPrefixInput}202029",
-        "${configTrojanPasswordPrefixInput}202030",
-        "${configTrojanPasswordPrefixInput}202031",
-        "${configTrojanPasswordPrefixInput}202032",
-        "${configTrojanPasswordPrefixInput}202033",
-        "${configTrojanPasswordPrefixInput}202034",
-        "${configTrojanPasswordPrefixInput}202035",
-        "${configTrojanPasswordPrefixInput}202036",
-        "${configTrojanPasswordPrefixInput}202037",
-        "${configTrojanPasswordPrefixInput}202038",
-        "${configTrojanPasswordPrefixInput}202039",
-        "${configTrojanPasswordPrefixInput}202040",
-        "${configTrojanPasswordPrefixInput}202041",
-        "${configTrojanPasswordPrefixInput}202042",
-        "${configTrojanPasswordPrefixInput}202043",
-        "${configTrojanPasswordPrefixInput}202044",
-        "${configTrojanPasswordPrefixInput}202045",
-        "${configTrojanPasswordPrefixInput}202046",
-        "${configTrojanPasswordPrefixInput}202047",
-        "${configTrojanPasswordPrefixInput}202048",
-        "${configTrojanPasswordPrefixInput}202049",
-        "${configTrojanPasswordPrefixInput}202050",
-        "${configTrojanPasswordPrefixInput}202051",
-        "${configTrojanPasswordPrefixInput}202052",
-        "${configTrojanPasswordPrefixInput}202053",
-        "${configTrojanPasswordPrefixInput}202054",
-        "${configTrojanPasswordPrefixInput}202055",
-        "${configTrojanPasswordPrefixInput}202056",
-        "${configTrojanPasswordPrefixInput}202057",
-        "${configTrojanPasswordPrefixInput}202058",
-        "${configTrojanPasswordPrefixInput}202059",
-        "${configTrojanPasswordPrefixInput}202060",
-        "${configTrojanPasswordPrefixInput}202061",
-        "${configTrojanPasswordPrefixInput}202062",
-        "${configTrojanPasswordPrefixInput}202063",
-        "${configTrojanPasswordPrefixInput}202064",
-        "${configTrojanPasswordPrefixInput}202065",
-        "${configTrojanPasswordPrefixInput}202066",
-        "${configTrojanPasswordPrefixInput}202067",
-        "${configTrojanPasswordPrefixInput}202068",
-        "${configTrojanPasswordPrefixInput}202069",
-        "${configTrojanPasswordPrefixInput}202070",
-        "${configTrojanPasswordPrefixInput}202071",
-        "${configTrojanPasswordPrefixInput}202072",
-        "${configTrojanPasswordPrefixInput}202073",
-        "${configTrojanPasswordPrefixInput}202074",
-        "${configTrojanPasswordPrefixInput}202075",
-        "${configTrojanPasswordPrefixInput}202076",
-        "${configTrojanPasswordPrefixInput}202077",
-        "${configTrojanPasswordPrefixInput}202078",
-        "${configTrojanPasswordPrefixInput}202079",
-        "${configTrojanPasswordPrefixInput}202080",
-        "${configTrojanPasswordPrefixInput}202081",
-        "${configTrojanPasswordPrefixInput}202082",
-        "${configTrojanPasswordPrefixInput}202083",
-        "${configTrojanPasswordPrefixInput}202084",
-        "${configTrojanPasswordPrefixInput}202085",
-        "${configTrojanPasswordPrefixInput}202086",
-        "${configTrojanPasswordPrefixInput}202087",
-        "${configTrojanPasswordPrefixInput}202088",
-        "${configTrojanPasswordPrefixInput}202089",
-        "${configTrojanPasswordPrefixInput}202090",
-        "${configTrojanPasswordPrefixInput}202091",
-        "${configTrojanPasswordPrefixInput}202092",
-        "${configTrojanPasswordPrefixInput}202093",
-        "${configTrojanPasswordPrefixInput}202094",
-        "${configTrojanPasswordPrefixInput}202095",
-        "${configTrojanPasswordPrefixInput}202096",
-        "${configTrojanPasswordPrefixInput}202097",
-        "${configTrojanPasswordPrefixInput}202098",
-        "${configTrojanPasswordPrefixInput}202099"
+        "${configTrojanPasswordPrefixInput}202200",
+        "${configTrojanPasswordPrefixInput}202201",
+        "${configTrojanPasswordPrefixInput}202202",
+        "${configTrojanPasswordPrefixInput}202203",
+        "${configTrojanPasswordPrefixInput}202204",
+        "${configTrojanPasswordPrefixInput}202205",
+        "${configTrojanPasswordPrefixInput}202206",
+        "${configTrojanPasswordPrefixInput}202207",
+        "${configTrojanPasswordPrefixInput}202208",
+        "${configTrojanPasswordPrefixInput}202209",
+        "${configTrojanPasswordPrefixInput}202210",
+        "${configTrojanPasswordPrefixInput}202211",
+        "${configTrojanPasswordPrefixInput}202212",
+        "${configTrojanPasswordPrefixInput}202213",
+        "${configTrojanPasswordPrefixInput}202214",
+        "${configTrojanPasswordPrefixInput}202215",
+        "${configTrojanPasswordPrefixInput}202216",
+        "${configTrojanPasswordPrefixInput}202217",
+        "${configTrojanPasswordPrefixInput}202218",
+        "${configTrojanPasswordPrefixInput}202219",
+        "${configTrojanPasswordPrefixInput}202220",
+        "${configTrojanPasswordPrefixInput}202221",
+        "${configTrojanPasswordPrefixInput}202222",
+        "${configTrojanPasswordPrefixInput}202223",
+        "${configTrojanPasswordPrefixInput}202224",
+        "${configTrojanPasswordPrefixInput}202225",
+        "${configTrojanPasswordPrefixInput}202226",
+        "${configTrojanPasswordPrefixInput}202227",
+        "${configTrojanPasswordPrefixInput}202228",
+        "${configTrojanPasswordPrefixInput}202229",
+        "${configTrojanPasswordPrefixInput}202230",
+        "${configTrojanPasswordPrefixInput}202231",
+        "${configTrojanPasswordPrefixInput}202232",
+        "${configTrojanPasswordPrefixInput}202233",
+        "${configTrojanPasswordPrefixInput}202234",
+        "${configTrojanPasswordPrefixInput}202235",
+        "${configTrojanPasswordPrefixInput}202236",
+        "${configTrojanPasswordPrefixInput}202237",
+        "${configTrojanPasswordPrefixInput}202238",
+        "${configTrojanPasswordPrefixInput}202239",
+        "${configTrojanPasswordPrefixInput}202240",
+        "${configTrojanPasswordPrefixInput}202241",
+        "${configTrojanPasswordPrefixInput}202242",
+        "${configTrojanPasswordPrefixInput}202243",
+        "${configTrojanPasswordPrefixInput}202244",
+        "${configTrojanPasswordPrefixInput}202245",
+        "${configTrojanPasswordPrefixInput}202246",
+        "${configTrojanPasswordPrefixInput}202247",
+        "${configTrojanPasswordPrefixInput}202248",
+        "${configTrojanPasswordPrefixInput}202249",
+        "${configTrojanPasswordPrefixInput}202250",
+        "${configTrojanPasswordPrefixInput}202251",
+        "${configTrojanPasswordPrefixInput}202252",
+        "${configTrojanPasswordPrefixInput}202253",
+        "${configTrojanPasswordPrefixInput}202254",
+        "${configTrojanPasswordPrefixInput}202255",
+        "${configTrojanPasswordPrefixInput}202256",
+        "${configTrojanPasswordPrefixInput}202257",
+        "${configTrojanPasswordPrefixInput}202258",
+        "${configTrojanPasswordPrefixInput}202259",
+        "${configTrojanPasswordPrefixInput}202260",
+        "${configTrojanPasswordPrefixInput}202261",
+        "${configTrojanPasswordPrefixInput}202262",
+        "${configTrojanPasswordPrefixInput}202263",
+        "${configTrojanPasswordPrefixInput}202264",
+        "${configTrojanPasswordPrefixInput}202265",
+        "${configTrojanPasswordPrefixInput}202266",
+        "${configTrojanPasswordPrefixInput}202267",
+        "${configTrojanPasswordPrefixInput}202268",
+        "${configTrojanPasswordPrefixInput}202269",
+        "${configTrojanPasswordPrefixInput}202270",
+        "${configTrojanPasswordPrefixInput}202271",
+        "${configTrojanPasswordPrefixInput}202272",
+        "${configTrojanPasswordPrefixInput}202273",
+        "${configTrojanPasswordPrefixInput}202274",
+        "${configTrojanPasswordPrefixInput}202275",
+        "${configTrojanPasswordPrefixInput}202276",
+        "${configTrojanPasswordPrefixInput}202277",
+        "${configTrojanPasswordPrefixInput}202278",
+        "${configTrojanPasswordPrefixInput}202279",
+        "${configTrojanPasswordPrefixInput}202280",
+        "${configTrojanPasswordPrefixInput}202281",
+        "${configTrojanPasswordPrefixInput}202282",
+        "${configTrojanPasswordPrefixInput}202283",
+        "${configTrojanPasswordPrefixInput}202284",
+        "${configTrojanPasswordPrefixInput}202285",
+        "${configTrojanPasswordPrefixInput}202286",
+        "${configTrojanPasswordPrefixInput}202287",
+        "${configTrojanPasswordPrefixInput}202288",
+        "${configTrojanPasswordPrefixInput}202289",
+        "${configTrojanPasswordPrefixInput}202290",
+        "${configTrojanPasswordPrefixInput}202291",
+        "${configTrojanPasswordPrefixInput}202292",
+        "${configTrojanPasswordPrefixInput}202293",
+        "${configTrojanPasswordPrefixInput}202294",
+        "${configTrojanPasswordPrefixInput}202295",
+        "${configTrojanPasswordPrefixInput}202296",
+        "${configTrojanPasswordPrefixInput}202297",
+        "${configTrojanPasswordPrefixInput}202298",
+        "${configTrojanPasswordPrefixInput}202299"
 EOM
 
     fi
@@ -3031,12 +3021,12 @@ EOF
 	yellow "密码9: ${trojanPassword9}"
 	yellow "密码10: ${trojanPassword10}"
 
-    tempTextInfoTrojanPassword="您指定前缀的密码共100个: 从 ${configTrojanPasswordPrefixInput}202000 到 ${configTrojanPasswordPrefixInput}202099 都可以使用"
+    tempTextInfoTrojanPassword="您指定前缀的密码共100个: 从 ${configTrojanPasswordPrefixInput}202200 到 ${configTrojanPasswordPrefixInput}202299 都可以使用"
     if [ "${isTrojanMultiPassword}" = "no" ] ; then
-        tempTextInfoTrojanPassword="您指定前缀的密码共20个: 从 ${configTrojanPasswordPrefixInput}202001 到 ${configTrojanPasswordPrefixInput}202020 都可以使用"
+        tempTextInfoTrojanPassword="您指定前缀的密码共10个: 从 ${configTrojanPasswordPrefixInput}202201 到 ${configTrojanPasswordPrefixInput}202220 都可以使用"
     fi
 	yellow "${tempTextInfoTrojanPassword}" 
-	yellow "例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用"
+	yellow "例如: 密码:${configTrojanPasswordPrefixInput}202202 或 密码:${configTrojanPasswordPrefixInput}202209 都可以使用"
 
     if [[ ${isTrojanGoSupportWebsocket} == "true" ]]; then
         yellow "Websocket path 路径为: /${configTrojanGoWebSocketPath}"
@@ -3145,7 +3135,7 @@ Trojan${promptInfoTrojanName}服务器地址: ${configSSLDomain}  端口: ${conf
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
 ${tempTextInfoTrojanPassword}
-例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用
+例如: 密码:${configTrojanPasswordPrefixInput}202202 或 密码:${configTrojanPasswordPrefixInput}202209 都可以使用
 
 如果是trojan-go开启了Websocket，那么Websocket path 路径为: /${configTrojanGoWebSocketPath}
 
@@ -4356,8 +4346,8 @@ EOM
     echo
 
 
-    mkdir -p ${configV2rayPath}
-    cd ${configV2rayPath}
+    mkdir -p "${configV2rayPath}"
+    cd "${configV2rayPath}" || exit
     rm -rf ${configV2rayPath}/*
 
     downloadV2rayXrayBin
@@ -4385,500 +4375,173 @@ EOM
 
     if [ "${isTrojanMultiPassword}" = "no" ] ; then
     read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
-                    {
-                        "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword2}", "level": 0, "email": "password112@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword3}", "level": 0, "email": "password113@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword4}", "level": 0, "email": "password114@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword5}", "level": 0, "email": "password115@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword6}", "level": 0, "email": "password116@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword7}", "level": 0, "email": "password117@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword8}", "level": 0, "email": "password118@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword9}", "level": 0, "email": "password119@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword10}", "level": 0, "email": "password120@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202001", "level": 0, "email": "password201@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202002", "level": 0, "email": "password202@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202003", "level": 0, "email": "password203@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202004", "level": 0, "email": "password204@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202005", "level": 0, "email": "password205@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202006", "level": 0, "email": "password206@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202007", "level": 0, "email": "password207@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202008", "level": 0, "email": "password208@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202009", "level": 0, "email": "password209@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202010", "level": 0, "email": "password210@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202011", "level": 0, "email": "password211@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202012", "level": 0, "email": "password212@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202013", "level": 0, "email": "password213@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202014", "level": 0, "email": "password214@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202015", "level": 0, "email": "password215@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202016", "level": 0, "email": "password216@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202017", "level": 0, "email": "password217@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202018", "level": 0, "email": "password218@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202019", "level": 0, "email": "password219@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202020", "level": 0, "email": "password220@gmail.com"
-                    }
+                    { "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com" },
+                    { "password": "${trojanPassword2}", "level": 0, "email": "password112@gmail.com" },
+                    { "password": "${trojanPassword3}", "level": 0, "email": "password113@gmail.com" },
+                    { "password": "${trojanPassword4}", "level": 0, "email": "password114@gmail.com" },
+                    { "password": "${trojanPassword5}", "level": 0, "email": "password115@gmail.com" },
+                    { "password": "${trojanPassword6}", "level": 0, "email": "password116@gmail.com" },
+                    { "password": "${trojanPassword7}", "level": 0, "email": "password117@gmail.com" },
+                    { "password": "${trojanPassword8}", "level": 0, "email": "password118@gmail.com" },
+                    { "password": "${trojanPassword9}", "level": 0, "email": "password119@gmail.com" },
+                    { "password": "${trojanPassword10}", "level": 0, "email": "password120@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202201", "level": 0, "email": "password201@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202202", "level": 0, "email": "password202@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202203", "level": 0, "email": "password203@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202204", "level": 0, "email": "password204@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202205", "level": 0, "email": "password205@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202206", "level": 0, "email": "password206@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202207", "level": 0, "email": "password207@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202208", "level": 0, "email": "password208@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202209", "level": 0, "email": "password209@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202210", "level": 0, "email": "password210@gmail.com" }
+
 EOM
     else
 
     read -r -d '' v2rayConfigUserpasswordTrojanInput << EOM
-                    {
-                        "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword2}", "level": 0, "email": "password112@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword3}", "level": 0, "email": "password113@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword4}", "level": 0, "email": "password114@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword5}", "level": 0, "email": "password115@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword6}", "level": 0, "email": "password116@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword7}", "level": 0, "email": "password117@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword8}", "level": 0, "email": "password118@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword9}", "level": 0, "email": "password119@gmail.com"
-                    },
-                    {
-                        "password": "${trojanPassword10}", "level": 0, "email": "password120@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202000", "level": 0, "email": "password200@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202001", "level": 0, "email": "password201@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202002", "level": 0, "email": "password202@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202003", "level": 0, "email": "password203@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202004", "level": 0, "email": "password204@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202005", "level": 0, "email": "password205@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202006", "level": 0, "email": "password206@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202007", "level": 0, "email": "password207@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202008", "level": 0, "email": "password208@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202009", "level": 0, "email": "password209@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202010", "level": 0, "email": "password210@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202011", "level": 0, "email": "password211@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202012", "level": 0, "email": "password212@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202013", "level": 0, "email": "password213@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202014", "level": 0, "email": "password214@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202015", "level": 0, "email": "password215@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202016", "level": 0, "email": "password216@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202017", "level": 0, "email": "password217@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202018", "level": 0, "email": "password218@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202019", "level": 0, "email": "password219@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202020", "level": 0, "email": "password220@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202021", "level": 0, "email": "password221@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202022", "level": 0, "email": "password222@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202023", "level": 0, "email": "password223@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202024", "level": 0, "email": "password224@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202025", "level": 0, "email": "password225@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202026", "level": 0, "email": "password226@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202027", "level": 0, "email": "password227@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202028", "level": 0, "email": "password228@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202029", "level": 0, "email": "password229@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202030", "level": 0, "email": "password230@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202031", "level": 0, "email": "password231@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202032", "level": 0, "email": "password232@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202033", "level": 0, "email": "password233@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202034", "level": 0, "email": "password234@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202035", "level": 0, "email": "password235@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202036", "level": 0, "email": "password236@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202037", "level": 0, "email": "password237@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202038", "level": 0, "email": "password238@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202039", "level": 0, "email": "password239@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202040", "level": 0, "email": "password240@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202041", "level": 0, "email": "password241@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202042", "level": 0, "email": "password242@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202043", "level": 0, "email": "password243@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202044", "level": 0, "email": "password244@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202045", "level": 0, "email": "password245@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202046", "level": 0, "email": "password246@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202047", "level": 0, "email": "password247@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202048", "level": 0, "email": "password248@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202049", "level": 0, "email": "password249@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202050", "level": 0, "email": "password250@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202051", "level": 0, "email": "password251@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202052", "level": 0, "email": "password252@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202053", "level": 0, "email": "password253@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202054", "level": 0, "email": "password254@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202055", "level": 0, "email": "password255@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202056", "level": 0, "email": "password256@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202057", "level": 0, "email": "password257@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202058", "level": 0, "email": "password258@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202059", "level": 0, "email": "password259@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202060", "level": 0, "email": "password260@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202061", "level": 0, "email": "password261@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202062", "level": 0, "email": "password262@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202063", "level": 0, "email": "password263@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202064", "level": 0, "email": "password264@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202065", "level": 0, "email": "password265@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202066", "level": 0, "email": "password266@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202067", "level": 0, "email": "password267@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202068", "level": 0, "email": "password268@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202069", "level": 0, "email": "password269@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202070", "level": 0, "email": "password270@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202071", "level": 0, "email": "password271@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202072", "level": 0, "email": "password272@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202073", "level": 0, "email": "password273@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202074", "level": 0, "email": "password274@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202075", "level": 0, "email": "password275@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202076", "level": 0, "email": "password276@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202077", "level": 0, "email": "password277@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202078", "level": 0, "email": "password278@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202079", "level": 0, "email": "password279@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202080", "level": 0, "email": "password280@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202081", "level": 0, "email": "password281@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202082", "level": 0, "email": "password282@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202083", "level": 0, "email": "password283@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202084", "level": 0, "email": "password284@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202085", "level": 0, "email": "password285@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202086", "level": 0, "email": "password286@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202087", "level": 0, "email": "password287@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202088", "level": 0, "email": "password288@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202089", "level": 0, "email": "password289@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202090", "level": 0, "email": "password290@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202091", "level": 0, "email": "password291@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202092", "level": 0, "email": "password292@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202093", "level": 0, "email": "password293@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202094", "level": 0, "email": "password294@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202095", "level": 0, "email": "password295@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202096", "level": 0, "email": "password296@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202097", "level": 0, "email": "password297@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202098", "level": 0, "email": "password298@gmail.com"
-                    },
-                    {
-                        "password": "${configTrojanPasswordPrefixInput}202099", "level": 0, "email": "password299@gmail.com"
-                    }
+                    { "password": "${trojanPassword1}", "level": 0, "email": "password111@gmail.com" },
+                    { "password": "${trojanPassword2}", "level": 0, "email": "password112@gmail.com" },
+                    { "password": "${trojanPassword3}", "level": 0, "email": "password113@gmail.com" },
+                    { "password": "${trojanPassword4}", "level": 0, "email": "password114@gmail.com" },
+                    { "password": "${trojanPassword5}", "level": 0, "email": "password115@gmail.com" },
+                    { "password": "${trojanPassword6}", "level": 0, "email": "password116@gmail.com" },
+                    { "password": "${trojanPassword7}", "level": 0, "email": "password117@gmail.com" },
+                    { "password": "${trojanPassword8}", "level": 0, "email": "password118@gmail.com" },
+                    { "password": "${trojanPassword9}", "level": 0, "email": "password119@gmail.com" },
+                    { "password": "${trojanPassword10}", "level": 0, "email": "password120@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202200", "level": 0, "email": "password200@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202201", "level": 0, "email": "password201@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202202", "level": 0, "email": "password202@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202203", "level": 0, "email": "password203@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202204", "level": 0, "email": "password204@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202205", "level": 0, "email": "password205@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202206", "level": 0, "email": "password206@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202207", "level": 0, "email": "password207@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202208", "level": 0, "email": "password208@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202209", "level": 0, "email": "password209@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202210", "level": 0, "email": "password210@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202211", "level": 0, "email": "password211@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202212", "level": 0, "email": "password212@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202213", "level": 0, "email": "password213@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202214", "level": 0, "email": "password214@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202215", "level": 0, "email": "password215@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202216", "level": 0, "email": "password216@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202217", "level": 0, "email": "password217@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202218", "level": 0, "email": "password218@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202219", "level": 0, "email": "password219@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202220", "level": 0, "email": "password220@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202221", "level": 0, "email": "password221@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202222", "level": 0, "email": "password222@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202223", "level": 0, "email": "password223@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202224", "level": 0, "email": "password224@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202225", "level": 0, "email": "password225@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202226", "level": 0, "email": "password226@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202227", "level": 0, "email": "password227@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202228", "level": 0, "email": "password228@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202229", "level": 0, "email": "password229@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202230", "level": 0, "email": "password230@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202231", "level": 0, "email": "password231@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202232", "level": 0, "email": "password232@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202233", "level": 0, "email": "password233@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202234", "level": 0, "email": "password234@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202235", "level": 0, "email": "password235@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202236", "level": 0, "email": "password236@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202237", "level": 0, "email": "password237@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202238", "level": 0, "email": "password238@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202239", "level": 0, "email": "password239@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202240", "level": 0, "email": "password240@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202241", "level": 0, "email": "password241@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202242", "level": 0, "email": "password242@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202243", "level": 0, "email": "password243@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202244", "level": 0, "email": "password244@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202245", "level": 0, "email": "password245@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202246", "level": 0, "email": "password246@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202247", "level": 0, "email": "password247@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202248", "level": 0, "email": "password248@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202249", "level": 0, "email": "password249@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202250", "level": 0, "email": "password250@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202251", "level": 0, "email": "password251@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202252", "level": 0, "email": "password252@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202253", "level": 0, "email": "password253@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202254", "level": 0, "email": "password254@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202255", "level": 0, "email": "password255@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202256", "level": 0, "email": "password256@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202257", "level": 0, "email": "password257@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202258", "level": 0, "email": "password258@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202259", "level": 0, "email": "password259@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202260", "level": 0, "email": "password260@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202261", "level": 0, "email": "password261@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202262", "level": 0, "email": "password262@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202263", "level": 0, "email": "password263@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202264", "level": 0, "email": "password264@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202265", "level": 0, "email": "password265@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202266", "level": 0, "email": "password266@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202267", "level": 0, "email": "password267@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202268", "level": 0, "email": "password268@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202269", "level": 0, "email": "password269@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202270", "level": 0, "email": "password270@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202271", "level": 0, "email": "password271@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202272", "level": 0, "email": "password272@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202273", "level": 0, "email": "password273@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202274", "level": 0, "email": "password274@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202275", "level": 0, "email": "password275@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202276", "level": 0, "email": "password276@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202277", "level": 0, "email": "password277@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202278", "level": 0, "email": "password278@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202279", "level": 0, "email": "password279@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202280", "level": 0, "email": "password280@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202281", "level": 0, "email": "password281@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202282", "level": 0, "email": "password282@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202283", "level": 0, "email": "password283@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202284", "level": 0, "email": "password284@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202285", "level": 0, "email": "password285@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202286", "level": 0, "email": "password286@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202287", "level": 0, "email": "password287@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202288", "level": 0, "email": "password288@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202289", "level": 0, "email": "password289@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202290", "level": 0, "email": "password290@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202291", "level": 0, "email": "password291@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202292", "level": 0, "email": "password292@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202293", "level": 0, "email": "password293@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202294", "level": 0, "email": "password294@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202295", "level": 0, "email": "password295@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202296", "level": 0, "email": "password296@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202297", "level": 0, "email": "password297@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202298", "level": 0, "email": "password298@gmail.com" },
+                    { "password": "${configTrojanPasswordPrefixInput}202299", "level": 0, "email": "password299@gmail.com" }
 
 EOM
     fi
 
     if [[ "${configV2rayIsTlsShowInfo}" == "xtls"  ]]; then
     read -r -d '' v2rayConfigUserpasswordInput << EOM
-                    {
-                        "id": "${v2rayPassword1}", "flow": "xtls-rprx-direct", "level": 0, "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}", "flow": "xtls-rprx-direct", "level": 0, "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}", "flow": "xtls-rprx-direct", "level": 0, "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}", "flow": "xtls-rprx-direct", "level": 0, "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}", "flow": "xtls-rprx-direct", "level": 0, "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}", "flow": "xtls-rprx-direct", "level": 0, "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}", "flow": "xtls-rprx-direct", "level": 0, "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}", "flow": "xtls-rprx-direct", "level": 0, "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}", "flow": "xtls-rprx-direct", "level": 0, "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com"
-                    }
+                    { "id": "${v2rayPassword1}", "flow": "xtls-rprx-direct", "level": 0, "email": "password11@gmail.com" },
+                    { "id": "${v2rayPassword2}", "flow": "xtls-rprx-direct", "level": 0, "email": "password12@gmail.com" },
+                    { "id": "${v2rayPassword3}", "flow": "xtls-rprx-direct", "level": 0, "email": "password13@gmail.com" },
+                    { "id": "${v2rayPassword4}", "flow": "xtls-rprx-direct", "level": 0, "email": "password14@gmail.com" },
+                    { "id": "${v2rayPassword5}", "flow": "xtls-rprx-direct", "level": 0, "email": "password15@gmail.com" },
+                    { "id": "${v2rayPassword6}", "flow": "xtls-rprx-direct", "level": 0, "email": "password16@gmail.com" },
+                    { "id": "${v2rayPassword7}", "flow": "xtls-rprx-direct", "level": 0, "email": "password17@gmail.com" },
+                    { "id": "${v2rayPassword8}", "flow": "xtls-rprx-direct", "level": 0, "email": "password18@gmail.com" },
+                    { "id": "${v2rayPassword9}", "flow": "xtls-rprx-direct", "level": 0, "email": "password19@gmail.com" },
+                    { "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com" }
+
 EOM
 
     else
     read -r -d '' v2rayConfigUserpasswordInput << EOM
-                    {
-                        "id": "${v2rayPassword1}", "level": 0, "email": "password11@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword2}", "level": 0, "email": "password12@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword3}", "level": 0, "email": "password13@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword4}", "level": 0, "email": "password14@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword5}", "level": 0, "email": "password15@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword6}", "level": 0, "email": "password16@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword7}", "level": 0, "email": "password17@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword8}", "level": 0, "email": "password18@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword9}", "level": 0, "email": "password19@gmail.com"
-                    },
-                    {
-                        "id": "${v2rayPassword10}", "level": 0, "email": "password20@gmail.com"
-                    }
+                    { "id": "${v2rayPassword1}", "level": 0, "email": "password11@gmail.com" },
+                    { "id": "${v2rayPassword2}", "level": 0, "email": "password12@gmail.com" },
+                    { "id": "${v2rayPassword3}", "level": 0, "email": "password13@gmail.com" },
+                    { "id": "${v2rayPassword4}", "level": 0, "email": "password14@gmail.com" },
+                    { "id": "${v2rayPassword5}", "level": 0, "email": "password15@gmail.com" },
+                    { "id": "${v2rayPassword6}", "level": 0, "email": "password16@gmail.com" },
+                    { "id": "${v2rayPassword7}", "level": 0, "email": "password17@gmail.com" },
+                    { "id": "${v2rayPassword8}", "level": 0, "email": "password18@gmail.com" },
+                    { "id": "${v2rayPassword9}", "level": 0, "email": "password19@gmail.com" },
+                    { "id": "${v2rayPassword10}", "level": 0, "email": "password20@gmail.com" }
+
 EOM
 
     fi
@@ -6101,8 +5764,8 @@ vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryp
 密码8: ${trojanPassword8}
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
-您指定前缀的密码共20个: 从 ${configTrojanPasswordPrefixInput}202001 到 ${configTrojanPasswordPrefixInput}202020 都可以使用
-例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用
+您指定前缀的密码共10个: 从 ${configTrojanPasswordPrefixInput}202201 到 ${configTrojanPasswordPrefixInput}202210 都可以使用
+例如: 密码:${configTrojanPasswordPrefixInput}202202 或 密码:${configTrojanPasswordPrefixInput}202209 都可以使用
 
 小火箭链接:
 trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan
@@ -6164,8 +5827,8 @@ vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPort}?encryp
 密码8: ${trojanPassword8}
 密码9: ${trojanPassword9}
 密码10: ${trojanPassword10}
-您指定前缀的密码共20个: 从 ${configTrojanPasswordPrefixInput}202001 到 ${configTrojanPasswordPrefixInput}202020 都可以使用
-例如: 密码:${configTrojanPasswordPrefixInput}202002 或 密码:${configTrojanPasswordPrefixInput}202019 都可以使用
+您指定前缀的密码共10个: 从 ${configTrojanPasswordPrefixInput}202201 到 ${configTrojanPasswordPrefixInput}202210 都可以使用
+例如: 密码:${configTrojanPasswordPrefixInput}202202 或 密码:${configTrojanPasswordPrefixInput}202209 都可以使用
 
 小火箭链接:
 trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanPort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan
