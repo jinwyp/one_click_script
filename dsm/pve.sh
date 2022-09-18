@@ -488,19 +488,31 @@ EOF
 
 }
 
+function setIPOPENWRT(){
+	green " ================================================== "
+	green " 请输入OpenWRT Lan 的IP地址"
+	echo
+	read -r -p "Please input IP address of LAN (default:192.168.7.1) :" IPOpenWRTInput
+	IPOpenWRTInput=${IPOpenWRTInput:-192.168.7.1}
 
+	configOpenWRTIP="/etc/config/network"
 
+	vi ${configOpenWRTIP}
+
+}
 
 function setPVEIP(){
 	# https://pve.proxmox.com/pve-docs/chapter-sysadmin.html#sysadmin_network_configuration
 
 	green " ================================================== "
-
 	green " 请选择使用静态IP模式还是DHCP自动获取IP模式, 直接回车默认静态IP模式 "
-	read -p "Choose IP Mode: DHCP(y) or Static(n) ? (default: static ip) Pls Input [y/N]:" IPModeInput
+	echo
+	read -r -p "Choose IP Mode: DHCP(y) or Static(n) ? (default: static ip) Pls Input [y/N]:" IPModeInput
 	IPModeInput=${IPModeInput:-n}
+	echo
 	green " 请输入指定的IP地址, 如果已选择了DHCP模式 输入的IP不是实际的IP地址,仅作为在开机欢迎语中的IP显示"
-	read -p "Please input IP address of your n3450 computer (default:192.168.7.200) :" IPInput
+	echo
+	read -r -p "Please input IP address of your n3450 computer (default:192.168.7.200) :" IPInput
 
 	if [[ $IPModeInput == [Yy] ]]; then
     cat > /etc/network/interfaces <<-EOF
@@ -1168,11 +1180,12 @@ function genPVEVMDiskWithQM(){
 
 
 	echo
-	echo "cat /etc/pve/storage.cfg"
+	echo
+	green " 当前PVE存储盘如下 (cat /etc/pve/storage.cfg) : "
 	echo
 	cat /etc/pve/storage.cfg
 	echo
-	read -r -p "根据上面已有的逻辑盘信息, 输入要导入后储存到的逻辑盘名称, 直接回车默认为local-lvm, 请输入:" dsmBootImgStoragePathInput
+	read -r -p "根据上面已有的存储盘信息, 输入要导入后储存到的存储盘名称, 直接回车默认为local-lvm, 请输入:" dsmBootImgStoragePathInput
 	dsmBootImgStoragePathInput=${dsmBootImgStoragePathInput:-"local-lvm"}
 
 	echo
@@ -1180,14 +1193,14 @@ function genPVEVMDiskWithQM(){
 	isHaveStorageUserInput=$(cat /etc/pve/storage.cfg | grep ${dsmBootImgStoragePathInput}) 
 
 	if [[ -n "$isHaveStorageUserInput" ]]; then	
-		green " 状态显示--系统有 逻辑盘 ${isHaveStorageUserInput}"
+		green " 状态显示--系统有 存储盘 ${isHaveStorageUserInput}"
 
 	elif [[ -n "$isHaveStorageLocalLvm" ]]; then	
-		green " 状态显示--系统没有 逻辑盘 ${isHaveStorageUserInput} 使用逻辑盘 local-lvm 代替"
+		green " 状态显示--系统没有 存储盘 ${isHaveStorageUserInput} 使用存储盘 local-lvm 代替"
 		dsmBootImgStoragePathInput="local-lvm"
 
 	elif [[ -n "$isHaveStorageLocal" ]]; then	
-		green " 状态显示--系统没有 逻辑盘 local-lvm, 使用逻辑盘 local 代替"
+		green " 状态显示--系统没有 存储盘 local-lvm, 使用存储盘 local 代替"
 		dsmBootImgStoragePathInput="local"
 	fi
 
@@ -2628,7 +2641,9 @@ function start_menu(){
     green " 9. 检测系统是否开启显卡直通"
     green " 10. 显示系统信息 用于查看直通设备"
 	echo
+	green " 11. 修改OpenWRT 系统的IP地址和网关地址"
 	green " 14. PVE安装OpenWRT 使用 qm importdisk 命令导入镜像文件openwrt.img, 生成硬盘设备"
+	echo
 	green " 15. PVE安装群晖 使用 qm importdisk 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 16. PVE安装群晖 使用 img2kvm 命令导入引导文件synoboot.img, 生成硬盘设备"
 	green " 17. PVE安装群晖 使用 qm set 命令添加整个硬盘(直通) 生成硬盘设备"
@@ -2678,6 +2693,9 @@ function start_menu(){
         10 )
             displayIOMMUInfo
         ;;
+        11 )
+            setIPOPENWRT
+        ;;			
         14)
             genPVEVMDiskWithQM "qm" "openwrt"
         ;;		
