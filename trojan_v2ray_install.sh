@@ -5867,6 +5867,7 @@ EOF
     # 设置 cron 定时任务
     # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
 
+    (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 rm -f /root/v2ray-*") | sort - | uniq - | crontab -
     (crontab -l ; echo "20 4 * * 0,1,2,3,4,5,6 systemctl restart ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service") | sort - | uniq - | crontab -
 
 
@@ -5995,6 +5996,7 @@ function removeV2ray(){
             rm -f ${configV2rayAccessLogFilePath}
             rm -f ${configV2rayErrorLogFilePath}
 
+            crontab -l | grep -v "rm" | crontab -
             crontab -l | grep -v "${promptInfoXrayName}${promptInfoXrayNameServiceName}" | crontab -
 
 
