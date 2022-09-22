@@ -86,7 +86,7 @@ function testNetflixAll(){
 
     elif [[ $1 == "ipv4warp" ]]; then
 
-        read -p "是否测试本机 IPv4 WARP Sock5 代理? 直接回车默认不测试 请输入[y/N]:" isIpv4WARPContinueInput
+        read -r -p "是否测试本机 IPv4 WARP Sock5 代理? 直接回车默认不测试 请输入[y/N]:" isIpv4WARPContinueInput
         isIpv4WARPContinueInput=${isIpv4WARPContinueInput:-n}
 
         if [[ ${isIpv4WARPContinueInput} == [Nn] ]]; then
@@ -106,7 +106,7 @@ function testNetflixAll(){
 
         if [[ "${isIPV6Enabled}" == "false" ]]; then
             red " 本机IPv6 没有开启 是否继续测试IPv6 "
-            read -p "是否继续测试IPv6? 直接回车默认不继续测试 请输入[y/N]:" isIpv6ContinueInput
+            read -r -p "是否继续测试IPv6? 直接回车默认不继续测试 请输入[y/N]:" isIpv6ContinueInput
             isIpv6ContinueInput=${isIpv6ContinueInput:-n}
 
             if [[ ${isIpv6ContinueInput} == [Nn] ]]; then
@@ -331,9 +331,7 @@ function autoRefreshWarpIP(){
 function testYoutubeAll(){
 #    curlCommand="curl --connect-timeout 10 -s --user-agent ${UA_Browser}"
     curlCommand="curl --connect-timeout 10 -s"
-
     curlInfo="IPv4"
-
 
     if [[ $1 == "ipv4" ]]; then
         bold " 开始测试本机的IPv4 解锁 Youtube Premium 情况"
@@ -355,7 +353,7 @@ function testYoutubeAll(){
 
     elif [[ $1 == "ipv6" ]]; then
 
-        if [[ "${isIPV6Enabled}"=="false" ]]; then
+        if [[ "${isIPV6Enabled}" == "false" ]]; then
 
             if [[ ${isIpv6ContinueInput} == [Nn] ]]; then
                 red " 已退出 本机IPv6 测试 "
@@ -432,6 +430,116 @@ function testYoutubeOneMethod(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+function testDisneyPlusAll(){
+#    curlCommand="curl --connect-timeout 10 -s --user-agent ${UA_Browser}"
+    curlCommand="curl --connect-timeout 10 -s"
+    curlInfo="IPv4"
+
+    if [[ $1 == "ipv4" ]]; then
+        bold " 开始测试本机的IPv4 解锁 Disney+ 情况"
+        curlCommand="${curlCommand} -4"
+        curlInfo="IPv4"
+
+    elif [[ $1 == "ipv4warp" ]]; then
+
+        if [[ ${isIpv4WARPContinueInput} == [Nn] ]]; then
+            red " 已退出本机 IPv4 WARP Sock5 代理测试"
+            echo
+            return
+        else
+
+            bold " 开始测试本机的IPv4 通过CloudFlare WARP 解锁 Disney+ 情况"
+            curlCommand="${curlCommand} -x socks5h://127.0.0.1:${warpPortInput}"
+            curlInfo="IPv4 CloudFlare WARP"
+        fi
+
+    elif [[ $1 == "ipv6" ]]; then
+
+        if [[ "${isIPV6Enabled}" == "false" ]]; then
+
+            if [[ ${isIpv6ContinueInput} == [Nn] ]]; then
+                red " 已退出 本机IPv6 测试 "
+                echo
+                return
+            else
+                bold " 开始测试本机的IPv6 解锁 Disney+ 情况"
+                curlCommand="${curlCommand} -6"
+                curlInfo="IPv6"
+            fi
+        else
+                bold " 开始测试本机的IPv6 解锁 Disney+ 情况"
+                curlCommand="${curlCommand} -6"
+                curlInfo="IPv6"
+
+        fi
+
+    elif [[ $1 == "ipv6warp" ]]; then
+        bold " 开始测试本机的IPv6 通过CloudFlare WARP 解锁 Disney+ 情况"
+        curlCommand="${curlCommand} -6"
+        curlInfo="IPv6 CloudFlare WARP"
+
+    else
+        red " 没有选择要进行的测试 已退出! "
+        return
+
+    fi
+
+    # curl 参数说明
+    # --connect-timeout <seconds> Maximum time allowed for connection
+    # -4, --ipv4          Resolve names to IPv4 addresses
+    # -s, --silent        Silent mode
+    # -S, --show-error    Show error even when -s is used
+    # -L, --location      Follow redirects
+
+    testDisneyPlusOneMethod "${curlCommand}" "${curlInfo}"
+    echo
+
+}
+
+function testDisneyPlusOneMethod(){
+
+    if [[ -n "$1" ]]; then
+
+        disneyLinkRed="https://www.disneyplus.com/movies/thor-the-dark-world/ZHk7aM5xTbW7"
+
+#        green " Test Url: $1 ${disneyLinkRed}"
+
+        resultYoutubeIndex=$($1 -S ${disneyLinkRed} 2>&1)
+  
+        if [[ "${resultYoutubeIndex}" == "curl"* ]];then
+            red " 网络错误 无法打开 Disney+ 网站"
+            return
+        fi
+
+        #resultYoutube=$(curl --connect-timeout 10 https://www.disneyplus.com/movies/thor-the-dark-world/ZHk7aM5xTbW7 | grep 'The Dark World' )
+        resultYoutube=$($1 ${disneyLinkRed} | grep 'The Dark World' )
+
+        if [  -z "${resultYoutube}" ]; then
+            yellow " 无法打开 Disney Plus 影片"
+        else
+            green " 本机 $2 支持观看 Disney Plus 影片"
+        fi
+
+    else
+        red " 要进行的测试 Url为空! "
+    fi
+
+}
+
+
+
+
+
 function startNetflixTest(){
 
     echo
@@ -459,6 +567,12 @@ function startNetflixTest(){
         testYoutubeAll "ipv4"
         testYoutubeAll "ipv6"
         testYoutubeAll "ipv4warp"
+
+        green " ===== Disney+ 准备开始检测 ====="
+
+        testDisneyPlusAll "ipv4"
+        testDisneyPlusAll "ipv6"
+        testDisneyPlusAll "ipv4warp"
 
     fi    
 }
