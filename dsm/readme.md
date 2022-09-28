@@ -5,14 +5,14 @@
 #### linux系统下 通过 wget 命令安装 via wget to install script
 
 ```bash
-wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
+wget --no-check-certificate -O /root/pve.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
 
 ```
 
 #### DSM 群晖系统下 通过 wget 命令安装 via wget to install script
 
 ```bash
-wget --no-check-certificate -P /tmp https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /tmp/pve.sh && /tmp/pve.sh
+wget --no-check-certificate -O /root/pve.sh /tmp https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /tmp/pve.sh && /tmp/pve.sh
 
 ```
 

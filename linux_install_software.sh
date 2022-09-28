@@ -1960,13 +1960,75 @@ function installWebServerNginx(){
 
 
 
+
     mkdir -p ${configWebsitePath}
     mkdir -p "${nginxConfigSiteConfPath}"
 
+    rm -rf ${configWebsitePath}/*
+    downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/website2.zip" "${configWebsitePath}" "website2.zip"
+
+
     nginxConfigServerHttpInput=""
 
+    if [[ "${configInstallNginxMode}" == "airuniverse" ]]; then
+        configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 
-    if [[ "${configInstallNginxMode}" == "ghost" ]]; then
+        read -r -p "是否自定义xray的 Websocket 的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
+        isV2rayUserWSPathInput=${isV2rayUserWSPathInput:-${configV2rayWebSocketPath}}
+        
+        if [[ -z $isV2rayUserWSPathInput ]]; then
+            echo
+        else
+            configV2rayWebSocketPath=${isV2rayUserWSPathInput}
+        fi
+
+        configV2rayWebSocketPath="9b08c0d789"
+
+        read -r -p "输入xray的端口号? 直接回车默认为8799, 请输入自定义端口号[1-65535]:" configV2rayPort
+        configV2rayPort=${configV2rayPort:-8799}
+
+        cat > "${nginxConfigSiteConfPath}/airuniverse.conf" <<-EOF
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location /$configV2rayWebSocketPath {
+            proxy_pass http://127.0.0.1:$configV2rayPort;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        }
+    }
+
+    server {
+        listen  80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+    }
+
+EOF
+
+    elif [[ "${configInstallNginxMode}" == "ghost" ]]; then
 
         cat > "${nginxConfigSiteConfPath}/ghost_site.conf" <<-EOF
 
@@ -3745,7 +3807,20 @@ function editXrayRConfig(){
 
 
 
+function installAiruAndNginx(){
+    isInstallNginx="true"
+    configSSLCertPath="${configSSLCertPathV2board}"
+    getHTTPSCertificateStep1
+    configInstallNginxMode="airuniverse"
+    installWebServerNginx
 
+
+    sed -i "s/\"force_close_tls\": ?false/\"force_close_tls\": true/g" ${configAirUniverseConfigFilePath}
+
+    systemctl restart xray.service
+    airu restart
+
+}
 
 
 
@@ -3982,7 +4057,7 @@ function installAirUniverse(){
         green "默认直接回车为通过acme.sh申请证书, 支持 http 和 dns 等更多方式申请证书, 推荐使用"
         green "注: Air-Universe 本身没有自动获取证书功能, 使用 acme.sh 申请证书"
         echo
-        read -p "请选择SSL证书申请方式 ? 默认直接回车为申请证书, 选否则不申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
+        read -r -p "请选择SSL证书申请方式 ? 默认直接回车为申请证书, 选否则不申请证书, 请输入[Y/n]:" isSSLRequestHTTPInput
         isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-Y}
 
         if [[ $isSSLRequestHTTPInput == [Yy] ]]; then
@@ -4042,7 +4117,7 @@ EOM
         else
             echo
             green "不申请SSL证书"
-            read -p "Press enter to continue. 按回车继续运行 airu 命令"
+            read -r -p "Press enter to continue. 按回车继续运行 airu 命令"
             airu
         fi
 
@@ -4637,13 +4712,7 @@ function manageAirUniverse(){
     echo
 }
 
-function editAirUniverseConfig(){
-    vi ${configAirUniverseConfigFilePath}
-}
 
-function editAirUniverseXrayConfig(){
-    vi ${configAirUniverseXrayConfigFilePath}
-}
 
 function removeAirUniverse(){
     rm -rf /usr/local/etc/xray
@@ -5095,11 +5164,9 @@ function start_menu(){
     green " 51. 安装 Air-Universe 服务器端"
     red " 52. 卸载 Air-Universe"
     green " 53. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
-    green " 54. 编辑 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
-    green " 55. 编辑 Air-Universe Xray配置文件 ${configAirUniverseXrayConfigFilePath}"
-    green " 56. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
-    green " 57. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
-    green " 58. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
+    green " 54. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
+    green " 55. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
+    green " 56. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
     echo 
     green " 61. 单独申请域名SSL证书"
     echo
@@ -5151,11 +5218,9 @@ function start_menu(){
     green " 51. Install Air-Universe server side "
     red " 52. Remove Air-Universe"
     green " 53. Stop, restart, show log, manage Air-Universe server side "
-    green " 54. Using VI open Air-Universe config file ${configAirUniverseConfigFilePath}"
-    green " 55. Using VI open Air-Universe Xray config file ${configAirUniverseXrayConfigFilePath}"
-    green " 56. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
-    green " 57. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
-    green " 58. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
+    green " 54. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
+    green " 55. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
+    green " 56. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
     echo 
     green " 61. Get a free SSL certificate for domain name only"
     echo
@@ -5272,19 +5337,16 @@ function start_menu(){
             manageAirUniverse
         ;;                                        
         54 )
-            editAirUniverseConfig
-        ;; 
-        55 )
-            editAirUniverseXrayConfig
-        ;; 
-        56 )
             replaceAirUniverseConfigWARP
         ;;
-        57 )
+        55 )
             downgradeXray
         ;;
-        58 )
+        56 )
             installAirUniverse "ssl"
+        ;;
+        57 )
+            installAiruAndNginx
         ;;
         61 )
             getHTTPSCertificateStep1

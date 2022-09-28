@@ -164,7 +164,7 @@ wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/on
 这里注意 100 是相应的虚拟机的ID 需要修改成对应的ID. local-lvm 是PVE储存盘, 也有可能是local. 如果弄不明白命令, 直接用我下面的脚本 选择14 使用 qm importdisk 命令导入. 运行下面的脚本选择14后 根据提示输入文件名 openwrt.img 和 虚拟机ID 100 然后回车 完成导入。
 
 ```bash
-wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
+wget --no-check-certificate -O /root/pve.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
 
 ```
 
