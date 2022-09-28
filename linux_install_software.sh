@@ -3815,7 +3815,7 @@ function installAiruAndNginx(){
     installWebServerNginx
 
 
-    sed -i "s/\"force_close_tls\": ?false/\"force_close_tls\": true/g" ${configAirUniverseConfigFilePath}
+    sed -i 's/\"force_close_tls\": false/\"force_close_tls\": true/g' ${configAirUniverseConfigFilePath}
 
     systemctl restart xray.service
     airu restart
