@@ -3414,7 +3414,7 @@ function inputV2rayWSPath(){
         configV2rayWSH2Text="HTTP2"
     fi 
 
-    read -p "是否自定义${promptInfoXrayName}的 ${configV2rayWSH2Text}的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
+    read -r -p "是否自定义${promptInfoXrayName}的 ${configV2rayWSH2Text}的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
     isV2rayUserWSPathInput=${isV2rayUserWSPathInput:-${configV2rayWebSocketPath}}
 
     if [[ -z $isV2rayUserWSPathInput ]]; then
