@@ -1749,6 +1749,27 @@ function installWebServerNginx(){
     nginxConfigServerHttpGrpcInput=""
     nginxConfigStreamConfigInput=""
     nginxConfigNginxModuleInput=""
+    nginxConfigDefaultWebsiteLocation=""
+
+    echo
+    green " =================================================="
+    green " 是否反代指定的网站? 默认不反代网站, 使用bootstrap静态网页作为伪装网站)"
+    green " 如需要反代网站 请输入网址 例如 www.baidu.com (不要输入https://)"
+    echo
+    read -r -p "是否反代指定的网站, 默认直接回车不反代, 请输入反代网址:" configNginxDefaultWebsiteInput
+    configNginxDefaultWebsiteInput=${configNginxDefaultWebsiteInput:-}
+
+        if [[ -n "${configNginxDefaultWebsiteInput}" ]]; then
+            read -r -d '' nginxConfigDefaultWebsiteLocation << EOM
+
+        location / {
+            proxy_pass https://$configNginxDefaultWebsiteInput;
+
+        }
+
+EOM
+
+        fi
 
     if [[ "${configInstallNginxMode}" == "noSSL" ]]; then
         if [[ ${configV2rayWorkingNotChangeMode} == "true" ]]; then
@@ -1766,6 +1787,8 @@ function installWebServerNginx(){
             grpc_set_header X-Real-IP \$remote_addr;
             grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
+
+        
 
 EOM
 
@@ -1790,6 +1813,8 @@ EOM
         }
 
         ${nginxConfigServerHttpGrpcInput}
+
+        ${nginxConfigDefaultWebsiteLocation}
     }
 
 EOF
@@ -1836,6 +1861,8 @@ EOF
             grpc_set_header X-Real-IP \$remote_addr;
             grpc_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         }
+
+        ${nginxConfigDefaultWebsiteLocation}
     }
 
     server {
@@ -7440,7 +7467,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-8-15 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-9-29 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -7488,7 +7515,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray Installation | 2022-8-15 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan Trojan-go V2ray Xray Installation | 2022-9-29 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
