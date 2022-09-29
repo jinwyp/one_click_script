@@ -1972,7 +1972,8 @@ function installWebServerNginx(){
 
     if [[ "${configInstallNginxMode}" == "airuniverse" ]]; then
         configV2rayWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-
+        
+        echo
         read -r -p "是否自定义xray的 Websocket 的Path? 直接回车默认创建随机路径, 请输入自定义路径(不要输入/):" isV2rayUserWSPathInput
         isV2rayUserWSPathInput=${isV2rayUserWSPathInput:-${configV2rayWebSocketPath}}
         
@@ -1984,6 +1985,7 @@ function installWebServerNginx(){
 
         configV2rayWebSocketPath="9b08c0d789"
 
+        echo
         read -r -p "输入xray的端口号? 直接回车默认为8799, 请输入自定义端口号[1-65535]:" configV2rayPort
         configV2rayPort=${configV2rayPort:-8799}
 
@@ -2345,6 +2347,7 @@ EOF
     fi
 
 
+    # https://raw.githubusercontent.com/nginx/nginx/master/conf/mime.types
 
     cat > "${nginxConfigPath}" <<-EOF
 
