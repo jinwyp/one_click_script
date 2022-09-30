@@ -2381,12 +2381,12 @@ function installTrojanV2rayWithNginx(){
 
     echo
     if [ "$1" = "v2ray" ]; then
-        read -p "是否不申请域名的证书 直接使用本VPS的IP安装? 默认直接回车为不申请证书,请输入[Y/n]:" isDomainIPRequestInput
+        read -r -p "是否不申请域名的证书 直接使用本VPS的IP安装? 默认直接回车为不申请证书,请输入[Y/n]:" isDomainIPRequestInput
         isDomainIPRequestInput=${isDomainIPRequestInput:-Y}
 
         if [[ $isDomainIPRequestInput == [Yy] ]]; then
             echo
-            read -p "请输入本VPS的IP 或 解析到本VPS的域名:" configSSLDomain
+            read -r -p "请输入本VPS的IP 或 解析到本VPS的域名:" configSSLDomain
             installV2ray
             exit
         fi
@@ -2394,6 +2394,7 @@ function installTrojanV2rayWithNginx(){
     elif [ "$1" = "nginxSNI_trojan_v2ray" ]; then
         green " ================================================== "
         yellow " 请选择 Nginx SNI + Trojan + V2ray 的安装模式, 默认为1"
+        red " 必须使用不同的2个或3个域名,并设置好DNS解析,否则无法申请SSL证书"
         echo
         green " 1. Nginx + Trojan + V2ray + 伪装网站"
         green " 2. Nginx + Trojan + 伪装网站"
@@ -2451,7 +2452,6 @@ function installTrojanV2rayWithNginx(){
             installV2ray
             
         fi
-
 
         exit
     fi
@@ -2642,7 +2642,7 @@ function installTrojanServer(){
 
             echo
             green " 请选择是否开启 trojan-go 的 Websocket 用于CDN中转, 注意原版trojan客户端不支持 Websocket"
-            read -p "请选择是否开启 Websocket? 直接回车默认开启, 请输入[Y/n]:" isTrojanGoWebsocketInput
+            read -r -p "请选择是否开启 Websocket? 直接回车默认开启, 请输入[Y/n]:" isTrojanGoWebsocketInput
             isTrojanGoWebsocketInput=${isTrojanGoWebsocketInput:-Y}
 
             if [[ "${isTrojanGoWebsocketInput}" == [Yy] ]]; then
