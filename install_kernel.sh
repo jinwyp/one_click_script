@@ -987,8 +987,8 @@ function installKernel(){
 
 
 function getVersionBBRPlus(){
-    if [ "${linuxKernelToInstallVersion}" = "5.18" ]; then 
-        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.18")
+    if [ "${linuxKernelToInstallVersion}" = "5.19" ]; then 
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.19")
 
     elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.15")
@@ -2517,7 +2517,7 @@ function installWGCF(){
     # 启用守护进程
     ${sudoCmd} systemctl start wg-quick@wgcf
 
-    (crontab -l ; echo "12 6 * * 1 systemctl restart wg-quick@wgcf ") | sort - | uniq - | crontab -
+    # (crontab -l ; echo "12 6 * * 1 systemctl restart wg-quick@wgcf ") | sort - | uniq - | crontab -
 
     checkWireguardBootStatus
 
@@ -3132,11 +3132,12 @@ function start_menu(){
     green " 12. 安装 WireGuard 和 Cloudflare WARP 工具 Wgcf, 启动 IPv4或IPv6, 用于避免弹出Google人机验证"
     green " 13. 同时安装 官方 Cloudflare WARP Client, WireGuard 和 命令行工具 Wgcf, 不推荐 "
     red " 14. 卸载 WireGuard 和 Cloudflare WARP linux client"
-    green " 15. 安装 warp-go 脚本 by fscarmen"
-    green " 16. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
-    green " 17. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
-    green " 21. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
-    green " 22. 自动刷新WARP IP 检测支持 Netflix 非自制剧解锁 "
+    green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
+    green " 16. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
+
+    green " 21. 安装 warp-go 脚本 by fscarmen"
+    green " 22. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
+    green " 23. 自动刷新WARP IP 直到支持 Netflix 非自制剧解锁 "
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3177,7 +3178,7 @@ function start_menu(){
     green " 65. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
     green " 66. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译" 
     green " 67. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译" 
-    green " 68. 安装 BBR Plus 内核 5.18, UJX6N 编译"   
+    green " 68. 安装 BBR Plus 内核 5.19, UJX6N 编译"   
  
     echo
     green " 0. 退出脚本"
@@ -3220,8 +3221,10 @@ function start_menu(){
     red " 14. Remove WireGuard 和 Cloudflare WARP linux client"
     green " 15. Switch WireGuard using IPv6 or IPv4 for your VPS"
     green " 16. Set VPS using IPv4 or IPv6 firstly to access network"
-    green " 21. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
-    green " 22. Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
+
+    green " 21. Install warp-go by fscarmen. Enable IPv6, avoid Google reCAPTCHA and unlock Netflix geo restriction "
+    green " 22. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
+    green " 23. Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3260,7 +3263,7 @@ function start_menu(){
     green " 65. Install BBR Plus kernel 5.4 LTS, compile by UJX6N"
     green " 66. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
     green " 67. Install BBR Plus kernel 5.15 LTS, compile by UJX6N" 
-    green " 68. Install BBR Plus kernel 5.18, compile by UJX6N"   
+    green " 68. Install BBR Plus kernel 5.19, compile by UJX6N"   
  
     echo
     green " 0. exit"
@@ -3319,18 +3322,18 @@ function start_menu(){
            removeWARP
         ;;
         15 )
-           installWARPGO
-        ;;        
-        16 )
            enableWireguardIPV6OrIPV4 "redo"
         ;;
-        17 )
+        16 )
            preferIPV4 "redo"
         ;;
         21 )
+           installWARPGO
+        ;;       
+        22 )
            vps_netflix_jin
         ;;
-        22 )
+        23 )
            vps_netflix_jin_auto
         ;;
         31 )
@@ -3450,7 +3453,7 @@ function start_menu(){
             installKernel
         ;;
         68 )
-            linuxKernelToInstallVersion="5.18"
+            linuxKernelToInstallVersion="5.19"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;

@@ -441,8 +441,8 @@ function testYoutubeOneMethod(){
 
 
 function testDisneyPlusAll(){
-#    curlCommand="curl --connect-timeout 10 -s --user-agent ${UA_Browser}"
-    curlCommand="curl --connect-timeout 10 -s"
+    curlCommand="curl --connect-timeout 10 -s --user-agent ${UA_Browser}"
+    # curlCommand="curl --connect-timeout 10 -s"
     curlInfo="IPv4"
 
     if [[ $1 == "ipv4" ]]; then
@@ -510,17 +510,20 @@ function testDisneyPlusOneMethod(){
 
     if [[ -n "$1" ]]; then
 
+        disneyLinkPrepare="https://disney.api.edge.bamgrid.com/devices"
         disneyLinkRed="https://www.disneyplus.com/movies/thor-the-dark-world/ZHk7aM5xTbW7"
 
 #        green " Test Url: $1 ${disneyLinkRed}"
 
-        resultYoutubeIndex=$($1 -S ${disneyLinkRed} 2>&1)
+        resultDisneyPlusIndex=$($1 --max-time 10 -S -X POST "${disneyLinkPrepare}" -H "authorization: Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84" -H "content-type: application/json; charset=UTF-8" -d '{"deviceFamily":"browser","applicationRuntime":"chrome","deviceProfile":"windows","attributes":{}}' 2>&1)
   
-        if [[ "${resultYoutubeIndex}" == "curl"* ]];then
+        if [[ "${resultDisneyPlusIndex}" == "curl"* ]];then
             red " 网络错误 无法打开 Disney+ 网站"
             return
         fi
 
+        local PreDisneyCookie=$(curl -s --max-time 10 "https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/cookies" | sed -n '1p')
+        
         #resultYoutube=$(curl --connect-timeout 10 https://www.disneyplus.com/movies/thor-the-dark-world/ZHk7aM5xTbW7 | grep 'The Dark World' )
         resultYoutube=$($1 ${disneyLinkRed} | grep 'The Dark World' )
 
@@ -535,6 +538,71 @@ function testDisneyPlusOneMethod(){
     fi
 
 }
+
+
+function MediaUnlockTest_DisneyPlus() {
+    echo -n -e " Disney+:\t\t\t\t->\c"
+    local PreAssertion=$(curl $useNIC $xForward -${1} --user-agent "${UA_Browser}" -s --max-time 10 -X POST "https://disney.api.edge.bamgrid.com/devices" -H "authorization: Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84" -H "content-type: application/json; charset=UTF-8" -d '{"deviceFamily":"browser","applicationRuntime":"chrome","deviceProfile":"windows","attributes":{}}' 2>&1)
+    if [[ "$PreAssertion" == "curl"* ]] && [[ "$1" == "6" ]]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Red}IPv6 Not Support${Font_Suffix}\n"
+        return
+    elif [[ "$PreAssertion" == "curl"* ]]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Red}Failed (Network Connection)${Font_Suffix}\n"
+        return
+    fi
+
+    local assertion=$(echo $PreAssertion | python -m json.tool 2>/dev/null | grep assertion | cut -f4 -d'"')
+    local PreDisneyCookie=$(curl -s --max-time 10 "https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/cookies" | sed -n '1p')
+    local disneycookie=$(echo $PreDisneyCookie | sed "s/DISNEYASSERTION/${assertion}/g")
+    local TokenContent=$(curl $useNIC $xForward -${1} --user-agent "${UA_Browser}" -s --max-time 10 -X POST "https://disney.api.edge.bamgrid.com/token" -H "authorization: Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84" -d "$disneycookie")
+    local isBanned=$(echo $TokenContent | python -m json.tool 2>/dev/null | grep 'forbidden-location')
+    local is403=$(echo $TokenContent | grep '403 ERROR')
+
+    if [ -n "$isBanned" ] || [ -n "$is403" ]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Red}No${Font_Suffix}\n"
+        return
+    fi
+
+    local fakecontent=$(curl -s --max-time 10 "https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/cookies" | sed -n '8p')
+    local refreshToken=$(echo $TokenContent | python -m json.tool 2>/dev/null | grep 'refresh_token' | awk '{print $2}' | cut -f2 -d'"')
+    local disneycontent=$(echo $fakecontent | sed "s/ILOVEDISNEY/${refreshToken}/g")
+    local tmpresult=$(curl $useNIC $xForward -${1} --user-agent "${UA_Browser}" -X POST -sSL --max-time 10 "https://disney.api.edge.bamgrid.com/graph/v1/device/graphql" -H "authorization: ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84" -d "$disneycontent" 2>&1)
+    local previewcheck=$(curl $useNIC $xForward -${1} -s -o /dev/null -L --max-time 10 -w '%{url_effective}\n' "https://disneyplus.com" | grep preview)
+    local isUnabailable=$(echo $previewcheck | grep 'unavailable')
+    local region=$(echo $tmpresult | python -m json.tool 2>/dev/null | grep 'countryCode' | cut -f4 -d'"')
+    local inSupportedLocation=$(echo $tmpresult | python -m json.tool 2>/dev/null | grep 'inSupportedLocation' | awk '{print $2}' | cut -f1 -d',')
+
+    if [[ "$region" == "JP" ]]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Green}Yes (Region: JP)${Font_Suffix}\n"
+        return
+    elif [ -n "$region" ] && [[ "$inSupportedLocation" == "false" ]] && [ -z "$isUnabailable" ]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Yellow}Available For [Disney+ $region] Soon${Font_Suffix}\n"
+        return
+    elif [ -n "$region" ] && [ -n "$isUnavailable" ]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Red}No${Font_Suffix}\n"
+        return
+    elif [ -n "$region" ] && [[ "$inSupportedLocation" == "true" ]]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Green}Yes (Region: $region)${Font_Suffix}\n"
+        return
+    elif [ -z "$region" ]; then
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Red}No${Font_Suffix}\n"
+        return
+    else
+        echo -n -e "\r Disney+:\t\t\t\t${Font_Red}Failed${Font_Suffix}\n"
+        return
+    fi
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
