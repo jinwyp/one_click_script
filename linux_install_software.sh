@@ -4729,6 +4729,8 @@ function removeAirUniverse(){
     crontab -r 
     green " crontab 定时任务 已清除!"
     echo
+
+    removeNginx
 }
 
 
