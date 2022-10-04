@@ -1103,7 +1103,13 @@ function downloadAndUnzip(){
         tar xf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
         mv ${configDownloadTempPath}/trojan/* $2
         rm -rf ${configDownloadTempPath}/trojan
-    else
+    elif [[ $3 == *"tar.gz"* ]]; then
+        green "===== 下载并解压tar.gz文件: $3 "
+        wget -O ${configDownloadTempPath}/$3 $1
+        tar -xzvf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
+        mv ${configDownloadTempPath}/easymosdns/* $2
+        rm -rf ${configDownloadTempPath}/*
+    else  
         green "===== 下载并解压zip文件:  $3 "
         wget -O ${configDownloadTempPath}/$3 $1
         unzip -d $2 ${configDownloadTempPath}/$3
@@ -6497,18 +6503,24 @@ function upgradeV2rayUI(){
 
 
 
-configMosdnsPath="/usr/local/bin/mosdns"
+configMosdnsBinPath="/usr/local/bin/mosdns"
+configMosdnsPath="/etc/mosdns"
 isInstallMosdns="true"
 isinstallMosdnsName="mosdns"
 downloadFilenameMosdns="mosdns-linux-amd64.zip"
 downloadFilenameMosdnsCn="mosdns-cn-linux-amd64.zip"
 
+isUseEasyMosdnsConfig="false"
+
 
 function downloadMosdns(){
 
-    rm -rf "${configMosdnsPath}"
-    mkdir -p "${configMosdnsPath}"
-    cd ${configMosdnsPath} || exit
+    rm -rf "${configMosdnsBinPath}"
+    mkdir -p "${configMosdnsBinPath}"
+    cd ${configMosdnsBinPath} || exit
+
+
+
     
     if [[ "${isInstallMosdns}" == "true" ]]; then
         versionMosdns=$(getGithubLatestReleaseVersion "IrineSistiana/mosdns")
@@ -6525,8 +6537,8 @@ function downloadMosdns(){
             downloadFilenameMosdns="mosdns-linux-arm64.zip"
         fi
         
-        downloadAndUnzip "https://github.com/IrineSistiana/mosdns/releases/download/v${versionMosdns}/${downloadFilenameMosdns}" "${configMosdnsPath}" "${downloadFilenameMosdns}"
-        ${sudoCmd} chmod +x "${configMosdnsPath}/mosdns"
+        downloadAndUnzip "https://github.com/IrineSistiana/mosdns/releases/download/v${versionMosdns}/${downloadFilenameMosdns}" "${configMosdnsBinPath}" "${downloadFilenameMosdns}"
+        ${sudoCmd} chmod +x "${configMosdnsBinPath}/mosdns"
     
     else
         versionMosdnsCn=$(getGithubLatestReleaseVersion "IrineSistiana/mosdns-cn")
@@ -6543,11 +6555,11 @@ function downloadMosdns(){
             downloadFilenameMosdnsCn="mosdns-cn-linux-arm64.zip"
         fi
 
-        downloadAndUnzip "https://github.com/IrineSistiana/mosdns-cn/releases/download/v${versionMosdnsCn}/${downloadFilenameMosdnsCn}" "${configMosdnsPath}" "${downloadFilenameMosdnsCn}"
-        ${sudoCmd} chmod +x "${configMosdnsPath}/mosdns-cn"
+        downloadAndUnzip "https://github.com/IrineSistiana/mosdns-cn/releases/download/v${versionMosdnsCn}/${downloadFilenameMosdnsCn}" "${configMosdnsBinPath}" "${downloadFilenameMosdnsCn}"
+        ${sudoCmd} chmod +x "${configMosdnsBinPath}/mosdns-cn"
     fi
 
-    if [ ! -f "${configMosdnsPath}/${isinstallMosdnsName}" ]; then
+    if [ ! -f "${configMosdnsBinPath}/${isinstallMosdnsName}" ]; then
         echo
         red "下载失败, 请检查网络是否可以正常访问 gitHub.com"
         red "请检查网络后, 重新运行本脚本!"
@@ -6555,28 +6567,38 @@ function downloadMosdns(){
         exit 1
     fi 
 
-    echo
-    green " Downloading files: cn.dat, geosite.dat, geoip.dat. "
-    green " 开始下载文件: cn.dat, geosite.dat, geoip.dat  等相关文件"
-    echo
 
-    # versionV2rayRulesDat=$(getGithubLatestReleaseVersion "Loyalsoldier/v2ray-rules-dat")
-    # geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geosite.dat"
-    # geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geoip.dat"
-    # cnipUrl="https://github.com/Loyalsoldier/geoip/releases/download/202205120123/cn.dat"
-
-    geositeFilename="geosite.dat"
-    geoipFilename="geoip.dat"
-    cnipFilename="cn.dat"
-
-    geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-    geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
+    rm -rf "${configMosdnsPath}"
+    mkdir -p "${configMosdnsPath}"
+    cd ${configMosdnsPath} || exit
 
 
-    wget -O ${configMosdnsPath}/${geositeFilename} ${geositeUrl}
-    wget -O ${configMosdnsPath}/${geoipFilename} ${geoipeUrl}
-    wget -O ${configMosdnsPath}/${cnipFilename} ${cnipUrl}
+
+    if [[ "${isUseEasyMosdnsConfig}" == "false" ]]; then
+
+        echo
+        green " Downloading files: cn.dat, geosite.dat, geoip.dat. "
+        green " 开始下载文件: cn.dat, geosite.dat, geoip.dat  等相关文件"
+        echo
+
+        # versionV2rayRulesDat=$(getGithubLatestReleaseVersion "Loyalsoldier/v2ray-rules-dat")
+        # geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geosite.dat"
+        # geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geoip.dat"
+        # cnipUrl="https://github.com/Loyalsoldier/geoip/releases/download/202205120123/cn.dat"
+
+        geositeFilename="geosite.dat"
+        geoipFilename="geoip.dat"
+        cnipFilename="cn.dat"
+
+        geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+        geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+        cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
+
+        wget -O ${configMosdnsPath}/${geositeFilename} ${geositeUrl}
+        wget -O ${configMosdnsPath}/${geoipFilename} ${geoipeUrl}
+        wget -O ${configMosdnsPath}/${cnipFilename} ${cnipUrl}
+    fi
+
 
 }
 
@@ -6595,7 +6617,7 @@ function installMosdns(){
     # https://askubuntu.com/questions/27213/what-is-the-linux-equivalent-to-windows-program-files
 
 
-    if [ -f "${configMosdnsPath}/mosdns" ]; then
+    if [ -f "${configMosdnsBinPath}/mosdns" ]; then
         echo
         green " =================================================="
         green " 检测到 mosdns 已安装, 退出安装! "
@@ -6604,7 +6626,7 @@ function installMosdns(){
     fi
 
 
-    if [ -f "${configMosdnsPath}/mosdns-cn" ]; then
+    if [ -f "${configMosdnsBinPath}/mosdns-cn" ]; then
         echo
         green " =================================================="
         green " 检测到 mosdns-cn 已安装, 退出安装! "
@@ -6621,26 +6643,45 @@ function installMosdns(){
     echo
     read -r -p "请选择Mosdns还是Mosdns-cn, 默认直接回车安装Mosdns-cn, 请输入纯数字:" isInstallMosdnsServerInput
     isInstallMosdnsServerInput=${isInstallMosdnsServerInput:-2}
+    echo
 
     if [[ "${isInstallMosdnsServerInput}" == "1" ]]; then
         isInstallMosdns="true"
         isinstallMosdnsName="mosdns"
+
+        echo
+        green " =================================================="
+        green " 是否使用 easymosdns 的配置, 该配置更复杂 效果更好"
+        green " https://github.com/pmkol/easymosdns"
+        echo
+        read -r -p "是否使用easymosdns, 默认直接回车不使用, 请输入[y/N]:" isUseEasyConfigInput
+        isUseEasyConfigInput=${isUseEasyConfigInput:-n}
+
+        if [[ "$isUseEasyConfigInput" == [Nn] ]]; then
+            isUseEasyMosdnsConfig="false" 
+        else
+            isUseEasyMosdnsConfig="true"
+        fi
+
     else
         isInstallMosdns="false"
         isinstallMosdnsName="mosdns-cn"        
     fi
+
+
+
 
     echo
     green " ================================================== "
     green "    开始安装 ${isinstallMosdnsName} !"
     green " ================================================== "
     echo
-    downloadMosdns
+    
 
 
     echo
     green " ================================================== "
-    green " 请填写mosdns运行的端口号 默认端口5335"
+    green " 请填写mosdns运行的端口号 默认端口号为5335"
     green " DNS服务器常用为53端口, 推荐输入53"
     yellow " 软路由一般内置DNS服务器, 如果在软路由安装 为避免冲突 默认为5335"
     echo
@@ -6653,6 +6694,8 @@ function installMosdns(){
     if [[ "${isMosDNSServerPortInput}" =~ ${reNumber} ]] ; then
         mosDNSServerPort="${isMosDNSServerPortInput}"
     fi
+
+
 
 
     echo
@@ -6707,11 +6750,29 @@ EOM
     fi
 
 
+    downloadMosdns
+
+
     if [[ "${isInstallMosdns}" == "true" ]]; then
 
         rm -f "${configMosdnsPath}/config.yaml"
 
-        cat > "${configMosdnsPath}/config.yaml" <<-EOF    
+
+        if [[ "${isUseEasyMosdnsConfig}" == "true" ]]; then
+            downloadAndUnzip "https://mirror.apad.pro/dns/easymosdns.tar.gz" "${configMosdnsPath}" "easymosdns.tar.gz"
+            ${sudoCmd} chmod +x ${configMosdnsPath}/tools/*
+
+            sed -i "s/0\.0\.0\.0:53/0\.0\.0\.0:${mosDNSServerPort}/g" ${configMosdnsPath}/config.yaml
+
+            cd ${configMosdnsBinPath} || exit
+            export PATH="$PATH:${configMosdnsBinPath}"
+
+            ${configMosdnsPath}/tools/config-reset
+
+        else
+        
+
+            cat > "${configMosdnsPath}/config.yaml" <<-EOF    
 
 log:
   level: info
@@ -6749,14 +6810,9 @@ plugins:
     args:
       upstream:
         - addr: "udp://223.5.5.5"
-          idle_timeout: 30
           trusted: true
         - addr: "udp://119.29.29.29"
-          idle_timeout: 30
           trusted: true
-        - addr: "tls://120.53.53.53:853"
-          enable_pipeline: true
-          idle_timeout: 30
 
   # 转发至远程服务器的插件
   - tag: forward_remote
@@ -6765,74 +6821,39 @@ plugins:
       upstream:
 ${addNewDNSServerIPText}
 ${addNewDNSServerDomainText}
-        #- addr: "tls://8.8.4.4:853"
-        #  enable_pipeline: true
         - addr: "udp://208.67.222.222"
-          trusted: true
-        - addr: "208.67.220.220:443"
-          trusted: true   
-
-        #- addr: "udp://172.105.216.54"
-        #  idle_timeout: 400
-        #  trusted: true 
-        - addr: "udp://5.2.75.231"
-          idle_timeout: 400
           trusted: true
 
         - addr: "udp://1.0.0.1"
           trusted: true
-        #- addr: "tls://1dot1dot1dot1.cloudflare-dns.com"
-        #- addr: "https://dns.cloudflare.com/dns-query"
-        
-        - addr: "https://doh.apad.pro/dns-query"
+        - addr: "https://dns.cloudflare.com/dns-query"
           idle_timeout: 400
           trusted: true
 
-        
+
+        - addr: "udp://5.2.75.231"
+          idle_timeout: 400
+          trusted: true
+
         - addr: "udp://185.121.177.177"
           idle_timeout: 400
           trusted: true        
-        #- addr: "udp://169.239.202.202"
-
 
         - addr: "udp://94.130.180.225"
           idle_timeout: 400
-          trusted: true  
+          trusted: true     
+
         - addr: "udp://78.47.64.161"
           idle_timeout: 400
-          trusted: true
-        #- addr: "tls://dns-dot.dnsforfamily.com"
-        #- addr: "https://dns-doh.dnsforfamily.com/dns-query"
-        #  dial_addr: "94.130.180.225:443"
-        #  idle_timeout: 400
-
-        #- addr: "udp://101.101.101.101"
-        #  idle_timeout: 400
-        #  trusted: true 
-        #- addr: "udp://101.102.103.104"
-        #  idle_timeout: 400
-        #  trusted: true 
-        #- addr: "tls://101.101.101.101"
-        #- addr: "https://dns.twnic.tw/dns-query"
-        #  idle_timeout: 400
-
-        #- addr: "udp://172.104.237.57"
+          trusted: true 
 
         - addr: "udp://51.38.83.141"          
-        #- addr: "tls://dns.oszx.co"
-        #- addr: "https://dns.oszx.co/dns-query"
-        #  idle_timeout: 400 
 
         - addr: "udp://176.9.93.198"
         - addr: "udp://176.9.1.117"                  
-        #- addr: "tls://dnsforge.de"
-        #- addr: "https://dnsforge.de/dns-query"
-        #  idle_timeout: 400
 
         - addr: "udp://88.198.92.222"                  
-        #- addr: "tls://dot.libredns.gr"
-        #- addr: "https://doh.libredns.gr/dns-query"
-        #  idle_timeout: 400 
+
 
   # 匹配本地域名的插件
   - tag: query_is_local_domain
@@ -6928,13 +6949,13 @@ servers:
 
 EOF
 
-        ${configMosdnsPath}/mosdns service install -c "${configMosdnsPath}/config.yaml" -d "${configMosdnsPath}" 
-        ${configMosdnsPath}/mosdns service start
+        fi
 
+        ${configMosdnsBinPath}/mosdns service install -c "${configMosdnsPath}/config.yaml" -d "${configMosdnsPath}" 
+        ${configMosdnsBinPath}/mosdns service start
 
 
     else
-
 
         rm -f "${configMosdnsPath}/config_mosdns_cn.yaml"
 
@@ -6965,9 +6986,9 @@ cd2exe: false
 
 EOF
 
-        ${configMosdnsPath}/mosdns-cn --service install --config "${configMosdnsPath}/config_mosdns_cn.yaml" --dir "${configMosdnsPath}" 
+        ${configMosdnsBinPath}/mosdns-cn --service install --config "${configMosdnsPath}/config_mosdns_cn.yaml" --dir "${configMosdnsPath}" 
 
-        ${configMosdnsPath}/mosdns-cn --service start
+        ${configMosdnsBinPath}/mosdns-cn --service start
     fi
 
     echo 
@@ -6980,21 +7001,21 @@ EOF
     green " 查看log: journalctl -n 50 -u ${isinstallMosdnsName} "
     green " 查看访问日志: cat  ${configMosdnsPath}/${isinstallMosdnsName}.log"
 
-    # green " 启动命令: ${configMosdnsPath}/${isinstallMosdnsName} -s start -dir ${configMosdnsPath} "
-    # green " 停止命令: ${configMosdnsPath}/${isinstallMosdnsName} -s stop -dir ${configMosdnsPath} "
-    # green " 重启命令: ${configMosdnsPath}/${isinstallMosdnsName} -s restart -dir ${configMosdnsPath} "
+    # green " 启动命令: ${configMosdnsBinPath}/${isinstallMosdnsName} -s start -dir ${configMosdnsPath} "
+    # green " 停止命令: ${configMosdnsBinPath}/${isinstallMosdnsName} -s stop -dir ${configMosdnsPath} "
+    # green " 重启命令: ${configMosdnsBinPath}/${isinstallMosdnsName} -s restart -dir ${configMosdnsPath} "
     green " =================================================="
 
 }
 
 function removeMosdns(){
-    if [[ -f "${configMosdnsPath}/mosdns" || -f "${configMosdnsPath}/mosdns-cn" ]]; then
-        if [[ -f "${configMosdnsPath}/mosdns" ]]; then
+    if [[ -f "${configMosdnsBinPath}/mosdns" || -f "${configMosdnsBinPath}/mosdns-cn" ]]; then
+        if [[ -f "${configMosdnsBinPath}/mosdns" ]]; then
             isInstallMosdns="true"
             isinstallMosdnsName="mosdns"
         fi
 
-        if [ -f "${configMosdnsPath}/mosdns-cn" ]; then
+        if [ -f "${configMosdnsBinPath}/mosdns-cn" ]; then
             isInstallMosdns="false"
             isinstallMosdnsName="mosdns-cn"
         fi
@@ -7006,14 +7027,15 @@ function removeMosdns(){
         echo
 
         if [[ "${isInstallMosdns}" == "true" ]]; then
-            ${configMosdnsPath}/${isinstallMosdnsName} service stop
-            ${configMosdnsPath}/${isinstallMosdnsName} service uninstall
+            ${configMosdnsBinPath}/${isinstallMosdnsName} service stop
+            ${configMosdnsBinPath}/${isinstallMosdnsName} service uninstall
         else
-            ${configMosdnsPath}/mosdns-cn --service stop
-            ${configMosdnsPath}/mosdns-cn --service uninstall
+            ${configMosdnsBinPath}/mosdns-cn --service stop
+            ${configMosdnsBinPath}/mosdns-cn --service uninstall
 
         fi
 
+        rm -rf "${configMosdnsBinPath}"
         rm -rf "${configMosdnsPath}"
 
         echo

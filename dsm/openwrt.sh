@@ -5,7 +5,6 @@
 checkArchitecture(){
 	# https://stackoverflow.com/questions/48678152/how-to-detect-386-amd64-arm-or-arm64-os-architecture-via-shell-bash
 
-    
 	case $(uname -m) in
 		i386)   osArchitecture="386" ;;
 		i686)   osArchitecture="386" ;;
@@ -15,7 +14,6 @@ checkArchitecture(){
 		* )     osArchitecture="arm" ;;
 	esac
 
-    
 }
 
 
@@ -45,19 +43,19 @@ getGithubLatestReleaseVersion(){
 
 
 mosdnsDownloadPath="/tmp"
-mosdnsLogFilePath="/tmp/mosdns.txt"
+mosdnsLogFilePath="/tmp/mosdns.log"
 mosdnsEtcPath="/etc/mosdns"
 
 getIPDKdownloadFilename(){
     # mosdnsIPK_array=($(wget -qO- https://op.supes.top/packages/x86_64/ | grep -E "mosdns|v2ray" | awk -F'<a href=\"' '/ipk/{print $2}' | cut -d\" -f1 | sort -V))
 
-    mosdnsFilename="mosdns_abcb222-74_x86_64.ipk"
+    mosdnsFilename="mosdns_8bc1821-84_x86_64.ipk"
     mosdnsNeoFilename="mosdns-neo_abcb222-73_x86_64.ipk"
     mosdnsLuciFilename="luci-app-mosdns_git-22.189.25450-61bab3a_all.ipk"
 
-    mosdnsUrl="https://op.supes.top/packages/x86_64/mosdns_abcb222-74_x86_64.ipk"
-    mosdnsNeoUrl="https://op.supes.top/packages/x86_64/mosdns-neo_abcb222-73_x86_64.ipk"
-    mosdnsLuciUrl="https://op.supes.top/packages/x86_64/luci-app-mosdns_git-22.189.25450-61bab3a_all.ipk"
+    mosdnsUrl="https://op.supes.top/packages/x86_64/mosdns_8bc1821-84_x86_64.ipk"
+    mosdnsNeoUrl="https://op.supes.top/packages/x86_64/mosdns_8bc1821-84_x86_64.ipk"
+    mosdnsLuciUrl="https://op.supes.top/packages/x86_64/luci-app-mosdns_git-23.275.44892-e5a38e2_all.ipk"
 
     v2rayGeoSiteFilename="v2ray-geosite_20220425025949-4_all.ipk"
     v2rayGeoIpFilename="v2ray-geoip_202204210050-4_all.ipk"
@@ -101,6 +99,7 @@ getIPDKdownloadFilename(){
         fi
     done
 }
+
 
 installMosdns(){
     getLinuxOSRelease
@@ -155,12 +154,12 @@ installMosdns(){
     # cnipFilename="cn.dat"
 
     # versionV2rayRulesDat=$(getGithubLatestReleaseVersion "Loyalsoldier/v2ray-rules-dat")
-    # geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geosite.dat"
-    # geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/download/202205162212/geoip.dat"
+    # geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+    # geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
     # cnipUrl="https://github.com/Loyalsoldier/geoip/releases/download/202205120123/cn.dat"
 
-    geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-    geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    geositeUrl="https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
+    geoipeUrl="https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
     # cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
 
 
@@ -318,8 +317,8 @@ plugins:
   - tag: cache
     type: cache
     args:
-      size: 4096
-      lazy_cache_ttl: 86400 
+      size: 2048
+      lazy_cache_ttl: 3600
       cache_everything: true
 
   # hosts map
@@ -337,30 +336,9 @@ plugins:
     args:
       upstream:
         - addr: "udp://223.5.5.5"
-          idle_timeout: 30
           trusted: true
         - addr: "udp://119.29.29.29"
-          idle_timeout: 30
-          trusted: true
-        - addr: "tls://120.53.53.53:853"
-          enable_pipeline: true
-          idle_timeout: 30
-
-  # 转发至本地无污染服务器的插件 [geekdns|tunadns]
-  - tag: forward_geekdns
-    type: forward
-    args:
-      upstream:
-        - addr: "tls://v.233py.com:853"
-      bootstrap:
-        - "119.29.29.29"
-        - "223.5.5.5"
-      timeout: 5
-  - tag: forward_tunadns
-    type: fast_forward
-    args:
-      upstream:
-        - addr: "https://101.6.6.6:8443/dns-query"
+          trusted: false
 
 
   # 转发至远程服务器的插件
@@ -370,71 +348,37 @@ plugins:
       upstream:
 ${addNewDNSServerIPText}
 ${addNewDNSServerDomainText}
-        - addr: "tls://8.8.4.4:853"
-          enable_pipeline: true
         - addr: "udp://208.67.222.222"
-          trusted: true
-        - addr: "208.67.220.220:443"
-          trusted: true   
-
-        #- addr: "udp://172.105.216.54"
-        #  idle_timeout: 400
-        #  trusted: true        
-        - addr: "udp://5.2.75.231"
-          idle_timeout: 400
           trusted: true
 
         - addr: "udp://1.0.0.1"
           trusted: true
-        # - addr: "tls://1dot1dot1dot1.cloudflare-dns.com"
         - addr: "https://dns.cloudflare.com/dns-query"
+          idle_timeout: 400
+          trusted: true
+
+        - addr: "udp://5.2.75.231"
           idle_timeout: 400
           trusted: true
 
         - addr: "udp://185.121.177.177"
           idle_timeout: 400
           trusted: true        
-        # - addr: "udp://169.239.202.202"
-
 
         - addr: "udp://94.130.180.225"
           idle_timeout: 400
-          trusted: true        
+          trusted: true     
+
         - addr: "udp://78.47.64.161"
           idle_timeout: 400
           trusted: true 
-        # - addr: "tls://dns-dot.dnsforfamily.com"
-        - addr: "https://dns-doh.dnsforfamily.com/dns-query"
-          dial_addr: "94.130.180.225:443"
-          idle_timeout: 400
-
-        #- addr: "udp://101.101.101.101"
-        #  idle_timeout: 400
-        #  trusted: true 
-        #- addr: "udp://101.102.103.104"
-        #  idle_timeout: 400
-        #  trusted: true 
-        #- addr: "tls://101.101.101.101"
-        # - addr: "https://dns.twnic.tw/dns-query"
-        #  idle_timeout: 400
-
-        # - addr: "udp://172.104.237.57"
 
         - addr: "udp://51.38.83.141"          
-        - addr: "tls://dns.oszx.co"
-        - addr: "https://dns.oszx.co/dns-query"
-          idle_timeout: 400 
 
         - addr: "udp://176.9.93.198"
         - addr: "udp://176.9.1.117"                  
-        - addr: "tls://dnsforge.de"
-        - addr: "https://dnsforge.de/dns-query"
-          idle_timeout: 400
 
         - addr: "udp://88.198.92.222"                  
-        - addr: "tls://dot.libredns.gr"
-        - addr: "https://doh.libredns.gr/dns-query"
-          idle_timeout: 400 
 
 
   # 匹配本地域名的插件
