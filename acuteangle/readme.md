@@ -1,8 +1,17 @@
 # 锐角云安装PVE 最简单教程
 
+## Table of Contents
+
+* [方法1 自动DD方法)](#autodd)
+* [方法2 修改代码方法 让PVE 安装到EMMC 硬盘上](#pveemmc)
+* [在 PVE中 安装Openwrt](#openwrt)
+
+
+
+## AutoDD
 ## 方法1 自动DD方法
 ### 准备工作
-1. 下载 PVE 6.2 镜像 proxmox.img.gz  地址 https://n3450.cloud/proxmox.img.gz 
+1. 下载 PVE 6.2 镜像 proxmox.img.gz(该镜像已经被修改 可以支持emmc并且删除了无用lvm分区)  地址 https://n3450.cloud/proxmox.img.gz 
 2. 下载 SystemRescue Linux 启动盘  地址 https://nchc.dl.sourceforge.net/project/systemrescuecd/sysresccd-x86/9.04/systemrescue-9.04-amd64.iso
 3. 下载 autorun 脚本 https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/autorun , 页面打开后另存为autorun. 注意不要有扩展名 (autorun.txt 这种是错误的)
 4. 下载初始化脚本 https://raw.githubusercontent.com/jinwyp/one_click_script/master/acuteangle/date.sh, 页面打开后另存为date.sh 扩展名是.sh
@@ -45,11 +54,13 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
+
+## pveemmc
 ## 方法2 修改代码方法让PVE 安装到EMMC 硬盘上
 
 ### 准备工作
 1. 下载 PVE 7.1 https://n3450.cloud/proxmox-ve_7.1-2-emmc.iso (已经修改好可以从EMMC安装PVE的镜像, 后面不再需要修改代码) 
-2. 或从 官方下载 [PVE 7.2](https://www.proxmox.com/en/downloads?task=callelement&format=raw&item_id=654&element=f85c494b-2b32-4109-b8c1-083cca2b7db6&method=download&args[0]=3fe6f5552df740d7a85a879ffe42dc14) 
+2. 或从 官方下载 [PVE 7.2-1](https://www.proxmox.com/en/downloads?task=callelement&format=raw&item_id=654&element=f85c494b-2b32-4109-b8c1-083cca2b7db6&method=download&args[0]=71d0b7259765b2c03267418eb4d7889e) 
 
 ### 开始制作启动盘和安装PVE
 1. 用 balenaEtcher(推荐) U盘写入工具 将 proxmox-ve_7.1-2-emmc.iso 或 官方PVE的 proxmox-ve_7.2-1.iso 写入U盘 
@@ -136,7 +147,7 @@ wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/on
 4. 通过再次运行上面脚本 选择1 更新软件源
 
 
-
+## Openwrt 
 ## 在 PVE中 安装Openwrt 
 
 ### 准备工作
