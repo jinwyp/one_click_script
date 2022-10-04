@@ -111,7 +111,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 6. 硬盘选择的时候选择 /dev/mmcblk1 (没有 bootX 后缀). 点击下图 options (建议关闭 swap, swapsize设置为0, 延长EMMC寿命. maxvz 也推荐设置为0, 毕竟只有64G, 不需要分太多卷). 最后安装完成后输入 Ctrl-D ，重启系统. 完成后访问 http://IP:8006 进入后台
 ![pve9](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve9.jpg?raw=true)
 
-7. 后续操作 运行以下脚本, 更新软件源, 删除逻辑卷 /pve/data 合并磁盘等操作.
+7. 后续操作 运行以下脚本, 更新软件源, 删除逻辑卷 /pve/data 合并磁盘等操作 (安装完/dev/pve/root 只有14G).
 
 ```bash
 wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh

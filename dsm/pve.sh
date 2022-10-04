@@ -449,8 +449,9 @@ function updatePVEAptSource(){
 
 
 	cp /etc/apt/sources.list /etc/apt/sources.list.bak
-
-	cat > /etc/apt/sources.list <<-EOF
+	
+	if [[ "$osReleaseVersionNo" == "11" ]]; then
+		cat > /etc/apt/sources.list <<-EOF
 
 deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
 deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
@@ -461,14 +462,37 @@ deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates ma
 deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
 deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
 
-deb http://mirrors.aliyun.com/debian-security ${osReleaseVersionCodeName}/updates main contrib non-free
-deb-src http://mirrors.aliyun.com/debian-security ${osReleaseVersionCodeName}/updates main contrib non-free
+deb https://mirrors.aliyun.com/debian-security/ bullseye-security main
+deb-src https://mirrors.aliyun.com/debian-security/ bullseye-security main
 
 EOF
+	else
+
+		cat > /etc/apt/sources.list <<-EOF
+
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
+
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
+
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
+
+deb http://mirrors.aliyun.com/debian-security ${osReleaseVersionCodeName}/updates main
+deb-src http://mirrors.aliyun.com/debian-security ${osReleaseVersionCodeName}/updates main
+
+
+EOF
+
+	fi
+
+
 
 	${sudoCmd} apt dist-upgrade
 	${sudoCmd} apt-get update
 
+	apt install -y vim
 	green " ================================================== "
 	green " 更新源成功 "
 	green " ================================================== "
