@@ -65,7 +65,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ### 开始制作启动盘和安装PVE
 1. 用 balenaEtcher(推荐) U盘写入工具 将 proxmox-ve_7.1-2-emmc.iso 或 官方PVE的 proxmox-ve_7.2-1.iso 写入U盘 
 2. 插入U盘到 锐角云 HDMI口旁边的USB, 开机按F7选择U盘引导后 (一般U盘为第二项 UEFI：你的U盘名称 例如 SanDisk, Partition 1)。
-3. 启动 PVE 安装程序后 进入安装初始界面后 点击 Install Proxmox VE (Debug mode), 在第一次提示你可以输入命令的时候输入 Ctrl-D ，
+3. 启动 PVE 安装程序后 进入安装初始界面后 先选 Advanced Options, 然后点击 Install Proxmox VE (Debug mode), 在第一次提示你可以输入命令的时候输入 Ctrl-D ，
 ![pve1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve1.jpg?raw=true)
 
 
@@ -111,7 +111,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 6. 硬盘选择的时候选择 /dev/mmcblk1 (没有 bootX 后缀). 点击下图 options (建议关闭 swap, swapsize设置为0, 延长EMMC寿命. maxvz 也推荐设置为0, 毕竟只有64G, 不需要分太多卷). 最后安装完成后输入 Ctrl-D ，重启系统. 完成后访问 http://IP:8006 进入后台
 ![pve9](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/pve9.jpg?raw=true)
 
-7. 后续操作 运行以下脚本, 更新软件院,删除逻辑卷 /pve/data 合并磁盘等操作.
+7. 后续操作 运行以下脚本, 更新软件源, 删除逻辑卷 /pve/data 合并磁盘等操作.
 
 ```bash
 wget --no-check-certificate -P /root https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/pve.sh && chmod 700 /root/pve.sh && /root/pve.sh
