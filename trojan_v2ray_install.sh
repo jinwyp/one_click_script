@@ -6254,7 +6254,7 @@ EOF
         green " nginx 安装成功会显示可视化管理面板网址, 请保存下来. 如果没有显示管理面板网址则表明安装失败. "
         green " =================================================="
 
-        read -p "按回车继续安装. Press enter to continue"
+        read -r -p "按回车继续安装. Press enter to continue"
 
         ${configTrojanWebPath}/trojan-web
 

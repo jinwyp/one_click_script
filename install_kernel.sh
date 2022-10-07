@@ -955,6 +955,8 @@ function downloadFile(){
 
 
 function installKernel(){
+    preferIPV4
+    
     if [ "${linuxKernelToBBRType}" = "bbrplus" ]; then 
         getVersionBBRPlus
     fi
@@ -1222,18 +1224,16 @@ function installCentosKernelManual(){
             elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun510}
             elrepo_kernel_filename=""
-            ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNoShort}"
+            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNoShort}"
 
-            # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.23-1.el7.x86_64.rpm
             # https://dl.lamp.sh/kernel/el7/kernel-ml-5.10.37-1.el7.x86_64.rpm
-            # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
             # https://dl.lamp.sh/kernel/el8/kernel-ml-5.10.27-1.el8.x86_64.rpm
 
         elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
             elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun515}
             elrepo_kernel_filename=""
-            ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNoShort}"
+            ELREPODownloadUrl="https://fr1.teddyvps.com/kernel/el${osReleaseVersionNoShort}"
 
         elif [ "${linuxKernelToInstallVersion}" = "${elrepo_kernel_version_ml_Teddysun_latest_version}" ]; then
             elrepo_kernel_name="kernel-ml"
