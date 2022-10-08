@@ -2768,6 +2768,8 @@ EOM
 
 
 
+
+
     # 增加trojan-go 服务器端配置
     cat > ${configTrojanBasePath}/server.json <<-EOF
 {
@@ -2818,7 +2820,6 @@ RestartPreventExitStatus=23
 [Install]
 WantedBy=multi-user.target
 EOF
-
 
 
     ${sudoCmd} chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
