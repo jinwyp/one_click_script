@@ -1914,7 +1914,7 @@ function installWebServerNginx(){
     echo
 
     if test -s ${nginxConfigPath}; then
-        showHeaderRed "Nginx 已存在, 是否退出安装?"
+        showHeaderRed "Nginx 已存在, 是否继续安装?" "Nginx already exists. Continue the installation? "
         promptContinueOpeartion
 
         ${sudoCmd} systemctl stop nginx.service

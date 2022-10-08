@@ -1666,6 +1666,9 @@ function stopServiceV2ray(){
     if [[ -f "${osSystemMdPath}v2ray.service" ]] || [[ -f "/etc/systemd/system/v2ray.service" ]] || [[ -f "/lib/systemd/system/v2ray.service" ]] ; then
         ${sudoCmd} systemctl stop v2ray.service
     fi
+    if [[ -f "${osSystemMdPath}xray.service" ]] || [[ -f "/etc/systemd/system/xray.service" ]] || [[ -f "/lib/systemd/system/xray.service" ]] ; then
+        ${sudoCmd} systemctl stop xray.service
+    fi    
 }
 
 
@@ -1679,47 +1682,53 @@ function installWebServerNginx(){
     echo
 
     if test -s ${nginxConfigPath}; then
-        showHeaderRed "Nginx 已存在, 退出安装!"
-        exit
-    fi
+        showHeaderRed "Nginx 已存在, 是否继续安装? " "Nginx already exists. Continue the installation? "
+        promptContinueOpeartion
 
-    stopServiceV2ray
-
-    createUserWWW
-    nginxUser="${wwwUsername} ${wwwUsername}"
-
-
-    if [ "$osRelease" == "centos" ]; then
-        ${osSystemPackage} install -y nginx-mod-stream
+        ${sudoCmd} systemctl stop nginx.service
     else
-        echo
-        groupadd -r -g 4 adm
+        stopServiceV2ray
 
-        apt autoremove -y
-        apt-get remove --purge -y nginx-common
-        apt-get remove --purge -y nginx-core
-        apt-get remove --purge -y libnginx-mod-stream
-        apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+        createUserWWW
+        nginxUser="${wwwUsername} ${wwwUsername}"
 
-        apt autoremove -y --purge nginx nginx-common nginx-core
-        apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
 
-        #${osSystemPackage} install -y libnginx-mod-stream
+        if [ "$osRelease" == "centos" ]; then
+            ${osSystemPackage} install -y nginx-mod-stream
+        else
+            echo
+            groupadd -r -g 4 adm
+
+            apt autoremove -y
+            apt-get remove --purge -y nginx-common
+            apt-get remove --purge -y nginx-core
+            apt-get remove --purge -y libnginx-mod-stream
+            apt-get remove --purge -y libnginx-mod-http-xslt-filter libnginx-mod-http-geoip2 libnginx-mod-stream-geoip2 libnginx-mod-mail libnginx-mod-http-image-filter
+
+            apt autoremove -y --purge nginx nginx-common nginx-core
+            apt-get remove --purge -y nginx nginx-full nginx-common nginx-core
+
+            #${osSystemPackage} install -y libnginx-mod-stream
+        fi
+
+        ${osSystemPackage} install -y nginx
+        ${sudoCmd} systemctl enable nginx.service
+        ${sudoCmd} systemctl stop nginx.service
+
+        # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
+        # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
+        
+        mkdir -p /etc/systemd/system/nginx.service.d
+        printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+        
+        ${sudoCmd} systemctl daemon-reload
+
     fi
 
-    ${osSystemPackage} install -y nginx
-    ${sudoCmd} systemctl enable nginx.service
-    ${sudoCmd} systemctl stop nginx.service
 
-    # 解决出现的nginx warning 错误 Failed to parse PID from file /run/nginx.pid: Invalid argument
-    # https://www.kancloud.cn/tinywan/nginx_tutorial/753832
-    
-    mkdir -p /etc/systemd/system/nginx.service.d
-    printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
-    
-    ${sudoCmd} systemctl daemon-reload
-    
 
+    
+    mkdir -p ${configWebsitePath}
     mkdir -p "${nginxConfigSiteConfPath}"
 
 
