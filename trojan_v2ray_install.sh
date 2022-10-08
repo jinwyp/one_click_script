@@ -2604,7 +2604,7 @@ function installTrojanServer(){
     green " 开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
     green " =================================================="
     echo
-    yellow " Input password prefix: "
+    yellow " Input trojan-go password prefix, default is ramdom char: "
     yellow " 请输入 trojan${promptInfoTrojanName} 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     
     read -r -p "请输入密码的前缀, 直接回车默认随机生成前缀:" configTrojanPasswordPrefixInput

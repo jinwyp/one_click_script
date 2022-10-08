@@ -106,35 +106,42 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ### 准备工作
 
 1. 一台新的VPS开通后,建议做以下事情(非必须)
-2. 运行脚本后 选择35 填入你自己的公钥, 这样就可以不需要每次输入SSH密码登录VPS, 提高安全性. 还可以继续手动修改配置文件 /etc/ssh/sshd_config 关闭SSH使用密码登录,使其只能使用密钥登录VPS
-3. 运行脚本后 选择33 修改SSH端口号, 一般默认SSH端口号是22, 强烈建议改成其他的端口号, 提高安全性. 默认22端口极易被扫描和攻击.
-4. 运行脚本后 选择34 修改时区为北京时间, 因为V2ray的Vmess的协议需要对服务器和客户端时间一致, 建议把VPS服务器改成北京时间.
-5. 有一些VPS例如Google Cloud 默认没有开启root账号登录, 运行脚本后 选择32 可以开启root账号登录. 建议使用root用户运行该脚本.
-6. 运行脚本后 选择31 安装 Oh-my-zsh 等软件, 这些软件会简化你的后续操作, 并带有提示. 安装完成后请退出VPS, 命令为```exit```. 重新登录VPS后继续后续操作. 
+2. 运行脚本后 选择45 填入你自己的公钥, 这样就可以不需要每次输入SSH密码登录VPS, 提高安全性. 还可以继续手动修改配置文件 /etc/ssh/sshd_config 关闭SSH使用密码登录,使其只能使用密钥登录VPS
+3. 运行脚本后 选择43 修改SSH端口号, 一般默认SSH端口号是22, 强烈建议改成其他的端口号, 提高安全性. 默认22端口极易被扫描和攻击.
+4. 运行脚本后 选择44 修改时区为北京时间, 因为V2ray的Vmess的协议需要对服务器和客户端时间一致, 建议把VPS服务器改成北京时间.
+5. 有一些VPS例如Google Cloud 默认没有开启root账号登录, 运行脚本后 选择42 可以开启root账号登录. 建议使用root用户运行该脚本.
+6. 运行脚本后 选择41 安装 Oh-my-zsh 等软件, 这些软件会简化你的后续操作, 并带有提示. 安装完成后请退出VPS, 命令为```exit```. 重新登录VPS后继续后续操作. 
 
 ### 安装新版Linux 内核 和 BBR 内核
 1. 运行脚本后 选择1 安装 Linux 内核和开启BBR+Cake, 具体请参考[Linux 内核一键安装脚本](/KERNEL_CN.md)
 
 
-### 安装命令行方式 启动 trojan 或 v2ray
 
-1. 建议使用root用户运行该脚本. 安装bbr plus 内核 需要root权限, 默认认为使用root执行本脚本, 非root用户请手动添加sudo执行 ```sudo ./trojan_v2ray_install.sh ``` 脚本. 注意 证书申请也需要用root用户而不建议用sudo运行 [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo).
+### 安装 trojan-go
 
-2. 安装 trojan 重新运行脚本 命令为 ```./trojan_v2ray_install.sh ```  选2 安装trojan 或 安装trojan-go 支持原版trojan客户端, 或3 安装 trojan-go 支持Websocket, 注意原版trojan客户端不支持websocket, 使用原版trojan客户端只能连接 trojan-go的原版tcp协议, 无法支持websocket 使用CDN. 需要使用trojan-go的客户端才可以支持websocket 支持CDN.
+1. 安装 trojan-go 重新运行脚本 命令为 ```./trojan_v2ray_install.sh ```  选2 安装trojan-go 如果开启 Websocket 支持CDN, 需要注意 很多原版trojan客户端不支持websocket, 使用原版trojan客户端只能连接 trojan-go的原版tcp协议, 无法支持websocket 使用CDN. 需要使用trojan-go的客户端才可以支持websocket 支持CDN.
 
-3. 安装 v2ray 重新运行脚本 选择11 安装 v2ray或xray 并且nginx 提供443端口的tls服务, 推荐使用本模式. 然后安装v2ray协议可以选择websocket或gRPC 等协议 通过设置 path来区分v2ray流量, 并且支持CDN. 如果选择TCP或HTTP2或QUIC 协议则无法使用CDN中转流量. Cloudflare 虽然支持HTTP2或QUIC协议, 但却无法使用其CDN中转, [具体信息可以看](https://github.com/v2ray/v2ray-core/issues/1769). QUIC(HTTP3)协议由于使用了UDP, 在某些运营商会被禁止或被限制端口或QoS降速, 所以使用QUIC可能无法达到提速的预期目的. 选择KCP协议降低延迟,如果打游戏可以尝试该协议.
 
-4. 安装 v2ray 重新运行脚本 选择13-17 安装 v2ray或xray 使用Vless协议提供443端口的tls服务, 而且安装过程中如果选XTLS代替TLS加密 将会明显提高速度. 安装完毕后会提供多种协议可以同时使用. 使用WS-TLS 或 gRPC+TLS协议可以使用CDN中转加速. 使用TCP-XTLS则为直连速度最快协议. 安装V2ray或Xray, 都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便用于不支持443端口的中转机中转给目标主机.
+### 安装 v2ray 或 xray
 
-5. 同时安装 trojan 和 v2ray 选择21 使用Vless提供443端口的tls服务, 而trojan或trojan-go运行在非443的其他端口上.
+1. 重新运行脚本 选择11 安装 v2ray或xray 并且nginx 前置提供443端口的tls服务, 推荐使用本模式 安全性最高. 然后安装v2ray协议可以选择websocket或gRPC 等协议 通过设置 path来区分v2ray流量, 并且支持CDN. 如果选择TCP或HTTP2或QUIC 协议则无法使用CDN中转流量. Cloudflare 虽然支持HTTP2或QUIC协议, 但却无法使用其CDN中转, [具体信息可以看](https://github.com/v2ray/v2ray-core/issues/1769). QUIC(HTTP3)协议由于使用了UDP, 在某些运营商会被禁止或被限制端口或QoS降速, 所以使用QUIC可能无法达到提速的预期目的. 选择KCP协议降低延迟,如果打游戏可以尝试该协议.
 
-6. 同时安装 trojan 和 v2ray 选择22 使用trojan或trojan-go 提供443端口的tls服务, trojan把非trojan流量转发到nginx, nginx在通过path路径转发流量到v2ray.
 
-7. 同时安装 trojan 和 v2ray 选择23 通过nginx SNI 提供443端口服务, 最少需要提供2个域名分别给trojan, v2ray单独使用, 并且可以与现有网站共存(需要再提供第3个域名给网站使用), 通过不同域名区分不同的HTTPS加密流量. 
+2. 重新运行脚本 选择13-17 安装 v2ray或xray 使用Vless协议提供443端口的tls服务, 同时 fallback 到80端口的nginx提供web服务.  安装过程中如果选XTLS代替TLS加密 将会明显提高速度. 安装完毕后会提供多种协议可以同时使用. 使用WS-TLS 或 gRPC+TLS协议可以使用CDN中转加速. 使用TCP-XTLS则为直连速度最快协议. 安装V2ray或Xray, 都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便用于不支持443端口的中转机中转给目标主机.
 
-8. 建议: 如果VPS线路速度可以保证，不需要CDN，建议17 安装xray + XTLS 速度最快, 或选2或3 安装 trojan-go. 如果需要CDN 可以选11 安装V2ray和Nginx. 不建议使用本脚本或其他脚本同时安装多个协议, 协议安装的越多安全性越低, 而且也不会提高速度, 适合自己的协议装一种最好. 
+3. 同时安装 trojan-go 和 v2ray 选择21 使用Vless提供443端口的tls服务, 而trojan或trojan-go运行在非443的其他端口上.
 
-9. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置.
+4. 同时安装 trojan-go 和 v2ray 选择22 使用trojan-go 提供443端口的tls服务, trojan把非trojan流量转发到nginx, nginx在通过path路径转发流量到v2ray.
+
+5. 同时安装 trojan-go 和 v2ray 选择23 通过nginx SNI 提供443端口服务, 最少需要提供2个域名分别给trojan, v2ray单独使用, 并且可以与现有网站共存(需要再提供第3个域名给网站使用), 通过不同域名区分不同的HTTPS加密流量. 
+
+
+6. 建议: 如果VPS线路速度可以保证，不需要CDN，建议17 安装xray + XTLS 速度最快, 或选2 安装 trojan-go. 如果需要CDN 可以选11 安装V2ray和Nginx. 不建议使用本脚本或其他脚本同时安装多个协议, 协议安装的越多安全性越低, 而且也不会提高速度, 适合自己的协议装一种最好. 
+
+7. 以上安装都可以选择是否申请证书, 如果已有证书可以不在安装过程中申请, 或多次安装本脚本也可以不需要再次申请。证书位置在 /root/website/cert/fullchain.cer 和 /root/website/cert/private.key, 可以手动放置.
+
+8. 安装的Nginx的伪装网站路径为 /nginxweb/html, 可自行替换网页内容. Nginx 配置路径为 /etc/nginx/conf.d. 同时安装过程中可以选择不使用静态网页 而是直接反代某个网站 例如反代 baidu.com
+
 
 
 ### 高级用法 Advanced Usage 与现有网站或宝塔面板共存
@@ -143,9 +150,9 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 2. 运行脚本 选择13-17 安装V2ray或Xray, 过程中可以选择不安装nginx, 这样让V2ray或Xray的 Vless协议服务于443 https端口(端口可自定义), 可与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由V2ray或Xray的 Vless协议提供.
 
-3. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择4 只安装trojan或trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由 trojan或trojan-go提供服务.
+3. 如果机器上已经有nginx或已有其他Web网站服务, 或是与宝塔面板共同使用, 可以运行脚本后 选择3 只安装trojan-go, 这样让trojan或trojan-go服务于443 https端口, 与现有的nginx或网站共存, nginx需要修改配置只监听80端口即可。Https的TLS加密由 trojan-go提供服务.
 
-4. 注意 运行脚本后选择4 并选择安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
+4. 注意 运行脚本后选择3 并选择安装trojan-go. 必须保证本机80端口有监听, 否则trojan-go无法启动. 这是trojan-go的一个fallback功能, 非trojan协议的流量会转发到remote_addr和remote_port指定这个HTTP服务器的地址. Trojan-Go将会测试这个HTTP服务器是否工作正常，如果不正常，Trojan-Go会拒绝启动. [参考trojan-go官方文档](https://p4gefau1t.github.io/trojan-go/basic/config/) 
 
 
 
@@ -175,19 +182,22 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 ## 注意事项与常见问题 FAQ 
 
-1. 自 2022 年 1 月 1 日起，服务器端将默认禁用对于 MD5 认证信息 的兼容。任何使用 MD5 认证信息的客户端将无法连接到禁用 VMess MD5 认证信息的服务器端, [V2ray官方文档说明](https://www.v2fly.org/config/protocols/vmess.html#inboundconfigurationobject). 解决方法为客户端升级到最新版, 客户端配置文件AID=0(alterId 为 0). [其他解决方法1](https://www.blueskyxn.com/202201/5696.html). [其他解决方法2](https://dasmz.com/?p=1051). 
+1. 建议使用root用户运行该脚本. 因为安装bbr 内核 需要root权限, 默认认为使用root执行本脚本, 非root用户请手动添加sudo执行 ```sudo ./trojan_v2ray_install.sh ``` 脚本. 注意 证书申请也需要用root用户而不建议用sudo运行 [acme.sh文档说明](https://github.com/acmesh-official/acme.sh/wiki/sudo).
+
+2. 自2022年 1月 1日起，V2ray 服务器端将默认禁用对于 MD5 认证信息 的兼容。任何使用 MD5 认证信息的客户端将无法连接到禁用 VMess MD5 认证信息的服务器端, [V2ray官方文档说明](https://www.v2fly.org/config/protocols/vmess.html#inboundconfigurationobject). 解决方法为客户端升级到最新版, 客户端配置文件AID=0(alterId 为 0). [其他解决方法1](https://www.blueskyxn.com/202201/5696.html). [其他解决方法2](https://dasmz.com/?p=1051). 
 
 
-2. 免费域名可以使用 [freenom](https://www.freenom.com/zh/index.html?lang=zh). 注册freenom时需要使用美国IP,否则无法通过注册邮件验证. 请自行搜索教程.
-3. 使用脚本安装时请先关闭CDN, cloudflare.com 中DNS设置页面, 二级域名设置为DNS only 为关闭CDN. 安装v2ray或trojan-go完毕后 可以开启CDN 设置为Proxied 即可. trojan目前不支持CDN, trojan-go 默认安装设置为不支持CDN,可以在安装过程中选择支持CDN.
+3. 免费域名可以使用 [freenom](https://www.freenom.com/zh/index.html?lang=zh). 注册freenom时需要使用美国IP,否则无法通过注册邮件验证. 请自行搜索教程.
+
+4. 使用脚本安装时请先关闭CDN, cloudflare.com 中DNS设置页面, 二级域名设置为DNS only 为关闭CDN(即关闭黄色云朵). 安装v2ray或trojan-go完毕后 可以开启CDN 设置为Proxied 即可. trojan目前不支持CDN, trojan-go 支持CDN,可以在安装过程中选择支持CDN.
 
 ![注意 cloudflare CDN](https://github.com/jinwyp/one_click_script/blob/master/docs/cloudflare1.jpg?raw=true)
 
-4. 如果使用v2ray 或 xray的 gRPC 通过cloudflare 转发, 需要在cloudflare 域名 "设置"中 => "网络" 菜单里面 允许gRPC，cloudflare Network => gRPC 
+5. 如果使用v2ray 或 xray的 gRPC 通过cloudflare 转发, 需要在cloudflare 域名 "设置"中 => "网络" 菜单里面 允许gRPC，cloudflare Network => gRPC 
 
 ![注意 cloudflare CDN gRPC](https://github.com/jinwyp/one_click_script/blob/master/docs/grpc.png?raw=true)
 
-5. 以下是Cloudflare CDN 的worker 加速脚本, 请把域名替换成自己的vps的域名. 然后在Cloudflare新建worker 添加即可. 可以通过下面3个工具任选其一, [CFIP][better-cloudflare-ip], [CloudflareScanner], [CloudflareSpeedTest],  在你自己的客户端机器上运行, 找出距离你最快的 cloudflare 的CDN IP, 在v2ray或trojan-go支持CDN的配置中填入该IP即可.
+6. 以下是Cloudflare CDN 的worker 加速脚本, 请把域名替换成自己的vps的域名. 然后在Cloudflare新建worker 添加即可. 可以通过下面3个工具任选其一, [CFIP][better-cloudflare-ip], [CloudflareScanner], [CloudflareSpeedTest],  在你自己的客户端机器上运行, 找出距离你最快的 cloudflare 的CDN IP, 在v2ray或trojan-go支持CDN的配置中填入该IP即可.
 ```
 addEventListener(
     "fetch", event => {
@@ -202,6 +212,7 @@ addEventListener(
 )
 ```
 
+
 ## 特别感谢 Special Thanks
 
 1. 脚本感谢 https://github.com/sprov065/v2-ui 
@@ -211,8 +222,6 @@ addEventListener(
 5. 脚本感谢 https://github.com/trojan-gfw/trojan
 6. 脚本感谢 https://github.com/p4gefau1t/trojan-go
 7. 脚本感谢 https://github.com/ylx2016/Linux-NetSpeed
-8. 脚本感谢 秋水逸冰、Atrandys、V2ray官方 和 波仔分享 等 
-9. 脚本感谢 JCNF的博客 https://ybfl.xyz/111.html
 
 
 
