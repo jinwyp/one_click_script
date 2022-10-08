@@ -1018,19 +1018,19 @@ versionTrojanWeb="2.10.5"
 downloadFilenameTrojanWeb="trojan-linux-amd64"
 
 isTrojanMultiPassword="no"
-promptInfoTrojanName=""
-isTrojanGo="yes"
+promptInfoTrojanName="-go"
+
 isTrojanGoSupportWebsocket="false"
 configTrojanGoWebSocketPath=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
 configTrojanPasswordPrefixInputDefault=$(cat /dev/urandom | head -1 | md5sum | head -c 3)
 
-configTrojanPath="${HOME}/trojan"
+
 configTrojanGoPath="${HOME}/trojan-go"
 configTrojanWebPath="${HOME}/trojan-web"
 configTrojanLogFile="${HOME}/trojan-access.log"
 configTrojanGoLogFile="${HOME}/trojan-go-access.log"
 
-configTrojanBasePath=${configTrojanPath}
+configTrojanBasePath=${configTrojanGoPath}
 configTrojanBaseVersion=${versionTrojan}
 
 configTrojanWebNginxPath=$(cat /dev/urandom | head -1 | md5sum | head -c 5)
@@ -1125,18 +1125,7 @@ function getGithubLatestReleaseVersion(){
 function getTrojanAndV2rayVersion(){
     # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
 
-    echo ""
-
-    if [[ $1 == "trojan" ]] ; then
-        versionTrojan=$(getGithubLatestReleaseVersion "trojan-gfw/trojan")
-        downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
-        echo "versionTrojan: ${versionTrojan}"
-    fi
-
-    if [[ $1 == "trojan-go" ]] ; then
-        versionTrojanGo=$(getGithubLatestReleaseVersion "p4gefau1t/trojan-go")
-        echo "versionTrojanGo: ${versionTrojanGo}"  
-    fi
+    echo 
 
     if [[ $1 == "v2ray" ]] ; then
         echo
@@ -1157,26 +1146,9 @@ function getTrojanAndV2rayVersion(){
     fi
 
     if [[ $1 == "xray" ]] ; then
-        echo
-        green " ================================================== "
-        green " 请选择 Xray 的版本, 默认直接回车为 稳定版1.5.5 (推荐)"
-        green " 选否则安装最新版的Xray Pre-release 1.5.10"
-        echo
-        read -r -p "是否安装稳定版Xray? 默认直接回车为稳定版1.5.5, 请输入[Y/n]:" isInstallXrayVersionInput
-        isInstallXrayVersionInput=${isInstallXrayVersionInput:-Y}
-        echo
-
-        if [[ $isInstallXrayVersionInput == [Yy] ]]; then
-            versionXray="1.5.5"
-        else
-            versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
-        fi
+        versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
         echo "versionXray: ${versionXray}"
     fi
-
-
-
-
 
 
     if [[ $1 == "trojan-web" ]] ; then
@@ -2511,7 +2483,6 @@ function installTrojanV2rayWithNginx(){
 
         else
             echo
-            
         fi
     else
         red " ================================================== "
@@ -2543,82 +2514,41 @@ function installTrojanV2rayWithNginx(){
 
 
 
+
+
+
+
+function getTrojanGoVersion(){
+    versionTrojanGo=$(getGithubLatestReleaseVersion "fregie/trojan-go")
+    echo "versionTrojanGo: ${versionTrojanGo}"  
+    configTrojanBaseVersion=${versionTrojanGo}
+}
+
 function downloadTrojanBin(){
 
-    if [ "${isTrojanGo}" = "no" ] ; then
-        if [ -z $1 ]; then
-            tempDownloadTrojanPath="${configTrojanPath}"
-        else
-            tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan"
-            mv -f ${configDownloadTempPath}/upgrade/trojan/trojan ${configTrojanPath}
-        fi    
-        # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
-        if [[ ${osArchitecture} == "arm" || ${osArchitecture} == "arm64" ]] ; then
-            red "Trojan not support arm on linux! "
-            exit
-        fi
+    tempDownloadTrojanPath="${configDownloadTempPath}/trojan-go" 
+    
+    mkdir -p ${tempDownloadTrojanPath}
 
-        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojan}"
+    # https://github.com/fregie/trojan-go/releases/download/v1.0.5/trojan-go-linux-amd64.zip
+    # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.6/trojan-go-linux-amd64.zip
+
+    if [[ ${osArchitecture} == "arm" ]] ; then
+        downloadFilenameTrojanGo="trojan-go-linux-arm.zip"
+    fi
+    if [[ ${osArchitecture} == "arm64" ]] ; then
+        downloadFilenameTrojanGo="trojan-go-linux-armv8.zip"
+    fi
+    downloadAndUnzip "https://github.com/fregie/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojanGo}"
+    
+    if [ -z $1 ]; then
+        mv -f ${configDownloadTempPath}/trojan-go/* ${configTrojanGoPath}
     else
-        if [ -z $1 ]; then
-            tempDownloadTrojanPath="${configTrojanGoPath}"
-        else
-            tempDownloadTrojanPath="${configDownloadTempPath}/upgrade/trojan-go"
-            mv -f ${configDownloadTempPath}/upgrade/trojan-go/trojan-go ${configTrojanGoPath}
-        fi 
-
-        # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.6/trojan-go-linux-amd64.zip
-        if [[ ${osArchitecture} == "arm" ]] ; then
-            downloadFilenameTrojanGo="trojan-go-linux-arm.zip"
-        fi
-        if [[ ${osArchitecture} == "arm64" ]] ; then
-            downloadFilenameTrojanGo="trojan-go-linux-armv8.zip"
-        fi
-        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${tempDownloadTrojanPath}" "${downloadFilenameTrojanGo}"
-    fi 
-}
-
-function checkTrojanGoInstall(){
-    if [ -f "${configTrojanPath}/trojan" ] ; then
-        configTrojanBasePath="${configTrojanPath}"
-        promptInfoTrojanName=""
-        isTrojanGo="no"
-    fi
-
-    if [ -f "${configTrojanGoPath}/trojan-go" ] ; then
-        configTrojanBasePath="${configTrojanGoPath}"
-        promptInfoTrojanName="-go"
-        isTrojanGo="yes"
-    fi
-
-    if [ -n "$1" ] ; then
-        if [[ -f "${configTrojanBasePath}/trojan${promptInfoTrojanName}" ]]; then
-            green " =================================================="
-            green "  已安装过 Trojan${promptInfoTrojanName} , 退出安装 !"
-            green " =================================================="
-            exit
-        fi
-    fi
-
-}
-
-function getTrojanGoInstallInfo(){
-    if [ "${isTrojanGo}" = "yes" ] ; then
-        getTrojanAndV2rayVersion "trojan-go"
-        configTrojanBaseVersion=${versionTrojanGo}
-        configTrojanBasePath="${configTrojanGoPath}"
-        promptInfoTrojanName="-go"
-    else
-        getTrojanAndV2rayVersion "trojan"
-        configTrojanBaseVersion=${versionTrojan}
-        configTrojanBasePath="${configTrojanPath}"
-        promptInfoTrojanName=""
+        mv -f ${configDownloadTempPath}/trojan-go/trojan-go ${configTrojanGoPath}
     fi
 }
 
-
-function installTrojanServer(){
-
+function generateTrojanPassword(){
     trojanPassword1=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword2=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword3=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
@@ -2629,46 +2559,43 @@ function installTrojanServer(){
     trojanPassword8=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword9=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
     trojanPassword10=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+}
 
+function installTrojanServer(){
 
-
-    checkTrojanGoInstall "exitInfo"
-
-    if [ "${isTrojanGoSupportWebsocket}" = "true" ] ; then
-        isTrojanGo="yes"
-    else
-        echo
+    if [[ -f "${configTrojanBasePath}/trojan${promptInfoTrojanName}" ]]; then
         green " =================================================="
-        green " 请选择安装 trojan-go 还是 原版trojan, 选Y为安装trojan-go, 选N为安装原版trojan"
-        read -r -p "请选择安装trojan-go 还是 原版trojan? 直接回车默认为trojan-go, 请输入[Y/n]:" isInstallTrojanTypeInput
-        isInstallTrojanTypeInput=${isInstallTrojanTypeInput:-Y}
-
-        if [[ "${isInstallTrojanTypeInput}" == [Yy] ]]; then
-            isTrojanGo="yes"
-
-            echo
-            green " 请选择是否开启 trojan-go 的 Websocket 用于CDN中转, 注意原版trojan客户端不支持 Websocket"
-            read -r -p "请选择是否开启 Websocket? 直接回车默认开启, 请输入[Y/n]:" isTrojanGoWebsocketInput
-            isTrojanGoWebsocketInput=${isTrojanGoWebsocketInput:-Y}
-
-            if [[ "${isTrojanGoWebsocketInput}" == [Yy] ]]; then
-                isTrojanGoSupportWebsocket="true"
-            else
-                isTrojanGoSupportWebsocket="false"
-            fi
-
-        else
-            isTrojanGo="no"
-        fi
-
+        red "  已安装过 Trojan${promptInfoTrojanName} , 退出安装 !"
+        red "  Trojan${promptInfoTrojanName} already installed !"
+        green " =================================================="
+        exit
     fi
 
-    getTrojanGoInstallInfo
+    generateTrojanPassword
+
+
+    echo
+    green " =================================================="
+    echo
+    green " Enable Websocket or not, default is Y"
+    green " 是否开启 Websocket 用于CDN中转, 注意原版trojan客户端不支持 Websocket"
+    echo
+    read -r -p "请选择是否开启 Websocket? 直接回车默认开启, 请输入[Y/n]:" isTrojanGoWebsocketInput
+    isTrojanGoWebsocketInput=${isTrojanGoWebsocketInput:-Y}
+
+    if [[ "${isTrojanGoWebsocketInput}" == [Yy] ]]; then
+        isTrojanGoSupportWebsocket="true"
+    else
+        isTrojanGoSupportWebsocket="false"
+    fi
+
+    getTrojanGoVersion
 
     green " =================================================="
     green " 开始安装 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
     green " =================================================="
     echo
+    yellow " Input password prefix: "
     yellow " 请输入 trojan${promptInfoTrojanName} 密码的前缀? (会生成若干随机密码和带有该前缀的密码)"
     
     read -r -p "请输入密码的前缀, 直接回车默认随机生成前缀:" configTrojanPasswordPrefixInput
@@ -2695,11 +2622,10 @@ function installTrojanServer(){
     mkdir -p "${configTrojanBasePath}"
     cd "${configTrojanBasePath}" || exit
 
-
     downloadTrojanBin
 
     if [ "${isTrojanMultiPassword}" = "no" ] ; then
-    read -r -d '' trojanConfigUserpasswordInput << EOM
+        read -r -d '' trojanConfigUserpasswordInput << EOM
         "${trojanPassword1}",
         "${trojanPassword2}",
         "${trojanPassword3}",
@@ -2724,7 +2650,7 @@ EOM
 
     else
 
-    read -r -d '' trojanConfigUserpasswordInput << EOM
+        read -r -d '' trojanConfigUserpasswordInput << EOM
         "${trojanPassword1}",
         "${trojanPassword2}",
         "${trojanPassword3}",
@@ -2842,82 +2768,8 @@ EOM
 
 
 
-
-
-    if [ "$isTrojanGo" = "no" ] ; then
-
-        # 增加trojan 服务器端配置
-	    cat > ${configTrojanBasePath}/server.json <<-EOF
-{
-    "run_type": "server",
-    "local_addr": "0.0.0.0",
-    "local_port": ${configV2rayTrojanPort},
-    "remote_addr": "127.0.0.1",
-    "remote_port": 80,
-    "password": [
-        ${trojanConfigUserpasswordInput}
-    ],
-    "log_level": 1,
-    "ssl": {
-        "cert": "${configSSLCertPath}/$configSSLCertFullchainFilename",
-        "key": "${configSSLCertPath}/$configSSLCertKeyFilename",
-        "key_password": "",
-        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
-	    "prefer_server_cipher": true,
-        "alpn": [
-            "http/1.1"
-        ],
-        "reuse_session": true,
-        "session_ticket": false,
-        "session_timeout": 600,
-        "plain_http_response": "",
-        "curves": "",
-        "dhparam": ""
-    },
-    "tcp": {
-        "no_delay": true,
-        "keep_alive": true,
-        "fast_open": false,
-        "fast_open_qlen": 20
-    },
-    "mysql": {
-        "enabled": false,
-        "server_addr": "127.0.0.1",
-        "server_port": 3306,
-        "database": "trojan",
-        "username": "trojan",
-        "password": ""
-    }
-}
-EOF
-
-        # rm /etc/systemd/system/trojan.service   
-        # 增加启动脚本
-        cat > ${osSystemMdPath}trojan.service <<-EOF
-[Unit]
-Description=trojan
-After=network.target
-
-[Service]
-Type=simple
-PIDFile=${configTrojanPath}/trojan.pid
-ExecStart=${configTrojanPath}/trojan -l ${configTrojanLogFile} -c "${configTrojanPath}/server.json"
-ExecReload=/bin/kill -HUP \$MAINPID
-Restart=on-failure
-RestartSec=10
-RestartPreventExitStatus=23
-PrivateTmp=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    fi
-
-
-    if [ "$isTrojanGo" = "yes" ] ; then
-
-        # 增加trojan 服务器端配置
-	    cat > ${configTrojanBasePath}/server.json <<-EOF
+    # 增加trojan-go 服务器端配置
+    cat > ${configTrojanBasePath}/server.json <<-EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
@@ -2947,8 +2799,9 @@ EOF
 }
 EOF
 
-        # 增加启动脚本
-        cat > ${osSystemMdPath}trojan-go.service <<-EOF
+
+    # 增加启动脚本
+    cat > ${osSystemMdPath}trojan-go.service <<-EOF
 [Unit]
 Description=trojan-go
 After=network.target
@@ -2967,74 +2820,11 @@ WantedBy=multi-user.target
 EOF
     fi
 
+
     ${sudoCmd} chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl daemon-reload
     ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl enable trojan${promptInfoTrojanName}.service
-
-
-    if [ "${configV2rayWorkingMode}" == "nouse" ] ; then
-        
-    
-    # 下载并制作 trojan windows 客户端的命令行启动文件
-    rm -rf ${configTrojanBasePath}/trojan-win-cli
-    rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
-    mkdir -p ${configTrojanBasePath}/trojan-win-cli-temp
-
-    downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/trojan-win-cli.zip" "${configTrojanBasePath}" "trojan-win-cli.zip"
-
-    if [ "$isTrojanGo" = "no" ] ; then
-        downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/trojan-${versionTrojan}-win.zip" "${configTrojanBasePath}/trojan-win-cli-temp" "trojan-${versionTrojan}-win.zip"
-        mv -f ${configTrojanBasePath}/trojan-win-cli-temp/trojan/trojan.exe ${configTrojanBasePath}/trojan-win-cli/
-        mv -f ${configTrojanBasePath}/trojan-win-cli-temp/trojan/VC_redist.x64.exe ${configTrojanBasePath}/trojan-win-cli/
-    fi
-
-    if [ "$isTrojanGo" = "yes" ] ; then
-        downloadAndUnzip "https://github.com/p4gefau1t/trojan-go/releases/download/v${versionTrojanGo}/trojan-go-windows-amd64.zip" "${configTrojanBasePath}/trojan-win-cli-temp" "trojan-go-windows-amd64.zip"
-        mv -f ${configTrojanBasePath}/trojan-win-cli-temp/* ${configTrojanBasePath}/trojan-win-cli/
-    fi
-
-    rm -rf ${configTrojanBasePath}/trojan-win-cli-temp
-    cp ${configSSLCertPath}/${configSSLCertFullchainFilename} ${configTrojanBasePath}/trojan-win-cli/${configSSLCertFullchainFilename}
-
-    cat > ${configTrojanBasePath}/trojan-win-cli/config.json <<-EOF
-{
-    "run_type": "client",
-    "local_addr": "127.0.0.1",
-    "local_port": 1080,
-    "remote_addr": "${configSSLDomain}",
-    "remote_port": 443,
-    "password": [
-        "${trojanPassword1}"
-    ],
-    "log_level": 1,
-    "ssl": {
-        "verify": true,
-        "verify_hostname": true,
-        "cert": "$configSSLCertFullchainFilename",
-        "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
-	    "sni": "",
-        "alpn": [
-            "h2",
-            "http/1.1"
-        ],
-        "reuse_session": true,
-        "session_ticket": false,
-        "curves": ""
-    },
-    "tcp": {
-        "no_delay": true,
-        "keep_alive": true,
-        "fast_open": false,
-        "fast_open_qlen": 20
-    }
-}
-EOF
-
-    zip -r ${configWebsiteDownloadPath}/trojan-win-cli.zip ${configTrojanBasePath}/trojan-win-cli/
-
-    fi
-
 
 
     # 设置 cron 定时任务
@@ -3060,7 +2850,7 @@ EOF
 	green "    Trojan${promptInfoTrojanName} 查看运行状态命令:  systemctl status trojan${promptInfoTrojanName}.service "
 	green "    Trojan${promptInfoTrojanName} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 	green "======================================================================"
-	# blue  "----------------------------------------"
+
     echo
 	yellow "Trojan${promptInfoTrojanName} 配置信息如下, 请自行复制保存, 密码任选其一 !"
 	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayTrojanReadmePort}"
@@ -3141,7 +2931,6 @@ EOF
     green "======================================================================"
 	green "教程与其他资源:"
 	green "访问 https://www.v2rayssr.com/vpn-client.html 下载 客户端 及教程"
-	#green "访问 https://www.v2rayssr.com/trojan-1.html 下载 浏览器插件 客户端 及教程"
     green "访问 https://westworldss.com/portal/page/download 下载 客户端 及教程"
 	green "======================================================================"
 	green "其他 Windows 客户端:"
@@ -3154,13 +2943,9 @@ EOF
 	green "https://dl.trojan-cdn.com/trojan (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
-	green "https://github.com/JimLee1996/TrojanX/releases (exe为Win客户端, dmg为Mac客户端)"
 	green "https://github.com/yichengchen/clashX/releases "
 	green "======================================================================"
-	green "其他 Android 客户端:"
-	green "https://github.com/trojan-gfw/igniter/releases "
-	green "https://github.com/Kr328/ClashForAndroid/releases "
-	green "======================================================================"
+
 
 
     cat >> ${configReadme} <<-EOF
@@ -3204,71 +2989,72 @@ EOF
 
 function upgradeTrojan(){
 
-    checkTrojanGoInstall
+    if [[ -f "${configTrojanGoPath}/trojan-go" ]]; then
 
-    if [[ -f "${configTrojanPath}/trojan" || -f "${configTrojanGoPath}/trojan-go" ]]; then
-
-        getTrojanGoInstallInfo
+        getTrojanGoVersion
 
         green " ================================================== "
-        green "     开始升级 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion}"
+        green "     Prepare upgrade Trojan-go Version: ${configTrojanBaseVersion}"
         green " ================================================== "
 
-        ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
-        mkdir -p ${configDownloadTempPath}/upgrade/trojan${promptInfoTrojanName}
+        ${sudoCmd} systemctl stop trojan-go.service
+        
         downloadTrojanBin "upgrade"
-        ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
+        ${sudoCmd} systemctl start trojan-go.service
 
         green " ================================================== "
-        green "     升级成功 Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} !"
+        green "     升级成功 Trojan-go Version: ${configTrojanBaseVersion} !"
+        green "     Trojan-go Version: ${configTrojanBaseVersion} upgrade success !"
         green " ================================================== "
 
     else
-        red " 系统没有安装 trojan${promptInfoTrojanName}, 退出卸载"
+        red " 系统没有安装 trojan-go, 退出卸载"
+        red " Not install trojan-go, exit"
     fi
 }
 
 function removeTrojan(){
 
+    if [[ -f "${configTrojanGoPath}/trojan-go" ]]; then
+        echo
+    else
+        red " 系统没有安装 trojan-go, 退出卸载"
+        red " Not install trojan-go, exit"
+        exit
+    fi
+
     echo
-    read -p "是否确认卸载 trojan 或 trojan-go? 直接回车默认卸载, 请输入[Y/n]:" isRemoveTrojanServerInput
+    green " ================================================== "
+    echo
+    green " Are you sure to uninstall Trojan-go ? "
+    read -p "是否确认卸载 trojan-go? 直接回车默认卸载, 请输入[Y/n]:" isRemoveTrojanServerInput
     isRemoveTrojanServerInput=${isRemoveTrojanServerInput:-Y}
 
     if [[ "${isRemoveTrojanServerInput}" == [Yy] ]]; then
         
+        echo
+        green " ================================================== "
+        red " 准备卸载已安装的trojan-go"
+        green " ================================================== "
+        echo
+
+        ${sudoCmd} systemctl stop trojan-go.service
+        ${sudoCmd} systemctl disable trojan-go.service
+
+        rm -rf ${configTrojanBasePath}
+        rm -f ${osSystemMdPath}trojan-go.service
+        rm -f ${configTrojanLogFile}
+        rm -f ${configTrojanGoLogFile}
+
+        rm -f ${configReadme}
+
+        crontab -l | grep -v "trojan-go"  | crontab -
 
         echo
-        checkTrojanGoInstall
-
-        if [[ -f "${configTrojanPath}/trojan" || -f "${configTrojanGoPath}/trojan-go" ]]; then
-            echo
-            green " ================================================== "
-            red " 准备卸载已安装的trojan${promptInfoTrojanName}"
-            green " ================================================== "
-            echo
-
-            ${sudoCmd} systemctl stop trojan${promptInfoTrojanName}.service
-            ${sudoCmd} systemctl disable trojan${promptInfoTrojanName}.service
-
-            rm -rf ${configTrojanBasePath}
-            rm -f ${osSystemMdPath}trojan${promptInfoTrojanName}.service
-            rm -f ${configTrojanLogFile}
-            rm -f ${configTrojanGoLogFile}
-
-            rm -f ${configReadme}
-
-            crontab -l | grep -v "trojan${promptInfoTrojanName}"  | crontab -
-
-            echo
-            green " ================================================== "
-            green "  trojan${promptInfoTrojanName} 卸载完毕 !"
-            green "  crontab 定时任务 删除完毕 !"
-            green " ================================================== "
-            
-        else
-            red " 系统没有安装 trojan${promptInfoTrojanName}, 退出卸载"
-        fi
-
+        green " ================================================== "
+        green "  trojan-go 卸载完毕 ! trojan-go uninstall success !"
+        green "  crontab 定时任务 删除完毕 ! crontab remove success !"
+        green " ================================================== "
     fi
 }
 
@@ -7489,15 +7275,14 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray 一键安装脚本 | 2022-9-29 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray 一键安装脚本 | 2022-9-29 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
-    green " 2. 安装 trojan 或 trojan-go 和 nginx, 不支持CDN, trojan 或 trojan-go 运行在443端口"
-    green " 3. 安装 trojan-go 和 nginx, 支持CDN 开启websocket, trojan-go 运行在443端口"
-    green " 4. 只安装 trojan 或 trojan-go 运行在443或自定义端口, 不安装nginx, 方便与现有网站或宝塔面板集成"
-    green " 5. 升级 trojan 或 trojan-go 到最新版本"
-    red " 6. 卸载 trojan 或 trojan-go 和 nginx"
+    green " 2. 安装 trojan-go 和 nginx, 支持CDN 开启websocket, trojan-go 运行在443端口"
+    green " 3. 只安装 trojan-go 运行在443或自定义端口, 不安装nginx, 方便与现有网站或宝塔面板集成"
+    green " 4. 升级 trojan-go 到最新版本"
+    red " 5. 卸载 trojan-go 和 nginx"
     echo
     green " 11. 安装 v2ray或xray 和 nginx ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), 支持CDN, nginx 运行在443端口"
     green " 12. 只安装 v2ray或xray ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), 无TLS加密, 方便与现有网站或宝塔面板集成"
@@ -7510,10 +7295,10 @@ function start_menu(){
     green " 18. 升级 v2ray或xray 到最新版本"
     red " 19. 卸载 v2ray或xray 和 nginx"
     echo
-    green " 21. 同时安装 v2ray或xray 和 trojan或trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
-    green " 22. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go (VLess/Vmess-WS-TLS)+Trojan, 支持CDN, trojan或trojan-go运行在443端口"  
-    green " 23. 同时安装 nginx, v2ray或xray 和 trojan或trojan-go, 通过 nginx SNI 分流, 支持CDN, 支持与现有网站共存, nginx 运行在443端口 "
-    red " 24. 卸载 trojan, v2ray或xray 和 nginx"
+    green " 21. 同时安装 v2ray或xray 和 trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
+    green " 22. 同时安装 nginx, v2ray或xray 和 trojan-go (VLess/Vmess-WS-TLS)+Trojan, 支持CDN, trojan-go运行在443端口"  
+    green " 23. 同时安装 nginx, v2ray或xray 和 trojan-go, 通过 nginx SNI 分流, 支持CDN, 支持与现有网站共存, nginx 运行在443端口 "
+    red " 24. 卸载 trojan-go, v2ray或xray 和 nginx"
     echo
     green " 25. 查看已安装的配置和用户密码等信息"
     green " 26. 申请免费的SSL证书"
@@ -7537,15 +7322,14 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan Trojan-go V2ray Xray Installation | 2022-9-29 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray Installation | 2022-9-29 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
-    green " 2. Install trojan/trojan-go with nginx, not support CDN acceleration, trojan/trojan-go running at 443 port serve TLS"
-    green " 3. Install trojan-go with nginx, enable websocket, support CDN acceleration, trojan-go running at 443 port serve TLS"
-    green " 4. Install trojan/trojan-go only, trojan/trojan-go running at 443(can customize port) serve TLS. Easy integration with existing website"
-    green " 5. Upgrade trojan/trojan-go to latest version"
-    red " 6. Remove trojan/trojan-go and nginx"
+    green " 2. Install trojan-go with nginx, enable websocket, support CDN acceleration, trojan-go running at 443 port serve TLS"
+    green " 3. Install trojan-go only, trojan-go running at 443(can customize port) serve TLS. Easy integration with existing website"
+    green " 4. Upgrade trojan-go to latest version"
+    red " 5. Remove trojan-go and nginx"
     echo
     green " 11. Install v2ray/xray with nginx, ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), support CDN acceleration, nginx running at 443 port serve TLS"
     green " 12. Install v2ray/xray only. ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), no TLS encryption. Easy integration with existing website"
@@ -7558,12 +7342,12 @@ function start_menu(){
     green " 18. Upgrade v2ray/xray to latest version"
     red " 19. Remove v2ray/xray and nginx"
     echo
-    green " 21. Install both v2ray/xray and trojan/trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, support CDN, nginx is optional, VLess running at 443 port serve TLS"
-    green " 22. Install both v2ray/xray and trojan/trojan-go with nginx, (VLess/Vmess-WS-TLS)+Trojan, support CDN, trojan/trojan-go running at 443 port serve TLS"
-    green " 23. Install both v2ray/xray and trojan/trojan-go with nginx. Using nginx SNI distinguish traffic by different domain name, support CDN. Easy integration with existing website. nginx SNI running at 443 port"
-    red " 24. Remove trojan/trojan-go, v2ray/xray and nginx"
+    green " 21. Install both v2ray/xray and trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 22. Install both v2ray/xray and trojan-go with nginx, (VLess/Vmess-WS-TLS)+Trojan, support CDN, trojan-go running at 443 port serve TLS"
+    green " 23. Install both v2ray/xray and trojan-go with nginx. Using nginx SNI distinguish traffic by different domain name, support CDN. Easy integration with existing website. nginx SNI running at 443 port"
+    red " 24. Remove trojan-go, v2ray/xray and nginx"
     echo
-    green " 25. Show info and password for installed trojan and v2ray"
+    green " 25. Show info and password for installed trojan-go and v2ray"
     green " 26. Get a free SSL certificate for one or multiple domains"
     green " 30. Submenu. install trojan and v2ray UI admin panel, VPS speedtest tools, Netflix unlock tools. Miscellaneous tools"
     green " =================================================="
@@ -7593,20 +7377,16 @@ function start_menu(){
         ;;
         2 )
             configInstallNginxMode="noSSL"
-            installTrojanV2rayWithNginx "trojan_nginx"
-        ;;
-        3 )
-            configInstallNginxMode="noSSL"
             isTrojanGoSupportWebsocket="true"
             installTrojanV2rayWithNginx "trojan_nginx"
         ;;
-        4 )
+        3 )
             installTrojanV2rayWithNginx "trojan"
         ;;
-        5 )
+        4 )
             upgradeTrojan
         ;;
-        6 )
+        5 )
             removeTrojan
             removeNginx
         ;;
