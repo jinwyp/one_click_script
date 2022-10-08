@@ -2818,7 +2818,7 @@ RestartPreventExitStatus=23
 [Install]
 WantedBy=multi-user.target
 EOF
-    fi
+
 
 
     ${sudoCmd} chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
