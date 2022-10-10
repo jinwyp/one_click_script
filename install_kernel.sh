@@ -1057,8 +1057,21 @@ function getLatestCentosKernelVersion(){
         else
             elrepo_kernel_version_ml=${elrepo_kernel_version_ml_teddysun_ftp_array[-1]} 
             elrepo_kernel_version_ml_Teddysun_number_temp=$(echo ${elrepo_kernel_version_ml} | grep -oe "\.[0-9]*\." | grep -oe "[0-9]*" )
-            elrepo_kernel_version_ml_Teddysun_latest_version_middle=$((elrepo_kernel_version_ml_Teddysun_number_temp-1))
-            elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
+            elrepo_kernel_version_ml_Teddysun_number_temp_first=${elrepo_kernel_version_ml:0:1}
+
+            if [[ ${elrepo_kernel_version_ml_Teddysun_number_temp_first} == "5" ]]; then
+                elrepo_kernel_version_ml_Teddysun_latest_version_middle="19"
+                elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
+            else
+                elrepo_kernel_version_ml_Teddysun_latest_version_middle=$((elrepo_kernel_version_ml_Teddysun_number_temp-1))
+                elrepo_kernel_version_ml_Teddysun_latest_version="6.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
+                
+                elrepo_kernel_version_ml_Teddysun_latest_version_middle="19"
+                elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"                
+            fi
+
+
+
 
             # https://stackoverflow.com/questions/229551/how-to-check-if-a-string-contains-a-substring-in-bash
             for ver in "${elrepo_kernel_version_ml_teddysun_ftp_array_lts[@]}"; do
