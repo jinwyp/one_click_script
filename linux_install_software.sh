@@ -4100,9 +4100,9 @@ EOM
 
             replaceAirUniverseConfigWARP "norestart"
             
-            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
-            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
-            chmod ugoa+rw ${configSSLCertPath}/*
+            chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertFullchainFilename}
+            chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertKeyFilename}
+            chmod ugoa+rwx ${configSSLCertPath}/*
 
             # chown -R nobody:nogroup /var/log/v2ray
 
@@ -4689,11 +4689,8 @@ EOF
     fi
 
 
-
-
-
-    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
-    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
+    chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertFullchainFilename}
+    chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertKeyFilename}
 
     # -z 为空
     if [[ -z $1 ]]; then
