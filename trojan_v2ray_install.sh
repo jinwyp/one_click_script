@@ -3089,6 +3089,354 @@ function removeTrojan(){
 
 
 
+get_ip(){
+    local IP
+    IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v '^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\.' | head -n 1 )
+    [ -z "${IP}" ] && IP=$( wget -qO- -t1 -T2 ipv4.icanhazip.com )
+    [ -z "${IP}" ] && IP=$( wget -qO- -t1 -T2 ipinfo.io/ip )
+    echo "${IP}"
+}
+
+get_ipv6(){
+    local ipv6
+    ipv6=$(wget -qO- -t1 -T2 ipv6.icanhazip.com)
+    [ -z "${ipv6}" ] && return 1 || return 0
+}
+
+
+configSSXrayPath="/root/shadowsocksxray"
+configSSXrayPort="$(($RANDOM + 10000))"
+configSSAccessLogFilePath="${HOME}/ss-access.log"
+configSSErrorLogFilePath="${HOME}/ss-error.log"
+
+
+
+function installShadowsocks(){
+
+    if [ -f "${configSSXrayPath}/xray"  ]; then
+        showHeaderGreen " 已安装过 Shadowsocks Xray, 退出安装 !" \
+        " Shadowsocks Xray already installed, exit !"
+        exit 0
+    fi
+
+    shadowsocksPassword0=$(openssl rand -base64 32)
+    shadowsocksPassword1=$(openssl rand -base64 32)
+    shadowsocksPassword2=$(openssl rand -base64 32)
+    shadowsocksPassword3=$(openssl rand -base64 32)
+    shadowsocksPassword4=$(openssl rand -base64 32)
+    shadowsocksPassword5=$(openssl rand -base64 32)
+
+    showHeaderGreen " 开始安装 Xray Shadowsocks " \
+    " Prepare to install Xray Shadowsocks "  
+
+    configNetworkVPSIP=$(get_ip)
+
+    getTrojanAndV2rayVersion "xray"
+    green " 准备下载并安装 Xray Version: ${versionXray} !"
+    green " Prepare to download and install Xray Version: ${versionXray} !"
+
+    echo
+    mkdir -p "${configSSXrayPath}"
+    cd "${configSSXrayPath}" || exit
+    rm -rf ${configSSXrayPath}/*
+
+    downloadV2rayXrayBin "shadowsocks"
+
+    # 建议使用 AEAD (method 为 aes-256-gcm、aes-128-gcm、chacha20-poly1305 即可开启 AEAD)
+    # 也可以使用传统的 method (method 为 aes-256-cfb、aes-128-cfb、chacha20、salsa20 等)
+    echo
+    green " =================================================="
+    yellow " 请选择 Shadowsocks 加密方式 (默认7 2022-blake3-aes-256-gcm):"
+    yellow " Pls select Shadowsocks encryption method (default is 7 2022-blake3-aes-256-gcm):"
+    echo
+    green " 1. aes-256-gcm"
+    green " 2. aes-128-gcm"
+    green " 3. chacha20-poly1305"
+    green " 4. chacha20-ietf-poly1305"
+    green " 5. xchacha20-ietf-poly1305"
+    green " 6. 2022-blake3-aes-128-gcm"
+    green " 7. 2022-blake3-aes-256-gcm"
+    green " 8. 2022-blake3-chacha20-poly1305"
+    echo
+    read -r -p "请选择加密方式? 直接回车默认选7, 请输入纯数字:" isShadowsocksMethodInput
+    isShadowsocksMethodInput=${isShadowsocksMethodInput:-7}
+
+    if [[ "${isShadowsocksMethodInput}" == "1" ]]; then
+        shadowsocksMethod="aes-256-gcm"
+    elif [[ "${isShadowsocksMethodInput}" == "2" ]]; then
+        shadowsocksMethod="aes-128-gcm"
+    elif [[ "${isShadowsocksMethodInput}" == "3" ]]; then
+        shadowsocksMethod="chacha20-poly1305"
+    elif [[ "${isShadowsocksMethodInput}" == "4" ]]; then
+        shadowsocksMethod="chacha20-ietf-poly1305"
+    elif [[ "${isShadowsocksMethodInput}" == "5" ]]; then
+        shadowsocksMethod="xchacha20-ietf-poly1305"
+
+    elif [[ "${isShadowsocksMethodInput}" == "6" ]]; then
+        shadowsocksMethod="2022-blake3-aes-128-gcm"
+    shadowsocksPassword0=$(openssl rand -base64 16)
+    shadowsocksPassword1=$(openssl rand -base64 16)
+    shadowsocksPassword2=$(openssl rand -base64 16)
+    shadowsocksPassword3=$(openssl rand -base64 16)
+    shadowsocksPassword4=$(openssl rand -base64 16)
+    shadowsocksPassword5=$(openssl rand -base64 16)
+    
+    elif [[ "${isShadowsocksMethodInput}" == "7" ]]; then
+        shadowsocksMethod="2022-blake3-aes-256-gcm"
+    elif [[ "${isShadowsocksMethodInput}" == "8" ]]; then
+        shadowsocksMethod="2022-blake3-chacha20-poly1305"           
+    else
+        shadowsocksMethod="aes-256-gcm"
+    fi
+
+    echo 
+
+if [[ "${isShadowsocksMethodInput}" == "6" || "${isShadowsocksMethodInput}" == "7" || "${isShadowsocksMethodInput}" == "8" ]]; then
+    cat > ${configSSXrayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configSSAccessLogFilePath}",
+        "error": "${configSSErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    "inbounds": [
+        {
+            "port": ${configSSXrayPort},
+            "protocol": "shadowsocks",
+            "settings": {
+                "method": "${shadowsocksMethod}",
+                "password": "${shadowsocksPassword0}",
+                "network": "tcp,udp",
+                "clients": [
+                    { "password": "${shadowsocksPassword1}", "email": "password101@gmail.com" },
+                    { "password": "${shadowsocksPassword2}", "email": "password102@gmail.com" },
+                    { "password": "${shadowsocksPassword3}", "email": "password103@gmail.com" },
+                    { "password": "${shadowsocksPassword4}", "email": "password104@gmail.com" },
+                    { "password": "${shadowsocksPassword5}", "email": "password105@gmail.com" }
+                ]
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ]
+}
+EOF
+
+else
+
+    shadowsocksPassword1=$(openssl rand -base64 32 | head -c 10)
+    shadowsocksPassword2=$(openssl rand -base64 32 | head -c 10)
+    shadowsocksPassword3=$(openssl rand -base64 32 | head -c 10)
+    shadowsocksPassword4=$(openssl rand -base64 32 | head -c 10)
+    shadowsocksPassword5=$(openssl rand -base64 32 | head -c 10)
+
+    cat > ${configSSXrayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configSSAccessLogFilePath}",
+        "error": "${configSSErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    "inbounds": [
+        {
+            "port": ${configSSXrayPort},
+            "protocol": "shadowsocks",
+            "settings": {
+                "network": "tcp,udp",
+                "clients": [
+                    { "password": "${shadowsocksPassword1}", "method": "${shadowsocksMethod}", "email": "password101@gmail.com" },
+                    { "password": "${shadowsocksPassword2}", "method": "${shadowsocksMethod}", "email": "password102@gmail.com" },
+                    { "password": "${shadowsocksPassword3}", "method": "${shadowsocksMethod}", "email": "password103@gmail.com" },
+                    { "password": "${shadowsocksPassword4}", "method": "${shadowsocksMethod}", "email": "password104@gmail.com" },
+                    { "password": "${shadowsocksPassword5}", "method": "${shadowsocksMethod}", "email": "password105@gmail.com" }
+                ]
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "block"
+        }
+    ]
+}
+EOF
+
+fi
+
+
+
+
+
+        cat > ${osSystemMdPath}shadowsocksxray.service <<-EOF
+[Unit]
+Description=Xray Service
+Documentation=https://github.com/xtls
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+# This service runs as root. You may consider to run it as another user for security concerns.
+# By uncommenting User=nobody and commenting out User=root, the service will run as user nobody.
+# More discussion at https://github.com/v2ray/v2ray-core/issues/1011
+User=root
+#User=nobody
+#CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ExecStart=${configSSXrayPath}/xray run -config ${configSSXrayPath}/config.json
+Restart=on-failure
+RestartPreventExitStatus=23
+LimitNPROC=10000
+LimitNOFILE=1000000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    ${sudoCmd} chmod +x ${configSSXrayPath}/xray
+    ${sudoCmd} chmod +x ${osSystemMdPath}shadowsocksxray.service
+    ${sudoCmd} systemctl daemon-reload
+    
+    ${sudoCmd} systemctl enable shadowsocksxray.service
+    ${sudoCmd} systemctl restart shadowsocksxray.service
+
+
+
+    # 设置 cron 定时任务
+    # https://stackoverflow.com/questions/610839/how-can-i-programmatically-create-a-new-cron-job
+
+    (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 rm -f /root/ss-*") | sort - | uniq - | crontab -
+    (crontab -l ; echo "20 4 * * 0,1,2,3,4,5,6 systemctl restart shadowsocksxray.service") | sort - | uniq - | crontab -
+
+
+
+if [[ "${isShadowsocksMethodInput}" == "6" || "${isShadowsocksMethodInput}" == "7" || "${isShadowsocksMethodInput}" == "8" ]]; then
+    configShadowsocksPasswordPrefix="${shadowsocksPassword0}:"
+else
+    configShadowsocksPasswordPrefix=""
+fi
+
+    configShadowsocksLink=$(echo -n "${shadowsocksMethod}:${configShadowsocksPasswordPrefix}${shadowsocksPassword1}@${configNetworkVPSIP}:${configSSXrayPort}" | base64 -w0)
+    configShadowsocksLinkFull="ss://${configShadowsocksLink}"
+
+    cat > ${configSSXrayPath}/clientConfig.json <<-EOF
+Shadowsocks Xray 运行在 ${configSSXrayPort} 端口
+
+=========== 客户端 Shadowsocks 配置参数 密码任选其一 =============
+
+{
+    协议: Shadowsocks,
+    地址: IP ${configNetworkVPSIP},
+    端口: ${configSSXrayPort},
+    加密方式: ${shadowsocksMethod},
+    密码1: ${configShadowsocksPasswordPrefix}${shadowsocksPassword1},
+    密码2: ${configShadowsocksPasswordPrefix}${shadowsocksPassword2},
+    密码3: ${configShadowsocksPasswordPrefix}${shadowsocksPassword3},
+    密码4: ${configShadowsocksPasswordPrefix}${shadowsocksPassword4},
+    密码5: ${configShadowsocksPasswordPrefix}${shadowsocksPassword5},
+    别名:自己起个任意名称
+}
+
+Shadowsocks 导入链接:
+ss://${shadowsocksMethod}:${configShadowsocksPasswordPrefix}${shadowsocksPassword1}@${configNetworkVPSIP}:${configSSXrayPort}
+
+或
+
+${configShadowsocksLinkFull}
+
+
+EOF
+
+
+    showHeaderGreen " Shadowsocks Xray ${versionXray} 安装成功 !"
+
+	red " Shadowsocksxray 服务器端配置路径 ${configSSXrayPath}/config.json !"
+	green " Shadowsocksxray 访问日志 ${configSSAccessLogFilePath} !"
+	green " Shadowsocksxray 错误日志 ${configSSErrorLogFilePath} ! "
+	green " Shadowsocksxray 查看日志命令: journalctl -n 50 -u shadowsocksxray.service "
+	green " Shadowsocksxray 停止命令: systemctl stop shadowsocksxray.service  启动命令: systemctl start shadowsocksxray.service "
+	green " Shadowsocksxray 重启命令: systemctl restart shadowsocksxray.service"
+	green " Shadowsocksxray 查看运行状态命令:  systemctl status shadowsocksxray.service "
+	green " Shadowsocksxray 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+
+    echo
+	cat "${configSSXrayPath}/clientConfig.json"
+    echo
+
+}
+
+
+
+
+function removeShadowsocks(){
+
+    if [[ -f "${configSSXrayPath}/xray" ]]; then
+        echo
+    else
+        showHeaderRed " 系统没有安装 Shadowsocks Xray, 退出卸载 !" \
+        " Shadowsocks Xray not found, exit !"
+        exit 0
+    fi
+
+    echo
+    green " ================================================== "
+    green " Are you sure to remove Shadowsocks Xray ? "
+    echo
+    read -r -p "是否确认卸载 Shadowsocks Xray? 直接回车默认卸载, 请输入[Y/n]:" isRemoveShadowsocksServerInput
+    isRemoveShadowsocksServerInput=${isRemoveShadowsocksServerInput:-Y}
+
+    if [[ "${isRemoveShadowsocksServerInput}" == [Yy] ]]; then
+
+        ${sudoCmd} systemctl stop shadowsocksxray.service
+        ${sudoCmd} systemctl disable shadowsocksxray.service
+
+
+        rm -rf ${configSSXrayPath}
+        rm -f ${osSystemMdPath}shadowsocksxray.service
+        rm -f ${configSSAccessLogFilePath}
+        rm -f ${configSSErrorLogFilePath}
+
+        crontab -l | grep -v "rm" | crontab -
+        crontab -l | grep -v "shadowsocksxray" | crontab -
+
+        showHeaderGreen " Shadowsocks Xray 卸载完毕 !" \
+        " Shadowsocks Xray uninstalled successfully !"
+        
+    fi
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3104,6 +3452,10 @@ function removeTrojan(){
 function downloadV2rayXrayBin(){
     if [ -z $1 ]; then
         tempDownloadV2rayPath="${configV2rayPath}"
+    elif [ $1 = "shadowsocks" ]; then
+        isXray="yes"
+        tempDownloadV2rayPath="${configSSXrayPath}"
+
     else
         tempDownloadV2rayPath="${configDownloadTempPath}/upgrade/${promptInfoXrayName}"
     fi
@@ -7294,6 +7646,9 @@ function start_menu(){
     green " 4. 升级 trojan-go 到最新版本"
     red " 5. 卸载 trojan-go 和 nginx"
     echo
+    green " 6. 安装 xray 的 Shadowsocks 2022, 运行在随机端口"
+    red " 7. 卸载 xray 的 Shadowsocks 2022"
+    echo
     green " 11. 安装 v2ray或xray 和 nginx ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), 支持CDN, nginx 运行在443端口"
     green " 12. 只安装 v2ray或xray ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), 无TLS加密, 方便与现有网站或宝塔面板集成"
     echo
@@ -7340,6 +7695,9 @@ function start_menu(){
     green " 3. Install trojan-go only, trojan-go running at 443(can customize port) serve TLS. Easy integration with existing website"
     green " 4. Upgrade trojan-go to latest version"
     red " 5. Remove trojan-go and nginx"
+    echo
+    green " 6. Install xray Shadowsocks 2022"
+    red " 7. Remove xray Shadowsocks 2022"
     echo
     green " 11. Install v2ray/xray with nginx, ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), support CDN acceleration, nginx running at 443 port serve TLS"
     green " 12. Install v2ray/xray only. ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), no TLS encryption. Easy integration with existing website"
@@ -7399,6 +7757,12 @@ function start_menu(){
         5 )
             removeTrojan
             removeNginx
+        ;;
+        6 )
+            installShadowsocks
+        ;;
+        7 )
+            removeShadowsocks
         ;;
         11 )
             configInstallNginxMode="v2raySSL"
