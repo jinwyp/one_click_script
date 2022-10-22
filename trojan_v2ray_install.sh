@@ -1104,8 +1104,10 @@ function downloadAndUnzip(){
         green "===== 下载并解压tar文件: $3 "
         wget -O ${configDownloadTempPath}/$3 $1
         tar xf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
-        mv ${configDownloadTempPath}/trojan/* $2
-        rm -rf ${configDownloadTempPath}/trojan
+
+        mv ${configDownloadTempPath}/* $2
+        rm -rf ${configDownloadTempPath}/* 
+
     elif [[ $3 == *"tar.gz"* ]]; then
         green "===== 下载并解压tar.gz文件: $3 "
         wget -O ${configDownloadTempPath}/$3 $1
@@ -2530,6 +2532,33 @@ function installTrojanV2rayWithNginx(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function getTrojanGoVersion(){
 
     if [[ "${isTrojanTypeInput}" == "1" ]]; then
@@ -2581,6 +2610,8 @@ function downloadTrojanBin(){
             exit
         fi
         downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configTrojanBasePath}" "${downloadFilenameTrojan}"
+        mv -f ${configTrojanBasePath}/trojan/* ${configTrojanBasePath}/
+
 
     elif [[ "${isTrojanTypeInput}" == "2" ]]; then
         # https://github.com/p4gefau1t/trojan-go/releases/download/v0.10.6/trojan-go-linux-amd64.zip
@@ -3226,6 +3257,11 @@ function removeTrojan(){
 
 
 
+
+
+
+
+
 get_ip(){
     local IP
     IP=$( ip addr | egrep -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | egrep -v '^192\.168|^172\.1[6-9]\.|^172\.2[0-9]\.|^172\.3[0-2]\.|^10\.|^127\.|^255\.|^0\.' | head -n 1 )
@@ -3240,44 +3276,27 @@ get_ipv6(){
     [ -z "${ipv6}" ] && return 1 || return 0
 }
 
+genShadowsocksPassword(){
+    if [ -z "$1" ]; then
 
-configSSXrayPath="/root/shadowsocksxray"
-configSSXrayPort="$(($RANDOM + 10000))"
-configSSAccessLogFilePath="${HOME}/ss-access.log"
-configSSErrorLogFilePath="${HOME}/ss-error.log"
+        shadowsocksPassword1=$(openssl rand -base64 32 | head -c 12)
+        shadowsocksPassword2=$(openssl rand -base64 32 | head -c 12)
+        shadowsocksPassword3=$(openssl rand -base64 32 | head -c 12)
+        shadowsocksPassword4=$(openssl rand -base64 32 | head -c 12)
+        shadowsocksPassword5=$(openssl rand -base64 32 | head -c 12)
+    else
+        PSlength=$1
 
-
-
-function installShadowsocks(){
-
-    if [ -f "${configSSXrayPath}/xray"  ]; then
-        showHeaderGreen " 已安装过 Shadowsocks Xray, 退出安装 !" \
-        " Shadowsocks Xray already installed, exit !"
-        exit 0
+        shadowsocksPassword0=$(openssl rand -base64 "${PSlength}")
+        shadowsocksPassword1=$(openssl rand -base64 "${PSlength}")
+        shadowsocksPassword2=$(openssl rand -base64 "${PSlength}")
+        shadowsocksPassword3=$(openssl rand -base64 "${PSlength}")
+        shadowsocksPassword4=$(openssl rand -base64 "${PSlength}")
+        shadowsocksPassword5=$(openssl rand -base64 "${PSlength}")
     fi
+}
 
-    shadowsocksPassword0=$(openssl rand -base64 32)
-    shadowsocksPassword1=$(openssl rand -base64 32)
-    shadowsocksPassword2=$(openssl rand -base64 32)
-    shadowsocksPassword3=$(openssl rand -base64 32)
-    shadowsocksPassword4=$(openssl rand -base64 32)
-    shadowsocksPassword5=$(openssl rand -base64 32)
-
-    showHeaderGreen " 开始安装 Xray Shadowsocks " \
-    " Prepare to install Xray Shadowsocks "  
-
-    configNetworkVPSIP=$(get_ip)
-
-    getV2rayVersion "xray"
-    green " 准备下载并安装 Xray Version: ${versionXray} !"
-    green " Prepare to download and install Xray Version: ${versionXray} !"
-
-    echo
-    mkdir -p "${configSSXrayPath}"
-    cd "${configSSXrayPath}" || exit
-    rm -rf ${configSSXrayPath}/*
-
-    downloadV2rayXrayBin "shadowsocks"
+selectShadowsocksMethod(){
 
     # 建议使用 AEAD (method 为 aes-256-gcm、aes-128-gcm、chacha20-poly1305 即可开启 AEAD)
     # 也可以使用传统的 method (method 为 aes-256-cfb、aes-128-cfb、chacha20、salsa20 等)
@@ -3297,6 +3316,8 @@ function installShadowsocks(){
     echo
     read -r -p "请选择加密方式? 直接回车默认选7, 请输入纯数字:" isShadowsocksMethodInput
     isShadowsocksMethodInput=${isShadowsocksMethodInput:-7}
+    
+    genShadowsocksPassword
 
     if [[ "${isShadowsocksMethodInput}" == "1" ]]; then
         shadowsocksMethod="aes-256-gcm"
@@ -3311,31 +3332,197 @@ function installShadowsocks(){
 
     elif [[ "${isShadowsocksMethodInput}" == "6" ]]; then
         shadowsocksMethod="2022-blake3-aes-128-gcm"
-    shadowsocksPassword0=$(openssl rand -base64 16)
-    shadowsocksPassword1=$(openssl rand -base64 16)
-    shadowsocksPassword2=$(openssl rand -base64 16)
-    shadowsocksPassword3=$(openssl rand -base64 16)
-    shadowsocksPassword4=$(openssl rand -base64 16)
-    shadowsocksPassword5=$(openssl rand -base64 16)
+        genShadowsocksPassword "16"
 
     elif [[ "${isShadowsocksMethodInput}" == "7" ]]; then
         shadowsocksMethod="2022-blake3-aes-256-gcm"
+        genShadowsocksPassword "32"
+
     elif [[ "${isShadowsocksMethodInput}" == "8" ]]; then
-        shadowsocksMethod="2022-blake3-chacha20-poly1305"           
+        shadowsocksMethod="2022-blake3-chacha20-poly1305"
+        genShadowsocksPassword "32"       
     else
         shadowsocksMethod="aes-256-gcm"
     fi
 
-    echo 
+    echo
+}
 
-if [[ "${isShadowsocksMethodInput}" == "6" || "${isShadowsocksMethodInput}" == "7" || "${isShadowsocksMethodInput}" == "8" ]]; then
-    cat > ${configSSXrayPath}/config.json <<-EOF
+
+configSSRustPath="/root/shadowsocksrust"
+
+configSSXrayPath="/root/shadowsocksxray"
+configSSXrayPort="$(($RANDOM + 10000))"
+configSSAccessLogFilePath="${HOME}/ss-access.log"
+configSSErrorLogFilePath="${HOME}/ss-error.log"
+
+
+
+function installShadowsocksRust(){
+    if [ -f "${configSSRustPath}/xray"  ]; then
+        showHeaderGreen " 已安装过 Shadowsocks Rust, 退出安装 !" \
+        " Shadowsocks Rust already installed, exit !"
+        exit 0
+    fi
+
+    showHeaderGreen " 开始安装 Shadowsocks Rust " \
+    " Prepare to install Shadowsocks Rust "  
+
+    configNetworkVPSIP=$(get_ip)
+
+    echo
+    green " ================================================== "
+    green " Shadowsocks Rust Version, default is latest 1.15.0-alpha, choose no is 1.14.3 "
+    green " 请选择 Shadowsocks Rust 的版本, 默认直接回车为最新版 1.15.0-alpha 选否为 1.14.3"
+    echo
+    read -r -p "是否安装最新版? 默认直接回车为最新版, 请输入[Y/n]:" isInstallSSRustVersionInput
+    isInstallSSRustVersionInput=${isInstallSSRustVersionInput:-Y}
+    echo
+
+    if [[ $isInstallSSRustVersionInput == [Yy] ]]; then
+        versionShadowsocksRust="1.15.0-alpha.9"
+        #versionShadowsocksRust=$(getGithubLatestReleaseVersion "shadowsocks/shadowsocks-rust")
+    else
+        versionShadowsocksRust="1.14.3"
+    fi
+    echo "Version: ${versionShadowsocksRust}"
+
+
+
+    echo
+    green " 准备下载并安装 Shadowsocks Rust: ${versionXray} !"
+    green " Prepare to download and install Shadowsocks Rust Version: ${versionXray} !"
+    echo
+    mkdir -p "${configSSRustPath}"
+    cd "${configSSRustPath}" || exit
+    rm -rf ${configSSRustPath}/*
+
+    # https://github.com/shadowsocks/shadowsocks-rust/releases/download/v1.14.3/shadowsocks-v1.14.3.x86_64-unknown-linux-musl.tar.xz
+    # https://github.com/shadowsocks/shadowsocks-rust/releases/download/v1.14.3/shadowsocks-v1.14.3.arm-unknown-linux-musleabi.tar.xz
+    
+    downloadFilenameShadowsocksRust="shadowsocks-v${versionShadowsocksRust}.x86_64-unknown-linux-musl.tar.xz"
+    if [[ ${osArchitecture} == "arm" ]] ; then
+        downloadFilenameShadowsocksRust="shadowsocks-v${versionShadowsocksRust}.arm-unknown-linux-musleabi.tar.xz"
+    fi
+    if [[ ${osArchitecture} == "arm64" ]] ; then
+        downloadFilenameShadowsocksRust="shadowsocks-v${versionShadowsocksRust}.arm-unknown-linux-musleabi.tar.xz"
+    fi
+
+    downloadAndUnzip "https://github.com/shadowsocks/shadowsocks-rust/releases/download/v${versionShadowsocksRust}/${downloadFilenameShadowsocksRust}" "${configSSRustPath}" "${downloadFilenameShadowsocksRust}"
+
+    selectShadowsocksMethod
+
+    cat > ${configSSRustPath}/shadowsocks.json <<-EOF
 {
-    "log" : {
-        "access": "${configSSAccessLogFilePath}",
-        "error": "${configSSErrorLogFilePath}",
-        "loglevel": "warning"
-    },
+    "server": "0.0.0.0",
+    "server_port": ${configSSXrayPort},
+    "password": "${shadowsocksPassword1}",
+    "timeout": 300,
+    "method": "${shadowsocksMethod}"
+}
+EOF
+
+    cat > ${osSystemMdPath}shadowsocksrust.service <<-EOF
+
+[Unit]
+Description=ssserver service
+After=network.target
+
+[Service]
+ExecStart=${configSSRustPath}/ssserver -c ${configSSRustPath}/shadowsocks.json
+ExecStop=/usr/bin/killall ssserver
+Restart=on-failure
+RestartSec=30
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    ${sudoCmd} chmod +x ${configSSRustPath}/ssserver
+    ${sudoCmd} chmod +x ${osSystemMdPath}shadowsocksrust.service
+    ${sudoCmd} systemctl daemon-reload
+    
+    ${sudoCmd} systemctl enable shadowsocksrust.service
+    ${sudoCmd} systemctl restart shadowsocksrust.service
+
+    (crontab -l ; echo "22 4 * * 0,1,2,3,4,5,6 systemctl restart shadowsocksrust.service") | sort - | uniq - | crontab -
+
+    configShadowsocksLink=$(echo -n "${shadowsocksMethod}:${shadowsocksPassword1}@${configNetworkVPSIP}:${configSSXrayPort}" | base64 -w0)
+    configShadowsocksLinkFull="ss://${configShadowsocksLink}"
+
+    cat > ${configSSRustPath}/clientConfig.json <<-EOF
+
+=========== 客户端 Shadowsocks 配置参数 密码任选其一 =============
+
+{
+    协议: Shadowsocks,
+    地址: IP ${configNetworkVPSIP},
+    端口: ${configSSXrayPort},
+    加密方式: ${shadowsocksMethod},
+    密码1: ${shadowsocksPassword1}
+    别名:自己起个任意名称
+}
+
+Shadowsocks 导入链接:
+ss://${shadowsocksMethod}:${configShadowsocksPasswordPrefix}${shadowsocksPassword1}@${configNetworkVPSIP}:${configSSXrayPort}
+
+或
+
+${configShadowsocksLinkFull}
+
+EOF
+
+
+
+    showHeaderGreen " Shadowsocks Rust 安装成功 !"
+
+	red " ShadowsocksRust 服务器端配置路径 ${configSSRustPath}/shadowsocks.json !"
+    green " ShadowsocksRust 查看日志命令: journalctl -n 50 -u shadowsocksrust.service "
+	green " ShadowsocksRust 停止命令: systemctl stop shadowsocksrust.service  启动命令: systemctl start shadowsocksrust.service "
+	green " ShadowsocksRust 重启命令: systemctl restart shadowsocksrust.service"
+	green " ShadowsocksRust 查看运行状态命令:  systemctl status shadowsocksrust.service "
+	green " ShadowsocksRust 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+
+    echo
+	cat "${configSSRustPath}/clientConfig.json"
+    echo
+
+
+}
+
+
+function installShadowsocks(){
+
+    if [ -f "${configSSXrayPath}/xray"  ]; then
+        showHeaderGreen " 已安装过 Shadowsocks Xray, 退出安装 !" \
+        " Shadowsocks Xray already installed, exit !"
+        exit 0
+    fi
+
+
+
+    showHeaderGreen " 开始安装 Xray Shadowsocks " \
+    " Prepare to install Xray Shadowsocks "  
+
+    configNetworkVPSIP=$(get_ip)
+
+    getV2rayVersion "xray"
+    green " 准备下载并安装 Xray Version: ${versionXray} !"
+    green " Prepare to download and install Xray Version: ${versionXray} !"
+
+    echo
+    mkdir -p "${configSSXrayPath}"
+    cd "${configSSXrayPath}" || exit
+    rm -rf ${configSSXrayPath}/*
+
+    downloadV2rayXrayBin "shadowsocks"
+
+    selectShadowsocksMethod
+
+    if [[ "${isShadowsocksMethodInput}" == "6" || "${isShadowsocksMethodInput}" == "7" || "${isShadowsocksMethodInput}" == "8" ]]; then
+        read -r -d '' shadowsocksXrayConfigInboundInput << EOM
     "inbounds": [
         {
             "port": ${configSSXrayPort},
@@ -3354,34 +3541,12 @@ if [[ "${isShadowsocksMethodInput}" == "6" || "${isShadowsocksMethodInput}" == "
             }
         }
     ],
-    "outbounds": [
-        {
-            "protocol": "freedom",
-            "tag": "direct"
-        },
-        {
-            "protocol": "blackhole",
-            "tag": "block"
-        }
-    ]
-}
-EOF
+EOM
+
 
 else
 
-    shadowsocksPassword1=$(openssl rand -base64 32 | head -c 10)
-    shadowsocksPassword2=$(openssl rand -base64 32 | head -c 10)
-    shadowsocksPassword3=$(openssl rand -base64 32 | head -c 10)
-    shadowsocksPassword4=$(openssl rand -base64 32 | head -c 10)
-    shadowsocksPassword5=$(openssl rand -base64 32 | head -c 10)
-
-    cat > ${configSSXrayPath}/config.json <<-EOF
-{
-    "log" : {
-        "access": "${configSSAccessLogFilePath}",
-        "error": "${configSSErrorLogFilePath}",
-        "loglevel": "warning"
-    },
+    read -r -d '' shadowsocksXrayConfigInboundInput << EOM
     "inbounds": [
         {
             "port": ${configSSXrayPort},
@@ -3398,6 +3563,48 @@ else
             }
         }
     ],
+EOM
+
+
+fi
+
+    echo
+    green " 某老姨子提供了可以解锁Netflix新加坡区的服务器, 不保证一直可用"
+    echo
+    read -r -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
+    isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
+    if [[ $isV2rayUnlockGoNetflixInput == [Nn] ]]; then
+        shadowsocksXrayConfigRouteInput=""
+    else
+        read -r -d '' shadowsocksXrayConfigRouteInput << EOM
+    "routing": {
+        "rules": [
+            {
+                "type": "field",
+                "outboundTag": "GoNetflix",
+                "domain": [ "geosite:netflix", "geosite:disney" ] 
+            },
+            {
+                "type": "field",
+                "outboundTag": "IPv4_out",
+                "network": "udp,tcp"
+            }
+        ]
+    }
+EOM
+    fi
+
+
+
+
+    cat > ${configSSXrayPath}/config.json <<-EOF
+{
+    "log" : {
+        "access": "${configSSAccessLogFilePath}",
+        "error": "${configSSErrorLogFilePath}",
+        "loglevel": "warning"
+    },
+    ${shadowsocksXrayConfigInboundInput}
     "outbounds": [
         {
             "protocol": "freedom",
@@ -3406,12 +3613,39 @@ else
         {
             "protocol": "blackhole",
             "tag": "block"
+        },        
+        {
+            "tag": "GoNetflix",
+            "protocol": "vmess",
+            "streamSettings": {
+                "network": "ws",
+                "security": "tls",
+                "tlsSettings": {
+                    "allowInsecure": false
+                },
+                "wsSettings": {
+                    "path": "ws"
+                }
+            },
+            "mux": {
+                "enabled": true,
+                "concurrency": 8
+            },
+            "settings": {
+                "vnext": [{
+                    "address": "free-sg-01.unblocknetflix.cf",
+                    "port": 443,
+                    "users": [
+                        { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
+                    ]
+                }]
+            }
         }
-    ]
+
+    ],
+    ${shadowsocksXrayConfigRouteInput}
 }
 EOF
-
-fi
 
 
 
@@ -3520,36 +3754,64 @@ function removeShadowsocks(){
 
     if [[ -f "${configSSXrayPath}/xray" ]]; then
         echo
+        green " ================================================== "
+        green " Are you sure to remove Shadowsocks Xray ? "
+        echo
+        read -r -p "是否确认卸载 Shadowsocks Xray? 直接回车默认卸载, 请输入[Y/n]:" isRemoveShadowsocksServerInput
+        isRemoveShadowsocksServerInput=${isRemoveShadowsocksServerInput:-Y}
+
+        if [[ "${isRemoveShadowsocksServerInput}" == [Yy] ]]; then
+
+            ${sudoCmd} systemctl stop shadowsocksxray.service
+            ${sudoCmd} systemctl disable shadowsocksxray.service
+
+            rm -rf ${configSSXrayPath}
+            rm -f ${osSystemMdPath}shadowsocksxray.service
+            rm -f ${configSSAccessLogFilePath}
+            rm -f ${configSSErrorLogFilePath}
+
+            crontab -l | grep -v "rm" | crontab -
+            crontab -l | grep -v "shadowsocksxray" | crontab -
+
+            showHeaderGreen " Shadowsocks Xray 卸载完毕 !" \
+            " Shadowsocks Xray uninstalled successfully !"
+            
+        fi
+
     else
         showHeaderRed " 系统没有安装 Shadowsocks Xray, 退出卸载 !" \
         " Shadowsocks Xray not found, exit !"
         exit 0
     fi
 
-    echo
-    green " ================================================== "
-    green " Are you sure to remove Shadowsocks Xray ? "
-    echo
-    read -r -p "是否确认卸载 Shadowsocks Xray? 直接回车默认卸载, 请输入[Y/n]:" isRemoveShadowsocksServerInput
-    isRemoveShadowsocksServerInput=${isRemoveShadowsocksServerInput:-Y}
 
-    if [[ "${isRemoveShadowsocksServerInput}" == [Yy] ]]; then
+  
 
-        ${sudoCmd} systemctl stop shadowsocksxray.service
-        ${sudoCmd} systemctl disable shadowsocksxray.service
+    if [[ -f "${configSSRustPath}/ssserver" ]]; then
+        echo
+        green " ================================================== "
+        green " Are you sure to remove Shadowsocks Rust ? "
+        echo
+        read -r -p "是否确认卸载 Shadowsocks Rust? 直接回车默认卸载, 请输入[Y/n]:" isRemoveShadowsocksServerInput
+        isRemoveShadowsocksServerInput=${isRemoveShadowsocksServerInput:-Y}
 
+        if [[ "${isRemoveShadowsocksServerInput}" == [Yy] ]]; then
 
-        rm -rf ${configSSXrayPath}
-        rm -f ${osSystemMdPath}shadowsocksxray.service
-        rm -f ${configSSAccessLogFilePath}
-        rm -f ${configSSErrorLogFilePath}
+            ${sudoCmd} systemctl stop shadowsocksrust.service
+            ${sudoCmd} systemctl disable shadowsocksrust.service
 
-        crontab -l | grep -v "rm" | crontab -
-        crontab -l | grep -v "shadowsocksxray" | crontab -
+            rm -rf ${configSSRustPath}
+            rm -f ${osSystemMdPath}shadowsocksrust.service
 
-        showHeaderGreen " Shadowsocks Xray 卸载完毕 !" \
-        " Shadowsocks Xray uninstalled successfully !"
-        
+            crontab -l | grep -v "shadowsocksrust" | crontab -
+
+            showHeaderGreen " Shadowsocks Rust 卸载完毕 !" \
+            " Shadowsocks Rust uninstalled successfully !"
+        fi
+    else
+        showHeaderRed " 系统没有安装 Shadowsocks Rust, 退出卸载 !" \
+        " Shadowsocks Rust not found, exit !"
+        exit 0
     fi
 
 }
@@ -4457,8 +4719,8 @@ EOM
 
 
     echo
-    yellow " 某大佬提供了可以解锁Netflix新加坡区的V2ray服务器, 不保证一直可用"
-    read -p "是否通过神秘力量解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
+    yellow " 某老姨子提供了可以解锁Netflix新加坡区的服务器, 不保证一直可用"
+    read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
     isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
 
     v2rayConfigRouteGoNetflixInput=""
@@ -7781,8 +8043,9 @@ function start_menu(){
     green " 3. 只安装 trojan/trojan-go 运行在443或自定义端口, 不安装nginx, 方便与现有网站或宝塔面板集成"
     red " 4. 卸载 trojan/trojan-go 和 nginx"
     echo
-    green " 6. 安装 xray 的 Shadowsocks 2022, 运行在随机端口"
-    red " 7. 卸载 xray 的 Shadowsocks 2022"
+    green " 6. 安装 Shadowsocks Rust 支持 Shadowsocks 2022 加密方式, 运行在随机端口"
+    green " 7. 安装 Xray Shadowsocks 支持 Shadowsocks 2022 加密方式, 运行在随机端口"
+    red " 8. 卸载 Shadowsocks Rust 或 Xray "
     echo
     green " 11. 安装 v2ray或xray 和 nginx ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), 支持CDN, nginx 运行在443端口"
     green " 12. 只安装 v2ray或xray ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), 无TLS加密, 方便与现有网站或宝塔面板集成"
@@ -7830,8 +8093,9 @@ function start_menu(){
     green " 3. Install trojan/trojan-go only, trojan-go running at 443(can customize port) serve TLS. Easy integration with existing website"
     red " 4. Remove trojan/trojan-go and nginx"
     echo
-    green " 6. Install xray Shadowsocks 2022"
-    red " 7. Remove xray Shadowsocks 2022"
+    green " 6. Install Shadowsocks Rust"
+    green " 7. Install Xray Shadowsocks"
+    red " 8. Remove Shadowsocks Rust or Xray"
     echo
     green " 11. Install v2ray/xray with nginx, ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]-TLS), support CDN acceleration, nginx running at 443 port serve TLS"
     green " 12. Install v2ray/xray only. ([Vmess/Vless]-[TCP/WS/gRPC/H2/QUIC]), no TLS encryption. Easy integration with existing website"
@@ -7890,9 +8154,12 @@ function start_menu(){
             removeNginx
         ;;
         6 )
-            installShadowsocks
+            installShadowsocksRust
         ;;
         7 )
+            installShadowsocks
+        ;;
+        8 )
             removeShadowsocks
         ;;
         11 )
