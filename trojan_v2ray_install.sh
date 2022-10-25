@@ -2631,7 +2631,7 @@ function downloadTrojanBin(){
         fi
         # https://github.com/Potterli20/trojan-go-fork/releases/download/V2022.10.17/trojan-go-fork-linux-amd64.zip
         downloadAndUnzip "https://github.com/Potterli20/trojan-go-fork/releases/download/${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanBasePath}" "${downloadFilenameTrojanGo}"
-        mv -f ${configTrojanBasePath}/trojan-go/trojan-go-fork ${configTrojanBasePath}/trojan-go/trojan-go
+        mv -f ${configTrojanBasePath}/trojan-go-fork ${configTrojanBasePath}/trojan-go
     fi
 
 }
@@ -3204,7 +3204,6 @@ function removeTrojan(){
 
     echo
     green " ================================================== "
-    echo
     green " Are you sure to uninstall Trojan${promptInfoTrojanName} ? "
     read -r -p "是否确认卸载 Trojan${promptInfoTrojanName}? 直接回车默认卸载, 请输入[Y/n]:" isRemoveTrojanServerInput
     isRemoveTrojanServerInput=${isRemoveTrojanServerInput:-Y}
@@ -5881,7 +5880,7 @@ EOF
         cat > ${osSystemMdPath}${promptInfoXrayName}${promptInfoXrayNameServiceName}.service <<-EOF
 [Unit]
 Description=Xray
-Documentation=https://www.v2fly.org/
+Documentation=https://xtls.github.io/
 After=network.target nss-lookup.target
 
 [Service]
