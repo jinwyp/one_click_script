@@ -1106,19 +1106,20 @@ function downloadAndUnzip(){
         tar xf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
 
         mv ${configDownloadTempPath}/* $2
-        rm -rf ${configDownloadTempPath}/* 
+         
 
     elif [[ $3 == *"tar.gz"* ]]; then
         green "===== 下载并解压tar.gz文件: $3 "
         wget -O ${configDownloadTempPath}/$3 $1
         tar -xzvf ${configDownloadTempPath}/$3 -C ${configDownloadTempPath}
         mv ${configDownloadTempPath}/easymosdns/* $2
-        rm -rf ${configDownloadTempPath}/*
+        
     else  
         green "===== 下载并解压zip文件:  $3 "
         wget -O ${configDownloadTempPath}/$3 $1
         unzip -d $2 ${configDownloadTempPath}/$3
     fi
+    rm -rf ${configDownloadTempPath}/*
 
 }
 
@@ -2610,7 +2611,8 @@ function downloadTrojanBin(){
             exit
         fi
         downloadAndUnzip "https://github.com/trojan-gfw/trojan/releases/download/v${versionTrojan}/${downloadFilenameTrojan}" "${configTrojanBasePath}" "${downloadFilenameTrojan}"
-        mv -f ${configTrojanBasePath}/trojan/* ${configTrojanBasePath}/
+        mv -f ${configTrojanBasePath}/trojan ${configTrojanBasePath}/trojan-temp
+        mv -f ${configTrojanBasePath}/trojan-temp/* ${configTrojanBasePath}/
 
 
     elif [[ "${isTrojanTypeInput}" == "2" ]]; then
@@ -3017,7 +3019,8 @@ EOF
 
     fi
 
-
+    ${sudoCmd} chown -R root:root ${configTrojanBasePath}
+    ${sudoCmd} chmod -R 774 ${configTrojanBasePath}
     ${sudoCmd} chmod +x ${osSystemMdPath}trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl daemon-reload
     ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
