@@ -546,6 +546,9 @@ function installSoftDownload(){
 
         elif ! rpm -qa | grep -qw git; then
 		    ${osSystemPackage} -y install wget curl git unzip
+
+        elif ! rpm -qa | grep -qw unzip; then
+            ${osSystemPackage} -y install wget curl git unzip
 		fi
 	fi
 }
@@ -3025,6 +3028,7 @@ EOF
     ${sudoCmd} systemctl daemon-reload
     ${sudoCmd} systemctl start trojan${promptInfoTrojanName}.service
     ${sudoCmd} systemctl enable trojan${promptInfoTrojanName}.service
+
 
 
     # 设置 cron 定时任务
