@@ -53,14 +53,14 @@ function showHeaderGreen(){
 }
 function showHeaderRed(){
     echo
-    green " =================================================="
+    red " =================================================="
     for parameter in "$@"
     do
         if [[ -n "${parameter}" ]]; then
-            green " ${parameter}"
+            red " ${parameter}"
         fi
     done
-    green " =================================================="
+    red " =================================================="
     echo
 }
 function showInfoGreen(){
@@ -319,6 +319,34 @@ function testLinuxPortUsage(){
 
 
 
+# 查看端口占用情况
+function checkPortUsage(){
+    # https://stackoverflow.com/questions/2013547/assigning-default-values-to-shell-variables-with-a-single-command-in-bash
+
+    portNum="${1:-80}"
+    # check port 80 is running
+    # http://www.letuknowit.com/post/98.html
+    # 不过，一般像下面这样写，多一个加号表明将连续出现的记录分隔符当做一个来处理
+
+    osPort80=$(netstat -tupln | awk -F '[ ]+' '$1=="tcp"||$1=="tcp6"{print $4}' | grep -w "${portNum}")
+
+    if [ -n "$osPort80" ]; then
+        process80=$(netstat -tupln | grep -w "${portNum}" | awk -F '[ ]+' '{print $7}')
+
+        showHeaderRed "检测到${portNum}端口被占用，占用进程为：${process80} "
+
+        if [[ ${portNum} == "80" ]] ; then
+            green " 如需要关闭 apache2 请运行如下命令: "
+            green " Run following command to stop apache2: "
+            green " ${sudoCmd} systemctl stop apache2 "
+            green " ${sudoCmd} systemctl disable apache2 "
+        fi
+
+
+        promptContinueOpeartion
+    fi
+
+}
 
 
 
@@ -1206,7 +1234,7 @@ function getHTTPSCertificateCheckEmail(){
 }
 function getHTTPSCertificateInputEmail(){
     echo
-    read -r -p "请输入邮箱地址, 用于申请证书:" acmeSSLRegisterEmailInput
+    read -r -p "请输入邮箱地址, 用于申请SSL证书:" acmeSSLRegisterEmailInput
     getHTTPSCertificateCheckEmail "email" "${acmeSSLRegisterEmailInput}"
 }
 function getHTTPSCertificateInputGoogleEABKey(){
@@ -1330,7 +1358,10 @@ function getHTTPSCertificateWithAcme(){
     # 申请https证书
 	mkdir -p ${configSSLCertPath}
 	mkdir -p ${configWebsitePath}
-	curl https://get.acme.sh | sh
+
+    getHTTPSCertificateInputEmail
+
+	curl https://get.acme.sh | sh -s email=${acmeSSLRegisterEmailInput}
 
 
     echo
@@ -1346,14 +1377,14 @@ function getHTTPSCertificateWithAcme(){
     isDomainSSLFromLetInput=${isDomainSSLFromLetInput:-1}
     
     if [[ "$isDomainSSLFromLetInput" == "2" ]]; then
-        getHTTPSCertificateInputEmail
+        
         acmeSSLDays="179"
         acmeSSLServerName="buypass"
         echo
         ${configSSLAcmeScriptPath}/acme.sh --register-account --accountemail ${acmeSSLRegisterEmailInput} --server buypass
         
     elif [[ "$isDomainSSLFromLetInput" == "3" ]]; then
-        getHTTPSCertificateInputEmail
+        
         acmeSSLServerName="zerossl"
         echo
         ${configSSLAcmeScriptPath}/acme.sh --register-account -m ${acmeSSLRegisterEmailInput} --server zerossl
@@ -1362,7 +1393,7 @@ function getHTTPSCertificateWithAcme(){
         green " ================================================== "
         yellow " 请先按照如下链接申请 google Public CA  https://hostloc.com/thread-993780-1-1.html"
         yellow " 具体可参考 https://github.com/acmesh-official/acme.sh/wiki/Google-Public-CA"
-        getHTTPSCertificateInputEmail
+        
         acmeSSLServerName="google"
         getHTTPSCertificateInputGoogleEABKey
         getHTTPSCertificateInputGoogleEABId
@@ -1397,6 +1428,8 @@ function getHTTPSCertificateWithAcme(){
         
         if [ -z "$1" ]; then
  
+            checkPortUsage "80"
+
             green " ================================================== "
             green " 请选择 http 申请证书方式: 默认直接回车为 ${acmeDefaultText} "
             green " 1 standalone 模式, 适合没有安装Web服务器, 如已选择不安装Nginx 请选择此模式. 请确保80端口不被占用. 注意:三个月后续签时80端口被占用会导致续签失败!"

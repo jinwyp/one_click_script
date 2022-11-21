@@ -46,14 +46,14 @@ function showHeaderGreen(){
 }
 function showHeaderRed(){
     echo
-    green " =================================================="
+    red " =================================================="
     for parameter in "$@"
     do
         if [[ -n "${parameter}" ]]; then
-            green " ${parameter}"
+            red " ${parameter}"
         fi
     done
-    green " =================================================="
+    red " =================================================="
     echo
 }
 function showInfoGreen(){
