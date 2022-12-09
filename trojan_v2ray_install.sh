@@ -457,7 +457,7 @@ function changeLinuxSSHPort(){
         green "设置成功, 请记住设置的端口号 ${osSSHLoginPortInput}!"
         green "登陆服务器命令: ssh -p ${osSSHLoginPortInput} root@111.111.111.your ip !"
     else
-        echo "输入的端口号错误! 范围: 22,1025~65534"
+        red "输入的端口号错误! 范围: 22,1025~65534. Exit !"
     fi
 }
 
@@ -515,9 +515,13 @@ function setLinuxDateZone(){
                 firewall-cmd --reload
             fi 
 
+            echo ""
+            echo "chrony sources:"
+
             chronyc sources
 
-            echo
+            echo ""
+            echo ""
         fi
         
     else
@@ -608,12 +612,16 @@ function installPackage(){
         if ! rpm -qa | grep -qw iperf3; then
 			${sudoCmd} ${osSystemPackage} install -y epel-release
 
-            ${osSystemPackage} install -y curl wget git unzip zip tar bind-utils htop net-tools
-            ${osSystemPackage} install -y xz jq redhat-lsb-core 
+            ${osSystemPackage} install -y curl wget git unzip zip tar
+            ${osSystemPackage} install -y redhat-lsb-core 
+            ${osSystemPackage} install -y bind-utils net-tools
+            ${osSystemPackage} install -y xz jq
             ${osSystemPackage} install -y iputils
-            ${osSystemPackage} install -y iperf3
+            ${osSystemPackage} install -y iperf3 
+            ${osSystemPackage} install -y htop 
 		fi
-
+        yum clean all
+        
         ${osSystemPackage} update -y
 
 
@@ -943,6 +951,11 @@ function installBBR(){
 
 function installBBR2(){
     wget -N --no-check-certificate "https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcp.sh" && chmod +x tcp.sh && ./tcp.sh
+}
+
+
+function installSWAP(){
+    bash <(wget --no-check-certificate -qO- 'https://www.moerats.com/usr/shell/swap.sh')
 }
 
 
@@ -8333,6 +8346,9 @@ function start_menu(){
         ;;
         82 )
             installBBR2
+        ;;
+        83 )
+            installSWAP
         ;;
         84 )
             firewallForbiden
