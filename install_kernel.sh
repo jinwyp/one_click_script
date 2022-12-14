@@ -1143,9 +1143,15 @@ function installCentosKernelFromRepo(){
             ${sudoCmd} yum install -y yum-plugin-fastestmirror 
             ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm
 
+        elif [ "${osReleaseVersionNoShort}" -eq 9 ]; then
+            # https://elrepo.org/linux/kernel/el8/x86_64/RPMS/
+            
+            ${sudoCmd} yum install -y yum-plugin-fastestmirror 
+            ${sudoCmd} yum install -y https://www.elrepo.org/elrepo-release-9.el9.elrepo.noarch.rpm
+
         else
             green " =================================================="
-            red "    不支持 Centos 7和8 以外的其他版本 安装 linux 内核"
+            red "    不支持 Centos 7, 8, 9 以外的其他版本 安装 linux 内核"
             green " =================================================="
             exit 255
         fi
@@ -1200,10 +1206,10 @@ function installCentosKernelManual(){
     else
         linuxKernelByUserTeddysun=""
 
-        if [ "${kernelVersionFirstletter}" = "5" ]; then 
+        if [[ "${kernelVersionFirstletter}" == "5" || "${kernelVersionFirstletter}" = "6" ]]; then 
             linuxKernelByUser="elrepo"
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.18" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.19" ]]; then 
                 linuxKernelByUserTeddysun="Teddysun"
             fi
         else
@@ -1280,7 +1286,9 @@ function installCentosKernelManual(){
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-headers-${elrepo_kernel_version}-1.el7.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-${elrepo_kernel_version}-1.el7.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-libs-${elrepo_kernel_version}-1.el7.${elrepo_kernel_filename}x86_64.rpm
-        else 
+
+        elif [ "${osReleaseVersionNoShort}" -eq 8 ]; then
+
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-devel-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-headers-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
@@ -1288,6 +1296,20 @@ function installCentosKernelManual(){
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-modules-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
             downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-libs-${elrepo_kernel_version}-1.el8.${elrepo_kernel_filename}x86_64.rpm
+
+        elif [ "${osReleaseVersionNoShort}" -eq 9 ]; then
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-devel-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-headers-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-core-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-modules-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-modules-extra-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+            downloadFile ${ELREPODownloadUrl}/${elrepo_kernel_name}-tools-libs-${elrepo_kernel_version}-1.el9.${elrepo_kernel_filename}x86_64.rpm
+
+            # https://fr1.teddyvps.com/kernel/el9/kernel-ml-6.1.0-1.el9.elrepo.x86_64.rpm
+            # https://fr1.teddyvps.com/kernel/el9/kernel-ml-modules-extra-6.1.0-1.el9.elrepo.x86_64.rpm
+            # https://fr1.teddyvps.com/kernel/el9/kernel-ml-tools-libs-devel-6.1.0-1.el9.elrepo.x86_64.rpm
         fi
 
 
@@ -3163,6 +3185,7 @@ function start_menu(){
     green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
     green " 37. 安装 内核 5.15 LTS, Teddysun 编译 推荐安装此内核"
     green " 38. 安装 内核 5.19, Teddysun 编译 下载安装. "
+    green " 39. 安装 内核 6.1, elrepo 官方编译. "
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
@@ -3381,6 +3404,10 @@ function start_menu(){
         ;;
         38 )
             linuxKernelToInstallVersion="5.19"
+            installKernel
+        ;;
+        39 )
+            linuxKernelToInstallVersion="6.1"
             installKernel
         ;;
         41 )
