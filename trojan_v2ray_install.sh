@@ -1061,7 +1061,7 @@ downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 versionV2ray="4.45.2"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.5.5"
+versionXray="1.6.6-2"
 downloadFilenameXray="Xray-linux-64.zip"
 
 versionTrojanWeb="2.10.5"
@@ -1202,7 +1202,7 @@ function getV2rayVersion(){
     fi
 
     if [[ $1 == "xray" ]] ; then
-        versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
+        #versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
         echo "versionXray: ${versionXray}"
     fi
 
