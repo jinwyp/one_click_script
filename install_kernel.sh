@@ -3176,14 +3176,14 @@ function start_menu(){
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
-    green " 31. 安装 最新版本内核 6.0, 通过elrepo源安装"
+    green " 31. 安装 最新版本内核 6.1, 通过elrepo源安装"
     green " 32. 安装 LTS内核 5.4 LTS, 通过elrepo源安装"
     green " 33. 安装 内核 4.14 LTS, 从 altarch网站 下载安装"
     green " 34. 安装 内核 4.19 LTS, 从 altarch网站 下载安装"
     green " 35. 安装 内核 5.4 LTS, 从 elrepo网站 下载安装"
     echo
-    green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装此内核"
-    green " 37. 安装 内核 5.15 LTS, Teddysun 编译 推荐安装此内核"
+    green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装"
+    green " 37. 安装 内核 5.15 LTS, Teddysun 编译 推荐安装"
     green " 38. 安装 内核 5.19, Teddysun 编译 下载安装. "
     green " 39. 安装 内核 6.1, elrepo 官方编译. "
 
@@ -3264,7 +3264,7 @@ function start_menu(){
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
-    green " 31. Install latest linux kernel, 6.0, from elrepo yum repository"
+    green " 31. Install latest linux kernel, 6.1, from elrepo yum repository"
     green " 32. Install LTS linux kernel, 5.4 LTS, from elrepo yum repository"
     green " 33. Install linux kernel 4.14 LTS, download and install from altarch website"
     green " 34. Install linux kernel 4.19 LTS, download and install from altarch website"
@@ -3272,8 +3272,8 @@ function start_menu(){
     echo
     green " 36. Install linux kernel 5.10 LTS, compile by Teddysun. Recommended"
     green " 37. Install linux kernel 5.15 LTS, compile by Teddysun. Recommended"
-    green " 38. Install linux latest kernel 5.19 compile by Teddysun. download from Teddysun ftp"
-
+    green " 38. Install linux kernel 5.19 compile by Teddysun. download from Teddysun ftp"
+    green " 39. Install linux kernel 6.1, compile by elrepo "
     else
         if [[ "${osRelease}" == "debian" ]]; then
         green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
