@@ -2110,7 +2110,10 @@ function installWARPGO(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
 	wget -qN --no-check-certificate -O ./warp-go.sh https://raw.githubusercontent.com/fscarmen/warp/main/warp-go.sh && chmod +x ./warp-go.sh && ./warp-go.sh
 }
-
+function vps_netflix_auto(){
+    # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
+	bash <(curl -sSL https://raw.githubusercontent.com/fscarmen/warp_unlock/main/unlock.sh)
+}
 
 function vps_netflix_jin(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
@@ -3171,8 +3174,8 @@ function start_menu(){
     green " 16. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
 
     green " 21. 安装 warp-go 脚本 by fscarmen"
-    green " 22. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
-    green " 23. 自动刷新WARP IP 直到支持 Netflix 非自制剧解锁 "
+    # green " 22. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
+    green " 22. 自动刷新WARP IP 直到支持 Netflix 非自制剧解锁 "
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3259,8 +3262,7 @@ function start_menu(){
     green " 16. Set VPS using IPv4 or IPv6 firstly to access network"
 
     green " 21. Install warp-go by fscarmen. Enable IPv6, avoid Google reCAPTCHA and unlock Netflix geo restriction "
-    green " 22. Netflix region and non-self produced drama unlock test, support WARP SOCKS5 proxy and IPv6"
-    green " 23. Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
+    green " 22. Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3365,11 +3367,14 @@ function start_menu(){
         ;;
         21 )
            installWARPGO
-        ;;       
+        ;;
         22 )
-           vps_netflix_jin
+           vps_netflix_auto
         ;;
         23 )
+           vps_netflix_jin
+        ;;
+        24 )
            vps_netflix_jin_auto
         ;;
         31 )
