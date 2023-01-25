@@ -317,8 +317,14 @@ function testLinuxPortUsage(){
         red " 关闭防火墙 ufw"
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
-        ufw disable
-        
+
+        if ! command -v ufw &> /dev/null; then
+            echo "ufw command could not be found"
+        else
+            ufw disable
+        fi
+
+
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
     fi
@@ -361,7 +367,10 @@ function changeLinuxSSHPort(){
             fi
 
             # semanage port -l
-            semanage port -a -t ssh_port_t -p tcp ${osSSHLoginPortInput}
+            if command -v semanage &> /dev/null; then
+                semanage port -a -t ssh_port_t -p tcp ${osSSHLoginPortInput}
+            fi
+
             if command -v firewall-cmd &> /dev/null; then
                 firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
                 firewall-cmd --reload
@@ -373,8 +382,19 @@ function changeLinuxSSHPort(){
         fi
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
-            semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            ${sudoCmd} ufw allow $osSSHLoginPortInput/tcp
+            
+            if ! command -v semanage &> /dev/null; then
+                echo "semanage command could not be found"
+            else
+                semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
+            fi
+
+            if ! command -v ufw &> /dev/null; then
+                echo "ufw command could not be found"
+            else
+                ${sudoCmd} ufw allow $osSSHLoginPortInput/tcp
+            fi
+
 
             ${sudoCmd} service ssh restart
             ${sudoCmd} systemctl restart ssh
@@ -383,7 +403,7 @@ function changeLinuxSSHPort(){
         green "设置成功, 请记住设置的端口号 ${osSSHLoginPortInput}!"
         green "登陆服务器命令: ssh -p ${osSSHLoginPortInput} root@111.111.111.your ip !"
     else
-        echo "输入的端口号错误! 范围: 22,1025~65534"
+        red "输入的端口号错误! 范围: 22,1025~65534"
     fi
 }
 
@@ -4104,9 +4124,9 @@ EOM
 
             replaceAirUniverseConfigWARP "norestart"
             
-            chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertFullchainFilename}
-            chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertKeyFilename}
-            chmod ugoa+rwx ${configSSLCertPath}/*
+            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
+            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
+            chmod ugoa+rw ${configSSLCertPath}/*
 
             # chown -R nobody:nogroup /var/log/v2ray
 
@@ -4284,11 +4304,11 @@ function replaceAirUniverseConfigWARP(){
     read -p "是否使用DNS解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
 
-    V2rayDNSUnlockText="AsIs"
+    V2rayDNSUnlockText="UseIPv4"
     v2rayConfigDNSInput=""
 
     if [[ "${isV2rayUnlockDNSInput}" == [Nn] ]]; then
-        V2rayDNSUnlockText="AsIs"
+        V2rayDNSUnlockText="UseIPv4"
     else
         V2rayDNSUnlockText="UseIP"
         read -r -d '' v2rayConfigDNSOutboundSettingsInput << EOM
@@ -4693,8 +4713,8 @@ EOF
     fi
 
 
-    chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertFullchainFilename}
-    chmod ugoa+rwx ${configSSLCertPath}/${configSSLCertKeyFilename}
+    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
+    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
 
     # -z 为空
     if [[ -z $1 ]]; then

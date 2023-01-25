@@ -309,7 +309,11 @@ function testLinuxPortUsage(){
         ${sudoCmd} systemctl stop ufw
         ${sudoCmd} systemctl disable ufw
 
-        ufw disable
+        if ! command -v ufw &> /dev/null; then
+            echo "ufw command could not be found"
+        else
+            ufw disable
+        fi
         
     elif [ "$osRelease" == "debian" ]; then
         $osSystemPackage update -y
@@ -436,7 +440,10 @@ function changeLinuxSSHPort(){
             fi
 
             # semanage port -l
-            semanage port -a -t ssh_port_t -p tcp ${osSSHLoginPortInput}
+            if command -v semanage &> /dev/null; then
+                semanage port -a -t ssh_port_t -p tcp ${osSSHLoginPortInput}
+            fi
+
             if command -v firewall-cmd &> /dev/null; then
                 firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
                 firewall-cmd --reload
@@ -447,8 +454,17 @@ function changeLinuxSSHPort(){
         fi
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
-            semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
-            ${sudoCmd} ufw allow $osSSHLoginPortInput/tcp
+            if ! command -v semanage &> /dev/null; then
+                echo "semanage command could not be found"
+            else
+                semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
+            fi
+
+            if ! command -v ufw &> /dev/null; then
+                echo "ufw command could not be found"
+            else
+                ${sudoCmd} ufw allow $osSSHLoginPortInput/tcp
+            fi
 
             ${sudoCmd} service ssh restart
             ${sudoCmd} systemctl restart ssh
@@ -457,7 +473,7 @@ function changeLinuxSSHPort(){
         green "设置成功, 请记住设置的端口号 ${osSSHLoginPortInput}!"
         green "登陆服务器命令: ssh -p ${osSSHLoginPortInput} root@111.111.111.your ip !"
     else
-        red "输入的端口号错误! 范围: 22,1025~65534. Exit !"
+        red "输入的端口号错误! 范围: 22,1025~65534"
     fi
 }
 
@@ -1061,7 +1077,7 @@ downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 versionV2ray="4.45.2"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.7.0"
+versionXray="1.7.2"
 downloadFilenameXray="Xray-linux-64.zip"
 
 versionTrojanWeb="2.10.5"
@@ -4628,11 +4644,11 @@ EOM
     read -p "是否使用DNS解锁流媒体? 直接回车默认不解锁, 解锁请输入DNS服务器的IP地址:" isV2rayUnlockDNSInput
     isV2rayUnlockDNSInput=${isV2rayUnlockDNSInput:-n}
 
-    V2rayDNSUnlockText="AsIs"
+    V2rayDNSUnlockText="UseIPv4"
     v2rayConfigDNSInput=""
 
     if [[ "${isV2rayUnlockDNSInput}" == [Nn] ]]; then
-        V2rayDNSUnlockText="AsIs"
+        V2rayDNSUnlockText="UseIPv4"
     else
         V2rayDNSUnlockText="UseIP"
         read -r -d '' v2rayConfigDNSInput << EOM
@@ -7020,7 +7036,7 @@ function removeXUI(){
     /usr/bin/x-ui
 }
 
-
+chmod
 function installV2rayUI(){
 
     stopServiceNginx
