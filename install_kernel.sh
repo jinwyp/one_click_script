@@ -989,8 +989,11 @@ function installKernel(){
 
 
 function getVersionBBRPlus(){
-    if [ "${linuxKernelToInstallVersion}" = "5.19" ]; then 
-        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.19")
+    if [ "${linuxKernelToInstallVersion}" = "6.1" ]; then
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-6.x_stable")
+
+    elif [ "${linuxKernelToInstallVersion}" = "5.19" ]; then 
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.15")
 
     elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.15")
@@ -1009,7 +1012,7 @@ function getVersionBBRPlus(){
 
     elif [ "${linuxKernelToInstallVersion}" = "4.9" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-4.9")
-    fi    
+    fi
     echo
     green "UJX6N 编译的 最新的Linux bbrplus 内核版本号为 ${bbrplusKernelVersion}" 
     echo
@@ -1446,14 +1449,30 @@ function installCentosKernelManual(){
         if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
 
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.15-bbrplus/CentOS-7_Required_kernel-bbrplus-5.14.15-1.bbrplus.el7.x86_64.rpm
+            # https://github.com/UJX6N/bbrplus-5.15/releases/download/5.15.86-bbrplus/CentOS-7_Required_kernel-5.15.86-bbrplus.el7.x86_64.rpm
+            
+            
 
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.76-bbrplus/CentOS-7_Required_kernel-bbrplus-5.10.76-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-devel-5.10.27-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-headers-5.10.27-1.bbrplus.el7.x86_64.rpm
 
-            downloadFile ${bbrplusDownloadUrl}/CentOS-7_Required_kernel-bbrplus-${bbrplusKernelVersion}-1.bbrplus.el7.x86_64.rpm
-            downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-bbrplus-devel-${bbrplusKernelVersion}-1.bbrplus.el7.x86_64.rpm
-            downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-bbrplus-headers-${bbrplusKernelVersion}-1.bbrplus.el7.x86_64.rpm
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" ]]; then 
+                # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.16-bbrplus/CentOS-7_Required_kernel-5.10.162-bbrplus.el7.x86_64.rpm
+                # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.162-bbrplus/CentOS-7_Optional_kernel-headers-5.10.162-bbrplus.el7.x86_64.rpm
+
+                downloadFile ${bbrplusDownloadUrl}/CentOS-7_Required_kernel-${bbrplusKernelVersion}-bbrplus.el7.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-headers-${bbrplusKernelVersion}-bbrplus.el7.x86_64.rpm
+            else
+                # https://github.com/UJX6N/bbrplus-4.9/releases/download/4.9.337-bbrplus/CentOS-7_Optional_kernel-bbrplus-devel-4.9.337-1.bbrplus.el7.x86_64.rpm
+
+                downloadFile ${bbrplusDownloadUrl}/CentOS-7_Required_kernel-bbrplus-${bbrplusKernelVersion}-1.bbrplus.el7.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-bbrplus-devel-${bbrplusKernelVersion}-1.bbrplus.el7.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-7_Optional_kernel-bbrplus-headers-${bbrplusKernelVersion}-1.bbrplus.el7.x86_64.rpm
+            fi
+
+
+
 
             removeCentosKernelMulti
             echo
@@ -1482,14 +1501,27 @@ function installCentosKernelManual(){
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Optional_kernel-bbrplus-modules-extra-5.14.18-1.bbrplus.el8.x86_64.rpm
 
 
-            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Required_kernel-bbrplus-core-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
-            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Required_kernel-bbrplus-modules-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" ]]; then 
+                # https://github.com/UJX6N/bbrplus-5.15/releases/download/5.15.86-bbrplus/CentOS-Stream-8_Required_kernel-5.15.86-bbrplus.el8.x86_64.rpm
+                # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.162-bbrplus/CentOS-Stream-8_Optional_kernel-headers-5.10.162-bbrplus.el8.x86_64.rpm
 
-            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
-            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-devel-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
-            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-headers-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
-            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-modules-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
-            downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-modules-extra-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-Stream-8_Required_kernel-${bbrplusKernelVersion}-bbrplus.el8.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-Stream-8_Optional_kernel-headers-${bbrplusKernelVersion}-bbrplus.el8.x86_64.rpm
+
+            else
+                # https://github.com/UJX6N/bbrplus-5.19/releases/download/5.19.17-bbrplus/CentOS-8_Required_kernel-bbrplus-core-5.19.17-1.bbrplus.el8.x86_64.rpm
+
+
+                downloadFile ${bbrplusDownloadUrl}/CentOS-8_Required_kernel-bbrplus-core-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-8_Required_kernel-bbrplus-modules-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+
+                downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-devel-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-headers-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+                # downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-modules-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+                downloadFile ${bbrplusDownloadUrl}/CentOS-8_Optional_kernel-bbrplus-modules-extra-${bbrplusKernelVersion}-1.bbrplus.el8.x86_64.rpm
+            fi
+
 
             removeCentosKernelMulti
             echo
@@ -1954,21 +1986,31 @@ function installDebianUbuntuKernel(){
 
             if [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
                 bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus/releases/download/${linuxKernelToInstallVersionFull}"
-                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
-                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
             else
                 bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/${linuxKernelToInstallVersionFull}"
+            fi
+    
 
+
+            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus/Debian-Ubuntu_Required_linux-image-5.9.16-bbrplus_5.9.16-bbrplus-1_amd64.deb
+            # https://github.com/UJX6N/bbrplus-5.4/releases/download/5.4.228-bbrplus/Debian-Ubuntu_Required_linux-headers-5.4.228-bbrplus_5.4.228-bbrplus-1_amd64.deb
+            # https://github.com/UJX6N/bbrplus-5.4/releases/download/5.4.228-bbrplus/Debian-Ubuntu_Required_linux-image-5.4.228-bbrplus_5.4.228-bbrplus-1_amd64.deb
+
+            # https://github.com/UJX6N/bbrplus-4.19/releases/download/4.19.269-bbrplus/Debian-Ubuntu_Required_linux-image-4.19.269-bbrplus_4.19.269-bbrplus-1_amd64.deb
+            # https://github.com/UJX6N/bbrplus/releases/download/4.14.302-bbrplus/Debian-Ubuntu_Required_linux-headers-4.14.302-bbrplus_4.14.302-bbrplus-1_amd64.deb
+            # https://github.com/UJX6N/bbrplus-4.9/releases/download/4.9.337-bbrplus/Debian-Ubuntu_Required_linux-image-4.9.337-bbrplus_4.9.337-bbrplus-1_amd64.deb
+        
+
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" ]]; then 
+            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.162-bbrplus/Debian-Ubuntu_Required_linux-image-5.10.162-bbrplus_5.10.162-bbrplus-1_amd64.deb
+            # https://github.com/UJX6N/bbrplus-5.15/releases/download/5.15.86-bbrplus/Debian-Ubuntu_Optional_linux-headers-5.15.86-bbrplus_5.15.86-bbrplus-1_amd64.deb
+
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Optional_linux-headers--${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
+            else
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
             fi
-    
-            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.76-bbrplus/Debian-Ubuntu_Required_linux-image-5.10.76-bbrplus_5.10.76-bbrplus-1_amd64.deb
-            # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/Debian-Ubuntu_Required_linux-headers-5.10.27-bbrplus_5.10.27-bbrplus-1_amd64.deb
-
-            # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus/Debian-Ubuntu_Required_linux-image-5.9.16-bbrplus_5.9.16-bbrplus-1_amd64.deb
-            # https://github.com/UJX6N/bbrplus-5.4/releases/download/5.4.109-bbrplus/Debian-Ubuntu_Required_linux-image-5.4.109-bbrplus_5.4.109-bbrplus-1_amd64.deb
-            # https://github.com/UJX6N/bbrplus-4.19/releases/download/4.19.184-bbrplus/Debian-Ubuntu_Required_linux-image-4.19.184-bbrplus_4.19.184-bbrplus-1_amd64.deb
 
         fi
 
@@ -3192,8 +3234,13 @@ function start_menu(){
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
-        green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
-        green " 42. 安装 最新版本内核 5.18 或更高, 通过 Debian 官方源安装"
+        if [[ "${osReleaseVersion}" == "10" ]]; then
+            green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
+        echo
+        fi
+        if [[ "${osReleaseVersion}" == "11" ]]; then
+            green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
+            green " 42. 安装 最新版本内核 5.18 或更高, 通过 Debian 官方源安装"
         echo
         fi
 
@@ -3214,10 +3261,11 @@ function start_menu(){
     green " 62. 安装 BBR Plus 内核 4.9 LTS, UJX6N 编译"
     green " 63. 安装 BBR Plus 内核 4.14 LTS, UJX6N 编译"
     green " 64. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
-    green " 65. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
-    green " 66. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译" 
-    green " 67. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译" 
-    green " 68. 安装 BBR Plus 内核 5.19, UJX6N 编译"   
+    # green " 65. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
+    green " 66. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"
+    green " 67. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译"
+    green " 68. 安装 BBR Plus 内核 5.19, UJX6N 编译"
+    green " 69. 安装 BBR Plus 内核 6.1, UJX6N 编译"
  
     echo
     green " 0. 退出脚本"
@@ -3278,8 +3326,16 @@ function start_menu(){
     green " 39. Install linux kernel 6.1, compile by elrepo "
     else
         if [[ "${osRelease}" == "debian" ]]; then
-        green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
-        green " 42. Install latest linux kernel, 5.18 or higher, from Debian repository source"
+        if [[ "${osReleaseVersion}" == "10" ]]; then
+            green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
+        echo
+        fi
+        if [[ "${osReleaseVersion}" == "11" ]]; then
+            green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
+            green " 42. Install latest linux kernel, 5.18 or higher, from Debian repository source"
+        echo
+        fi
+
         echo
         fi
 
@@ -3302,7 +3358,7 @@ function start_menu(){
     green " 66. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
     green " 67. Install BBR Plus kernel 5.15 LTS, compile by UJX6N" 
     green " 68. Install BBR Plus kernel 5.19, compile by UJX6N"   
- 
+    green " 69. Install BBR Plus kernel 6.1, compile by UJX6N" 
     echo
     green " 0. exit"
 
@@ -3499,6 +3555,11 @@ function start_menu(){
         ;;
         68 )
             linuxKernelToInstallVersion="5.19"
+            linuxKernelToBBRType="bbrplus"
+            installKernel
+        ;;
+        69 )
+            linuxKernelToInstallVersion="6.1"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
