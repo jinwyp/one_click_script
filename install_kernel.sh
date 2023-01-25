@@ -3234,15 +3234,18 @@ function start_menu(){
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
-        if [[ "${osReleaseVersion}" == "10" ]]; then
-            green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
-        echo
+
+            if [[ "${osReleaseVersion}" == "10" ]]; then
+                green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
+
+            fi
+            if [[ "${osReleaseVersion}" == "11" ]]; then
+                green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
+                green " 42. 安装 最新版本内核 5.18 或更高, 通过 Debian 官方源安装"
+            fi
+            echo
         fi
-        if [[ "${osReleaseVersion}" == "11" ]]; then
-            green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
-            green " 42. 安装 最新版本内核 5.18 或更高, 通过 Debian 官方源安装"
-        echo
-        fi
+
 
         green " 44. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
         green " 45. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
@@ -3253,7 +3256,7 @@ function start_menu(){
         echo
         green " 51. 安装 XanMod Kernel 内核 5.15 LTS, 官方源安装 "    
         green " 52. 安装 XanMod Kernel 内核 5.17, 官方源安装 "   
-
+        
     fi
 
     echo
@@ -3326,17 +3329,15 @@ function start_menu(){
     green " 39. Install linux kernel 6.1, compile by elrepo "
     else
         if [[ "${osRelease}" == "debian" ]]; then
-        if [[ "${osReleaseVersion}" == "10" ]]; then
-            green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
-        echo
-        fi
-        if [[ "${osReleaseVersion}" == "11" ]]; then
-            green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
-            green " 42. Install latest linux kernel, 5.18 or higher, from Debian repository source"
-        echo
-        fi
-
-        echo
+            if [[ "${osReleaseVersion}" == "10" ]]; then
+                green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
+            fi
+            
+            if [[ "${osReleaseVersion}" == "11" ]]; then
+                green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
+                green " 42. Install latest linux kernel, 5.18 or higher, from Debian repository source"
+            fi
+            echo
         fi
 
         green " 44. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
