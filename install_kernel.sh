@@ -2006,7 +2006,7 @@ function installDebianUbuntuKernel(){
             # https://github.com/UJX6N/bbrplus-5.15/releases/download/5.15.86-bbrplus/Debian-Ubuntu_Optional_linux-headers-5.15.86-bbrplus_5.15.86-bbrplus-1_amd64.deb
 
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
-                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Optional_linux-headers--${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Optional_linux-headers-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
             else
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
@@ -2020,7 +2020,7 @@ function installDebianUbuntuKernel(){
         green " =================================================="
         green " 开始安装 linux 内核版本: ${linuxKernelToInstallVersionFull}"
         echo
-        ${sudoCmd} dpkg -i *.deb 
+        ${sudoCmd} dpkg -i ./*.deb 
 
         updateGrubConfig
 
@@ -3127,6 +3127,7 @@ function checkWireguard(){
 
 
 }
+
 
 
 
