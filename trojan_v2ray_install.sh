@@ -3929,8 +3929,11 @@ function downloadV2rayXrayBin(){
         tempDownloadV2rayPath="${configSSXrayPath}"
 
     else
-        tempDownloadV2rayPath="${configDownloadTempPath}/upgrade/${promptInfoXrayName}"
+        tempDownloadV2rayPath="${configV2rayPath}/upgrade/${promptInfoXrayName}"
     fi
+
+    mkdir -p "${tempDownloadV2rayPath}"
+    cd "${tempDownloadV2rayPath}" || exit
 
     if [ "$isXray" = "no" ] ; then
         # https://github.com/v2fly/v2ray-core/releases/download/v4.41.1/v2ray-linux-64.zip
@@ -3958,6 +3961,18 @@ function downloadV2rayXrayBin(){
 
         downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${tempDownloadV2rayPath}" "${downloadFilenameXray}"
     fi
+
+    if [ $1 = "upgrade" ]; then
+        if [ "$isXray" = "no" ] ; then
+            mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
+        fi
+
+        mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/${promptInfoXrayName} ${configV2rayPath}
+        mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
+        mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
+    fi
+
+
 }
 
 
@@ -6709,13 +6724,7 @@ function upgradeV2ray(){
 
         downloadV2rayXrayBin "upgrade"
 
-        if [ "$isXray" = "no" ] ; then
-            mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
-        fi
 
-        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/${promptInfoXrayName} ${configV2rayPath}
-        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
-        mv -f ${configDownloadTempPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
 
         ${sudoCmd} chmod +x ${configV2rayPath}/${promptInfoXrayName}
 
