@@ -4626,7 +4626,6 @@ EOM
                 }
             }
         },
-
         ${v2rayConfigOutboundV2rayServerInput}
         ${v2rayConfigOutboundV2rayGoNetflixServerInput}
         {
