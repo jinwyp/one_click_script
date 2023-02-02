@@ -3643,7 +3643,7 @@ EOM
 fi
 
     echo
-    green " 某老姨子提供了可以解锁Netflix新加坡区的服务器, 不保证一直可用"
+    green " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 已失效"
     echo
     read -r -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
     isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
@@ -3685,9 +3685,14 @@ EOM
             "tag": "direct"
         },
         {
+            "tag": "blocked",
             "protocol": "blackhole",
-            "tag": "block"
-        },        
+            "settings": {
+                "response": {
+                    "type": "http"
+                }
+            }
+        },      
         {
             "tag": "GoNetflix",
             "protocol": "vmess",
@@ -4624,6 +4629,36 @@ EOM
 
 
 
+    echo
+    echo
+    green " =================================================="
+    yellow " 是否屏蔽回国流量, 根据 geosite:cn 和 geoip:cn 规则判断是否回国流量"
+    echo
+    green " 1. 屏蔽回国流量"
+    green " 2. 不屏蔽回国流量"
+    green " 3. 回国流量走 WARP IPv6 解锁"
+    echo
+    green " 默认选1 屏蔽回国流量. 选择3 需要安装好 Wireguard 与 Cloudflare WARP, 可重新运行本脚本选择第一项安装".
+    red " 推荐先安装 Wireguard 与 Cloudflare WARP 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare WARP也没问题"
+    echo
+    read -p "请输入? 直接回车默认选1, 请输入纯数字:" isV2rayBlockChinaSiteInput
+    isV2rayBlockChinaSiteInput=${isV2rayBlockChinaSiteInput:-1}
+    
+    V2rayBlockChinaSiteRuleText="blocked"
+
+
+    if [[ $isV2rayBlockChinaSiteInput == "1" ]]; then
+        V2rayBlockChinaSiteRuleText="blocked"
+
+    elif [[ $isV2rayBlockChinaSiteInput == "2" ]]; then
+        V2rayBlockChinaSiteRuleText="IPv4_out"
+
+    else
+        V2rayBlockChinaSiteRuleText="IPv6_out"
+
+    fi
+
+
 
 
 
@@ -4808,7 +4843,7 @@ EOM
 
 
     echo
-    yellow " 某老姨子提供了可以解锁Netflix新加坡区的服务器, 不保证一直可用"
+    yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 已失效"
     read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
     isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
 
@@ -4895,6 +4930,7 @@ EOM
 
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
+        "domainStrategy": "IPOnDemand",
         "rules": [
             ${v2rayConfigRouteGoNetflixInput}
             {
@@ -4902,6 +4938,20 @@ EOM
                 "outboundTag": "${V2rayUnlockVideoSiteOutboundTagText}",
                 "domain": [${V2rayUnlockVideoSiteRuleText}] 
             },
+            {
+                "type": "field",
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "${V2rayBlockChinaSiteRuleText}"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "${V2rayBlockChinaSiteRuleText}"
+            },           
             {
                 "type": "field",
                 "outboundTag": "IPv4_out",
@@ -4943,6 +4993,7 @@ EOM
         
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
+        "domainStrategy": "IPOnDemand",
         "rules": [
             ${v2rayConfigRouteGoNetflixInput}
             {
@@ -4954,6 +5005,20 @@ EOM
                 "type": "field",
                 "outboundTag": "${V2rayUnlockVideoSiteOutboundTagText}",
                 "domain": [${V2rayUnlockVideoSiteRuleText}] 
+            },
+            {
+                "type": "field",
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "${V2rayBlockChinaSiteRuleText}"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "${V2rayBlockChinaSiteRuleText}"
             },
             {
                 "type": "field",
@@ -4978,7 +5043,11 @@ EOM
         {
             "tag": "blocked",
             "protocol": "blackhole",
-            "settings": {}
+            "settings": {
+                "response": {
+                    "type": "http"
+                }
+            }
         },
         {
             "tag":"IPv6_out",
@@ -8367,7 +8436,7 @@ function start_menu(){
         ;;
         77 )
             vps_netflixgo
-            vps_netflix_jin
+            vps_netflix2
         ;;
         80 )
             installPackage

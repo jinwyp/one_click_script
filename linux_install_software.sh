@@ -4467,8 +4467,8 @@ EOM
 
     echo
     echo
-    yellow " 某大佬提供了可以解锁Netflix新加坡区的V2ray服务器, 不保证一直可用"
-    read -p "是否通过神秘力量解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
+    yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 已失效"
+    read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
     isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
 
     v2rayConfigRouteGoNetflixInput=""
@@ -4617,6 +4617,15 @@ EOM
             "protocol": "blackhole",
             "settings": {}
         },
+        {
+            "tag": "blocked",
+            "protocol": "blackhole",
+            "settings": {
+                "response": {
+                    "type": "http"
+                }
+            }
+        },
 
         ${v2rayConfigOutboundV2rayServerInput}
         ${v2rayConfigOutboundV2rayGoNetflixServerInput}
@@ -4644,6 +4653,7 @@ EOM
         }      
     ],
     "routing": {
+        "domainStrategy": "IPOnDemand",
         "rules": [
             {
                 "inboundTag": [
@@ -4654,6 +4664,20 @@ EOM
             },
             ${xrayConfigRuleInput}
             ${v2rayConfigRouteGoNetflixInput}
+            {
+                "type": "field",
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "IPv6_out"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "IPv6_out"
+            },
             {
                 "type": "field",
                 "protocol": [
@@ -4737,6 +4761,15 @@ EOF
 
 
 
+
+function updateGeoIp(){
+    wget -O /usr/local/share/xray/geoip.dat https://github.com/v2fly/geoip/releases/latest/download/geoip.dat
+    wget -O /usr/local/share/xray/geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat
+    
+    systemctl restart xray.service
+    airu restart
+
+}
 
 function manageAirUniverse(){
     echo -e ""
@@ -5219,6 +5252,7 @@ function start_menu(){
     green " 54. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
     green " 55. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
     green " 56. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
+    green " 58. 更新 geoip.dat 和 geosite.dat 文件"
     echo 
     green " 61. 单独申请域名SSL证书"
     echo
@@ -5273,6 +5307,7 @@ function start_menu(){
     green " 54. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     green " 55. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
     green " 56. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
+    green " 58. Update geoip.dat and geosite.dat "
     echo 
     green " 61. Get a free SSL certificate for domain name only"
     echo
@@ -5399,6 +5434,9 @@ function start_menu(){
         ;;
         57 )
             installAiruAndNginx
+        ;;
+        58 )
+            updateGeoIp
         ;;
         61 )
             getHTTPSCertificateStep1
