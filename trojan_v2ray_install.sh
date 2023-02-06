@@ -2657,7 +2657,7 @@ function getTrojanGoVersion(){
 
     else
         #versionTrojanGo=$(getGithubLatestReleaseVersion "Potterli20/trojan-go-fork")
-        versionTrojanGo="V2022.10.17"
+        versionTrojanGo="V2023.01.30"
         echo "versionTrojanGo: ${versionTrojanGo}"
         configTrojanBaseVersion=${versionTrojanGo}
         configTrojanBasePath="${configTrojanGoPath}"
