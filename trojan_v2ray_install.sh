@@ -2243,6 +2243,8 @@ EOF
 
 function removeNginx(){
 
+    green " ================================================== "
+    green " Are you sure to remove Nginx ? "
     echo
     read -r -p "是否确认卸载Nginx? 直接回车默认卸载, 请输入[Y/n]:" isRemoveNginxServerInput
     isRemoveNginxServerInput=${isRemoveNginxServerInput:-Y}
@@ -2757,8 +2759,8 @@ function installTrojanServer(){
     green " 3 修改版 Trojan-go 支持 websocket by fregie (support websocket)"
     green " 4 修改版 Trojan-go 支持模拟浏览器指纹 支持 websocket by Potterli20 (support websocket)"
     echo
-    read -r -p "请选择哪种 Trojan ? 直接回车默认选4, 请输入纯数字:" isTrojanTypeInput
-    isTrojanTypeInput=${isTrojanTypeInput:-4}
+    read -r -p "请选择哪种 Trojan ? 直接回车默认选3, 请输入纯数字:" isTrojanTypeInput
+    isTrojanTypeInput=${isTrojanTypeInput:-3}
 
     if [[ "${isTrojanTypeInput}" == "1" ]]; then
         trojanInstallType="1"
@@ -3283,6 +3285,7 @@ function removeTrojan(){
     echo
     green " ================================================== "
     green " Are you sure to uninstall Trojan${promptInfoTrojanName} ? "
+    echo
     read -r -p "是否确认卸载 Trojan${promptInfoTrojanName}? 直接回车默认卸载, 请输入[Y/n]:" isRemoveTrojanServerInput
     isRemoveTrojanServerInput=${isRemoveTrojanServerInput:-Y}
 
@@ -6695,6 +6698,8 @@ EOF
 
 function removeV2ray(){
 
+    green " ================================================== "
+    green " Are you sure to remove V2ray or Xray ? "
     echo
     read -r -p "是否确认卸载 V2ray 或 Xray? 直接回车默认卸载, 请输入[Y/n]:" isRemoveV2rayServerInput
     isRemoveV2rayServerInput=${isRemoveV2rayServerInput:-Y}
@@ -8190,7 +8195,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray 一键安装脚本 | 2022-10-23 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray 一键安装脚本 | 2023-2-06 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -8240,7 +8245,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray Installation | 2022-10-23 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray Installation | 2023-2-06 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
