@@ -1203,7 +1203,7 @@ function getV2rayVersion(){
         echo
         green " ================================================== "
         green " 请选择 V2ray 的版本, 默认直接回车为 稳定版4.45.2 (推荐)"
-        green " 选否则安装最新版的 V2ray 5.1.0 User Preview"
+        green " 选否则安装最新版的 V2ray 5.3.0 User Preview"
         echo
         read -r -p "是否安装稳定版V2ray? 默认直接回车为稳定版4.45.2, 请输入[Y/n]:" isInstallXrayVersionInput
         isInstallXrayVersionInput=${isInstallXrayVersionInput:-Y}
@@ -1680,6 +1680,24 @@ function compareRealIpWithLocalIp(){
 
 function getHTTPSCertificateStep1(){
     
+    echo
+    green " ================================================== "
+    green " 请输入证书要放置的路径:  默认为${configSSLCertPath} "
+    yellow " 自定义证书路径可能会导致安装失败 仅供高手使用 "
+    yellow " 自定义证书路径需要预先创建好, 否则会使用默认路径${configSSLCertPath} "
+    echo
+    read -r -p "请输入证书路径 默认直接回车为${configSSLCertPath}" configSSLFilePath
+    configSSLFilePath=${configSSLFilePath:-${configSSLCertPath}}
+    if [ -z "${configSSLFilePath}" ]; then
+        configSSLFilePath="${configSSLCertPath}"
+        red " 输入的自定义证书路径为空, 将使用默认路径${configSSLCertPath} "
+    fi
+    if [ ! -d "${configSSLFilePath}" ]; then
+        configSSLFilePath="${configSSLCertPath}"
+        red " 输入的自定义证书路径为不存在, 将使用默认路径${configSSLCertPath} "
+    fi
+    configSSLCertPath="${configSSLFilePath}"
+
     echo
     green " ================================================== "
     yellow " 请输入解析到本VPS的域名 例如 www.xxx.com: (此步骤请关闭CDN后和nginx后安装 避免80端口占用导致申请证书失败)"
@@ -2344,7 +2362,7 @@ configNginxSNIDomainWebsite=""
 configNginxSNIDomainV2ray=""
 configNginxSNIDomainTrojan=""
 
-configSSLCertPath="${configWebsiteFatherPath}/cert"
+
 configNginxSNIDomainTrojanCertPath="${configWebsiteFatherPath}/cert/nginxsni/trojan"
 configNginxSNIDomainV2rayCertPath="${configWebsiteFatherPath}/cert/nginxsni/v2ray"
 configNginxSNIDomainWebsiteCertPath="${configWebsiteFatherPath}/cert/nginxsni/web"
