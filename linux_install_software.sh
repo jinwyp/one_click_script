@@ -4080,7 +4080,9 @@ function installAirUniverse(){
         echo
     fi
 
-
+    # sed -i '/User=nobody/d' "/etc/systemd/system/xray.service"
+    # ${sudoCmd} systemctl daemon-reload
+    # chown root "/var/log/au/xr.log"
 
     if test -s ${configAirUniverseConfigFilePath}; then
 

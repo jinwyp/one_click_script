@@ -2657,7 +2657,7 @@ function getTrojanGoVersion(){
 
     else
         #versionTrojanGo=$(getGithubLatestReleaseVersion "Potterli20/trojan-go-fork")
-        versionTrojanGo="V2023.01.30"
+        versionTrojanGo="V2023.02.15"
         echo "versionTrojanGo: ${versionTrojanGo}"
         configTrojanBaseVersion=${versionTrojanGo}
         configTrojanBasePath="${configTrojanGoPath}"
@@ -2700,9 +2700,13 @@ function downloadTrojanBin(){
             downloadFilenameTrojanGo="trojan-go-fork-linux-arm.zip"
         fi
         if [[ ${osArchitecture} == "arm64" ]] ; then
-            downloadFilenameTrojanGo="trojan-go-fork-linux-armv8.zip"
+            downloadFilenameTrojanGo="trojan-go-fork-freebsd-arm64.zip"
         fi
-        # https://github.com/Potterli20/trojan-go-fork/releases/download/V2022.10.17/trojan-go-fork-linux-amd64.zip
+
+        # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.02.15/trojan-go-fork-linux-arm.zip
+        # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.02.15/trojan-go-fork-freebsd-arm64.zip
+        # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.02.15/trojan-go-fork-linux-amd64.zip
+        
         downloadAndUnzip "https://github.com/Potterli20/trojan-go-fork/releases/download/${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanBasePath}" "${downloadFilenameTrojanGo}"
         mv -f ${configTrojanBasePath}/trojan-go-fork ${configTrojanBasePath}/trojan-go
     fi
@@ -3274,7 +3278,6 @@ function removeTrojan(){
     else
         red " 系统没有安装 Trojan / Trojan-go, 退出卸载"
         red " Trojan or Trojan-go not install, exit"
-        exit
     fi
 
     echo
