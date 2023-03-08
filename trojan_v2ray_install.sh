@@ -1194,6 +1194,7 @@ function getGithubLatestReleaseVersion(){
     wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
 }
 
+
 function getV2rayVersion(){
     # https://github.com/trojan-gfw/trojan/releases/download/v1.16.0/trojan-1.16.0-linux-amd64.tar.xz
 
@@ -2676,8 +2677,9 @@ function getTrojanGoVersion(){
         promptInfoTrojanName="-go"
 
     else
-        #versionTrojanGo=$(getGithubLatestReleaseVersion "Potterli20/trojan-go-fork")
-        versionTrojanGo="V2023.02.15"
+        # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.03.08/trojan-go-fork-linux-amd64.zip
+        versionTrojanGo=$(getGithubLatestReleaseVersion "Potterli20/trojan-go-fork")
+        # versionTrojanGo="V2023.03.08"
         echo "versionTrojanGo: ${versionTrojanGo}"
         configTrojanBaseVersion=${versionTrojanGo}
         configTrojanBasePath="${configTrojanGoPath}"
@@ -2725,9 +2727,9 @@ function downloadTrojanBin(){
 
         # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.02.15/trojan-go-fork-linux-arm.zip
         # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.02.15/trojan-go-fork-linux-armv8.zip
-        # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.02.15/trojan-go-fork-linux-amd64.zip
-        
-        downloadAndUnzip "https://github.com/Potterli20/trojan-go-fork/releases/download/${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanBasePath}" "${downloadFilenameTrojanGo}"
+        # https://github.com/Potterli20/trojan-go-fork/releases/download/V2023.03.08/trojan-go-fork-linux-amd64.zip
+
+        downloadAndUnzip "https://github.com/Potterli20/trojan-go-fork/releases/download/V${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanBasePath}" "${downloadFilenameTrojanGo}"
         mv -f ${configTrojanBasePath}/trojan-go-fork ${configTrojanBasePath}/trojan-go
     fi
 
@@ -2777,8 +2779,8 @@ function installTrojanServer(){
     green " 3 修改版 Trojan-go 支持 websocket by fregie (support websocket)"
     green " 4 修改版 Trojan-go 支持模拟浏览器指纹 支持 websocket by Potterli20 (support websocket)"
     echo
-    read -r -p "请选择哪种 Trojan ? 直接回车默认选3, 请输入纯数字:" isTrojanTypeInput
-    isTrojanTypeInput=${isTrojanTypeInput:-3}
+    read -r -p "请选择哪种 Trojan ? 直接回车默认选2, 请输入纯数字:" isTrojanTypeInput
+    isTrojanTypeInput=${isTrojanTypeInput:-2}
 
     if [[ "${isTrojanTypeInput}" == "1" ]]; then
         trojanInstallType="1"
