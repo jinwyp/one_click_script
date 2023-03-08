@@ -3953,7 +3953,7 @@ function removeShadowsocks(){
 function downloadV2rayXrayBin(){
     if [ -z $1 ]; then
         tempDownloadV2rayPath="${configV2rayPath}"
-    elif [ $1 = "shadowsocks" ]; then
+    elif [ "$1" = "shadowsocks" ]; then
         isXray="yes"
         tempDownloadV2rayPath="${configSSXrayPath}"
 
@@ -3991,8 +3991,8 @@ function downloadV2rayXrayBin(){
         downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${tempDownloadV2rayPath}" "${downloadFilenameXray}"
     fi
 
-    if [ $1 = "upgrade" ]; then
-        if [ "$isXray" = "no" ] ; then
+    if [ "$1" = "upgrade" ]; then
+        if [ "$isXray" = "no" ]; then
             mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/v2ctl ${configV2rayPath}
         fi
 
@@ -4000,7 +4000,6 @@ function downloadV2rayXrayBin(){
         mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
         mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
     fi
-
 
 }
 
