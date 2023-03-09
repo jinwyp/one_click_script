@@ -4330,6 +4330,11 @@ function generateVLessImportLink(){
             configV2rayVlessXtlsFlow="xtls&flow=xtls-rprx-direct"
             configV2rayVlessXtlsFlowShowInfo="xtls-rprx-direct"
         fi
+        if [[ "${configV2rayWorkingMode}" == "vlessTCPVision" ]]; then
+            configV2rayVlessXtlsFlow="tls&flow=xtls-rprx-vision"
+            configV2rayVlessXtlsFlowShowInfo="xtls-rprx-vision"
+        fi
+
 
         if [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
             cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
@@ -4505,7 +4510,7 @@ function installV2ray(){
     green " =================================================="    
     echo
 
-    if [[ ( $configV2rayWorkingMode == "trojan" ) || ( $configV2rayWorkingMode == "vlessTCPVmessWS" ) || ( $configV2rayWorkingMode == "vlessTCPWS" ) || ( $configV2rayWorkingMode == "vlessTCPWSgRPC" ) || ( $configV2rayWorkingMode == "vlessTCPWSTrojan" ) || ( $configV2rayWorkingMode == "sni" ) ]]; then
+    if [[ ( $configV2rayWorkingMode == "trojan" ) || ( $configV2rayWorkingMode == "vlessTCPVmessWS" ) || ( $configV2rayWorkingMode == "vlessTCPWS" ) || ( $configV2rayWorkingMode == "vlessTCPWSTrojan" ) || ( $configV2rayWorkingMode == "sni" ) ]]; then
         echo
         green " 是否使用XTLS代替TLS加密, XTLS是Xray特有的加密方式, 速度更快, 默认使用TLS加密"
         green " 由于V2ray不支持XTLS, 如果选择XTLS加密将使用Xray内核提供服务"
@@ -4526,6 +4531,10 @@ function installV2ray(){
                 isXray="yes"
             fi        
         fi
+    elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
+            promptInfoXrayName="xray"
+            isXray="yes"
+            configV2rayIsTlsShowInfo="tls"
     else
         read -r -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayCoreInput
         isV2rayOrXrayCoreInput=${isV2rayOrXrayCoreInput:-n}
@@ -5311,6 +5320,20 @@ EOM
                     { "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com" }
 
 EOM
+    elif [[ "${configV2rayWorkingMode}" == "vlessTCPVision" ]]; then
+    read -r -d '' v2rayConfigUserpasswordInput << EOM
+                    { "id": "${v2rayPassword1}", "flow": "xtls-rprx-vision", "level": 0, "email": "password11@gmail.com" },
+                    { "id": "${v2rayPassword2}", "flow": "xtls-rprx-vision", "level": 0, "email": "password12@gmail.com" },
+                    { "id": "${v2rayPassword3}", "flow": "xtls-rprx-vision", "level": 0, "email": "password13@gmail.com" },
+                    { "id": "${v2rayPassword4}", "flow": "xtls-rprx-vision", "level": 0, "email": "password14@gmail.com" },
+                    { "id": "${v2rayPassword5}", "flow": "xtls-rprx-vision", "level": 0, "email": "password15@gmail.com" },
+                    { "id": "${v2rayPassword6}", "flow": "xtls-rprx-vision", "level": 0, "email": "password16@gmail.com" },
+                    { "id": "${v2rayPassword7}", "flow": "xtls-rprx-vision", "level": 0, "email": "password17@gmail.com" },
+                    { "id": "${v2rayPassword8}", "flow": "xtls-rprx-vision", "level": 0, "email": "password18@gmail.com" },
+                    { "id": "${v2rayPassword9}", "flow": "xtls-rprx-vision", "level": 0, "email": "password19@gmail.com" },
+                    { "id": "${v2rayPassword10}", "flow": "xtls-rprx-vision", "level": 0, "email": "password20@gmail.com" }
+
+EOM
 
     else
     read -r -d '' v2rayConfigUserpasswordInput << EOM
@@ -5762,8 +5785,62 @@ EOM
     ],
 EOM
 
+    elif [[ "$configV2rayWorkingMode" == "vlessTCPVision" ]]; then
 
-    elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" || "$configV2rayWorkingMode" == "sni" ]]; then
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "${configV2rayIsTlsShowInfo}",
+                "${configV2rayIsTlsShowInfo}Settings": {
+                    "rejectUnknownSni": true,
+                    "minVersion": "1.2",
+                    "certificates": [
+                        {
+                            "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
+                            "keyFile": "${configSSLCertPath}/$configSSLCertKeyFilename"
+                        }
+                    ]
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
+            }
+        }
+
+        ${v2rayConfigAdditionalPortInput}
+    ],
+    "policy": {
+        "levels": {
+            "0": {
+                "handshake": 5, 
+                "connIdle": 360
+            }
+        }
+    },    
+EOM
+
+
+
+    elif [[ "$configV2rayWorkingMode" == "sni" ]]; then
 
         read -r -d '' v2rayConfigInboundInput << EOM
     "inbounds": [
@@ -6432,7 +6509,33 @@ vless://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo
 
 EOF
 
-    elif [[ "$configV2rayWorkingMode" == "vlessTCPWSgRPC" || "$configV2rayWorkingMode" == "sni" ]]; then
+    elif [[ "$configV2rayWorkingMode" == "vlessTCPVision" ]]; then
+
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-XTLS Vision) 不支持CDN
+
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-XTLS Vision 配置参数 =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPort},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo},
+    加密方式: none, 
+    传输协议: tcp ,
+    websocket路径:无,
+    底层传输协议: ${configV2rayIsTlsShowInfo},
+    别名:自己起个任意名称
+}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
+
+EOF
+
+    elif [[ "$configV2rayWorkingMode" == "sni" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
 VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-TLS) + (VLess-WS-TLS) + (VLess-gRPC-TLS)支持CDN
@@ -8214,7 +8317,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray 一键安装脚本 | 2023-2-06 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray 一键安装脚本 | 2023-3-10 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -8232,7 +8335,7 @@ function start_menu(){
     green " 13. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VMess-TCP-TLS)+(VMess-WS-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
     green " 14. 安装 v2ray或xray (VLess-gRPC-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
     green " 15. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
-    #green " 16. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+(VLess-gRPC-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口" 
+    green " 16. 安装 v2ray或xray (VLess-TCP-XTLS Vision)) 不支持CDN, 可选安装nginx, VLess运行在443端口" 
     green " 17. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+xray自带的trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
     green " 18. 升级 v2ray或xray 到最新版本"
     red " 19. 卸载 v2ray或xray 和 nginx"
@@ -8264,7 +8367,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray Installation | 2023-2-06 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray Installation | 2023-3-10 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
@@ -8282,7 +8385,7 @@ function start_menu(){
     green " 13. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VMess-TCP-TLS)+(VMess-WS-TLS), support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 14. Install v2ray/xray (VLess-gRPC-TLS) support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 15. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS) support CDN, nginx is optional, VLess running at 443 port serve TLS"
-
+    green " 16. Install v2ray/xray (VLess-TCP-XTLS Vision) not support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 17. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+(xray's trojan), support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 18. Upgrade v2ray/xray to latest version"
     red " 19. Remove v2ray/xray and nginx"
@@ -8368,7 +8471,7 @@ function start_menu(){
         ;;
         16 )
             configInstallNginxMode="noSSL"
-            configV2rayWorkingMode="vlessTCPWSgRPC"
+            configV2rayWorkingMode="vlessTCPVision"
             installTrojanV2rayWithNginx "v2ray_nginxOptional"
         ;;
         17 )
