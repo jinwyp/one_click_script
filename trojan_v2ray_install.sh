@@ -6526,6 +6526,7 @@ VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-XTLS Vision) 不支持
     传输协议: tcp ,
     websocket路径:无,
     底层传输协议: ${configV2rayIsTlsShowInfo},
+    fingerprint: chrome,
     别名:自己起个任意名称
 }
 
