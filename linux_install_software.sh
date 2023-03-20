@@ -1776,7 +1776,7 @@ function installCloudreve(){
     echo
 
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
-    ${sudoCmd} chmod -R 771 ${configCloudrevePath}
+    ${sudoCmd} chmod -R 775 ${configCloudrevePath}
 
 
     cat > ${osSystemMdPath}cloudreve.service <<-EOF
@@ -1813,7 +1813,7 @@ EOF
     ${configCloudreveCommandFolder}/cloudreve -eject
 
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
-    ${sudoCmd} chmod -R 771 ${configCloudrevePath}
+    ${sudoCmd} chmod -R 775 ${configCloudrevePath}
 
 
     echo
@@ -1944,7 +1944,8 @@ function installWebServerNginx(){
 
         createUserWWW
         nginxUser="${wwwUsername} ${wwwUsername}"
-        
+
+
         if [ "$osRelease" == "centos" ]; then
             ${osSystemPackage} install -y nginx-mod-stream
         else
@@ -2412,15 +2413,15 @@ EOF
 
 
 
-    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
-    ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
+    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsitePath}
+    ${sudoCmd} chmod -R 774 ${configWebsitePath}
 
     # /var/lib/nginx/tmp/client_body /var/lib/nginx/tmp/proxy 权限问题
     mkdir -p "${nginxTempPath}/client_body"
     mkdir -p "${nginxTempPath}/proxy"
     mkdir -p "${nginxProxyTempPath}"
 
-    
+
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxTempPath}
     ${sudoCmd} chmod -R 775 ${nginxTempPath}
 
@@ -3932,7 +3933,7 @@ function downgradeXray(){
     green " 1. 不降级 使用最新版本"
 
     if [[ "${isAirUniverseVersionInput}" == "1" || "${isAirUniverseVersionInput}" == "2" ]]; then
-        green " 2. 1.7.3"
+        green " 2. 1.7.5"
         green " 3. 1.6.1"
         green " 4. 1.6.0"
         green " 5. 1.5.5"
@@ -3953,7 +3954,7 @@ function downgradeXray(){
     downloadXrayUrl="https://github.com/XTLS/Xray-core/releases/download/v${downloadXrayVersion}/Xray-linux-64.zip"
 
     if [[ "${isXrayVersionInput}" == "2" ]]; then
-        downloadXrayVersion="1.7.3"
+        downloadXrayVersion="1.7.5"
 
     elif [[ "${isXrayVersionInput}" == "3" ]]; then
         downloadXrayVersion="1.6.1"
