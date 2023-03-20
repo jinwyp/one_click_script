@@ -3832,17 +3832,21 @@ function editXrayRConfig(){
 
 
 function installAiruAndNginx(){
+
+    systemctl stop xray.service
+    systemctl stop au.service
+
     isInstallNginx="true"
     configSSLCertPath="${configSSLCertPathV2board}"
-    getHTTPSCertificateStep1
+    #getHTTPSCertificateStep1
+
     configInstallNginxMode="airuniverse"
     installWebServerNginx
 
-
     sed -i 's/\"force_close_tls\": \?false/\"force_close_tls\": true/g' ${configAirUniverseConfigFilePath}
 
-    systemctl restart xray.service
-    airu restart
+    systemctl start xray.service
+    systemctl start au.service
 
 }
 
@@ -4162,30 +4166,17 @@ EOM
         echo
         green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性"
         echo
-        read -r -p "是否安装 Nginx web服务器? 直接回车默认不安装, 请输入[y/N]:" isNginxAlistInstallInput
-        isNginxAlistInstallInput=${isNginxAlistInstallInput:-n}
+        read -r -p "是否安装 Nginx web服务器? 直接回车默认不安装, 请输入[y/N]:" isNginxAiruInstallInput
+        isNginxAiruInstallInput=${isNginxAiruInstallInput:-n}
 
-        if [[ "${isNginxAlistInstallInput}" == [Yy] ]]; then
-            isInstallNginx="true"
-            configSSLCertPath="${configSSLCertPathV2board}"
-            configInstallNginxMode="airuniverse"
-            installWebServerNginx
-
-            sed -i 's/\"force_close_tls\": \?false/\"force_close_tls\": true/g' ${configAirUniverseConfigFilePath}
-
-            systemctl restart xray.service
-            airu restart
+        if [[ "${isNginxAiruInstallInput}" == [Yy] ]]; then
+            installAiruAndNginx
         fi
-
-
 
     else
         manageAirUniverse
     fi
 
-
-
-    
 }
 
 
