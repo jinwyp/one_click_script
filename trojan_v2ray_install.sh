@@ -2772,7 +2772,7 @@ function installTrojanServer(){
 
     echo
     green " =================================================="
-    green " 请选择安装 Trojan 或 Trojan-go ? 默认选择4 修改版Trojan-go "
+    green " 请选择安装 Trojan 或 Trojan-go ? 默认选择2 原版 Trojan-go "
     echo
     green " 1 原版 Trojan 不支持 websocket (not support websocket)"
     green " 2 原版 Trojan-go 支持 websocket (support websocket)"

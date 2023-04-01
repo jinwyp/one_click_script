@@ -4136,9 +4136,9 @@ EOM
 
             replaceAirUniverseConfigWARP "norestart"
             
-            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
-            chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
-            chmod ugoa+rw ${configSSLCertPath}/*
+            chmod ugo+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
+            chmod ugo+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
+            
 
             # chown -R nobody:nogroup /var/log/v2ray
 
