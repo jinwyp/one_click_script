@@ -1224,12 +1224,14 @@ function getV2rayVersion(){
         green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
         echo
 
-        green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
-        green " 2. 1.7.5 支持 XTLS Vision (推荐)"
 
         if [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
-            echo
+            green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            green " 2. 1.7.5 支持 XTLS Vision (推荐)"
         else
+            green " 2. 1.7.5 支持 XTLS Vision (推荐)"
+        fi
+
             green " 3. 1.6.1 (推荐)"
             green " 4. 1.6.0"
             green " 5. 1.5.5"
@@ -1240,9 +1242,8 @@ function getV2rayVersion(){
             green " 10. 1.5.0"
             green " 11. 1.4.5"
             green " 12. 1.3.1"
-            echo
-        fi
 
+        echo
         read -r -p "请选择Xray版本? 直接回车默认选2, 请输入纯数字:" isXrayVersionInput
         isXrayVersionInput=${isXrayVersionInput:-2}
 
