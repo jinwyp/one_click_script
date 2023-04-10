@@ -1077,7 +1077,7 @@ downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 versionV2ray="4.45.2"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.7.2"
+versionXray="1.7.5"
 downloadFilenameXray="Xray-linux-64.zip"
 
 versionTrojanWeb="2.10.5"
@@ -1204,7 +1204,7 @@ function getV2rayVersion(){
         echo
         green " ================================================== "
         green " 请选择 V2ray 的版本, 默认直接回车为 稳定版4.45.2 (推荐)"
-        green " 选否则安装最新版的 V2ray 5.3.0 User Preview"
+        green " 选否则安装最新版的 V2ray 5.4.1 User Preview"
         echo
         read -r -p "是否安装稳定版V2ray? 默认直接回车为稳定版4.45.2, 请输入[Y/n]:" isInstallXrayVersionInput
         isInstallXrayVersionInput=${isInstallXrayVersionInput:-Y}
@@ -1219,6 +1219,71 @@ function getV2rayVersion(){
     fi
 
     if [[ $1 == "xray" ]] ; then
+        echo
+        green " ================================================== "
+        green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
+        echo
+
+        green " 1. 使用最新版本 1.8.0 以上 支持 REALITY 和 XTLS Vision"
+        green " 2. 1.7.5 支持 XTLS Vision (推荐)"
+
+        if [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
+            echo
+        else
+            green " 3. 1.6.1 (推荐)"
+            green " 4. 1.6.0"
+            green " 5. 1.5.5"
+            green " 6. 1.5.4"
+            green " 7. 1.5.3"
+            green " 8. 1.5.2"
+            green " 9. 1.5.1"
+            green " 10. 1.5.0"
+            green " 11. 1.4.5"
+            green " 12. 1.3.1"
+            echo
+        fi
+
+        read -p "请选择Xray版本? 直接回车默认选2, 请输入纯数字:" isXrayVersionInput
+        isXrayVersionInput=${isXrayVersionInput:-2}
+
+        if [[ "${isXrayVersionInput}" == "1" ]]; then
+            versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
+
+        elif [[ "${isXrayVersionInput}" == "3" ]]; then
+            versionXray="1.6.1"
+
+        elif [[ "${isXrayVersionInput}" == "4" ]]; then
+            versionXray="1.6.0"
+
+        elif [[ "${isXrayVersionInput}" == "5" ]]; then
+            versionXray="1.5.5"
+
+        elif [[ "${isXrayVersionInput}" == "6" ]]; then
+            versionXray="1.5.4"
+
+        elif [[ "${isXrayVersionInput}" == "7" ]]; then
+            versionXray="1.5.3"
+
+        elif [[ "${isXrayVersionInput}" == "8" ]]; then
+            versionXray="1.5.2"
+
+        elif [[ "${isXrayVersionInput}" == "9" ]]; then
+            versionXray="1.5.1"
+
+        elif [[ "${isXrayVersionInput}" == "10" ]]; then
+            versionXray="1.5.0"
+
+        elif [[ "${isXrayVersionInput}" == "11" ]]; then
+            versionXray="1.4.5"
+
+        elif [[ "${isXrayVersionInput}" == "12" ]]; then
+            versionXray="1.3.1"
+
+        else
+            versionXray="1.7.5"
+        fi
+        
+
         versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
         echo "versionXray: ${versionXray}"
     fi
@@ -4666,13 +4731,14 @@ EOM
     echo
     echo
     green " =================================================="
-    yellow " 是否屏蔽回国流量, 根据 geosite:cn 和 geoip:cn 规则判断是否回国流量"
+    yellow " 是否屏蔽中国回国流量, 根据 geosite:cn 和 geoip:cn 规则判断是否中国回国流量"
+    yellow " 屏蔽中国回国流量, 可以有效防止GFW的检测, 如果挂代理访问中国国内网站 则很容易2次过墙而被检测"
     echo
-    green " 1. 屏蔽回国流量"
-    green " 2. 不屏蔽回国流量"
-    green " 3. 回国流量走 WARP IPv6 解锁"
+    green " 1. 屏蔽中国回国流量"
+    green " 2. 不屏蔽中国回国流量"
+    green " 3. 中国回国流量走 WARP IPv6 解锁"
     echo
-    green " 默认选1 屏蔽回国流量. 选择3 需要安装好 Wireguard 与 Cloudflare WARP, 可重新运行本脚本选择第一项安装".
+    green " 默认选1 屏蔽回国流量. 选择3 需要安装好 Wireguard 和 Cloudflare WARP, 可重新运行本脚本选择第一项安装WARP".
     red " 推荐先安装 Wireguard 与 Cloudflare WARP 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare WARP也没问题"
     echo
     read -p "请输入? 直接回车默认选1, 请输入纯数字:" isV2rayBlockChinaSiteInput
