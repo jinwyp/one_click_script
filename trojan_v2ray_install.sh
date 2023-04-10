@@ -6052,7 +6052,7 @@ EOM
                     "maxClientVer": "", 
                     "maxTimeDiff": 0, 
                     "shortIds": [ 
-                        "" 
+                        "",
                         "${xrayRealityShortId}" 
                     ]
                 }
