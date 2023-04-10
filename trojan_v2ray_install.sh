@@ -1221,17 +1221,29 @@ function getV2rayVersion(){
     if [[ $1 == "xray" ]] ; then
         echo
         green " ================================================== "
-        green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
-        echo
+        tempXrayVersionDisplayText="2"
 
         if [[ $configV2rayWorkingMode == "vlessTCPREALITY" ]]; then
+            tempXrayVersionDisplayText="1"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.8.0 或以上的最新版本"
+            echo
             green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
 
         elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
+            green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
+            echo
             green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
             green " 2. 1.7.5 支持 XTLS Vision (推荐)"
 
         else
+            green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
+            echo
+            if [[ $2 == "update" ]]; then
+                red "升级 1.8.0 或以上版本可能导致 启动失败, 不兼容旧版 XTLS 配置!"
+                echo
+                green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            fi
+            
             green " 2. 1.7.5 支持 XTLS Vision (推荐)"
             green " 3. 1.6.1 (推荐)"
             green " 4. 1.6.0"
@@ -1245,11 +1257,9 @@ function getV2rayVersion(){
             green " 12. 1.3.1"
         fi
 
-
-
         echo
-        read -r -p "请选择Xray版本? 直接回车默认选2, 请输入纯数字:" isXrayVersionInput
-        isXrayVersionInput=${isXrayVersionInput:-2}
+        read -r -p "请选择Xray版本? 直接回车默认选${tempXrayVersionDisplayText}, 请输入纯数字:" isXrayVersionInput
+        isXrayVersionInput=${isXrayVersionInput:-${tempXrayVersionDisplayText}}
 
         if [[ "${isXrayVersionInput}" == "1" ]]; then
             versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
@@ -2610,7 +2620,39 @@ function installTrojanV2rayWithNginx(){
     fi
 
     inputXraySystemdServiceName "$1"
-    renewCertificationWithAcme ""
+
+    if [[ "$1" == "v2ray_nginxOptional" && "$configV2rayWorkingMode" == "vlessTCPREALITY" ]]; then
+
+        configNetworkLocalIp3="$(curl  ipinfo.io/ip)"
+
+        echo
+        green "当前 VPS IP 地址为: ${configNetworkLocalIp3}"
+        green "如果上面的IP不正确, 请输入正确的IP或域名. 直接回车默认为 ${configNetworkLocalIp3}"
+        echo
+        read -r -p "请输入本VPS的IP 或 解析到本VPS的域名:" configSSLDomain
+
+        if [ -z "${configSSLDomain}" ]; then
+            configSSLDomain="${configNetworkLocalIp3}"
+        fi
+
+        # Regular expression to match a valid domain name
+        domain_regex='^(?!:\/\/)(?=.{1,255}$)([[:alnum:]][[:alnum:]-]*[[:alnum:]]\.)+[a-z]{2,}$'
+        echo
+        if [[ $configSSLDomain =~ $domain_regex ]]; then
+            green "Valid domain name. 域名输入格式正确 "
+        else
+            red "Invalid domain name. 域名输入格式不正确 "
+            green "使用 ${configNetworkLocalIp3} 作为本VPS的IP地址 "
+            configSSLDomain="${configNetworkLocalIp3}"
+        fi
+
+        echo
+        installV2ray
+        exit
+    else
+        renewCertificationWithAcme ""
+    fi
+    
 
     echo
     if test -s ${configSSLCertPath}/${configSSLCertFullchainFilename}; then
@@ -4010,9 +4052,52 @@ function removeShadowsocks(){
 
 
 
+xrayRealityX25519Key=""
+xrayRealityPrivateKey=""
+xrayRealityPublicKey=""
+xrayRealityShortId=""
+configxrayRealityKeyFilePath="${HOME}/xray_reality_key"
 
+function generateXrayRealityShortId() {
+    # Generate random string of specified length
+    # 0 到 f，长度为 2 的倍数，长度上限为 16
+    local hex_chars="0123456789abcdef"
+    
+    for (( i=0; i<16; i++ )); do
+        xrayRealityShortId+=${hex_chars:$((RANDOM%16)):1}
+    done
+}
 
+function generateXrayRealityPrivateKey(){
 
+    if [[ -f "${configxrayRealityKeyFilePath}" ]]; then
+        xrayRealityX25519Key=$(cat ${configxrayRealityKeyFilePath})
+        xrayRealityPrivateKey=$(echo "${xrayRealityX25519Key}" | head -1 | awk '{print $3}')
+        xrayRealityPublicKey=$(echo "${xrayRealityX25519Key}" | tail -n 1 | awk '{print $3}')
+    fi
+
+    if [[ -z "${xrayRealityPrivateKey}" ]]; then
+        xrayRealityX25519Key=$(${configV2rayPath}/xray x25519)
+        echo "${xrayRealityX25519Key}" > "${configxrayRealityKeyFilePath}"
+        xrayRealityPrivateKey=$(echo "${xrayRealityX25519Key}" | head -1 | awk '{print $3}')
+        xrayRealityPublicKey=$(echo "${xrayRealityX25519Key}" | tail -n 1 | awk '{print $3}')
+    else
+        echo
+        green " 发现之前安装的 Xray Reality PublicKey 和 PrivateKey, 是否重新生成新Key？"
+        green " 默认直接回车 重新生成新Key, 选否则使用之前生成的Key "
+        echo
+        read -r -p "是否重新生成新的 Reality Key, 请输入[Y/n]:" isGenerateNewXrayRealityKey
+        isGenerateNewXrayRealityKey=${isGenerateNewXrayRealityKey:-Y}
+        if [[ "${isGenerateNewXrayRealityKey}" == [Yy] ]]; then
+            xrayRealityX25519Key=$(${configV2rayPath}/xray x25519)
+            echo "${xrayRealityX25519Key}" > "${configxrayRealityKeyFilePath}"
+            xrayRealityPrivateKey=$(echo "${xrayRealityX25519Key}" | head -1 | awk '{print $3}')
+            xrayRealityPublicKey=$(echo "${xrayRealityX25519Key}" | tail -n 1 | awk '{print $3}')
+        fi
+    fi
+
+    generateXrayRealityShortId
+}
 
 
 
@@ -4402,6 +4487,10 @@ function generateVLessImportLink(){
             configV2rayVlessXtlsFlow="tls&flow=xtls-rprx-vision"
             configV2rayVlessXtlsFlowShowInfo="xtls-rprx-vision"
         fi
+        if [[ "${configV2rayWorkingMode}" == "vlessTCPREALITY" ]]; then
+            configV2rayVlessXtlsFlow="reality&flow=xtls-rprx-vision&fp=chrome&utls=chrome&pbk=${xrayRealityPublicKey}&sni=microsoft.com"
+            configV2rayVlessXtlsFlowShowInfo="xtls-rprx-vision"
+        fi
 
 
         if [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
@@ -4425,7 +4514,7 @@ EOF
 	    if [[ "${configV2rayProtocol}" == "vless" ]]; then
 
             cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
-${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting1}&host=${configSSLDomain}&path=%2f${configV2rayVmessLinkConfigPath}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=${configV2rayVmessLinkConfigPath}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting1}_${configV2rayIsTlsShowInfo}
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting1}&path=%2f${configV2rayVmessLinkConfigPath}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=${configV2rayVmessLinkConfigPath}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting1}_${configV2rayIsTlsShowInfo}
 EOF
             cat > ${configV2rayVlessImportLinkFile2Path} <<-EOF
 ${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting2}&host=${configSSLDomain}&path=%2f${configV2rayVmessLinkConfigPath2}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=${configV2rayVmessLinkConfigPath2}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting2}_${configV2rayIsTlsShowInfo}
@@ -4437,6 +4526,7 @@ EOF
 
     fi
 }
+
 
 
 
@@ -4600,9 +4690,14 @@ function installV2ray(){
             fi        
         fi
     elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
-            promptInfoXrayName="xray"
-            isXray="yes"
-            configV2rayIsTlsShowInfo="tls"
+        promptInfoXrayName="xray"
+        isXray="yes"
+        configV2rayIsTlsShowInfo="tls"
+
+    elif [[ $configV2rayWorkingMode == "vlessTCPREALITY" ]]; then
+        promptInfoXrayName="xray"
+        isXray="yes"
+        configV2rayIsTlsShowInfo="reality"
     else
         read -r -p "是否使用Xray内核? 直接回车默认为V2ray内核, 请输入[y/N]:" isV2rayOrXrayCoreInput
         isV2rayOrXrayCoreInput=${isV2rayOrXrayCoreInput:-n}
@@ -5212,7 +5307,10 @@ EOM
     rm -rf ${configV2rayPath}/*
 
     downloadV2rayXrayBin
-
+    if [[ "$configV2rayWorkingMode" == "vlessTCPREALITY" ]]; then
+        generateXrayRealityPrivateKey
+    fi
+ 
 
     # 增加 v2ray 服务器端配置
 
@@ -5389,7 +5487,7 @@ EOM
                     { "id": "${v2rayPassword10}", "flow": "xtls-rprx-direct", "level": 0, "email": "password20@gmail.com" }
 
 EOM
-    elif [[ "${configV2rayWorkingMode}" == "vlessTCPVision" ]]; then
+    elif [[ "${configV2rayWorkingMode}" == "vlessTCPVision" || "${configV2rayWorkingMode}" == "vlessTCPREALITY" ]]; then
     read -r -d '' v2rayConfigUserpasswordInput << EOM
                     { "id": "${v2rayPassword1}", "flow": "xtls-rprx-vision", "level": 0, "email": "password11@gmail.com" },
                     { "id": "${v2rayPassword2}", "flow": "xtls-rprx-vision", "level": 0, "email": "password12@gmail.com" },
@@ -5907,6 +6005,78 @@ EOM
     },    
 EOM
 
+    elif [[ "$configV2rayWorkingMode" == "vlessTCPREALITY" ]]; then
+
+        read -r -d '' v2rayConfigInboundInput << EOM
+    "inbounds": [
+        {
+            "port": ${configV2rayPort},
+            "protocol": "${configV2rayProtocol}",
+            "settings": {
+                "clients": [
+                    ${v2rayConfigUserpasswordInput}
+                ],
+                "decryption": "none",
+                "fallbacks": [
+                    {
+                        "dest": 80
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "${configV2rayIsTlsShowInfo}",
+                "${configV2rayIsTlsShowInfo}Settings": {
+                    "show": false, 
+                    "dest": "addons.mozilla.org:443", 
+                    "xver": 0,
+                    "serverNames": [ 
+                        "icloud.com",
+                        "apple.com",
+                        "mozilla.net",
+                        "mozilla.org",
+                        "airbnb.com",
+                        "microsoft.com",
+                        "cdn-dynmedia-1.microsoft.com",
+                        "update.microsoft",
+                        "software.download.prss.microsoft.com",
+                        "lovelive-anime.jp",
+                        "s0.awsstatic.com",
+                        "d1.awsstatic.com",
+                        "images-na.ssl-images-amazon.com",
+                        "m.media-amazon.com",
+                        "player.live-video.net"
+                    ],
+                    "privateKey": "${xrayRealityPrivateKey}", 
+                    "minClientVer": "", 
+                    "maxClientVer": "", 
+                    "maxTimeDiff": 0, 
+                    "shortIds": [ 
+                        "" 
+                        "${xrayRealityShortId}" 
+                    ]
+                }
+            },
+            "sniffing": {
+                "enabled": true,
+                "destOverride": [
+                    "http",
+                    "tls"
+                ]
+            }
+        }
+
+        ${v2rayConfigAdditionalPortInput}
+    ],
+    "policy": {
+        "levels": {
+            "0": {
+                "handshake": 5, 
+                "connIdle": 360
+            }
+        }
+    },    
+EOM
 
 
     elif [[ "$configV2rayWorkingMode" == "sni" ]]; then
@@ -6605,6 +6775,37 @@ ${v2rayVlessLinkQR1}
 
 EOF
 
+    elif [[ "$configV2rayWorkingMode" == "vlessTCPREALITY" ]]; then
+
+    cat > ${configV2rayPath}/clientConfig.json <<-EOF
+VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-REALITY XTLS Vision) 不支持CDN
+
+=========== ${promptInfoXrayInstall}客户端 VLess-TCP-REALITY XTLS Vision 配置参数 =============
+{
+    协议: VLess,
+    地址: ${configSSLDomain},
+    端口: ${configV2rayPort},
+    uuid: ${v2rayPassword1},
+    额外id: 0,  // AlterID 如果是Vless协议则不需要该项
+    流控flow: ${configV2rayVlessXtlsFlowShowInfo},
+    加密方式: none, 
+    传输协议: tcp,
+    websocket路径:无,
+    底层传输协议: ${configV2rayIsTlsShowInfo},
+    fingerprint: chrome,
+    serverNames: microsoft.com,
+    publicKey: ${xrayRealityPublicKey},
+    shortId: ${xrayRealityShortId},
+    别名:自己起个任意名称
+}
+
+导入链接 Vless 格式:
+${v2rayVlessLinkQR1}
+
+
+
+EOF
+
     elif [[ "$configV2rayWorkingMode" == "sni" ]]; then
 
     cat > ${configV2rayPath}/clientConfig.json <<-EOF
@@ -6980,7 +7181,7 @@ function upgradeV2ray(){
             green "       开始升级 V2ray Version: ${versionV2ray} !"
             green " =================================================="
         else
-            getV2rayVersion "xray"
+            getV2rayVersion "xray" "update"
             green " =================================================="
             green "       开始升级 Xray Version: ${versionXray} !"
             green " =================================================="
@@ -8551,7 +8752,7 @@ function start_menu(){
             configV2rayWorkingMode="vlessTCPVision"
             installTrojanV2rayWithNginx "v2ray_nginxOptional"
         ;;
-        19 )
+        18 )
             configInstallNginxMode="noSSL"
             configV2rayWorkingMode="vlessTCPREALITY"
             installTrojanV2rayWithNginx "v2ray_nginxOptional"
@@ -8662,6 +8863,9 @@ function start_menu(){
         ;;        
         88 )
             upgradeScript
+        ;;
+        89 )
+            generateXrayRealityPrivateKey
         ;;
         99 )
             getV2rayVersion "wgcf"
