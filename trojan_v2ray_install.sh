@@ -1224,14 +1224,15 @@ function getV2rayVersion(){
         green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
         echo
 
+        if [[ $configV2rayWorkingMode == "vlessTCPREALITY" ]]; then
+            green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
 
-        if [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
+        elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
             green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
             green " 2. 1.7.5 支持 XTLS Vision (推荐)"
+
         else
             green " 2. 1.7.5 支持 XTLS Vision (推荐)"
-        fi
-
             green " 3. 1.6.1 (推荐)"
             green " 4. 1.6.0"
             green " 5. 1.5.5"
@@ -1242,6 +1243,9 @@ function getV2rayVersion(){
             green " 10. 1.5.0"
             green " 11. 1.4.5"
             green " 12. 1.3.1"
+        fi
+
+
 
         echo
         read -r -p "请选择Xray版本? 直接回车默认选2, 请输入纯数字:" isXrayVersionInput
@@ -1284,8 +1288,6 @@ function getV2rayVersion(){
             versionXray="1.7.5"
         fi
         
-
-        versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
         echo "versionXray: ${versionXray}"
     fi
 
@@ -8385,7 +8387,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray 一键安装脚本 | 2023-3-10 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray 一键安装脚本 | 2023-4-10 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -8403,10 +8405,11 @@ function start_menu(){
     green " 13. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VMess-TCP-TLS)+(VMess-WS-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
     green " 14. 安装 v2ray或xray (VLess-gRPC-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
     green " 15. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS) 支持CDN, 可选安装nginx, VLess运行在443端口"
-    green " 16. 安装 v2ray或xray (VLess-TCP-XTLS Vision)) 不支持CDN, 可选安装nginx, VLess运行在443端口" 
-    green " 17. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+xray自带的trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
-    green " 18. 升级 v2ray或xray 到最新版本"
-    red " 19. 卸载 v2ray或xray 和 nginx"
+    green " 16. 安装 v2ray或xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+xray自带的trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
+    green " 17. 安装 v2ray或xray (VLess-TCP-XTLS Vision)) 不支持CDN, 可选安装nginx, VLess运行在443端口" 
+    green " 18. 安装 v2ray或xray (VLess-TCP-REALITY XTLS Vision)) 不支持CDN, 可选安装nginx, VLess运行在443端口"
+    green " 19. 升级 v2ray或xray 到最新版本"
+    red " 20. 卸载 v2ray或xray 和 nginx"
     echo
     green " 21. 同时安装 v2ray或xray 和 trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, 支持CDN, 可选安装nginx, VLess运行在443端口"  
     green " 22. 同时安装 nginx, v2ray或xray 和 trojan-go (VLess/Vmess-WS-TLS)+Trojan, 支持CDN, trojan-go运行在443端口"  
@@ -8435,7 +8438,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray Installation | 2023-3-10 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray Installation | 2023-4-10 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
@@ -8453,10 +8456,11 @@ function start_menu(){
     green " 13. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VMess-TCP-TLS)+(VMess-WS-TLS), support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 14. Install v2ray/xray (VLess-gRPC-TLS) support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 15. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS) support CDN, nginx is optional, VLess running at 443 port serve TLS"
-    green " 16. Install v2ray/xray (VLess-TCP-XTLS Vision) not support CDN, nginx is optional, VLess running at 443 port serve TLS"
-    green " 17. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+(xray's trojan), support CDN, nginx is optional, VLess running at 443 port serve TLS"
-    green " 18. Upgrade v2ray/xray to latest version"
-    red " 19. Remove v2ray/xray and nginx"
+    green " 16. Install v2ray/xray (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+(xray's trojan), support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 17. Install v2ray/xray (VLess-TCP-XTLS Vision) not support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 18. Install v2ray/xray (VLess-TCP-REALITY XTLS Vision) not support CDN, nginx is optional, VLess running at 443 port serve TLS"
+    green " 19. Upgrade v2ray/xray to latest version"
+    red " 20. Remove v2ray/xray and nginx"
     echo
     green " 21. Install both v2ray/xray and trojan-go (VLess-TCP-[TLS/XTLS])+(VLess-WS-TLS)+Trojan, support CDN, nginx is optional, VLess running at 443 port serve TLS"
     green " 22. Install both v2ray/xray and trojan-go with nginx, (VLess/Vmess-WS-TLS)+Trojan, support CDN, trojan-go running at 443 port serve TLS"
@@ -8539,18 +8543,23 @@ function start_menu(){
         ;;
         16 )
             configInstallNginxMode="noSSL"
-            configV2rayWorkingMode="vlessTCPVision"
-            installTrojanV2rayWithNginx "v2ray_nginxOptional"
-        ;;
-        17 )
-            configInstallNginxMode="noSSL"
             configV2rayWorkingMode="vlessTCPWSTrojan"
             installTrojanV2rayWithNginx "v2ray_nginxOptional"
         ;; 
-        18)
-            upgradeV2ray
+        17 )
+            configInstallNginxMode="noSSL"
+            configV2rayWorkingMode="vlessTCPVision"
+            installTrojanV2rayWithNginx "v2ray_nginxOptional"
         ;;
         19 )
+            configInstallNginxMode="noSSL"
+            configV2rayWorkingMode="vlessTCPREALITY"
+            installTrojanV2rayWithNginx "v2ray_nginxOptional"
+        ;;
+        19)
+            upgradeV2ray
+        ;;
+        20 )
             removeV2ray
             removeNginx
         ;;
