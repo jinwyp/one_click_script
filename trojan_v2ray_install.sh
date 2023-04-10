@@ -1224,7 +1224,7 @@ function getV2rayVersion(){
         green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
         echo
 
-        green " 1. 使用最新版本 1.8.0 以上 支持 REALITY 和 XTLS Vision"
+        green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
         green " 2. 1.7.5 支持 XTLS Vision (推荐)"
 
         if [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
@@ -1243,7 +1243,7 @@ function getV2rayVersion(){
             echo
         fi
 
-        read -p "请选择Xray版本? 直接回车默认选2, 请输入纯数字:" isXrayVersionInput
+        read -r -p "请选择Xray版本? 直接回车默认选2, 请输入纯数字:" isXrayVersionInput
         isXrayVersionInput=${isXrayVersionInput:-2}
 
         if [[ "${isXrayVersionInput}" == "1" ]]; then
@@ -4943,7 +4943,7 @@ EOM
 
 
     echo
-    yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 已失效"
+    yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 目前已失效"
     read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
     isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
 
