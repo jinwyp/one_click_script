@@ -2434,7 +2434,10 @@ function removeNginx(){
 
 
 
-
+# Regular expression to match a valid domain name
+ip_regex="^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$"
+domain_regex="^[a-zA-Z0-9]+([a-zA-Z0-9\-]*[a-zA-Z0-9]+)?(\.[a-zA-Z]+)+$"
+domain_regex2="^(?!:\/\/)(?=.{1,255}$)([[:alnum:]][[:alnum:]-]*[[:alnum:]]\.)+[a-z]{2,}$"
 
 
 configNginxSNIDomainWebsite=""
@@ -2628,6 +2631,7 @@ function installTrojanV2rayWithNginx(){
         echo
         green "当前 VPS IP 地址为: ${configNetworkLocalIp3}"
         green "如果上面的IP不正确, 请输入正确的IP或域名. 直接回车默认为 ${configNetworkLocalIp3}"
+        green "如果输入的是域名 将安装 Nginx 作为伪装网站"
         echo
         read -r -p "请输入本VPS的IP 或 解析到本VPS的域名:" configSSLDomain
 
@@ -2635,15 +2639,28 @@ function installTrojanV2rayWithNginx(){
             configSSLDomain="${configNetworkLocalIp3}"
         fi
 
-        # Regular expression to match a valid domain name
-        domain_regex='^(?!:\/\/)(?=.{1,255}$)([[:alnum:]][[:alnum:]-]*[[:alnum:]]\.)+[a-z]{2,}$'
-        echo
-        if [[ $configSSLDomain =~ $domain_regex ]]; then
-            green "Valid domain name. 域名输入格式正确 "
+
+        if [[ $configSSLDomain =~ $ip_regex ]]; then
+            green "Valid ip address. 输入的 IP 格式正确 "
         else
-            red "Invalid domain name. 域名输入格式不正确 "
-            green "使用 ${configNetworkLocalIp3} 作为本VPS的IP地址 "
-            configSSLDomain="${configNetworkLocalIp3}"
+            red "Invalid ip address. 输入的 IP 格式不正确 "
+            if [[ $configSSLDomain =~ $domain_regex ]]; then
+                green "Valid domain name. 输入的域名格式正确 "
+
+                echo
+                green " 是否安装 Nginx 用于提供伪装网站, 如果已有网站或搭配宝塔面板请选择N不安装"
+                read -r -p "是否确安装Nginx伪装网站? 直接回车默认安装, 请输入[Y/n]:" isInstallNginxServerInput
+                isInstallNginxServerInput=${isInstallNginxServerInput:-Y}
+
+                if [[ "${isInstallNginxServerInput}" == [Yy] ]]; then
+                    installWebServerNginx
+                fi
+
+            else
+                red "Invalid domain name. 输入的域名格式不正确 "
+                green "使用 ${configNetworkLocalIp3} 作为本VPS的IP地址 "
+                configSSLDomain="${configNetworkLocalIp3}"
+            fi
         fi
 
         echo
@@ -4488,7 +4505,7 @@ function generateVLessImportLink(){
             configV2rayVlessXtlsFlowShowInfo="xtls-rprx-vision"
         fi
         if [[ "${configV2rayWorkingMode}" == "vlessTCPREALITY" ]]; then
-            configV2rayVlessXtlsFlow="reality&flow=xtls-rprx-vision&fp=chrome&utls=chrome&pbk=${xrayRealityPublicKey}&sni=microsoft.com"
+            configV2rayVlessXtlsFlow="reality&flow=xtls-rprx-vision&fp=chrome&utls=chrome&pbk=${xrayRealityPublicKey}&sni=${configXrayRealitySni}&sid=${xrayRealityShortId}"
             configV2rayVlessXtlsFlowShowInfo="xtls-rprx-vision"
         fi
 
@@ -4863,7 +4880,7 @@ EOM
     echo
     echo
     isV2rayUnlockWarpModeInput="1"
-    V2rayDNSUnlockText="AsIs"
+    V2rayDNSUnlockText="UseIPv4"
     V2rayUnlockVideoSiteOutboundTagText=""
     unlockWARPServerIpInput="127.0.0.1"
     unlockWARPServerPortInput="40000"
@@ -5128,7 +5145,7 @@ EOM
 
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
-        "domainStrategy": "IPOnDemand",
+        "domainStrategy": "IPIfNonMatch",
         "rules": [
             ${v2rayConfigRouteGoNetflixInput}
             {
@@ -5191,7 +5208,7 @@ EOM
         
         read -r -d '' v2rayConfigRouteInput << EOM
     "routing": {
-        "domainStrategy": "IPOnDemand",
+        "domainStrategy": "IPIfNonMatch",
         "rules": [
             ${v2rayConfigRouteGoNetflixInput}
             {
@@ -5237,7 +5254,7 @@ EOM
             "settings": {
                 "domainStrategy": "${V2rayDNSUnlockText}"
             }
-        },        
+        },
         {
             "tag": "blocked",
             "protocol": "blackhole",
@@ -5309,8 +5326,27 @@ EOM
     downloadV2rayXrayBin
     if [[ "$configV2rayWorkingMode" == "vlessTCPREALITY" ]]; then
         generateXrayRealityPrivateKey
+
+        echo
+        green " 请输入回落域名 同时也用于serverName? 默认为www.ebay.com"
+        read -r -p "请输入回落域名, 直接回车默认为 www.ebay.com: " configXrayRealityFallbackDomainNameInput
+        
+        if [ -z "${configXrayRealityFallbackDomainNameInput}" ]; then
+            configXrayRealitySni="www.ebay.com"
+        fi
+
+        if [[ $configXrayRealityFallbackDomainNameInput =~ $domain_regex ]]; then
+            green "Valid domain name. 输入的域名格式正确 "
+            configXrayRealitySni="$configXrayRealityFallbackDomainNameInput"
+        else
+            red "Invalid domain name. 输入的域名格式不正确 "
+            green "使用 www.ebay.com 作为回落域名 同时也用于serverName "
+            configXrayRealitySni="www.ebay.com"
+        fi
+        echo
+        echo
     fi
- 
+
 
     # 增加 v2ray 服务器端配置
 
@@ -5999,7 +6035,7 @@ EOM
         "levels": {
             "0": {
                 "handshake": 5, 
-                "connIdle": 360
+                "connIdle": 310
             }
         }
     },    
@@ -6028,30 +6064,51 @@ EOM
                 "security": "${configV2rayIsTlsShowInfo}",
                 "${configV2rayIsTlsShowInfo}Settings": {
                     "show": false, 
-                    "dest": "addons.mozilla.org:443", 
+                    "dest": "${configXrayRealitySni}:443", 
                     "xver": 0,
-                    "serverNames": [ 
+                    "serverNames": [
+                        "${configXrayRealitySni}",
                         "icloud.com",
+                        "www.icloud.com",
                         "apple.com",
-                        "mozilla.net",
+                        "www.apple.com",
                         "mozilla.org",
+                        "addons.mozilla.org",
+                        "ebay.com",
+                        "www.ebay.com",
+                        "walmart.com",
+                        "www.walmart.com",
+                        "etsy.com",
+                        "www.etsy.com",
+                        "shopify.com",
+                        "www.shopify.com",
+                        "samsung.com",
+                        "www.samsung.com",
                         "airbnb.com",
+                        "www.airbnb.com",
+                        "asml.com",
+                        "www.asml.com",
+                        "tsmc.com",
+                        "www.tsmc.com",
+                        "pfizer.com",
+                        "www.pfizer.com",
                         "microsoft.com",
-                        "cdn-dynmedia-1.microsoft.com",
-                        "update.microsoft",
-                        "software.download.prss.microsoft.com",
+                        "www.microsoft.com",
+                        "support.microsoft.com",
+                        "office.com",
+                        "www.office.com",
+                        "signup.live.com",
+                        "www.live.com",
+                        "outlook.live.com",
                         "lovelive-anime.jp",
                         "s0.awsstatic.com",
                         "d1.awsstatic.com",
-                        "images-na.ssl-images-amazon.com",
-                        "m.media-amazon.com",
-                        "player.live-video.net"
+                        "amazon.com",
+                        "m.media-amazon.com"
                     ],
-                    "privateKey": "${xrayRealityPrivateKey}", 
-                    "minClientVer": "", 
-                    "maxClientVer": "", 
+                    "privateKey": "${xrayRealityPrivateKey}",
                     "maxTimeDiff": 0, 
-                    "shortIds": [ 
+                    "shortIds": [
                         "",
                         "${xrayRealityShortId}" 
                     ]
@@ -6068,14 +6125,7 @@ EOM
 
         ${v2rayConfigAdditionalPortInput}
     ],
-    "policy": {
-        "levels": {
-            "0": {
-                "handshake": 5, 
-                "connIdle": 360
-            }
-        }
-    },    
+
 EOM
 
 
@@ -6793,11 +6843,19 @@ VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-REALITY XTLS Vision) �
     websocket路径:无,
     底层传输协议: ${configV2rayIsTlsShowInfo},
     fingerprint: chrome,
-    serverNames: microsoft.com,
+    serverNames: ${configXrayRealitySni},
     publicKey: ${xrayRealityPublicKey},
     shortId: ${xrayRealityShortId},
     别名:自己起个任意名称
 }
+
+serverNames 还可以填入以下任意一个网站:  
+icloud.com   www.icloud.com  apple.com  www.apple.com  mozilla.org  addons.mozilla.org  ebay.com  www.ebay.com 
+walmart.com  www.walmart.com  etsy.com  www.etsy.com  shopify.com  www.shopify.com  samsung.com  www.samsung.com 
+airbnb.com  www.airbnb.com  asml.com  www.asml.com  tsmc.com  www.tsmc.com  pfizer.com  www.pfizer.com 
+microsoft.com  www.microsoft.com  support.microsoft.com  office.com  www.office.com  signup.live.com  www.live.com
+outlook.live.com  lovelive-anime.jp  s0.awsstatic.com  d1.awsstatic.com  amazon.com  m.media-amazon.com
+
 
 导入链接 Vless 格式:
 ${v2rayVlessLinkQR1}
@@ -7515,7 +7573,7 @@ function removeXUI(){
     /usr/bin/x-ui
 }
 
-chmod
+
 function installV2rayUI(){
 
     stopServiceNginx
