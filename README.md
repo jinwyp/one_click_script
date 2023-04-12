@@ -1,7 +1,8 @@
 # Easy install latest or LTS linux kernel and enable BBR or BBR plus
 
 ### [中文文档](/KERNEL_CN.md)
-### [其他脚本安装](/README2.md)
+### [xray v2ray trojan 一键安装脚本](/README2.md)
+### [# Easily install docker, Nodejs and more sofrware shell script ](TOOL.md)
 
 ## Sponsors
 Thanks for support this project. Check on [patreon](https://www.patreon.com/linuxkernel)

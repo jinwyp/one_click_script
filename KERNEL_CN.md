@@ -1,6 +1,6 @@
 # Easy install latest or LTS linux kernel and enable BBR or BBR plus
 
-### [其他脚本安装](/README2_CN.md)
+### [xray v2ray trojan 一键安装脚本](/README2.md)
 
 ## 目录 Table of Contents
 
