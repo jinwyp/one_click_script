@@ -116,22 +116,34 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 
 
-
-### Install command line trojan or v2ray
+### Install command line trojan or trojan-go
 
 1. Firstly, prefer run this script with root user. Because linux kernel installation need root privileges. And to get SSL with acme.sh also need root privileges. [acme.sh instruction](https://github.com/acmesh-official/acme.sh/wiki/sudo).
 
-2. How to install trojan. Run script ```./trojan_v2ray_install.sh ```. Choose 2 to install trojan or trojan-go with no websockt. Choose 3 to install trojan-go with websocket support CDN. 
+2. How to install trojan. Run script ```./trojan_v2ray_install.sh ```. Choose 2 to install trojan or trojan-go with websocket support CDN. 
 
-3. How to install V2ray. Run script ```./trojan_v2ray_install.sh ```. Choose 11 to install V2ray or Xray with Nginx. Nginx listen 443 port and serve TLS service. During the installation, you can choose websocket or gRPC to support CDN.  Choose TCP or HTTP2 or QUIC protocal will not supprot CDN. 
 
-4. How to install V2ray using Vless. Run script ```./trojan_v2ray_install.sh ```. Choose 13-17 to install V2ray or Xray. Vless listen 443 port and serve TLS service. Nginx is optional during the installation for fake website service. Also you can choose XTLS instead of TLS to improve network speed.
 
-5. Run script ```./trojan_v2ray_install.sh ```. Choose 21 to install both V2ray and trojan on same VPS. Vless listen 443 port and serve TLS service.
+### Install command line xray or v2ray
 
-6. Run script ```./trojan_v2ray_install.sh ```. Choose 22 to install both V2ray and trojan/trojan-go on same VPS. trojan/trojan-go listen 443 port and serve TLS service.
+1. Firstly, prefer run this script with root user. Because linux kernel installation need root privileges. And to get SSL with acme.sh also need root privileges. [acme.sh instruction](https://github.com/acmesh-official/acme.sh/wiki/sudo).
 
-7. Run script ```./trojan_v2ray_install.sh ```. Choose 23 to install both V2ray and trojan/trojan-go on same VPS. Nginx SNI listen 443 port. You need at least 2 domain for trojan and v2ray. Nginx SNI distinguishes v2ray or trojan traffic by different domain name.
+2. How to install V2ray or Xray. Run script ```./trojan_v2ray_install.sh ```. Choose 11 to install V2ray or Xray with Nginx. Nginx listen 443 port and serve TLS service. During the installation, you can choose websocket or gRPC to support CDN.  Choose TCP or HTTP2 or QUIC protocal will not supprot CDN. 
+
+3. How to install V2ray or Xray using Vless. Run script ```./trojan_v2ray_install.sh ```. Choose 13-16 to install V2ray or Xray. Vless listen 443 port and serve TLS service. Nginx is optional during the installation for fake website service. Also you can choose XTLS instead of TLS to improve network speed.
+
+4. Run script ```./trojan_v2ray_install.sh ```. Choose 21 to install both V2ray and trojan on same VPS. Vless listen 443 port and serve TLS service.
+
+5. Run script ```./trojan_v2ray_install.sh ```. Choose 22 to install both V2ray and trojan/trojan-go on same VPS. trojan/trojan-go listen 443 port and serve TLS service.
+
+6. Run script ```./trojan_v2ray_install.sh ```. Choose 23 to install both V2ray and trojan/trojan-go on same VPS. Nginx SNI listen 443 port. You need at least 2 domain for trojan and v2ray. Nginx SNI distinguishes v2ray or trojan traffic by different domain name.
+
+### Install command line xray  vision or Reality 
+
+1. How to install Xray using XTLS Vision. Run script ```./trojan_v2ray_install.sh ```. Choose 17 to install Xray XTLS Vision protocol. Use Vless protocol to provide tls service on port 443.  Fallback to nginx on port 80 to provide web camouflage. During installation, please select Xray version 1.7.5 or above, as older versions prior to 1.6 do not support XTLS Vision protocol. This protocol does not support CDN relay. To use XTLS Vision on the client side, please use latest V2rayN and choose Xray version 1.7.5 or higher.
+
+2. How to install Xray using Reality protocol. Run script ```./trojan_v2ray_install.sh ```. Choose 18 to install Xray Reality protocol. Domain name is not required for this installation, making the process more convenient. Vless Reality protocol provides forwarding service on port 443, and fallbacks to a specific foreign enterprise website that was filled by you during installation. During the installation, please choose Xray version 1.8.0 or above, as older versions of Xray prior to 1.7 do not support Reality protocol. This protocol does not support CDN relay. To use Xray Reality on the client side, it is necessary to use latest V2rayN 6.xx and choose Xray version 1.8.0 or above.
+
 
 
 
@@ -160,7 +172,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 1. Run script ```./trojan_v2ray_install.sh ```. Choose 1 to enter sub menu to install linux kernel. Prefer to install linux kernel 5.10 LTS. [More Details](/KERNEL.md)
 2. Run script ```./trojan_v2ray_install.sh ```. Choose 1 to enter sub menu. Then choose 2 to enable BBR and Cake. This will import VPS network speed. 
 3. After reboot, rerun script ```./trojan_v2ray_install.sh ```. Choose 1 to enter sub menu. Then choose 11 or 12 to Wireguard or cloudflare WARP linux client sock5 proxy. 
-4. After finish Wireguard installation, rerun script ```./trojan_v2ray_install.sh ```. Choose 11-17 to v2ray xray。 Duiring the installation, you can  follow the instruction to unlock netflix region restriction and avoid showing Google CAPTCHA Human verification.
+4. After finish Wireguard installation, rerun script ```./trojan_v2ray_install.sh ```. Choose 11-17 to v2ray or xray。 During the installation, you can follow the instruction to unlock netflix region restriction and avoid showing Google CAPTCHA Human verification.
 
 
 

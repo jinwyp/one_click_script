@@ -110,24 +110,24 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 3. 运行脚本后 选择43 修改SSH端口号, 一般默认SSH端口号是22, 强烈建议改成其他的端口号, 提高安全性. 默认22端口极易被扫描和攻击.
 4. 运行脚本后 选择44 修改时区为北京时间, 因为V2ray的Vmess的协议需要对服务器和客户端时间一致, 建议把VPS服务器改成北京时间.
 5. 有一些VPS例如Google Cloud 默认没有开启root账号登录, 运行脚本后 选择42 可以开启root账号登录. 建议使用root用户运行该脚本.
-6. 运行脚本后 选择41 安装 Oh-my-zsh 等软件, 这些软件会简化你的后续操作, 并带有提示. 安装完成后请退出VPS, 命令为```exit```. 重新登录VPS后继续后续操作. 
+6. 运行脚本后 选择41 安装 Oh-my-zsh 和Micro 编辑器 等软件, 这些软件会简化你的后续操作, 并带有提示. 安装完成后请退出VPS, 命令为```exit```. 重新登录VPS后继续后续操作. 
 
 ### 安装新版Linux 内核 和 BBR 内核
 1. 运行脚本后 选择1 安装 Linux 内核和开启BBR+Cake, 具体请参考[Linux 内核一键安装脚本](/KERNEL_CN.md)
 
 
 
-### 安装 trojan-go
+### 安装 trojan or trojan-go
 
-1. 安装 trojan-go 重新运行脚本 命令为 ```./trojan_v2ray_install.sh ```  选2 安装trojan-go 如果开启 Websocket 支持CDN, 需要注意 很多原版trojan客户端不支持websocket, 使用原版trojan客户端只能连接 trojan-go的原版tcp协议, 无法支持websocket 使用CDN. 需要使用trojan-go的客户端才可以支持websocket 支持CDN.
+1. 安装 trojan-go 重新运行脚本 命令为 ```./trojan_v2ray_install.sh ```  选2 安装trojan-go 如果开启 Websocket 来支持CDN, 需要注意 很多原版trojan客户端不支持websocket, 使用原版trojan客户端只能连接 trojan-go的原版tcp协议, 无法支持websocket 使用CDN. 需要使用支持 trojan-go的客户端才可以支持websocket 支持CDN.
 
 
 ### 安装 v2ray 或 xray
 
-1. 重新运行脚本 选择11 安装 v2ray或xray 并且nginx 前置提供443端口的tls服务, 推荐使用本模式 安全性最高. 然后安装v2ray协议可以选择websocket或gRPC 等协议 通过设置 path来区分v2ray流量, 并且支持CDN. 如果选择TCP或HTTP2或QUIC 协议则无法使用CDN中转流量. Cloudflare 虽然支持HTTP2或QUIC协议, 但却无法使用其CDN中转, [具体信息可以看](https://github.com/v2ray/v2ray-core/issues/1769). QUIC(HTTP3)协议由于使用了UDP, 在某些运营商会被禁止或被限制端口或QoS降速, 所以使用QUIC可能无法达到提速的预期目的. 选择KCP协议降低延迟,如果打游戏可以尝试该协议.
+1. 重新运行脚本 选择11 安装 v2ray或xray 和 nginx.  Nginx前置提供443端口的tls服务, 推荐使用本模式 安全性最高. 然后安装v2ray协议时可以选择websocket或gRPC 等协议 通过设置 path来区分v2ray流量, 并且支持CDN. 如果选择TCP或HTTP2或QUIC 协议则无法使用CDN中转流量. Cloudflare 虽然支持HTTP2或QUIC协议, 但却无法使用其CDN中转, [具体信息可以看](https://github.com/v2ray/v2ray-core/issues/1769). QUIC(HTTP3)协议由于使用了UDP, 在某些运营商会被禁止或被限制端口或QoS降速, 所以使用QUIC可能无法达到提速的预期目的. 选择KCP协议降低延迟,如果打游戏可以尝试该协议.
 
 
-2. 重新运行脚本 选择13-17 安装 v2ray或xray 使用Vless协议提供443端口的tls服务, 同时 fallback 到80端口的nginx提供web服务.  安装过程中如果选XTLS代替TLS加密 将会明显提高速度. 安装完毕后会提供多种协议可以同时使用. 使用WS-TLS 或 gRPC+TLS协议可以使用CDN中转加速. 使用TCP-XTLS则为直连速度最快协议. 安装V2ray或Xray, 都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便用于不支持443端口的中转机中转给目标主机.
+2. 重新运行脚本 选择13-16 安装 v2ray或xray 使用Vless协议提供443端口的tls服务, 同时 fallback 到80端口的nginx提供web伪装网站服务.  安装过程中如果选XTLS代替TLS加密 将会明显提高速度. 安装完毕后会提供多种协议可以同时使用. 使用WS-TLS 或 gRPC+TLS协议可以使用CDN中转加速. 使用TCP-XTLS则为直连速度最快协议(选择15或16安装). 安装V2ray或Xray, 都可以自定义端口, 密码和websocket 的path 路径, 默认为随机密码和随机路径. 同时还可以增加一个额外的监听端口与主端口同时使用, 方便用于不支持443端口的中转机中转给目标主机.
 
 3. 同时安装 trojan-go 和 v2ray 选择21 使用Vless提供443端口的tls服务, 而trojan或trojan-go运行在非443的其他端口上.
 
@@ -142,7 +142,11 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 
 8. 安装的Nginx的伪装网站路径为 /nginxweb/html, 可自行替换网页内容. Nginx 配置路径为 /etc/nginx/conf.d. 同时安装过程中可以选择不使用静态网页 而是直接反代某个网站 例如反代 baidu.com
 
+### 安装 xray 的 vision 和 Reality 协议
 
+1. 重新运行脚本 选择17 安装 xray 的 XTLS Vision协议. 使用Vless协议提供443端口的tls服务, 同时 fallback 到80端口的nginx提供web伪装网站服务.  安装过程中请选择 xray 1.7.5版本以上, 1.6以前的老版本不支持 XTLS Vision协议. 该协议不支持CDN中转. 客户端使用时也需要匹配最新版本的xray 1.7.5或以上版本内核 才能支持XTLS Vision.
+
+2. 重新运行脚本 选择18 安装 xray 的 Reality 协议. 该项安装时可以不需要域名, 这样就方便了很多. Vless Reality 协议提供443端口的转发服务. 同时 fallback 到安装时填写的某国外大企业网站. 安装过程中请选择 xray 1.8.0版本以上, 1.7以前的老版本不支持 Reality协议.  该协议不支持CDN中转. 客户端使用时也需要匹配最新版本的xray 1.8.0或以上版本内核 才能支持Reality.
 
 ### 高级用法 Advanced Usage 与现有网站或宝塔面板共存
 
@@ -173,7 +177,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 2. 更换内核重启后, 选择1 进入linux 内核安装菜单, 选择2 使用BBR加速 和 Cake算法 优化VPS参数后 重启
 3. 重启后, 选择1, 再选择11或12 安装 Wireguard 和 Cloudflare WARP. 具体请参考[Linux 内核一键安装脚本](/KERNEL_CN.md) 
 4. 确认 Wireguard 和 Cloudflare WARP 启动成功后, 运行脚本后 安装v2ray或xray, 安装过程中根据提示 选择 Netflix 和 Google 人机验证 解锁即可, 也可以选择解锁更多的视频网站.
-5. 本脚本集合了所有解锁 Netflix 网站的方法, 目前有 1 使用DNS解锁, 2 使用IPv6解锁, 3 使用WARP sock5 代理解锁, 4 使用转发到可解锁的V2ray或Xray服务器解锁, 5 神秘方法解锁
+5. 本脚本集合了所有解锁 Netflix 网站的方法, 目前有 1 使用DNS解锁, 2 使用IPv6解锁, 3 使用WARP sock5 代理解锁, 4 使用转发到可解锁的V2ray或Xray服务器解锁.
 6. 目前网上搭建解锁反代服务器是使用 sniproxy + dns的方式, 本脚本稍后推出 nginx stream + dns, nginx + xray, nginx + v2ray, nginx + sock5, 非常灵活的各种方式搭建解锁反代服务器, 以便达到一台VPS可以同时做网站+提供解锁+v2ray+trojan的目的
 7. Netflix 检测解锁脚本无法测试 使用V2ray路由规则的解锁. 就是说使用本脚本安装过v2ray已经解锁了Netflix, 但用检测解锁脚本检测的结果还是会显示没有解锁, 就是无法测出已解锁Netflix. 可以把检测脚本运行在 V2ray客户端机器上, 则能检测成功解锁. Netflix 检测解锁脚本只能运行在Mac或linux 平台. Windows平台可以使用linux ubuntu 子系统来运行 Netflix 检测解锁脚本.
 
