@@ -3253,7 +3253,7 @@ function start_menu(){
     green " 22. 自动刷新WARP IP 直到支持 Netflix 非自制剧解锁 "
     echo
 
-
+    if [[ "${osRelease}" == "centos" ]]; then
     green " 31. 安装 最新版本内核 6.1, 通过elrepo源安装"
     green " 32. 安装 LTS内核 5.4 LTS, 通过elrepo源安装"
     green " 33. 安装 内核 4.14 LTS, 从 altarch网站 下载安装"
@@ -3265,7 +3265,7 @@ function start_menu(){
     green " 38. 安装 内核 5.19, Teddysun 编译 下载安装. "
     green " 39. 安装 内核 6.1, elrepo 官方编译. "
 
-
+    else
         if [[ "${osRelease}" == "debian" ]]; then
 
             if [[ "${osReleaseVersion}" == "10" ]]; then
@@ -3291,7 +3291,7 @@ function start_menu(){
         green " 51. 安装 XanMod Kernel 内核 6.1 LTS, 官方源安装 "    
         green " 52. 安装 XanMod Kernel 内核 6.2, 官方源安装 "   
         
-
+    fi
 
     echo
     green " 61. 安装 BBR Plus 内核 4.14.129 LTS, cx9208 编译的 dog250 原版, 推荐使用"
