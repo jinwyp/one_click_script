@@ -1786,8 +1786,12 @@ function installDebianUbuntuKernel(){
             # https://xanmod.org/
             
             
-            echo 'deb http://deb.xanmod.org releases main' > /etc/apt/sources.list.d/xanmod-kernel.list
-            wget -qO - https://dl.xanmod.org/gpg.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/xanmod-kernel.gpg add -
+            # echo 'deb http://deb.xanmod.org releases main' > /etc/apt/sources.list.d/xanmod-kernel.list
+            # wget -qO - https://dl.xanmod.org/gpg.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/xanmod-kernel.gpg add -
+
+            wget -qO - https://dl.xanmod.org/archive.key | sudo gpg --dearmor -o /usr/share/keyrings/xanmod-archive-keyring.gpg
+            echo 'deb [signed-by=/usr/share/keyrings/xanmod-archive-keyring.gpg] http://deb.xanmod.org releases main' | sudo tee /etc/apt/sources.list.d/xanmod-release.list
+
             ${sudoCmd} apt update -y
 
             listAvailableLinuxKernel "xanmod"
@@ -1800,6 +1804,10 @@ function installDebianUbuntuKernel(){
 
             if [ "${linuxKernelToInstallVersion}" = "5.15" ]; then
                 ${sudoCmd} apt install -y linux-xanmod-lts 
+            elif [ "${linuxKernelToInstallVersion}" = "6.2" ]; then
+                ${sudoCmd} apt install -y linux-xanmod-x64v3
+            elif [ "${linuxKernelToInstallVersion}" = "6.1" ]; then
+                ${sudoCmd} apt install -y linux-xanmod-lts-x64v3
             else
                 ${sudoCmd} apt install -y linux-xanmod
             fi
@@ -1812,12 +1820,18 @@ function installDebianUbuntuKernel(){
             if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
                 debianKernelVersion="5.10.0-0"
                 # linux-image-5.10.0-0.bpo.15-amd64
+            elif [ "${linuxKernelToInstallVersion}" = "5.19" ]; then
+                debianKernelVersion="5.16.0-0"
+                if [ "${osReleaseVersionNo}" = "11" ]; then
+                    debianKernelVersion="5.19.0-0"
+                fi
+
             elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then
                 debianKernelVersion="4.19.0-21"
             else
-                debianKernelVersion="5.16.0-0"
+                debianKernelVersion="6.1.0-0"
                 if [ "${osReleaseVersionNo}" = "11" ]; then
-                    debianKernelVersion="5.18.0-0"
+                    debianKernelVersion="6.1.0-0"
                 fi
             fi
 
@@ -3246,11 +3260,11 @@ function start_menu(){
 
             if [[ "${osReleaseVersion}" == "10" ]]; then
                 green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
-
             fi
             if [[ "${osReleaseVersion}" == "11" ]]; then
                 green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
-                green " 42. 安装 最新版本内核 5.18 或更高, 通过 Debian 官方源安装"
+                green " 42. 安装 最新版本内核 5.19 或更高, 通过 Debian 官方源安装"
+                green " 43. 安装 最新版本内核 6.1 或更高, 通过 Debian 官方源安装"
             fi
             echo
         fi
@@ -3263,8 +3277,8 @@ function start_menu(){
         green " 48. 安装 最新版本内核 5.18, 通过 Ubuntu kernel mainline 安装"
 
         echo
-        green " 51. 安装 XanMod Kernel 内核 5.15 LTS, 官方源安装 "    
-        green " 52. 安装 XanMod Kernel 内核 5.17, 官方源安装 "   
+        green " 51. 安装 XanMod Kernel 内核 6.1 LTS, 官方源安装 "    
+        green " 52. 安装 XanMod Kernel 内核 6.2, 官方源安装 "   
         
     fi
 
@@ -3344,7 +3358,8 @@ function start_menu(){
             
             if [[ "${osReleaseVersion}" == "11" ]]; then
                 green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
-                green " 42. Install latest linux kernel, 5.18 or higher, from Debian repository source"
+                green " 42. Install latest linux kernel, 5.19 or higher, from Debian repository source"
+                green " 43. Install latest linux kernel, 6.1 or higher, from Debian repository source"
             fi
             echo
         fi
@@ -3355,8 +3370,8 @@ function start_menu(){
         green " 47. Install linux kernel 5.15, download and install from Ubuntu kernel mainline"
         green " 48. Install latest linux kernel 5.18, download and install from Ubuntu kernel mainline"
         echo
-        green " 51. Install XanMod kernel 5.15 LTS, from XanMod repository source "    
-        green " 52. Install XanMod kernel 5.17, from XanMod repository source "  
+        green " 51. Install XanMod kernel 6.1 LTS, from XanMod repository source "    
+        green " 52. Install XanMod kernel 6.2, from XanMod repository source "  
     fi
 
     echo
@@ -3487,15 +3502,15 @@ function start_menu(){
             installKernel
         ;;
         42 )
-            linuxKernelToInstallVersion="5.18"
+            linuxKernelToInstallVersion="5.19"
             isInstallFromRepo="yes"
             installKernel
-        ;; 
+        ;;
         43 )
-            linuxKernelToInstallVersion="4.19"
+            linuxKernelToInstallVersion="6.1"
             isInstallFromRepo="yes"
             installKernel
-        ;;        
+        ;;
         44 ) 
             linuxKernelToInstallVersion="4.19"
             installKernel
@@ -3517,13 +3532,13 @@ function start_menu(){
             installKernel
         ;;        
         51 )
-            linuxKernelToInstallVersion="5.15"
+            linuxKernelToInstallVersion="6.1"
             linuxKernelToBBRType="xanmod"
             isInstallFromRepo="yes"
             installKernel
         ;;
         52 )
-            linuxKernelToInstallVersion="5.17"
+            linuxKernelToInstallVersion="6.2"
             linuxKernelToBBRType="xanmod"
             isInstallFromRepo="yes"
             installKernel
