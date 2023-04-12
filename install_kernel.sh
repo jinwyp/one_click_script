@@ -3269,24 +3269,22 @@ function start_menu(){
         if [[ "${osRelease}" == "debian" ]]; then
 
             if [[ "${osReleaseVersion}" == "10" ]]; then
-                green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
+                green " 41. 安装 LTS内核 5.10 LTS, 通过 Debian 官方源安装"
             fi
             if [[ "${osReleaseVersion}" == "11" ]]; then
-                green " 41. 安装 最新版本LTS内核 5.10 LTS, 通过 Debian 官方源安装"
-                green " 42. 安装 最新版本内核 5.19, 通过 Debian 官方源安装"
+                green " 41. 安装 LTS内核 5.10 LTS, 通过 Debian 官方源安装"
+                green " 42. 安装 内核 5.19, 通过 Debian 官方源安装"
                 green " 43. 安装 最新版本内核 6.1 或更高, 通过 Debian 官方源安装"
             fi
             echo
         fi
 
-
         green " 44. 安装 内核 4.19 LTS, 通过 Ubuntu kernel mainline 安装"
         green " 45. 安装 内核 5.4 LTS, 通过 Ubuntu kernel mainline 安装"
         green " 46. 安装 内核 5.10 LTS, 通过 Ubuntu kernel mainline 安装"
         green " 47. 安装 内核 5.15, 通过 Ubuntu kernel mainline 安装"
-        green " 48. 安装 最新版本内核 5.19, 通过 Ubuntu kernel mainline 安装"
+        green " 48. 安装 内核 5.19, 通过 Ubuntu kernel mainline 安装"
         green " 49. 安装 最新版本内核 6.1, 通过 Ubuntu kernel mainline 安装"
-
         echo
         green " 51. 安装 XanMod Kernel 内核 6.1 LTS, 官方源安装 "    
         green " 52. 安装 XanMod Kernel 内核 6.2, 官方源安装 "   
@@ -3364,26 +3362,26 @@ function start_menu(){
     else
         if [[ "${osRelease}" == "debian" ]]; then
             if [[ "${osReleaseVersion}" == "10" ]]; then
-                green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
+                green " 41. Install LTS linux kernel, 5.10 LTS, from Debian repository source"
             fi
             
             if [[ "${osReleaseVersion}" == "11" ]]; then
-                green " 41. Install latest LTS linux kernel, 5.10 LTS, from Debian repository source"
-                green " 42. Install latest linux kernel, 5.19, from Debian repository source"
+                green " 41. Install LTS linux kernel, 5.10 LTS, from Debian repository source"
+                green " 42. Install linux kernel, 5.19, from Debian repository source"
                 green " 43. Install latest linux kernel, 6.1 or higher, from Debian repository source"
             fi
             echo
         fi
 
-        green " 44. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
-        green " 45. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
-        green " 46. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
-        green " 47. Install linux kernel 5.15, download and install from Ubuntu kernel mainline"
-        green " 48. Install latest linux kernel 5.19, download and install from Ubuntu kernel mainline"
-        green " 49. Install latest linux kernel 6.1, download and install from Ubuntu kernel mainline"
-        echo
-        green " 51. Install XanMod kernel 6.1 LTS, from XanMod repository source "    
-        green " 52. Install XanMod kernel 6.2, from XanMod repository source "  
+    green " 44. Install linux kernel 4.19 LTS, download and install from Ubuntu kernel mainline"
+    green " 45. Install linux kernel 5.4 LTS, download and install from Ubuntu kernel mainline"
+    green " 46. Install linux kernel 5.10 LTS, download and install from Ubuntu kernel mainline"
+    green " 47. Install linux kernel 5.15, download and install from Ubuntu kernel mainline"
+    green " 48. Install linux kernel 5.19, download and install from Ubuntu kernel mainline"
+    green " 49. Install latest linux kernel 6.1, download and install from Ubuntu kernel mainline"
+    echo
+    green " 51. Install XanMod kernel 6.1 LTS, from XanMod repository source "    
+    green " 52. Install XanMod kernel 6.2, from XanMod repository source "  
     fi
 
     echo
