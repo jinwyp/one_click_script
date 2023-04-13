@@ -4463,59 +4463,59 @@ EOM
 
 
 
-    echo
-    echo
-    yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 已失效"
-    read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
-    isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
+#     echo
+#     echo
+#     yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 已失效"
+#     read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
+#     isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
 
-    v2rayConfigRouteGoNetflixInput=""
-    v2rayConfigOutboundV2rayGoNetflixServerInput=""
-    if [[ "${isV2rayUnlockGoNetflixInput}" == [Nn] ]]; then
-        echo
-    else
-        removeString="\"geosite:netflix\", "
-        V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString"}
-        removeString2="\"geosite:disney\", "
-        V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString2"}
-        read -r -d '' v2rayConfigRouteGoNetflixInput << EOM
-            {
-                "type": "field",
-                "outboundTag": "GoNetflix",
-                "domain": [ "geosite:netflix", "geosite:disney" ] 
-            },
-EOM
+#     v2rayConfigRouteGoNetflixInput=""
+#     v2rayConfigOutboundV2rayGoNetflixServerInput=""
+#     if [[ "${isV2rayUnlockGoNetflixInput}" == [Nn] ]]; then
+#         echo
+#     else
+#         removeString="\"geosite:netflix\", "
+#         V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString"}
+#         removeString2="\"geosite:disney\", "
+#         V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString2"}
+#         read -r -d '' v2rayConfigRouteGoNetflixInput << EOM
+#             {
+#                 "type": "field",
+#                 "outboundTag": "GoNetflix",
+#                 "domain": [ "geosite:netflix", "geosite:disney" ] 
+#             },
+# EOM
 
-        read -r -d '' v2rayConfigOutboundV2rayGoNetflixServerInput << EOM
-        {
-            "tag": "GoNetflix",
-            "protocol": "vmess",
-            "streamSettings": {
-                "network": "ws",
-                "security": "tls",
-                "tlsSettings": {
-                    "allowInsecure": false
-                },
-                "wsSettings": {
-                    "path": "ws"
-                }
-            },
-            "mux": {
-                "enabled": true,
-                "concurrency": 8
-            },
-            "settings": {
-                "vnext": [{
-                    "address": "free-sg-01.unblocknetflix.cf",
-                    "port": 443,
-                    "users": [
-                        { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
-                    ]
-                }]
-            }
-        },
-EOM
-    fi
+#         read -r -d '' v2rayConfigOutboundV2rayGoNetflixServerInput << EOM
+#         {
+#             "tag": "GoNetflix",
+#             "protocol": "vmess",
+#             "streamSettings": {
+#                 "network": "ws",
+#                 "security": "tls",
+#                 "tlsSettings": {
+#                     "allowInsecure": false
+#                 },
+#                 "wsSettings": {
+#                     "path": "ws"
+#                 }
+#             },
+#             "mux": {
+#                 "enabled": true,
+#                 "concurrency": 8
+#             },
+#             "settings": {
+#                 "vnext": [{
+#                     "address": "free-sg-01.unblocknetflix.cf",
+#                     "port": 443,
+#                     "users": [
+#                         { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
+#                     ]
+#                 }]
+#             }
+#         },
+# EOM
+#     fi
 
 
 

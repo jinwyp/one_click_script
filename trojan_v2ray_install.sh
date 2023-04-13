@@ -1454,7 +1454,7 @@ function renewCertificationWithAcme(){
                 fi  
             else
                 echo
-                red " 域名 ${configSSLRenewDomain} 证书不存在！"
+                red " 您选择的域名 ${configSSLRenewDomain} 证书不存在！"
             fi
 
         else 
@@ -3795,32 +3795,36 @@ EOM
 
 fi
 
-    echo
-    green " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 已失效"
-    echo
-    read -r -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
-    isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
-    if [[ $isV2rayUnlockGoNetflixInput == [Nn] ]]; then
-        shadowsocksXrayConfigRouteInput=""
-    else
-        read -r -d '' shadowsocksXrayConfigRouteInput << EOM
-    "routing": {
-        "rules": [
-            {
-                "type": "field",
-                "outboundTag": "GoNetflix",
-                "domain": [ "geosite:netflix", "geosite:disney" ] 
-            },
-            {
-                "type": "field",
-                "outboundTag": "IPv4_out",
-                "network": "udp,tcp"
-            }
-        ]
-    }
-EOM
-    fi
 
+    echo
+    echo
+    green " =================================================="
+    yellow " 是否屏蔽中国回国流量, 根据 geosite:cn 和 geoip:cn 规则判断是否中国回国流量"
+    yellow " 屏蔽中国回国流量, 可以有效防止GFW的检测, 如果挂代理访问中国国内网站 则很容易2次过墙而被检测"
+    echo
+    green " 1. 屏蔽中国回国流量"
+    green " 2. 不屏蔽中国回国流量"
+    green " 3. 中国回国流量走 WARP IPv6 解锁"
+    echo
+    green " 默认选1 屏蔽回国流量. 选择3 需要安装好 Wireguard 和 Cloudflare WARP, 可重新运行本脚本选择第一项安装WARP".
+    red " 推荐先安装 Wireguard 与 Cloudflare WARP 后,再安装v2ray或xray. 实际上先安装v2ray或xray, 后安装Wireguard 与 Cloudflare WARP也没问题"
+    echo
+    read -p "请输入? 直接回车默认选1, 请输入纯数字:" isV2rayBlockChinaSiteInput
+    isV2rayBlockChinaSiteInput=${isV2rayBlockChinaSiteInput:-1}
+    
+    V2rayBlockChinaSiteRuleText="blocked"
+
+
+    if [[ $isV2rayBlockChinaSiteInput == "1" ]]; then
+        V2rayBlockChinaSiteRuleText="blocked"
+
+    elif [[ $isV2rayBlockChinaSiteInput == "2" ]]; then
+        V2rayBlockChinaSiteRuleText="IPv4_out"
+
+    else
+        V2rayBlockChinaSiteRuleText="IPv6_out"
+
+    fi
 
 
 
@@ -3832,10 +3836,39 @@ EOM
         "loglevel": "warning"
     },
     ${shadowsocksXrayConfigInboundInput}
+
+    "routing": {
+        "domainStrategy": "IPIfNonMatch",
+        "rules": [
+
+            {
+                "type": "field",
+                "domain": [
+                    "geosite:cn"
+                ],
+                "outboundTag": "${V2rayBlockChinaSiteRuleText}"
+            },
+            {
+                "type": "field",
+                "ip": [
+                    "geoip:cn"
+                ],
+                "outboundTag": "${V2rayBlockChinaSiteRuleText}"
+            },           
+            {
+                "type": "field",
+                "outboundTag": "IPv4_out",
+                "network": "udp,tcp"
+            }
+        ]
+    },
     "outbounds": [
         {
+            "tag":"IPv4_out",
             "protocol": "freedom",
-            "tag": "direct"
+            "settings": {
+                "domainStrategy": "UseIPv4"
+            }
         },
         {
             "tag": "blocked",
@@ -3845,37 +3878,15 @@ EOM
                     "type": "http"
                 }
             }
-        },      
+        },
         {
-            "tag": "GoNetflix",
-            "protocol": "vmess",
-            "streamSettings": {
-                "network": "ws",
-                "security": "tls",
-                "tlsSettings": {
-                    "allowInsecure": false
-                },
-                "wsSettings": {
-                    "path": "ws"
-                }
-            },
-            "mux": {
-                "enabled": true,
-                "concurrency": 8
-            },
+            "tag":"IPv6_out",
+            "protocol": "freedom",
             "settings": {
-                "vnext": [{
-                    "address": "free-sg-01.unblocknetflix.cf",
-                    "port": 443,
-                    "users": [
-                        { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
-                    ]
-                }]
+                "domainStrategy": "UseIPv6" 
             }
-        }
-
-    ],
-    ${shadowsocksXrayConfigRouteInput}
+        },
+    ],    
 }
 EOF
 
@@ -4949,7 +4960,6 @@ EOM
     fi
 
 
-
     echo
     echo
     green " =================================================="
@@ -5057,58 +5067,58 @@ EOM
 
 
 
-    echo
-    yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 目前已失效"
-    read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
-    isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
+#     echo
+#     yellow " 某老姨子提供了可以解锁Netflix新加坡区的V2ray服务器, 目前已失效"
+#     read -p "是否通过老姨子解锁Netflix新加坡区? 直接回车默认不解锁, 请输入[y/N]:" isV2rayUnlockGoNetflixInput
+#     isV2rayUnlockGoNetflixInput=${isV2rayUnlockGoNetflixInput:-n}
 
-    v2rayConfigRouteGoNetflixInput=""
-    v2rayConfigOutboundV2rayGoNetflixServerInput=""
-    if [[ $isV2rayUnlockGoNetflixInput == [Nn] ]]; then
-        echo
-    else
-        removeString="\"geosite:netflix\", "
-        V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString"}
-        removeString2="\"geosite:disney\", "
-        V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString2"}
-        read -r -d '' v2rayConfigRouteGoNetflixInput << EOM
-            {
-                "type": "field",
-                "outboundTag": "GoNetflix",
-                "domain": [ "geosite:netflix", "geosite:disney" ] 
-            },
-EOM
+#     v2rayConfigRouteGoNetflixInput=""
+#     v2rayConfigOutboundV2rayGoNetflixServerInput=""
+#     if [[ $isV2rayUnlockGoNetflixInput == [Nn] ]]; then
+#         echo
+#     else
+#         removeString="\"geosite:netflix\", "
+#         V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString"}
+#         removeString2="\"geosite:disney\", "
+#         V2rayUnlockVideoSiteRuleText=${V2rayUnlockVideoSiteRuleText#"$removeString2"}
+#         read -r -d '' v2rayConfigRouteGoNetflixInput << EOM
+#             {
+#                 "type": "field",
+#                 "outboundTag": "GoNetflix",
+#                 "domain": [ "geosite:netflix", "geosite:disney" ] 
+#             },
+# EOM
 
-        read -r -d '' v2rayConfigOutboundV2rayGoNetflixServerInput << EOM
-        {
-            "tag": "GoNetflix",
-            "protocol": "vmess",
-            "streamSettings": {
-                "network": "ws",
-                "security": "tls",
-                "tlsSettings": {
-                    "allowInsecure": false
-                },
-                "wsSettings": {
-                    "path": "ws"
-                }
-            },
-            "mux": {
-                "enabled": true,
-                "concurrency": 8
-            },
-            "settings": {
-                "vnext": [{
-                    "address": "free-sg-01.unblocknetflix.cf",
-                    "port": 443,
-                    "users": [
-                        { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
-                    ]
-                }]
-            }
-        },
-EOM
-    fi
+#         read -r -d '' v2rayConfigOutboundV2rayGoNetflixServerInput << EOM
+#         {
+#             "tag": "GoNetflix",
+#             "protocol": "vmess",
+#             "streamSettings": {
+#                 "network": "ws",
+#                 "security": "tls",
+#                 "tlsSettings": {
+#                     "allowInsecure": false
+#                 },
+#                 "wsSettings": {
+#                     "path": "ws"
+#                 }
+#             },
+#             "mux": {
+#                 "enabled": true,
+#                 "concurrency": 8
+#             },
+#             "settings": {
+#                 "vnext": [{
+#                     "address": "free-sg-01.unblocknetflix.cf",
+#                     "port": 443,
+#                     "users": [
+#                         { "id": "402d7490-6d4b-42d4-80ed-e681b0e6f1f9", "security": "auto", "alterId": 0 }
+#                     ]
+#                 }]
+#             }
+#         },
+# EOM
+#     fi
 
 
 
@@ -5147,7 +5157,7 @@ EOM
     "routing": {
         "domainStrategy": "IPIfNonMatch",
         "rules": [
-            ${v2rayConfigRouteGoNetflixInput}
+
             {
                 "type": "field",
                 "outboundTag": "${V2rayUnlockVideoSiteOutboundTagText}",
@@ -5272,7 +5282,6 @@ EOM
             }
         },
         ${v2rayConfigOutboundV2rayServerInput}
-        ${v2rayConfigOutboundV2rayGoNetflixServerInput}
         {
             "tag": "WARP_out",
             "protocol": "socks",
