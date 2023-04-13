@@ -2272,8 +2272,8 @@ EOF
 
     #wget -P "${configWebsiteDownloadPath}" "https://github.com/jinwyp/one_click_script/raw/master/download/v2ray-android.zip"
 
-    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsiteFatherPath}
-    ${sudoCmd} chmod -R 774 ${configWebsiteFatherPath}
+    # ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configWebsitePath}
+    ${sudoCmd} chmod -R 774 ${configWebsitePath}
 
     ${sudoCmd} systemctl start nginx.service
 

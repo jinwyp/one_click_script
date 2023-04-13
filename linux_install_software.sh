@@ -4031,7 +4031,7 @@ function downgradeXray(){
         airu stop
         systemctl stop xray.service
 
-        chmod ugoa+rw ${configSSLCertPath}/*
+        chmod 666 ${configSSLCertPathV2board}/*
         
         systemctl start xray.service
         echo
@@ -4136,8 +4136,7 @@ EOM
 
             replaceAirUniverseConfigWARP "norestart"
             
-            chmod ugo+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
-            chmod ugo+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
+            chmod 666 ${configSSLCertPathV2board}/*
             
 
             # chown -R nobody:nogroup /var/log/v2ray
@@ -4735,8 +4734,8 @@ EOF
     fi
 
 
-    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertFullchainFilename}
-    chmod ugoa+rw ${configSSLCertPath}/${configSSLCertKeyFilename}
+    chmod 666 ${configSSLCertPathV2board}/*
+    # chmod ugoa+rw ${configSSLCertPathV2board}/${configSSLCertKeyFilename}
 
     # -z 为空
     if [[ -z $1 ]]; then
