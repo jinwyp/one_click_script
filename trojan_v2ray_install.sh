@@ -91,30 +91,30 @@ osSystemShell="bash"
 
 
 function checkArchitecture(){
-	# https://stackoverflow.com/questions/48678152/how-to-detect-386-amd64-arm-or-arm64-os-architecture-via-shell-bash
+    # https://stackoverflow.com/questions/48678152/how-to-detect-386-amd64-arm-or-arm64-os-architecture-via-shell-bash
 
-	case $(uname -m) in
-		i386)   osArchitecture="386" ;;
-		i686)   osArchitecture="386" ;;
-		x86_64) osArchitecture="amd64" ;;
-		arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
-		aarch64)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
-		* )     osArchitecture="arm" ;;
-	esac
+    case $(uname -m) in
+        i386)   osArchitecture="386" ;;
+        i686)   osArchitecture="386" ;;
+        x86_64) osArchitecture="amd64" ;;
+        arm)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+        aarch64)    dpkg --print-architecture | grep -q "arm64" && osArchitecture="arm64" || osArchitecture="arm" ;;
+        * )     osArchitecture="arm" ;;
+    esac
 }
 
 
 function checkCPU(){
-	osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
-	if [[ $osCPUText =~ "GenuineIntel" ]]; then
-		osCPU="intel"
+    osCPUText=$(cat /proc/cpuinfo | grep vendor_id | uniq)
+    if [[ $osCPUText =~ "GenuineIntel" ]]; then
+        osCPU="intel"
     elif [[ $osCPUText =~ "AMD" ]]; then
         osCPU="amd"
     else
         echo
     fi
 
-	# green " Status 状态显示--当前CPU是: $osCPU"
+    # green " Status 状态显示--当前CPU是: $osCPU"
 }
 
 # 检测系统版本号
@@ -204,7 +204,7 @@ function getLinuxOSRelease(){
 
     getLinuxOSVersion
     checkArchitecture
-	checkCPU
+    checkCPU
 
     [[ -z $(echo $SHELL|grep zsh) ]] && osSystemShell="bash" || osSystemShell="zsh"
 
@@ -215,14 +215,14 @@ function getLinuxOSRelease(){
 
 
 function promptContinueOpeartion(){
-	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
-	isContinueInput=${isContinueInput:-Y}
+    read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
+    isContinueInput=${isContinueInput:-Y}
 
-	if [[ $isContinueInput == [Yy] ]]; then
-		echo ""
-	else 
-		exit 1
-	fi
+    if [[ $isContinueInput == [Yy] ]]; then
+        echo ""
+    else
+        exit 1
+    fi
 }
 
 osPort80=""
@@ -556,21 +556,31 @@ function setLinuxDateZone(){
 
 # 软件安装
 function installSoftDownload(){
-	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
-		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget git unzip curl apt-transport-https
-			
-			# https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
-			${osSystemPackage} -y install cpu-checker
-		fi
 
-		if ! dpkg -l | grep -qw curl; then
-			${osSystemPackage} -y install curl git unzip wget apt-transport-https
-			
-			${osSystemPackage} -y install cpu-checker
-		fi
+    PACKAGE_LIST=("wget" "curl" "git" "unzip" )
 
-	elif [[ "${osRelease}" == "centos" ]]; then
+    # 检查所有软件包是否已安装
+    for package in "${PACKAGE_LIST[@]}"; do
+        if ! dpkg -l | grep -qw "$package"; then
+            # green "$package is not installed. Installing..."
+            ${osSystemPackage} -y install "$package"
+
+        fi
+    done
+
+    if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
+
+        PACKAGE_LIST=( "apt-transport-https" "cpu-checker" )
+
+        # 检查所有软件包是否已安装
+        for package in "${PACKAGE_LIST[@]}"; do
+            if ! dpkg -l | grep -qw "$package"; then
+                # green "$package is not installed. Installing..."
+                ${osSystemPackage} -y install "$package"
+            fi
+        done
+
+    elif [[ "${osRelease}" == "centos" ]]; then
 
         if  [[ ${osReleaseVersion} == "8.1.1911" || ${osReleaseVersion} == "8.2.2004" || ${osReleaseVersion} == "8.0.1905" || ${osReleaseVersion} == "8.5.2111" ]]; then
 
@@ -588,17 +598,8 @@ function installSoftDownload(){
             ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
             ${sudoCmd} dnf distro-sync -y
         fi
-        
-        if ! rpm -qa | grep -qw wget; then
-		    ${osSystemPackage} -y install wget curl git unzip
 
-        elif ! rpm -qa | grep -qw git; then
-		    ${osSystemPackage} -y install wget curl git unzip
-
-        elif ! rpm -qa | grep -qw unzip; then
-            ${osSystemPackage} -y install wget curl git unzip
-		fi
-	fi
+    fi
 }
 
 
@@ -625,17 +626,18 @@ function installPackage(){
 # 
 # EOF
 
-        if ! rpm -qa | grep -qw iperf3; then
-			${sudoCmd} ${osSystemPackage} install -y epel-release
+        PACKAGE_LIST=("zip" "tar" "iputils" "htop" "redhat-lsb-core" "epel-release" "bind-utils" "net-tools" "xz" "jq" "iperf3" )
 
-            ${osSystemPackage} install -y curl wget git unzip zip tar
-            ${osSystemPackage} install -y redhat-lsb-core 
-            ${osSystemPackage} install -y bind-utils net-tools
-            ${osSystemPackage} install -y xz jq
-            ${osSystemPackage} install -y iputils
-            ${osSystemPackage} install -y iperf3 
-            ${osSystemPackage} install -y htop 
-		fi
+        # 检查所有软件包是否已安装
+        for package in "${PACKAGE_LIST[@]}"; do
+            if ! dpkg -l | grep -qw "$package"; then
+                green "$package is not installed. Installing..."
+                ${sudoCmd} ${osSystemPackage} -y install "$package"
+            else
+                green "$package has been installed."
+            fi
+        done
+
         yum clean all
         
         ${osSystemPackage} update -y
@@ -687,7 +689,7 @@ EOF
             ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
             ${osSystemPackage} install -y iputils-ping
             ${osSystemPackage} install -y iperf3
-		fi    
+        fi    
 
     elif [ "$osRelease" == "debian" ]; then
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
@@ -877,19 +879,19 @@ function vps_netflix(){
     # bash <(curl -sSL "https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh")
     # bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh)
 
-	# wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
+    # wget -N --no-check-certificate https://github.com/CoiaPrant/Netflix_Unlock_Information/raw/main/netflix.sh && chmod +x netflix.sh && ./netflix.sh
     # wget -N --no-check-certificate -O netflixcheck https://github.com/sjlleo/netflix-verify/releases/download/2.61/nf_2.61_linux_amd64 && chmod +x ./netflixcheck && ./netflixcheck -method full
 
-	wget -N --no-check-certificate -O ./netflix.sh https://github.com/CoiaPrant/MediaUnlock_Test/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
+    wget -N --no-check-certificate -O ./netflix.sh https://github.com/CoiaPrant/MediaUnlock_Test/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
 }
 
 function vps_netflix2(){
-	wget -N --no-check-certificate -O ./netflix.sh https://github.com/lmc999/RegionRestrictionCheck/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
+    wget -N --no-check-certificate -O ./netflix.sh https://github.com/lmc999/RegionRestrictionCheck/raw/main/check.sh && chmod +x ./netflix.sh && ./netflix.sh
 }
 
 function vps_netflix_jin(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
-	wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./nf.sh && ./nf.sh
+    wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./nf.sh && ./nf.sh
 }
 
 
@@ -912,39 +914,39 @@ function vps_superspeed(){
     # bash <(curl -Lso- https://raw.githubusercontent.com/uxh/superspeed/master/superspeed.sh)
 
     # bash <(curl -Lso- https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh)
-	# bash <(curl -Lso- https://git.io/superspeed.sh)
+    # bash <(curl -Lso- https://git.io/superspeed.sh)
 
 
     #wget -N --no-check-certificate https://raw.githubusercontent.com/flyzy2005/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
     #wget -N --no-check-certificate https://raw.githubusercontent.com/zq/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 
     # bash <(curl -Lso- https://git.io/superspeed)
-	#wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
-	
-	#wget -N --no-check-certificate https://raw.githubusercontent.com/oooldking/script/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+    #wget -N --no-check-certificate https://raw.githubusercontent.com/ernisn/superspeed/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
+    
+    #wget -N --no-check-certificate https://raw.githubusercontent.com/oooldking/script/master/superspeed.sh && chmod +x superspeed.sh && ./superspeed.sh
 }
 
 function vps_yabs(){
-	curl -sL yabs.sh | bash
+    curl -sL yabs.sh | bash
 }
 function vps_bench(){
     wget -N --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/bench.sh && chmod +x bench.sh && bash bench.sh
-	# wget -N --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh && chmod +x bench.sh && bash bench.sh
+    # wget -N --no-check-certificate https://raw.githubusercontent.com/teddysun/across/master/bench.sh && chmod +x bench.sh && bash bench.sh
 }
 function vps_bench_dedicated(){
     # bash -c "$(wget -qO- https://github.com/Aniverse/A/raw/i/a)"
-	wget -N --no-check-certificate -O dedicated_server_bench.sh https://raw.githubusercontent.com/Aniverse/A/i/a && chmod +x dedicated_server_bench.sh && bash dedicated_server_bench.sh
+    wget -N --no-check-certificate -O dedicated_server_bench.sh https://raw.githubusercontent.com/Aniverse/A/i/a && chmod +x dedicated_server_bench.sh && bash dedicated_server_bench.sh
 }
 
 function vps_zbench(){
-	wget -N --no-check-certificate https://raw.githubusercontent.com/FunctionClub/ZBench/master/ZBench-CN.sh && chmod +x ZBench-CN.sh && bash ZBench-CN.sh
+    wget -N --no-check-certificate https://raw.githubusercontent.com/FunctionClub/ZBench/master/ZBench-CN.sh && chmod +x ZBench-CN.sh && bash ZBench-CN.sh
 }
 function vps_LemonBench(){
     wget -N --no-check-certificate -O LemonBench.sh https://ilemonra.in/LemonBenchIntl && chmod +x LemonBench.sh && ./LemonBench.sh fast
 }
 
 function vps_testrace(){
-	wget -N --no-check-certificate https://raw.githubusercontent.com/nanqinlang-script/testrace/master/testrace.sh && chmod +x testrace.sh && ./testrace.sh
+    wget -N --no-check-certificate https://raw.githubusercontent.com/nanqinlang-script/testrace/master/testrace.sh && chmod +x testrace.sh && ./testrace.sh
 }
 
 function vps_autoBestTrace(){
@@ -1474,12 +1476,12 @@ function renewCertificationWithAcme(){
 function getHTTPSCertificateWithAcme(){
 
     # 申请https证书
-	mkdir -p ${configSSLCertPath}
-	mkdir -p ${configWebsitePath}
+    mkdir -p ${configSSLCertPath}
+    mkdir -p ${configWebsitePath}
 
     getHTTPSCertificateInputEmail
 
-	curl https://get.acme.sh | sh -s email=${acmeSSLRegisterEmailInput}
+    curl https://get.acme.sh | sh -s email=${acmeSSLRegisterEmailInput}
 
 
     echo
@@ -1826,11 +1828,11 @@ function getHTTPSCertificateStep1(){
 
 wwwUsername="www-data"
 function createUserWWW(){
-	isHaveWwwUser=$(cat /etc/passwd | cut -d ":" -f 1 | grep ^${wwwUsername}$)
-	if [ "${isHaveWwwUser}" != "${wwwUsername}" ]; then
-		${sudoCmd} groupadd ${wwwUsername}
-		${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
-	fi
+    isHaveWwwUser=$(cat /etc/passwd | cut -d ":" -f 1 | grep ^${wwwUsername}$)
+    if [ "${isHaveWwwUser}" != "${wwwUsername}" ]; then
+        ${sudoCmd} groupadd ${wwwUsername}
+        ${sudoCmd} useradd -s /usr/sbin/nologin -g ${wwwUsername} ${wwwUsername} --no-create-home         
+    fi
 }
 
 function stopServiceNginx(){
@@ -2285,22 +2287,22 @@ EOF
     green "       Web服务器 nginx 安装成功!!"
     green "    伪装站点为 http://${configSSLDomain}"
 
-	if [[ "${configInstallNginxMode}" == "trojanWeb" ]] ; then
-	    yellow "    Trojan-web ${versionTrojanWeb} 可视化管理面板地址  http://${configSSLDomain}/${configTrojanWebNginxPath} "
-	    green "    Trojan-web 可视化管理面板 可执行文件路径 ${configTrojanWebPath}/trojan-web"
+    if [[ "${configInstallNginxMode}" == "trojanWeb" ]] ; then
+        yellow "    Trojan-web ${versionTrojanWeb} 可视化管理面板地址  http://${configSSLDomain}/${configTrojanWebNginxPath} "
+        green "    Trojan-web 可视化管理面板 可执行文件路径 ${configTrojanWebPath}/trojan-web"
         green "    Trojan-web 停止命令: systemctl stop trojan-web.service  启动命令: systemctl start trojan-web.service  重启命令: systemctl restart trojan-web.service"
-	    green "    Trojan 服务器端可执行文件路径 /usr/bin/trojan/trojan"
-	    green "    Trojan 服务器端配置路径 /usr/local/etc/trojan/config.json "
-	    green "    Trojan 停止命令: systemctl stop trojan.service  启动命令: systemctl start trojan.service  重启命令: systemctl restart trojan.service"
-	fi
+        green "    Trojan 服务器端可执行文件路径 /usr/bin/trojan/trojan"
+        green "    Trojan 服务器端配置路径 /usr/local/etc/trojan/config.json "
+        green "    Trojan 停止命令: systemctl stop trojan.service  启动命令: systemctl start trojan.service  重启命令: systemctl restart trojan.service"
+    fi
 
     green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
-	red "    nginx 配置路径 ${nginxConfigPath} "
-	green "    nginx 访问日志 ${nginxAccessLogFilePath} "
-	green "    nginx 错误日志 ${nginxErrorLogFilePath} "
+    red "    nginx 配置路径 ${nginxConfigPath} "
+    green "    nginx 访问日志 ${nginxAccessLogFilePath} "
+    green "    nginx 错误日志 ${nginxErrorLogFilePath} "
     green "    nginx 查看日志命令: journalctl -n 50 -u nginx.service"
-	green "    nginx 启动命令: systemctl start nginx.service  停止命令: systemctl stop nginx.service  重启命令: systemctl restart nginx.service"
-	green "    nginx 查看运行状态命令: systemctl status nginx.service "
+    green "    nginx 启动命令: systemctl start nginx.service  停止命令: systemctl stop nginx.service  重启命令: systemctl restart nginx.service"
+    green "    nginx 查看运行状态命令: systemctl status nginx.service "
 
     green " ================================================== "
 
@@ -2322,7 +2324,7 @@ nginx 查看运行状态命令: systemctl status nginx.service
 
 EOF
 
-	if [[ "${configInstallNginxMode}" == "trojanWeb" ]] ; then
+    if [[ "${configInstallNginxMode}" == "trojanWeb" ]] ; then
         cat >> ${configReadme} <<-EOF
 
 安装的Trojan-web ${versionTrojanWeb} 可视化管理面板 
@@ -2338,7 +2340,7 @@ Trojan 重启命令: systemctl restart trojan.service
 Trojan 查看运行状态命令: systemctl status trojan.service
 
 EOF
-	fi
+    fi
 
 }
 
@@ -3126,7 +3128,7 @@ EOM
     if [[ "${isTrojanTypeInput}" == "1" ]]; then
 
         # 增加trojan 服务器端配置
-	    cat > ${configTrojanBasePath}/server.json <<-EOF
+        cat > ${configTrojanBasePath}/server.json <<-EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
@@ -3142,7 +3144,7 @@ EOM
         "key": "${configSSLCertPath}/$configSSLCertKeyFilename",
         "key_password": "",
         "cipher_tls13":"TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384",
-	    "prefer_server_cipher": true,
+        "prefer_server_cipher": true,
         "alpn": [
             "http/1.1"
         ],
@@ -3263,43 +3265,43 @@ EOF
     (crontab -l ; echo "10 4 * * 0,1,2,3,4,5,6 systemctl restart trojan${promptInfoTrojanName}.service") | sort - | uniq - | crontab -
 
 
-	green "======================================================================"
-	green "    Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !"
+    green "======================================================================"
+    green "    Trojan${promptInfoTrojanName} Version: ${configTrojanBaseVersion} 安装成功 !"
 
     if [[ ${configInstallNginxMode} == "noSSL" ]]; then
         green "    伪装站点为 https://${configSSLDomain}"
-	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+        green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
     fi
 
-	red "    Trojan${promptInfoTrojanName} 服务器端配置路径 ${configTrojanBasePath}/server.json "
-	red "    Trojan${promptInfoTrojanName} 运行日志文件路径: ${configTrojanLogFile} "
-	green "    Trojan${promptInfoTrojanName} 查看日志命令: journalctl -n 50 -u trojan${promptInfoTrojanName}.service "
+    red "    Trojan${promptInfoTrojanName} 服务器端配置路径 ${configTrojanBasePath}/server.json "
+    red "    Trojan${promptInfoTrojanName} 运行日志文件路径: ${configTrojanLogFile} "
+    green "    Trojan${promptInfoTrojanName} 查看日志命令: journalctl -n 50 -u trojan${promptInfoTrojanName}.service "
 
-	green "    Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
-	green "    Trojan${promptInfoTrojanName} 查看运行状态命令:  systemctl status trojan${promptInfoTrojanName}.service "
-	green "    Trojan${promptInfoTrojanName} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
-	green "======================================================================"
+    green "    Trojan${promptInfoTrojanName} 停止命令: systemctl stop trojan${promptInfoTrojanName}.service  启动命令: systemctl start trojan${promptInfoTrojanName}.service  重启命令: systemctl restart trojan${promptInfoTrojanName}.service"
+    green "    Trojan${promptInfoTrojanName} 查看运行状态命令:  systemctl status trojan${promptInfoTrojanName}.service "
+    green "    Trojan${promptInfoTrojanName} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+    green "======================================================================"
 
     echo
-	yellow "Trojan${promptInfoTrojanName} 配置信息如下, 请自行复制保存, 密码任选其一 !"
-	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayTrojanReadmePort}"
-	yellow "密码1: ${trojanPassword1}"
-	yellow "密码2: ${trojanPassword2}"
-	yellow "密码3: ${trojanPassword3}"
-	yellow "密码4: ${trojanPassword4}"
-	yellow "密码5: ${trojanPassword5}"
-	yellow "密码6: ${trojanPassword6}"
-	yellow "密码7: ${trojanPassword7}"
-	yellow "密码8: ${trojanPassword8}"
-	yellow "密码9: ${trojanPassword9}"
-	yellow "密码10: ${trojanPassword10}"
+    yellow "Trojan${promptInfoTrojanName} 配置信息如下, 请自行复制保存, 密码任选其一 !"
+    yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayTrojanReadmePort}"
+    yellow "密码1: ${trojanPassword1}"
+    yellow "密码2: ${trojanPassword2}"
+    yellow "密码3: ${trojanPassword3}"
+    yellow "密码4: ${trojanPassword4}"
+    yellow "密码5: ${trojanPassword5}"
+    yellow "密码6: ${trojanPassword6}"
+    yellow "密码7: ${trojanPassword7}"
+    yellow "密码8: ${trojanPassword8}"
+    yellow "密码9: ${trojanPassword9}"
+    yellow "密码10: ${trojanPassword10}"
 
     tempTextInfoTrojanPassword="您指定前缀的密码共100个: 从 ${configTrojanPasswordPrefixInput}202200 到 ${configTrojanPasswordPrefixInput}202299 都可以使用"
     if [ "${isTrojanMultiPassword}" = "no" ] ; then
         tempTextInfoTrojanPassword="您指定前缀的密码共10个: 从 ${configTrojanPasswordPrefixInput}202201 到 ${configTrojanPasswordPrefixInput}202220 都可以使用"
     fi
-	yellow "${tempTextInfoTrojanPassword}" 
-	yellow "例如: 密码:${configTrojanPasswordPrefixInput}202202 或 密码:${configTrojanPasswordPrefixInput}202209 都可以使用"
+    yellow "${tempTextInfoTrojanPassword}" 
+    yellow "例如: 密码:${configTrojanPasswordPrefixInput}202202 或 密码:${configTrojanPasswordPrefixInput}202209 都可以使用"
 
     if [[ ${isTrojanGoSupportWebsocket} == "true" ]]; then
         yellow "Websocket path 路径为: /${configTrojanGoWebSocketPath}"
@@ -3316,7 +3318,7 @@ EOF
             green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?peer=${configSSLDomain}&sni=${configSSLDomain}&plugin=obfs-local;obfs=websocket;obfs-host=${configSSLDomain};obfs-uri=/${configTrojanGoWebSocketPath}#${configSSLDomain}_trojan_go_ws"
             echo
             yellow " 二维码 Trojan${promptInfoTrojanName} "
-		    green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fallowInsecure%3d0%26peer%3d${configSSLDomain}%26plugin%3dobfs-local%3bobfs%3dwebsocket%3bobfs-host%3d${configSSLDomain}%3bobfs-uri%3d/${configTrojanGoWebSocketPath}%23${configSSLDomain}_trojan_go_ws"
+            green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fallowInsecure%3d0%26peer%3d${configSSLDomain}%26plugin%3dobfs-local%3bobfs%3dwebsocket%3bobfs-host%3d${configSSLDomain}%3bobfs-uri%3d/${configTrojanGoWebSocketPath}%23${configSSLDomain}_trojan_go_ws"
 
             echo
             yellow " Trojan${promptInfoTrojanName} QV2ray 链接地址"
@@ -3337,17 +3339,17 @@ EOF
         green " trojan://${trojanPassword1}@${configSSLDomain}:${configV2rayTrojanReadmePort}?peer=${configSSLDomain}&sni=${configSSLDomain}#${configSSLDomain}_trojan"
         echo
         yellow " 二维码 Trojan${promptInfoTrojanName} "
-		green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan"
+        green "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${trojanPassword1}%40${configSSLDomain}%3a${configV2rayTrojanReadmePort}%3fpeer%3d${configSSLDomain}%26sni%3d${configSSLDomain}%23${configSSLDomain}_trojan"
 
     fi
 
-	echo
-	green "======================================================================"
-	green "请下载相应的trojan客户端:"
-	yellow "1 Windows 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
-	#yellow "  Windows 客户端另一个版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-Qt5-windows.zip"
-	#yellow "  Windows 客户端命令行版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-win-cli.zip"
-	#yellow "  Windows 客户端命令行版本需要搭配浏览器插件使用，例如switchyomega等! "
+    echo
+    green "======================================================================"
+    green "请下载相应的trojan客户端:"
+    yellow "1 Windows 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
+    #yellow "  Windows 客户端另一个版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-Qt5-windows.zip"
+    #yellow "  Windows 客户端命令行版本下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-win-cli.zip"
+    #yellow "  Windows 客户端命令行版本需要搭配浏览器插件使用，例如switchyomega等! "
     yellow "2 MacOS 客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-mac.zip"
     yellow "  MacOS 另一个客户端下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-mac.zip"
     #yellow "  MacOS 客户端Trojan-Qt5下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/trojan-Qt5-mac.zip"
@@ -3358,22 +3360,22 @@ EOF
     yellow "  iOS 请安装小火箭另一个地址 https://lueyingpro.github.io/shadowrocket/index.html "
     yellow "  iOS 安装小火箭遇到问题 教程 https://github.com/shadowrocketHelp/help/ "
     green "======================================================================"
-	green "教程与其他资源:"
-	green "访问 https://www.v2rayssr.com/vpn-client.html 下载 客户端 及教程"
+    green "教程与其他资源:"
+    green "访问 https://www.v2rayssr.com/vpn-client.html 下载 客户端 及教程"
     green "访问 https://westworldss.com/portal/page/download 下载 客户端 及教程"
-	green "======================================================================"
-	green "其他 Windows 客户端:"
-	green "https://dl.trojan-cdn.com/trojan (exe为Win客户端, dmg为Mac客户端)"
-	green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
-	green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
-	green "https://github.com/Fndroid/clash_for_windows_pkg/releases"
-	green "======================================================================"
-	green "其他 Mac 客户端:"
-	green "https://dl.trojan-cdn.com/trojan (exe为Win客户端, dmg为Mac客户端)"
-	green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
-	green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
-	green "https://github.com/yichengchen/clashX/releases "
-	green "======================================================================"
+    green "======================================================================"
+    green "其他 Windows 客户端:"
+    green "https://dl.trojan-cdn.com/trojan (exe为Win客户端, dmg为Mac客户端)"
+    green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
+    green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
+    green "https://github.com/Fndroid/clash_for_windows_pkg/releases"
+    green "======================================================================"
+    green "其他 Mac 客户端:"
+    green "https://dl.trojan-cdn.com/trojan (exe为Win客户端, dmg为Mac客户端)"
+    green "https://github.com/Qv2ray/Qv2ray/releases (exe为Win客户端, dmg为Mac客户端)"
+    green "https://github.com/Dr-Incognito/V2Ray-Desktop/releases (exe为Win客户端, dmg为Mac客户端)"
+    green "https://github.com/yichengchen/clashX/releases "
+    green "======================================================================"
 
 
 
@@ -3709,15 +3711,15 @@ EOF
 
     showHeaderGreen " Shadowsocks Rust 安装成功 !"
 
-	red " ShadowsocksRust 服务器端配置路径 ${configSSRustPath}/shadowsocks.json !"
+    red " ShadowsocksRust 服务器端配置路径 ${configSSRustPath}/shadowsocks.json !"
     green " ShadowsocksRust 查看日志命令: journalctl -n 50 -u shadowsocksrust.service "
-	green " ShadowsocksRust 停止命令: systemctl stop shadowsocksrust.service  启动命令: systemctl start shadowsocksrust.service "
-	green " ShadowsocksRust 重启命令: systemctl restart shadowsocksrust.service"
-	green " ShadowsocksRust 查看运行状态命令:  systemctl status shadowsocksrust.service "
-	green " ShadowsocksRust 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+    green " ShadowsocksRust 停止命令: systemctl stop shadowsocksrust.service  启动命令: systemctl start shadowsocksrust.service "
+    green " ShadowsocksRust 重启命令: systemctl restart shadowsocksrust.service"
+    green " ShadowsocksRust 查看运行状态命令:  systemctl status shadowsocksrust.service "
+    green " ShadowsocksRust 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 
     echo
-	cat "${configSSRustPath}/clientConfig.json"
+    cat "${configSSRustPath}/clientConfig.json"
     echo
 
 
@@ -3977,17 +3979,17 @@ EOF
 
     showHeaderGreen " Shadowsocks Xray ${versionXray} 安装成功 !"
 
-	red " Shadowsocksxray 服务器端配置路径 ${configSSXrayPath}/config.json !"
-	green " Shadowsocksxray 访问日志 ${configSSAccessLogFilePath} !"
-	green " Shadowsocksxray 错误日志 ${configSSErrorLogFilePath} ! "
-	green " Shadowsocksxray 查看日志命令: journalctl -n 50 -u shadowsocksxray.service "
-	green " Shadowsocksxray 停止命令: systemctl stop shadowsocksxray.service  启动命令: systemctl start shadowsocksxray.service "
-	green " Shadowsocksxray 重启命令: systemctl restart shadowsocksxray.service"
-	green " Shadowsocksxray 查看运行状态命令:  systemctl status shadowsocksxray.service "
-	green " Shadowsocksxray 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+    red " Shadowsocksxray 服务器端配置路径 ${configSSXrayPath}/config.json !"
+    green " Shadowsocksxray 访问日志 ${configSSAccessLogFilePath} !"
+    green " Shadowsocksxray 错误日志 ${configSSErrorLogFilePath} ! "
+    green " Shadowsocksxray 查看日志命令: journalctl -n 50 -u shadowsocksxray.service "
+    green " Shadowsocksxray 停止命令: systemctl stop shadowsocksxray.service  启动命令: systemctl start shadowsocksxray.service "
+    green " Shadowsocksxray 重启命令: systemctl restart shadowsocksxray.service"
+    green " Shadowsocksxray 查看运行状态命令:  systemctl status shadowsocksxray.service "
+    green " Shadowsocksxray 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
 
     echo
-	cat "${configSSXrayPath}/clientConfig.json"
+    cat "${configSSXrayPath}/clientConfig.json"
     echo
 
 }
@@ -4322,36 +4324,36 @@ function inputV2rayGRPCPath(){
 
 function inputV2rayServerPort(){  
     echo
-	if [[ $1 == "textMainPort" ]]; then
+    if [[ $1 == "textMainPort" ]]; then
         green " 是否自定义${promptInfoXrayName}的端口号? 如要支持cloudflare的CDN, 需要使用cloudflare支持的HTTPS端口号 例如 443 8443 2053 2083 2087 2096 端口"
         green " 具体请看cloudflare官方文档 https://developers.cloudflare.com/fundamentals/get-started/network-ports"
         read -p "是否自定义${promptInfoXrayName}的端口号? 直接回车默认为${configV2rayPortShowInfo}, 请输入自定义端口号[1-65535]:" isV2rayUserPortInput
         isV2rayUserPortInput=${isV2rayUserPortInput:-${configV2rayPortShowInfo}}
-		checkPortInUse "${isV2rayUserPortInput}" $1 
-	fi
+        checkPortInUse "${isV2rayUserPortInput}" $1 
+    fi
 
-	if [[ $1 == "textMainGRPCPort" ]]; then
+    if [[ $1 == "textMainGRPCPort" ]]; then
         green " 如果使用gRPC 协议并要支持cloudflare的CDN, 需要输入 443 端口才可以"
         read -p "是否自定义${promptInfoXrayName} gRPC的端口号? 直接回车默认为${configV2rayPortGRPCShowInfo}, 请输入自定义端口号[1-65535]:" isV2rayUserPortGRPCInput
         isV2rayUserPortGRPCInput=${isV2rayUserPortGRPCInput:-${configV2rayPortGRPCShowInfo}}
-		checkPortInUse "${isV2rayUserPortGRPCInput}" $1 
-	fi    
+        checkPortInUse "${isV2rayUserPortGRPCInput}" $1 
+    fi    
 
-	if [[ $1 == "textAdditionalPort" ]]; then
+    if [[ $1 == "textAdditionalPort" ]]; then
         green " 是否添加一个额外监听端口, 与主端口${configV2rayPort}一起同时工作"
         green " 一般用于 中转机无法使用443端口 使用额外端口中转给目标主机时使用"
         read -p "是否给${promptInfoXrayName}添加额外的监听端口? 直接回车默认否, 请输入额外端口号[1-65535]:" isV2rayAdditionalPortInput
         isV2rayAdditionalPortInput=${isV2rayAdditionalPortInput:-999999}
         checkPortInUse "${isV2rayAdditionalPortInput}" $1 
-	fi
+    fi
 
 
     if [[ $1 == "textMainTrojanPort" ]]; then
         green "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}"
         read -p "是否自定义Trojan${promptInfoTrojanName}的端口号? 直接回车默认为${configV2rayTrojanPort}, 请输入自定义端口号[1-65535]:" isTrojanUserPortInput
         isTrojanUserPortInput=${isTrojanUserPortInput:-${configV2rayTrojanPort}}
-		checkPortInUse "${isTrojanUserPortInput}" $1 
-	fi    
+        checkPortInUse "${isTrojanUserPortInput}" $1 
+    fi    
 }
 
 function checkPortInUse(){ 
@@ -4541,7 +4543,7 @@ EOF
         v2rayVlessLinkQR2="$(cat ${configV2rayVlessImportLinkFile2Path})"
     else
 
-	    if [[ "${configV2rayProtocol}" == "vless" ]]; then
+        if [[ "${configV2rayProtocol}" == "vless" ]]; then
 
             cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
 ${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayIsTlsShowInfo}&type=${configV2rayVmessLinkStreamSetting1}&path=%2f${configV2rayVmessLinkConfigPath}&headerType=none&seed=${configV2rayKCPSeedPassword}&quicSecurity=none&key=${configV2rayKCPSeedPassword}&serviceName=${configV2rayVmessLinkConfigPath}#${configSSLDomain}+${configV2rayVmessLinkStreamSetting1}_${configV2rayIsTlsShowInfo}
@@ -4552,7 +4554,7 @@ EOF
 
             v2rayVlessLinkQR1="$(cat ${configV2rayVlessImportLinkFile1Path})"
             v2rayVlessLinkQR2="$(cat ${configV2rayVlessImportLinkFile2Path})"
-	    fi
+        fi
 
     fi
 }
@@ -7081,34 +7083,34 @@ EOF
 
     if [[ -n ${configInstallNginxMode} ]]; then
         green "    伪装站点为 https://${configSSLDomain}!"
-	    green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
+        green "    伪装站点的静态html内容放置在目录 ${configWebsitePath}, 可自行更换网站内容!"
     fi
-	
-	red "    ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json !"
-	green "    ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} !"
-	green "    ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath} ! "
-	green "    ${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
-	green "    ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service  启动命令: systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
-	green "    ${promptInfoXrayInstall} 重启命令: systemctl restart ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service"
-	green "    ${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
-	green "    ${promptInfoXrayInstall} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
-	green "======================================================================"
-	echo ""
-	yellow "${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
-	yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
-	yellow "用户ID或密码1: ${v2rayPassword1}"
-	yellow "用户ID或密码2: ${v2rayPassword2}"
-	yellow "用户ID或密码3: ${v2rayPassword3}"
-	yellow "用户ID或密码4: ${v2rayPassword4}"
-	yellow "用户ID或密码5: ${v2rayPassword5}"
-	yellow "用户ID或密码6: ${v2rayPassword6}"
-	yellow "用户ID或密码7: ${v2rayPassword7}"
-	yellow "用户ID或密码8: ${v2rayPassword8}"
-	yellow "用户ID或密码9: ${v2rayPassword9}"
-	yellow "用户ID或密码10: ${v2rayPassword10}"
+    
+    red "    ${promptInfoXrayInstall} 服务器端配置路径 ${configV2rayPath}/config.json !"
+    green "    ${promptInfoXrayInstall} 访问日志 ${configV2rayAccessLogFilePath} !"
+    green "    ${promptInfoXrayInstall} 错误日志 ${configV2rayErrorLogFilePath} ! "
+    green "    ${promptInfoXrayInstall} 查看日志命令: journalctl -n 50 -u ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
+    green "    ${promptInfoXrayInstall} 停止命令: systemctl stop ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service  启动命令: systemctl start ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
+    green "    ${promptInfoXrayInstall} 重启命令: systemctl restart ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service"
+    green "    ${promptInfoXrayInstall} 查看运行状态命令:  systemctl status ${promptInfoXrayName}${promptInfoXrayNameServiceName}.service "
+    green "    ${promptInfoXrayInstall} 服务器 每天会自动重启, 防止内存泄漏. 运行 crontab -l 命令 查看定时重启命令 !"
+    green "======================================================================"
     echo ""
-	cat "${configV2rayPath}/clientConfig.json"
-	echo ""
+    yellow "${promptInfoXrayInstall} 配置信息如下, 请自行复制保存, 密码任选其一 (密码即用户ID或UUID) !!"
+    yellow "服务器地址: ${configSSLDomain}  端口: ${configV2rayPortShowInfo}"
+    yellow "用户ID或密码1: ${v2rayPassword1}"
+    yellow "用户ID或密码2: ${v2rayPassword2}"
+    yellow "用户ID或密码3: ${v2rayPassword3}"
+    yellow "用户ID或密码4: ${v2rayPassword4}"
+    yellow "用户ID或密码5: ${v2rayPassword5}"
+    yellow "用户ID或密码6: ${v2rayPassword6}"
+    yellow "用户ID或密码7: ${v2rayPassword7}"
+    yellow "用户ID或密码8: ${v2rayPassword8}"
+    yellow "用户ID或密码9: ${v2rayPassword9}"
+    yellow "用户ID或密码10: ${v2rayPassword10}"
+    echo ""
+    cat "${configV2rayPath}/clientConfig.json"
+    echo ""
     green "======================================================================"
     green "请下载相应的 ${promptInfoXrayName} 客户端:"
     yellow "1 Windows 客户端V2rayN下载：http://${configSSLDomain}/download/${configTrojanWindowsCliPrefixPath}/v2ray-windows.zip"
@@ -8233,7 +8235,7 @@ configAdGuardPath="/opt/AdGuardHome"
 
 # DNS server 
 function installAdGuardHome(){
-	wget -qN --no-check-certificate -O ./ad_guard_install.sh https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh && chmod +x ./ad_guard_install.sh && ./ad_guard_install.sh -v
+    wget -qN --no-check-certificate -O ./ad_guard_install.sh https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh && chmod +x ./ad_guard_install.sh && ./ad_guard_install.sh -v
     echo
     if [[ ${configLanguage} == "cn" ]] ; then
         green " 如要卸载删除AdGuard Home 请运行命令 ./ad_guard_install.sh -u"
@@ -8438,7 +8440,7 @@ function startMenuOther(){
     green " 41. superspeed 三网纯测速 （全国各地三大运营商部分节点全面测速）推荐使用 "
     green " 42. yet-another-bench-script 综合测试 （包含 CPU IO 测试 国际多个数据节点网速测试）推荐使用"
     green " 43. 由teddysun 编写的Bench 综合测试 （包含系统信息 IO 测试 国内多个数据节点网速测试）"
-	green " 44. LemonBench 快速全方位测试 (包含CPU内存性能、回程、节点测速) "
+    green " 44. LemonBench 快速全方位测试 (包含CPU内存性能、回程、节点测速) "
     green " 45. ZBench 综合网速测试 (包含节点测速, Ping 以及 路由测试)"
     green " 46. testrace 回程路由测试 by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace 回程路由测试 (广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
@@ -8486,7 +8488,7 @@ function startMenuOther(){
     green " 41. superspeed. ( China telecom / China unicom / China mobile node speed test ) "
     green " 42. yet-another-bench-script ( CPU IO Memory Network speed test)"
     green " 43. Bench by teddysun"
-	green " 44. LemonBench ( CPU IO Memory Network Traceroute test） "
+    green " 44. LemonBench ( CPU IO Memory Network Traceroute test） "
     green " 45. ZBench "
     green " 46. testrace by nanqinlang （四网路由 上海电信 厦门电信 浙江杭州联通 浙江杭州移动 北京教育网）"
     green " 47. autoBestTrace (Traceroute test 广州电信 上海电信 厦门电信 重庆联通 成都联通 上海移动 成都移动 成都教育网)"
@@ -8650,8 +8652,9 @@ function start_menu(){
     clear
 
     if [[ $1 == "first" ]] ; then
-        getLinuxOSRelease
         installSoftDownload
+        getLinuxOSRelease
+        
     fi
 
     if [[ ${configLanguage} == "cn" ]] ; then
