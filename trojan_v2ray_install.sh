@@ -3746,7 +3746,6 @@ function installShadowsocks(){
     echo
     mkdir -p "${configSSXrayPath}"
     cd "${configSSXrayPath}" || exit
-    rm -rf ${configSSXrayPath}/*
 
     downloadV2rayXrayBin "shadowsocks"
 
