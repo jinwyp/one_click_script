@@ -1244,6 +1244,10 @@ function getV2rayVersion(){
                 green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
             fi
             
+            if [[ $2 == "shadowsocks" ]]; then
+                green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            fi
+
             green " 2. 1.7.5 支持 XTLS Vision (推荐)"
             green " 3. 1.6.1 (推荐)"
             green " 4. 1.6.0"
@@ -3728,14 +3732,12 @@ function installShadowsocks(){
         exit 0
     fi
 
-
-
     showHeaderGreen " 开始安装 Xray Shadowsocks " \
     " Prepare to install Xray Shadowsocks "  
 
     configNetworkVPSIP=$(get_ip)
 
-    getV2rayVersion "xray"
+    getV2rayVersion "xray" "shadowsocks"
     green " 准备下载并安装 Xray Version: ${versionXray} !"
     green " Prepare to download and install Xray Version: ${versionXray} !"
 
@@ -3885,8 +3887,8 @@ fi
             "settings": {
                 "domainStrategy": "UseIPv6" 
             }
-        },
-    ],    
+        }
+    ]
 }
 EOF
 
