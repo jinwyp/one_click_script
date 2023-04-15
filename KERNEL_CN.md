@@ -46,7 +46,7 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 ## 使用说明 Usage 
 
 ### kernel
-### 安装 linux 新班内核 开启BBR 或 BBR Plus 加速
+### 安装 linux 新版内核 开启BBR 或 BBR Plus 加速
 
 
 1. CentOS / AlmaLinux / Rocky Linux 系统安装新版 linux 内核. 运行脚本后 请选择31 安装官方源最新版5.16内核 或选择35 安装 LTS 5.10 内核 推荐安装 LTS 5.10. 根据提示需要重启2次 完成内核安装。
