@@ -231,7 +231,7 @@ osSELINUXCheck=""
 osSELINUXCheckIsRebootInput=""
 
 function testLinuxPortUsage(){
-    $osSystemPackage -y install net-tools socat
+    $osSystemPackage install -y net-tools socat
 
     osPort80=$(netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80)
     osPort443=$(netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 443)
@@ -434,9 +434,9 @@ function changeLinuxSSHPort(){
         if [ "$osRelease" == "centos" ] ; then
 
             if  [[ ${osReleaseVersionNoShort} == "7" ]]; then
-                yum -y install policycoreutils-python
+                yum install -y policycoreutils-python
             elif  [[ ${osReleaseVersionNoShort} == "8" ]]; then
-                yum -y install policycoreutils-python-utils
+                yum install -y policycoreutils-python-utils
             fi
 
             # semanage port -l
@@ -514,15 +514,15 @@ function setLinuxDateZone(){
             systemctl stop chronyd
             systemctl disable chronyd
 
-            $osSystemPackage -y install ntpdate
-            $osSystemPackage -y install ntp
+            $osSystemPackage install -y ntpdate
+            $osSystemPackage install -y ntp
             ntpdate -q 0.rhel.pool.ntp.org
             systemctl enable ntpd
             systemctl restart ntpd
             ntpdate -u  pool.ntp.org
 
         elif  [[ ${osReleaseVersionNoShort} == "8" || ${osReleaseVersionNoShort} == "9" ]]; then
-            $osSystemPackage -y install chrony
+            $osSystemPackage install -y chrony
             systemctl enable chronyd
             systemctl restart chronyd
 
@@ -563,7 +563,7 @@ function installSoftDownload(){
     for package in "${PACKAGE_LIST[@]}"; do
         if ! dpkg -l | grep -qw "$package"; then
             # green "$package is not installed. Installing..."
-            ${osSystemPackage} -y install "$package"
+            ${osSystemPackage} install -y "$package"
 
         fi
     done
@@ -576,7 +576,7 @@ function installSoftDownload(){
         for package in "${PACKAGE_LIST[@]}"; do
             if ! dpkg -l | grep -qw "$package"; then
                 # green "$package is not installed. Installing..."
-                ${osSystemPackage} -y install "$package"
+                ${osSystemPackage} install -y "$package"
             fi
         done
 
@@ -632,7 +632,7 @@ function installPackage(){
         for package in "${PACKAGE_LIST[@]}"; do
             if ! dpkg -l | grep -qw "$package"; then
                 green "$package is not installed. Installing..."
-                ${sudoCmd} ${osSystemPackage} -y install "$package"
+                ${sudoCmd} ${osSystemPackage} install -y "$package"
             else
                 green "$package has been installed."
             fi
@@ -695,8 +695,8 @@ EOF
         # ${sudoCmd} add-apt-repository ppa:nginx/stable -y
         ${osSystemPackage} update -y
 
-        apt install -y gnupg2
-        apt install -y curl ca-certificates lsb-release
+        ${osSystemPackage} install -y gnupg2
+        ${osSystemPackage} install -y curl ca-certificates lsb-release
         wget https://nginx.org/keys/nginx_signing.key -O- | apt-key add - 
 
         rm -f /etc/apt/sources.list.d/nginx.list
