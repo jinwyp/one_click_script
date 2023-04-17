@@ -562,25 +562,14 @@ function setLinuxDateZone(){
 # 软件安装
 function installSoftDownload(){
 
-    PACKAGE_LIST=("wget" "curl" "git" "unzip" )
-
-    # 检查所有软件包是否已安装
-    for package in "${PACKAGE_LIST[@]}"; do
-        if ! dpkg -l | grep -qw "$package"; then
-            # green "$package is not installed. ${osSystemPackage} Installing..."
-            ${osSystemPackage} install -y "$package"
-
-        fi
-    done
-
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 
-        PACKAGE_LIST=( "apt-transport-https" "cpu-checker" )
+        PACKAGE_LIST=( "wget" "curl" "git" "unzip" "apt-transport-https" "cpu-checker" )
 
         # 检查所有软件包是否已安装
         for package in "${PACKAGE_LIST[@]}"; do
             if ! dpkg -l | grep -qw "$package"; then
-                # green "$package is not installed. Installing..."
+                # green "$package is not installed. ${osSystemPackage} Installing..."
                 ${osSystemPackage} install -y "$package"
             fi
         done
@@ -603,6 +592,16 @@ function installSoftDownload(){
             ${sudoCmd} dnf swap centos-{linux,stream}-repos -y
             ${sudoCmd} dnf distro-sync -y
         fi
+
+        PACKAGE_LIST_Centos=( "wget" "curl" "git" "unzip" )
+
+        # 检查所有软件包是否已安装
+        for package in "${PACKAGE_LIST_Centos[@]}"; do
+            if ! rpm -qa | grep -qw "$package"; then
+                # green "$package is not installed. ${osSystemPackage} Installing..."
+                ${osSystemPackage} install -y "$package"
+            fi
+        done
 
     fi
 }
@@ -631,18 +630,18 @@ function installPackage(){
 # 
 # EOF
 
-        PACKAGE_LIST=("zip" "tar" "iputils" "htop" "redhat-lsb-core" "epel-release" "bind-utils" "net-tools" "xz" "jq" "iperf3" )
+        PACKAGE_LIST=("zip" "unzip" "tar" "iputils" "htop" "redhat-lsb-core" "epel-release" "bind-utils" "net-tools" "xz" "jq" "iperf3" )
 
         # 检查所有软件包是否已安装
         for package in "${PACKAGE_LIST[@]}"; do
-            if ! dpkg -l | grep -qw "$package"; then
+            if ! rpm -qa | grep -qw "$package"; then
                 green "$package is not installed. Installing..."
                 ${sudoCmd} ${osSystemPackage} install -y "$package"
             else
                 green "$package has been installed."
             fi
         done
-
+        
         yum clean all
         
         ${osSystemPackage} update -y
