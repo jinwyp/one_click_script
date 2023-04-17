@@ -641,7 +641,7 @@ function installPackage(){
                 green "$package has been installed."
             fi
         done
-        
+
         yum clean all
         
         ${osSystemPackage} update -y
@@ -1236,13 +1236,13 @@ function getV2rayVersion(){
             green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
 
         elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
-            green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.7.5 (推荐)"
             echo
             green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
             green " 2. 1.7.5 支持 XTLS Vision (推荐)"
 
         else
-            green " 请选择 Xray 的版本, 默认直接回车为 稳定版 1.7.5 (推荐)"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.7.5 (推荐)"
             echo
             if [[ $2 == "update" ]]; then
                 red "升级 1.8.0 或以上版本可能导致 启动失败, 不兼容旧版 XTLS 配置!"
