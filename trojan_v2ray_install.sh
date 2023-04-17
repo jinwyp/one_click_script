@@ -442,11 +442,16 @@ function changeLinuxSSHPort(){
             # semanage port -l
             if command -v semanage &> /dev/null; then
                 semanage port -a -t ssh_port_t -p tcp ${osSSHLoginPortInput}
+            else
+                red "semanage command is not installed"
             fi
+
 
             if command -v firewall-cmd &> /dev/null; then
                 firewall-cmd --permanent --zone=public --add-port=$osSSHLoginPortInput/tcp 
                 firewall-cmd --reload
+            else
+                red "firewall-cmd command is not installed"
             fi
     
             ${sudoCmd} systemctl restart sshd.service
@@ -455,13 +460,13 @@ function changeLinuxSSHPort(){
 
         if [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ] ; then
             if ! command -v semanage &> /dev/null; then
-                echo "semanage command could not be found"
+                red "semanage command is not installed"
             else
                 semanage port -a -t ssh_port_t -p tcp $osSSHLoginPortInput
             fi
 
             if ! command -v ufw &> /dev/null; then
-                echo "ufw command could not be found"
+                red "ufw command is not installed"
             else
                 ${sudoCmd} ufw allow $osSSHLoginPortInput/tcp
             fi
