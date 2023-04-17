@@ -562,7 +562,7 @@ function installSoftDownload(){
     # 检查所有软件包是否已安装
     for package in "${PACKAGE_LIST[@]}"; do
         if ! dpkg -l | grep -qw "$package"; then
-            # green "$package is not installed. Installing..."
+            # green "$package is not installed. ${osSystemPackage} Installing..."
             ${osSystemPackage} install -y "$package"
 
         fi
@@ -8651,9 +8651,8 @@ function start_menu(){
     clear
 
     if [[ $1 == "first" ]] ; then
-        installSoftDownload
         getLinuxOSRelease
-        
+        installSoftDownload
     fi
 
     if [[ ${configLanguage} == "cn" ]] ; then
