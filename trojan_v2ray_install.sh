@@ -6028,6 +6028,10 @@ EOM
                 "${configV2rayIsTlsShowInfo}Settings": {
                     "rejectUnknownSni": true,
                     "minVersion": "1.2",
+                    "alpn": [
+                        "http/1.1",
+                        "h2"
+                    ],
                     "certificates": [
                         {
                             "certificateFile": "${configSSLCertPath}/$configSSLCertFullchainFilename",
