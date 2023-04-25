@@ -4611,11 +4611,6 @@ EOM
             }
         },
         {
-            "tag": "blackhole",
-            "protocol": "blackhole",
-            "settings": {}
-        },
-        {
             "tag": "blocked",
             "protocol": "blackhole",
             "settings": {
@@ -4680,7 +4675,7 @@ EOM
                 "protocol": [
                     "bittorrent"
                 ],
-                "outboundTag": "blackhole"
+                "outboundTag": "blocked"
             },
             {
                 "type": "field",
@@ -4691,7 +4686,7 @@ EOM
                     "fe80::/10",
                     "172.16.0.0/12"
                 ],
-                "outboundTag": "blackhole"
+                "outboundTag": "blocked"
             }
         ]
     }
