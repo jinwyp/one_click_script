@@ -4884,7 +4884,7 @@ EOM
 
 
 function v2rayRouteRule(){
-    site_LIST=("google" "openai" "netflix" "disney" "youtube" "pornhub" )
+    site_LIST=("google" "openai" "netflix" "disney" "youtube" "spotify" "pornhub" )
 
     V2rayUnlockSiteRuleV6Text=""
     V2rayUnlockSiteRuleSock5Text=""
@@ -4914,8 +4914,8 @@ function v2rayRouteRule(){
         elif [[ "${site}" == "pornhub" ]]; then
         yellow " 请选择 避免出现 Pornhub 视频变成玉米的方式"
 
-        elif [[ "${site}" == "others" ]]; then
-        yellow " 请选择 解锁 其他网站的方式"
+        elif [[ "${site}" == "spotify" ]]; then
+        yellow " 请选择 解锁 Spotify 的方式"
 
         fi
 
@@ -4969,8 +4969,7 @@ function v2rayRouteRule(){
     green " 1. 不解锁"
     green " 2. 解锁 Hulu "
     green " 3. 解锁 HBO "
-    green " 4. 解锁 Spotify "
-    green " 5. 同时解锁 Hulu, HBO, Spotify"
+    green " 5. 同时解锁 Hulu, HBO"
     green " 9. 同时解锁 全部流媒体 包括 Hulu, HBO, Spotify, BBC, Fox, Niconico, DMM, Viu Pixiv 等"
     echo
     read -r -p "请输入解锁选项? 直接回车默认选1 不解锁, 请输入纯数字:" isV2rayUnlockVideoSiteInput
@@ -4983,22 +4982,22 @@ function v2rayRouteRule(){
         V2rayUnlockVideoSiteRuleText="\"geosite:hbo\""
 
     elif [[ $isV2rayUnlockVideoSiteInput == "4" ]]; then
-        V2rayUnlockVideoSiteRuleText="\"geosite:spotify\""
+        V2rayUnlockVideoSiteRuleText="\"geosite:bbc\""
 
     elif [[ $isV2rayUnlockVideoSiteInput == "5" ]]; then
-        V2rayUnlockVideoSiteRuleText="\"geosite:hulu\", \"geosite:hbo\", \"geosite:spotify\""
+        V2rayUnlockVideoSiteRuleText="\"geosite:hulu\", \"geosite:hbo\" "
 
     elif [[ $isV2rayUnlockVideoSiteInput == "6" ]]; then
-        V2rayUnlockVideoSiteRuleText="\"geosite:spotify\", \"geosite:hulu\", \"geosite:hbo\""
+        V2rayUnlockVideoSiteRuleText=" \"geosite:hulu\", \"geosite:hbo\" "
 
     elif [[ $isV2rayUnlockVideoSiteInput == "7" ]]; then
-        V2rayUnlockVideoSiteRuleText="\"geosite:spotify\", \"geosite:hulu\", \"geosite:hbo\""
+        V2rayUnlockVideoSiteRuleText=" \"geosite:hulu\", \"geosite:hbo\" "
 
     elif [[ $isV2rayUnlockVideoSiteInput == "8" ]]; then
-        V2rayUnlockVideoSiteRuleText="\"geosite:spotify\", \"geosite:hulu\", \"geosite:hbo\""
+        V2rayUnlockVideoSiteRuleText=" \"geosite:hulu\", \"geosite:hbo\" "
 
     elif [[ $isV2rayUnlockVideoSiteInput == "9" ]]; then
-        V2rayUnlockVideoSiteRuleText="\"geosite:spotify\", \"geosite:hulu\", \"geosite:hbo\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
+        V2rayUnlockVideoSiteRuleText=" \"geosite:hulu\", \"geosite:hbo\", \"geosite:bbc\", \"geosite:4chan\", \"geosite:fox\", \"geosite:abema\", \"geosite:dmm\", \"geosite:niconico\", \"geosite:pixiv\", \"geosite:viu\""
 
     fi
 
