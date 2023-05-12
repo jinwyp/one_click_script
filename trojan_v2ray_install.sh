@@ -4530,7 +4530,7 @@ function generateVLessImportLink(){
 
         if [[ "$configV2rayWorkingMode" == "vlessgRPC" ]]; then
             cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
-${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayVlessXtlsFlow}&type=grpc&host=${configSSLDomain}&serviceName=%2f${configV2rayGRPCServiceName}#${configSSLDomain}+gRPC_${configV2rayIsTlsShowInfo}
+${configV2rayProtocol}://${v2rayPassword1UrlEncoded}@${configSSLDomain}:${configV2rayPortShowInfo}?encryption=none&security=${configV2rayVlessXtlsFlow}&type=grpc&host=${configSSLDomain}&serviceName=${configV2rayGRPCServiceName}#${configSSLDomain}+gRPC_${configV2rayIsTlsShowInfo}
 EOF
         else
             cat > ${configV2rayVlessImportLinkFile1Path} <<-EOF
