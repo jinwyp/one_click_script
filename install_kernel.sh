@@ -275,6 +275,15 @@ virt_check(){
 function installSoftDownload(){
 	if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 
+        PACKAGE_LIST=( "wget" "curl" "git" "unzip" "apt-transport-https" "cpu-checker" "bc" )
+
+        # 检查所有软件包是否已安装
+        for package in "${PACKAGE_LIST[@]}"; do
+            if ! dpkg -l | grep -qw "$package"; then
+                # green "$package is not installed. ${osSystemPackage} Installing..."
+                ${osSystemPackage} install -y "$package"
+            fi
+        done
 
 		if ! dpkg -l | grep -qw curl; then
 			${osSystemPackage} -y install wget curl git
@@ -287,36 +296,22 @@ function installSoftDownload(){
 
 		fi
 
-		if ! dpkg -l | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git
-
-            if [[ "${osRelease}" == "debian" ]]; then
-                echo "deb http://deb.debian.org/debian buster-backports main contrib non-free" > /etc/apt/sources.list.d/buster-backports.list
-                echo "deb-src http://deb.debian.org/debian buster-backports main contrib non-free" >> /etc/apt/sources.list.d/buster-backports.list
-                ${sudoCmd} apt update -y
-            fi
-
-		fi
-
-        if ! dpkg -l | grep -qw bc; then
-			${osSystemPackage} -y install bc
-            # https://stackoverflow.com/questions/11116704/check-if-vt-x-is-activated-without-having-to-reboot-in-linux
-            ${osSystemPackage} -y install cpu-checker
-		fi
-
         if ! dpkg -l | grep -qw ca-certificates; then
 			${osSystemPackage} -y install ca-certificates dmidecode
             update-ca-certificates
 		fi        
 
 	elif [[ "${osRelease}" == "centos" ]]; then
-		if ! rpm -qa | grep -qw wget; then
-			${osSystemPackage} -y install wget curl git bc
-		fi
+    
+        PACKAGE_LIST_Centos=( "wget" "curl" "git" "unzip" "bc" )
 
-        if ! rpm -qa | grep -qw bc; then
-			${osSystemPackage} -y install bc
-		fi
+        # 检查所有软件包是否已安装
+        for package in "${PACKAGE_LIST_Centos[@]}"; do
+            if ! rpm -qa | grep -qw "$package"; then
+                # green "$package is not installed. ${osSystemPackage} Installing..."
+                ${osSystemPackage} install -y "$package"
+            fi
+        done
 
         # 处理ca证书
         if ! rpm -qa | grep -qw ca-certificates; then
@@ -989,11 +984,14 @@ function installKernel(){
 
 
 function getVersionBBRPlus(){
-    if [ "${linuxKernelToInstallVersion}" = "6.1" ]; then
+    if [ "${linuxKernelToInstallVersion}" = "6.3" ]; then
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-6.x_stable")
 
+    elif [ "${linuxKernelToInstallVersion}" = "6.1" ]; then 
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-6.1")
+
     elif [ "${linuxKernelToInstallVersion}" = "5.19" ]; then 
-        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.15")
+        bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.19")
 
     elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-5.15")
@@ -1014,7 +1012,7 @@ function getVersionBBRPlus(){
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-4.9")
     fi
     echo
-    green "UJX6N 编译的 最新的Linux bbrplus 内核版本号为 ${bbrplusKernelVersion}" 
+    green "UJX6N 编译的 Linux bbrplus 内核版本号为 ${bbrplusKernelVersion}" 
     echo
 
 }
@@ -1067,10 +1065,7 @@ function getLatestCentosKernelVersion(){
                 elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
             else
                 elrepo_kernel_version_ml_Teddysun_latest_version_middle=$((elrepo_kernel_version_ml_Teddysun_number_temp-1))
-                elrepo_kernel_version_ml_Teddysun_latest_version="6.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"
-
-                elrepo_kernel_version_ml_Teddysun_latest_version_middle="19"
-                elrepo_kernel_version_ml_Teddysun_latest_version="5.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"                
+                elrepo_kernel_version_ml_Teddysun_latest_version="6.${elrepo_kernel_version_ml_Teddysun_latest_version_middle}"         
             fi
 
 
@@ -1089,6 +1084,11 @@ function getLatestCentosKernelVersion(){
                     elrepo_kernel_version_ml_Teddysun515=${ver}
                 fi
 
+                if [[ ${ver} == *"6.1"* ]]; then
+                    # echo "符合所选版本的Linux 6.1 内核版本: ${ver}"
+                    elrepo_kernel_version_ml_Teddysun61=${ver}
+                fi
+
                 if [[ ${ver} == *"${elrepo_kernel_version_ml_Teddysun_latest_version}"* ]]; then
                     # echo "符合所选版本的Linux 内核版本: ${ver}, ${elrepo_kernel_version_ml_Teddysun_latest_version}"
                     elrepo_kernel_version_ml_Teddysun_latest=${ver}
@@ -1097,9 +1097,9 @@ function getLatestCentosKernelVersion(){
             done
 
             green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml}" 
-            green "由 Teddysun 编译的 Centos 最新的Linux 5.10 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun510}" 
             green "由 Teddysun 编译的 Centos 最新的Linux 5.15 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun515}" 
-            green "由 Teddysun 编译的 Centos 最新的Linux 5.xx 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun_latest}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 6.1 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun61}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 6.xx 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun_latest}" 
             
         fi
     fi
@@ -1209,7 +1209,7 @@ function installCentosKernelManual(){
     else
         linuxKernelByUserTeddysun=""
 
-        if [[ "${kernelVersionFirstletter}" == "5" || "${kernelVersionFirstletter}" = "6" ]]; then 
+        if [[ "${kernelVersionFirstletter}" == "5" || "${kernelVersionFirstletter}" == "6" ]]; then 
             linuxKernelByUser="elrepo"
 
             if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "5.19" ]]; then 
@@ -1254,6 +1254,12 @@ function installCentosKernelManual(){
         elif [ "${linuxKernelToInstallVersion}" = "5.15" ]; then 
             elrepo_kernel_name="kernel-ml"
             elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun515}
+            elrepo_kernel_filename=""
+            ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNoShort}"
+
+        elif [ "${linuxKernelToInstallVersion}" = "6.1" ]; then 
+            elrepo_kernel_name="kernel-ml"
+            elrepo_kernel_version=${elrepo_kernel_version_ml_Teddysun61}
             elrepo_kernel_filename=""
             ELREPODownloadUrl="https://dl.lamp.sh/kernel/el${osReleaseVersionNoShort}"
 
@@ -1438,7 +1444,7 @@ function installCentosKernelManual(){
         cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
 
-        if [ "${linuxKernelToInstallVersion}" = "6.1" ]; then
+        if [ "${linuxKernelToInstallVersion}" = "6.3" ]; then
             bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/${linuxKernelToInstallVersionFull}"
 
         elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
@@ -1456,12 +1462,12 @@ function installCentosKernelManual(){
             # https://github.com/UJX6N/bbrplus-5.15/releases/download/5.15.86-bbrplus/CentOS-7_Required_kernel-5.15.86-bbrplus.el7.x86_64.rpm
             
             
-
+            # https://github.com/UJX6N/bbrplus-6.1/releases/download/6.1.28-bbrplus/CentOS-7_Required_kernel-6.1.28-bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.76-bbrplus/CentOS-7_Required_kernel-bbrplus-5.10.76-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-devel-5.10.27-1.bbrplus.el7.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.27-bbrplus/CentOS-7_Optional_kernel-bbrplus-headers-5.10.27-1.bbrplus.el7.x86_64.rpm
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" || "${linuxKernelToInstallVersion}" == "6.3" ]]; then 
                 # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.16-bbrplus/CentOS-7_Required_kernel-5.10.162-bbrplus.el7.x86_64.rpm
                 # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.162-bbrplus/CentOS-7_Optional_kernel-headers-5.10.162-bbrplus.el7.x86_64.rpm
 
@@ -1487,7 +1493,7 @@ function installCentosKernelManual(){
             rpm -ivh --force --nodeps *.rpm
         else 
             
-            if [ "${kernelVersionFirstletter}" = "5" ]; then 
+            if [[ "${kernelVersionFirstletter}" == "5" || "${kernelVersionFirstletter}" == "6" ]]; then 
                 echo
             else
                 red "从 UJX6N 的 github 网站没有找到 Centos 8 的 ${linuxKernelToInstallVersion} Kernel "
@@ -1497,6 +1503,7 @@ function installCentosKernelManual(){
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Required_kernel-bbrplus-core-5.14.18-1.bbrplus.el8.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Required_kernel-bbrplus-modules-5.14.18-1.bbrplus.el8.x86_64.rpm
 
+
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Optional_kernel-bbrplus-5.14.18-1.bbrplus.el8.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Optional_kernel-bbrplus-devel-5.14.18-1.bbrplus.el8.x86_64.rpm
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Optional_kernel-bbrplus-headers-5.14.18-1.bbrplus.el8.x86_64.rpm
@@ -1505,7 +1512,8 @@ function installCentosKernelManual(){
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Optional_kernel-bbrplus-modules-extra-5.14.18-1.bbrplus.el8.x86_64.rpm
 
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" ]]; then 
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" || "${linuxKernelToInstallVersion}" == "6.3" ]]; then 
+                # https://github.com/UJX6N/bbrplus-6.1/releases/download/6.1.28-bbrplus/CentOS-Stream-8_Required_kernel-6.1.28-bbrplus.el8.x86_64.rpm
                 # https://github.com/UJX6N/bbrplus-5.15/releases/download/5.15.86-bbrplus/CentOS-Stream-8_Required_kernel-5.15.86-bbrplus.el8.x86_64.rpm
                 # https://github.com/UJX6N/bbrplus-5.10/releases/download/5.10.162-bbrplus/CentOS-Stream-8_Optional_kernel-headers-5.10.162-bbrplus.el8.x86_64.rpm
 
@@ -3213,7 +3221,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2023-4-10 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2023-5-26 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " 在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -3262,8 +3270,8 @@ function start_menu(){
     echo
     green " 36. 安装 内核 5.10 LTS, Teddysun 编译 推荐安装"
     green " 37. 安装 内核 5.15 LTS, Teddysun 编译 推荐安装"
-    green " 38. 安装 内核 5.19, Teddysun 编译 下载安装. "
-    green " 39. 安装 内核 6.1, elrepo 官方编译. "
+    green " 38. 安装 内核 6.1 LTS, Teddysun 编译 下载安装. "
+    green " 39. 安装 内核 6.3, elrepo 官方编译. "
 
     else
         if [[ "${osRelease}" == "debian" ]]; then
@@ -3293,14 +3301,12 @@ function start_menu(){
 
     echo
     green " 61. 安装 BBR Plus 内核 4.14.129 LTS, cx9208 编译的 dog250 原版, 推荐使用"
-    green " 62. 安装 BBR Plus 内核 4.9 LTS, UJX6N 编译"
-    green " 63. 安装 BBR Plus 内核 4.14 LTS, UJX6N 编译"
-    green " 64. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
-    # green " 65. 安装 BBR Plus 内核 5.4 LTS, UJX6N 编译"
-    green " 66. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"
-    green " 67. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译"
-    green " 68. 安装 BBR Plus 内核 5.19, UJX6N 编译"
-    green " 69. 安装 BBR Plus 内核 6.1, UJX6N 编译"
+    green " 62. 安装 BBR Plus 内核 4.14 LTS, UJX6N 编译"
+    green " 63. 安装 BBR Plus 内核 4.19 LTS, UJX6N 编译"
+    green " 64. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"
+    green " 65. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译"
+    green " 66. 安装 BBR Plus 内核 6.1 LTS, UJX6N 编译"
+    green " 67. 安装 BBR Plus 最新版内核 6.3或更高版本, UJX6N 编译"
  
     echo
     green " 0. 退出脚本"
@@ -3309,7 +3315,7 @@ function start_menu(){
     else
 
     green " =================================================="
-    green " Linux kernel install script | 2023-4-10 | OS support：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux kernel install script | 2023-5-26 | OS support：centos7+ / debian10+ / ubuntu16.04+"
     green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
     red " Please use this script with caution in production. Backup your data first! Upgrade linux kernel will cause VPS unable to boot sometimes."
     green " =================================================="
@@ -3357,8 +3363,8 @@ function start_menu(){
     echo
     green " 36. Install linux kernel 5.10 LTS, compile by Teddysun. Recommended"
     green " 37. Install linux kernel 5.15 LTS, compile by Teddysun. Recommended"
-    green " 38. Install linux kernel 5.19 compile by Teddysun. download from Teddysun ftp"
-    green " 39. Install linux kernel 6.1, compile by elrepo "
+    green " 38. Install linux kernel 6.1 LTS compile by Teddysun. Recommended"
+    green " 39. Install linux kernel 6.3, compile by elrepo "
     else
         if [[ "${osRelease}" == "debian" ]]; then
             if [[ "${osReleaseVersion}" == "10" ]]; then
@@ -3386,14 +3392,12 @@ function start_menu(){
 
     echo
     green " 61. Install BBR Plus kernel 4.14.129 LTS, compile by cx9208 from original dog250 source code. Recommended"
-    green " 62. Install BBR Plus kernel 4.9 LTS, compile by UJX6N"
-    green " 63. Install BBR Plus kernel 4.14 LTS, compile by UJX6N"
-    green " 64. Install BBR Plus kernel 4.19 LTS, compile by UJX6N"
-    green " 65. Install BBR Plus kernel 5.4 LTS, compile by UJX6N"
-    green " 66. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
-    green " 67. Install BBR Plus kernel 5.15 LTS, compile by UJX6N" 
-    green " 68. Install BBR Plus kernel 5.19, compile by UJX6N"   
-    green " 69. Install BBR Plus kernel 6.1, compile by UJX6N" 
+    green " 62. Install BBR Plus kernel 4.14 LTS, compile by UJX6N"
+    green " 63. Install BBR Plus kernel 4.19 LTS, compile by UJX6N"
+    green " 64. Install BBR Plus kernel 5.10 LTS, compile by UJX6N" 
+    green " 65. Install BBR Plus kernel 5.15 LTS, compile by UJX6N"  
+    green " 66. Install BBR Plus kernel 6.1 LTS, compile by UJX6N" 
+    green " 67. Install BBR Plus latest kernel 6.3 or higher, compile by UJX6N" 
     echo
     green " 0. exit"
 
@@ -3499,11 +3503,11 @@ function start_menu(){
             installKernel
         ;;
         38 )
-            linuxKernelToInstallVersion="5.19"
+            linuxKernelToInstallVersion="6.1"
             installKernel
         ;;
         39 )
-            linuxKernelToInstallVersion="6.1"
+            linuxKernelToInstallVersion="6.3"
             installKernel
         ;;
         41 )
@@ -3563,42 +3567,32 @@ function start_menu(){
             installKernel
         ;;
         62 )
-            linuxKernelToInstallVersion="4.9"
-            linuxKernelToBBRType="bbrplus"
-            installKernel
-        ;;
-        63 )
             linuxKernelToInstallVersion="4.14"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
-        64 )
+        63 )
             linuxKernelToInstallVersion="4.19"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
-        65 )
-            linuxKernelToInstallVersion="5.4"
-            linuxKernelToBBRType="bbrplus"
-            installKernel
-        ;;
-        66 )
+        64 )
             linuxKernelToInstallVersion="5.10"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
-        67 )
+        65 )
             linuxKernelToInstallVersion="5.15"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
-        68 )
-            linuxKernelToInstallVersion="5.19"
+        66 )
+            linuxKernelToInstallVersion="6.1"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
-        69 )
-            linuxKernelToInstallVersion="6.1"
+        67 )
+            linuxKernelToInstallVersion="6.3"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
