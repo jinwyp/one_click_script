@@ -3819,11 +3819,11 @@ fi
     read -p "请输入? 直接回车默认选1, 请输入纯数字:" isV2rayBlockChinaSiteInput
     isV2rayBlockChinaSiteInput=${isV2rayBlockChinaSiteInput:-1}
     
-    V2rayBlockChinaSiteRuleText="blocked"
+    V2rayBlockChinaSiteRuleText="blocked_out"
 
 
     if [[ $isV2rayBlockChinaSiteInput == "1" ]]; then
-        V2rayBlockChinaSiteRuleText="blocked"
+        V2rayBlockChinaSiteRuleText="blocked_out"
 
     elif [[ $isV2rayBlockChinaSiteInput == "2" ]]; then
         V2rayBlockChinaSiteRuleText="IPv4_out"
@@ -3878,7 +3878,7 @@ fi
             }
         },
         {
-            "tag": "blocked",
+            "tag": "blocked_out",
             "protocol": "blackhole",
             "settings": {
                 "response": {
@@ -5310,7 +5310,7 @@ EOM
     echo
     read -p "请输入? 直接回车默认选1, 请输入纯数字:" isV2rayBlockChinaSiteInput
     isV2rayBlockChinaSiteInput=${isV2rayBlockChinaSiteInput:-1}
-    V2rayBlockChinaSiteRuleText="blocked"
+    V2rayBlockChinaSiteRuleText="blocked_out"
 
     if [[ $isV2rayBlockChinaSiteInput == "2" ]]; then
         V2rayBlockChinaSiteRuleText="IPv4_out"
@@ -5318,7 +5318,7 @@ EOM
     elif [[ $isV2rayBlockChinaSiteInput == "3" ]]; then
         V2rayBlockChinaSiteRuleText="IPv6_out"
     else
-        V2rayBlockChinaSiteRuleText="blocked"
+        V2rayBlockChinaSiteRuleText="blocked_out"
     fi
 
 
@@ -5406,7 +5406,7 @@ EOM
             }
         },
         {
-            "tag": "blocked",
+            "tag": "blocked_out",
             "protocol": "blackhole",
             "settings": {
                 "response": {
