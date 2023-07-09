@@ -972,8 +972,8 @@ function installDocker(){
         versionDockerCompose=$(getGithubLatestReleaseVersion "docker/compose")
 
         # dockerComposeUrl="https://github.com/docker/compose/releases/download/v${versionDockerCompose}/docker-compose-$(uname -s)-$(uname -m)"
-        dockerComposeUrl="https://github.com/docker/compose/releases/download/v2.9.0/docker-compose-linux-x86_64"
-        dockerComposeUrl="https://get.daocloud.io/docker/compose/releases/download/v${versionDockerCompose}/docker-compose-linux-x86_64"
+        dockerComposeUrl="https://github.com/docker/compose/releases/download/v${versionDockerCompose}/docker-compose-linux-x86_64"
+        #dockerComposeUrl="https://get.daocloud.io/docker/compose/releases/download/v${versionDockerCompose}/docker-compose-linux-x86_64"
         
         showInfoGreen "Downloading  ${dockerComposeUrl}"
 
@@ -2363,6 +2363,50 @@ EOF
     }
 EOF
 
+    elif [[ "${configInstallNginxMode}" == "joplin" ]]; then
+
+        cat > "${nginxConfigSiteConfPath}/joplin_site.conf" <<-EOF
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:${configJoplin_PORT};
+
+        }
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+EOF
+
     else
         echo
     fi
@@ -2860,6 +2904,155 @@ function removeGrist(){
 
 
 
+
+
+
+
+
+
+
+configJoplinProjectPath="${HOME}/joplin"
+configJoplinDockerPath="${HOME}/joplin/docker"
+configJoplinDockerComposeFilePath="${HOME}/joplin/docker/docker-compose.yml"
+configJoplinDockerPostgresPath="${HOME}/joplin/docker/data"
+
+configJoplin_PostgreSQLDATABASE="joplindb"
+configJoplin_PostgreSQLUSER="postgreuser1"
+configJoplin_PostgreSQLPASSWORD="postgreuser1pw"
+configJoplin_PostgreSQLPORT="5432"
+configJoplin_PORT="5432"
+configJoplin_APP_BASE_URL="https://joplin.example.com/"
+
+function installJoplin(){
+    if [[ -d "${configJoplinDockerPath}" ]]; then
+        showHeaderRed " Joplin already installed !"
+        exit
+    fi
+    showHeaderGreen "开始 使用Docker方式 安装 Joplin "
+
+    ${sudoCmd} mkdir -p "${configJoplinDockerPostgresPath}"
+    cd "${configJoplinDockerPath}" || exit
+
+    read -r -p "请输入PostgreSQL 数据库名 (直接回车默认为joplindb):" configJoplin_PostgreSQLDATABASE
+    configJoplin_PostgreSQLDATABASE=${configJoplin_PostgreSQLDATABASE:-joplindb}
+    echo
+    read -r -p "请输入PostgreSQL USER (直接回车默认为postgreuser1):" configJoplin_PostgreSQLUSER
+    configJoplin_PostgreSQLUSER=${configJoplin_PostgreSQLUSER:-postgreuser1}
+    echo
+    read -r -p "请输入PostgreSQL PASSWORD (直接回车默认为postgreuser1pw):" configJoplin_PostgreSQLPASSWORD
+    configJoplin_PostgreSQLPASSWORD=${configJoplin_PostgreSQLPASSWORD:-postgreuser1pw}
+    echo
+    read -r -p "请输入PostgreSQL PORT (直接回车默认为5432):" configJoplin_PostgreSQLPORT
+    configJoplin_PostgreSQLPORT=${configJoplin_PostgreSQLPORT:-5432}
+    echo
+    read -r -p "请输入Joplin Server PORT (直接回车默认为22300):" configJoplin_PORT
+    configJoplin_PORT=${configJoplin_PORT:-22300}
+    echo
+    read -r -p "请输入域名 (直接回车默认为 https://joplin.example.com/):" configJoplin_APP_BASE_URL
+    configJoplin_APP_BASE_URL=${configJoplin_APP_BASE_URL:-https://joplin.example.com/}
+    echo
+
+
+    docker pull joplin/server
+    docker pull postgres:15
+
+    cat > "${configJoplinDockerComposeFilePath}" <<-EOF
+
+version: '3'
+
+services:
+    db:
+        image: postgres:15
+        volumes:
+            - ${configJoplinDockerPostgresPath}/postgres_data:/var/lib/postgresql/data
+        ports:
+            - "${configJoplin_PostgreSQLPORT}:5432"
+        restart: unless-stopped
+        environment:
+            - POSTGRES_PASSWORD=${configJoplin_PostgreSQLPASSWORD}
+            - POSTGRES_USER=${configJoplin_PostgreSQLUSER}
+            - POSTGRES_DB=${configJoplin_PostgreSQLDATABASE}
+    app:
+        image: joplin/server:latest
+        depends_on:
+            - db
+        ports:
+            - "${configJoplin_PORT}:22300"
+        restart: unless-stopped
+        environment:
+            - APP_PORT=${configJoplin_PORT}
+            - APP_BASE_URL=${configJoplin_APP_BASE_URL}
+            - DB_CLIENT=pg
+            - POSTGRES_PASSWORD=${configJoplin_PostgreSQLPASSWORD}
+            - POSTGRES_DATABASE=${configJoplin_PostgreSQLDATABASE}
+            - POSTGRES_USER=${configJoplin_PostgreSQLUSER}
+            - POSTGRES_PORT=${configJoplin_PostgreSQLPORT}
+            - POSTGRES_HOST=db
+
+
+EOF
+
+    docker-compose up -d
+
+
+    green " ================================================== "
+    echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/joplin"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="joplin"
+        installWebServerNginx
+
+        ${sudoCmd} systemctl restart nginx.service
+
+        showHeaderGreen "Joplin Server install success !  https://${configSSLDomain}" \
+        "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
+        "Joplin_USER: admin@localhost, Joplin_PASSWORD: admin" 
+    else
+
+        showHeaderGreen "Joplin Server install success !  http://your_ip:${configJoplin_PORT}" \
+        "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
+        "Joplin_USER: admin@localhost, Joplin_PASSWORD: admin" 
+    fi
+}
+
+
+function removeJoplin(){
+    echo
+    read -r -p "是否确认卸载Joplin? 直接回车默认卸载, 请输入[Y/n]:" isRemoveJoplinInput
+    isRemoveJoplinInput=${isRemoveJoplinInput:-Y}
+
+    if [[ "${isRemoveJoplinInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configJoplinDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Joplin Server"
+
+            cd ${configJoplinDockerPath} || exit
+            docker-compose down 
+
+            rm -rf "${configJoplinDockerPath}"
+            rm -f "${nginxConfigSiteConfPath}/joplin_site.conf"
+            
+            systemctl restart nginx.service
+            showHeaderGreen "已成功卸载 Joplin Server 版本 !"
+            
+        else
+            showHeaderRed "系统没有安装 Joplin Server, 退出卸载"
+        fi
+
+    fi
+    removeNginx
+}
 
 
 
@@ -5230,7 +5423,9 @@ function start_menu(){
     red " 36. 卸载 Etherpad 多人协作文档 "     
     echo
     green " 41. 安装 Ghost Blog 博客系统 "
-    red " 42. 卸载 Ghost Blog 博客系统 "     
+    red " 42. 卸载 Ghost Blog 博客系统 "
+    green " 43. 安装 Joplin 笔记 "
+    red " 44. 卸载 Joplin 笔记 " 
     echo
 
     green " 47. 安装视频会议系统 Jitsi Meet "
@@ -5394,6 +5589,12 @@ function start_menu(){
         42 )
             removeCMSGhost
         ;;
+        43 )
+            installJoplin
+        ;;
+        44 )
+            removeJoplin
+        ;;        
         47 )
             installJitsiMeet
         ;;
