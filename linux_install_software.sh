@@ -942,15 +942,18 @@ function installDocker(){
     else
 
         if [[ "${osInfo}" == "AlmaLinux" ]]; then
+            echo " dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
             ${sudoCmd} yum module remove container-tools
+            ${sudoCmd} dnf upgrade
+
             # https://linuxconfig.org/install-docker-on-almalinux
             ${sudoCmd} dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
             ${sudoCmd} dnf remove -y podman buildah 
-            ${sudoCmd} dnf install -y docker-ce docker-ce-cli containerd.io
- 
+            ${sudoCmd} dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
         else
-            # curl -fsSL https://get.docker.com -o get-docker.sh  
-            curl -sSL https://get.daocloud.io/docker -o ${configDockerDownloadPath}/get-docker.sh  
+            curl -fsSL https://get.docker.com -o ${configDockerDownloadPath}/get-docker.sh
+            # curl -sSL https://get.daocloud.io/docker -o ${configDockerDownloadPath}/get-docker.sh  
             chmod +x ${configDockerDownloadPath}/get-docker.sh
             ${configDockerDownloadPath}/get-docker.sh
 
@@ -958,7 +961,8 @@ function installDocker(){
         ${sudoCmd}
         ${sudoCmd} systemctl start docker.service
         ${sudoCmd} systemctl enable docker.service
-        
+        ${sudoCmd} systemctl restart docker.service
+
         showHeaderGreen "Docker installed successfully !"
         docker version
         echo
@@ -1005,6 +1009,7 @@ function removeDocker(){
     if [ "$osRelease" == "centos" ] ; then
 
         sudo yum remove docker docker-common container-selinux docker-selinux docker-engine
+        sudo yum remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     else 
         sudo apt-get remove docker docker-engine
@@ -1014,6 +1019,7 @@ function removeDocker(){
     rm -rf /var/lib/docker/
 
     rm -f "$(which dc)" 
+    rm -f "/usr/bin/docker"
     rm -f "/usr/bin/docker-compose"
     rm -f "/usr/local/bin/docker-compose"
     rm -f "${DOCKER_CONFIG}/cli-plugins/docker-compose"
@@ -2920,7 +2926,7 @@ configJoplin_PostgreSQLDATABASE="joplindb"
 configJoplin_PostgreSQLUSER="postgreuser1"
 configJoplin_PostgreSQLPASSWORD="postgreuser1pw"
 configJoplin_PostgreSQLPORT="5432"
-configJoplin_PORT="5432"
+configJoplin_PORT="22300"
 configJoplin_APP_BASE_URL="https://joplin.example.com/"
 
 function installJoplin(){
@@ -2948,9 +2954,30 @@ function installJoplin(){
     read -r -p "请输入Joplin Server PORT (直接回车默认为22300):" configJoplin_PORT
     configJoplin_PORT=${configJoplin_PORT:-22300}
     echo
-    read -r -p "请输入域名 (直接回车默认为 https://joplin.example.com/):" configJoplin_APP_BASE_URL
-    configJoplin_APP_BASE_URL=${configJoplin_APP_BASE_URL:-https://joplin.example.com/}
+
+
+
+    green " ================================================== "
     echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+    echo
+    red "如果选择安装 Nginx, 请输入你的域名 例如 joplin.xxx.com (不要带有 https:// 或者 http://)"
+    red "如果选择不安装 Nginx, 请输入你的IP 例如 192.168.1.1 (不要带有 https:// 或者 http://)"
+    echo
+    read -r -p "请输入域名或IP (直接回车默认为 joplin.xxx.com):" configJoplin_APP_BASE_URL
+    configJoplin_APP_BASE_URL=${configJoplin_APP_BASE_URL:-joplin.xxx.com}
+    echo
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        configJoplin_APP_BASE_URL="https://${configJoplin_APP_BASE_URL}"
+    else
+        configJoplin_APP_BASE_URL="http://${configJoplin_APP_BASE_URL}:${configJoplin_PORT}"
+    fi
 
 
     docker pull joplin/server
@@ -2980,28 +3007,18 @@ services:
             - "${configJoplin_PORT}:22300"
         restart: unless-stopped
         environment:
-            - APP_PORT=${configJoplin_PORT}
+            - APP_PORT=22300
             - APP_BASE_URL=${configJoplin_APP_BASE_URL}
             - DB_CLIENT=pg
             - POSTGRES_PASSWORD=${configJoplin_PostgreSQLPASSWORD}
             - POSTGRES_DATABASE=${configJoplin_PostgreSQLDATABASE}
             - POSTGRES_USER=${configJoplin_PostgreSQLUSER}
-            - POSTGRES_PORT=${configJoplin_PostgreSQLPORT}
+            - POSTGRES_PORT=5432
             - POSTGRES_HOST=db
-
 
 EOF
 
     docker-compose up -d
-
-
-    green " ================================================== "
-    echo
-    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
-    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
-    echo
-    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
-    isNginxInstallInput=${isNginxInstallInput:-Y}
 
 
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
@@ -3015,12 +3032,12 @@ EOF
 
         showHeaderGreen "Joplin Server install success !  https://${configSSLDomain}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
-        "Joplin_USER: admin@localhost, Joplin_PASSWORD: admin" 
+        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" 
     else
 
-        showHeaderGreen "Joplin Server install success !  http://your_ip:${configJoplin_PORT}" \
+        showHeaderGreen "Joplin Server install success !  ${configJoplin_APP_BASE_URL}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
-        "Joplin_USER: admin@localhost, Joplin_PASSWORD: admin" 
+        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" 
     fi
 }
 
