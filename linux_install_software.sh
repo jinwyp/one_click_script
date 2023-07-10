@@ -2921,6 +2921,7 @@ configJoplinProjectPath="${HOME}/joplin"
 configJoplinDockerPath="${HOME}/joplin/docker"
 configJoplinDockerComposeFilePath="${HOME}/joplin/docker/docker-compose.yml"
 configJoplinDockerPostgresPath="${HOME}/joplin/docker/data"
+configJoplinDockerFileStoragePath="${HOME}/joplin/docker/data/storage"
 
 configJoplin_PostgreSQLDATABASE="joplindb"
 configJoplin_PostgreSQLUSER="postgreuser1"
@@ -2930,6 +2931,8 @@ configJoplin_PORT="22300"
 configJoplin_APP_BASE_URL="https://joplin.example.com/"
 
 function installJoplin(){
+    # https://www.vultr.com/docs/how-to-host-a-joplin-server-with-docker-on-ubuntu/
+
     if [[ -d "${configJoplinDockerPath}" ]]; then
         showHeaderRed " Joplin already installed !"
         exit
@@ -2937,6 +2940,9 @@ function installJoplin(){
     showHeaderGreen "开始 使用Docker方式 安装 Joplin "
 
     ${sudoCmd} mkdir -p "${configJoplinDockerPostgresPath}"
+    ${sudoCmd} mkdir -p "${configJoplinDockerFileStoragePath}"
+    ${sudoCmd} chmod -R 777 ${configJoplinDockerFileStoragePath}
+
     cd "${configJoplinDockerPath}" || exit
 
     read -r -p "请输入PostgreSQL 数据库名 (直接回车默认为joplindb):" configJoplin_PostgreSQLDATABASE
@@ -3001,6 +3007,8 @@ services:
             - POSTGRES_DB=${configJoplin_PostgreSQLDATABASE}
     app:
         image: joplin/server:latest
+        volumes:
+            - ${configJoplinDockerFileStoragePath}:/mnt/files
         depends_on:
             - db
         ports:
@@ -3015,6 +3023,8 @@ services:
             - POSTGRES_USER=${configJoplin_PostgreSQLUSER}
             - POSTGRES_PORT=5432
             - POSTGRES_HOST=db
+            - STORAGE_DRIVER=Type=Filesystem; Path=/mnt/files
+            - STORAGE_DRIVER_FALLBACK=Type=Database; Mode=ReadAndWrite
 
 EOF
 
@@ -3032,13 +3042,16 @@ EOF
 
         showHeaderGreen "Joplin Server install success !  https://${configSSLDomain}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
-        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" 
+        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
+        "Joplin Logs: docker-compose --file docker-compose.yml logs" 
     else
 
         showHeaderGreen "Joplin Server install success !  ${configJoplin_APP_BASE_URL}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
-        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" 
+        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
+        "Joplin Logs: docker-compose --file docker-compose.yml logs" 
     fi
+
 }
 
 
