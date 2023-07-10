@@ -5422,7 +5422,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2022-9-29 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2023-7-10 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -5454,8 +5454,8 @@ function start_menu(){
     echo
     green " 41. 安装 Ghost Blog 博客系统 "
     red " 42. 卸载 Ghost Blog 博客系统 "
-    green " 43. 安装 Joplin 笔记 "
-    red " 44. 卸载 Joplin 笔记 " 
+    green " 43. 安装 Joplin Server 笔记 "
+    red " 44. 卸载 Joplin Server 笔记 " 
     echo
 
     green " 47. 安装视频会议系统 Jitsi Meet "
@@ -5480,7 +5480,7 @@ function start_menu(){
 
     else
     green " =================================================="
-    green " Linux tools installation script | 2022-9-29 | OS support：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux tools installation script | 2023-7-10 | OS support：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
@@ -5511,7 +5511,9 @@ function start_menu(){
     red " 36. Remove Etherpad collaborative editor (Word alternative)"
     echo
     green " 41. Install Ghost Blog "
-    red " 42. Remove Ghost Blog "     
+    red " 42. Remove Ghost Blog "
+    green " 43. Install Joplin Server (Evernote alternative) "
+    red " 44. Remove Joplin Server " 
     echo    
     green " 47. Install Jitsi Meet video conference system"
     red " 48. Remove Jitsi Meet video conference system"
