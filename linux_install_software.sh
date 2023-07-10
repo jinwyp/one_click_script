@@ -5445,16 +5445,16 @@ function start_menu(){
     green " 28. 安装 CasaOS 系统(包括 Nextcloud 云盘 和 AdGuard DNS 等)  "
     red " 29. 卸载 CasaOS 系统 " 
     echo
-    green " 31. 安装 Grist 在线Excel表格(类似 Airtable)  "
+    green " 31. 安装 Grist 在线Excel表格(类似 Airtable) "
     red " 32. 卸载 Grist 在线Excel表格 " 
-    green " 33. 安装 NocoDB 在线Excel表格(类似 Airtable)  "
+    green " 33. 安装 NocoDB 在线Excel表格(类似 Airtable) "
     red " 34. 卸载 NocoDB 在线Excel表格 " 
-    green " 35. 安装 Etherpad 多人协作文档(类似 Word)  "
+    green " 35. 安装 Etherpad 多人协作文档(类似 Word) "
     red " 36. 卸载 Etherpad 多人协作文档 "     
     echo
     green " 41. 安装 Ghost Blog 博客系统 "
     red " 42. 卸载 Ghost Blog 博客系统 "
-    green " 43. 安装 Joplin Server 笔记 "
+    green " 43. 安装 Joplin Server 笔记(类似 Evernote) "
     red " 44. 卸载 Joplin Server 笔记 " 
     echo
 
@@ -5504,16 +5504,16 @@ function start_menu(){
     red " 29. Remove CasaOS "     
     echo
     green " 31. Install Grist Online Spreadsheet (Airtable alternative)"
-    red " 32. Remove Grist Online Spreadsheet (Airtable alternative)"
+    red " 32. Remove Grist Online Spreadsheet "
     green " 33. Install NocoDB Online Spreadsheet (Airtable alternative)"
-    red " 34. Remove NocoDB Online Spreadsheet (Airtable alternative)"
+    red " 34. Remove NocoDB Online Spreadsheet "
     green " 35. Install Etherpad collaborative editor (Word alternative)"
-    red " 36. Remove Etherpad collaborative editor (Word alternative)"
+    red " 36. Remove Etherpad collaborative editor "
     echo
     green " 41. Install Ghost Blog "
     red " 42. Remove Ghost Blog "
     green " 43. Install Joplin Server (Evernote alternative) "
-    red " 44. Remove Joplin Server " 
+    red " 44. Remove Joplin Server "
     echo    
     green " 47. Install Jitsi Meet video conference system"
     red " 48. Remove Jitsi Meet video conference system"
