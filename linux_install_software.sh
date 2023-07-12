@@ -950,7 +950,7 @@ function installDocker(){
             ${sudoCmd} dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
             ${sudoCmd} dnf remove -y podman buildah 
             ${sudoCmd} dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            
+
         elif [[ "$osRelease" == "debian" ]]; then
             for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; 
             do 
@@ -3063,12 +3063,14 @@ EOF
         showHeaderGreen "Joplin Server install success !  https://${configSSLDomain}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
         "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
+        "Joplin_Data Path : ${configJoplinDockerPath}" \
         "Joplin Logs: docker-compose --file docker-compose.yml logs" 
     else
 
         showHeaderGreen "Joplin Server install success !  ${configJoplin_APP_BASE_URL}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
         "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
+        "Joplin_Data Path : ${configJoplinDockerPath}" \
         "Joplin Logs: docker-compose --file docker-compose.yml logs" 
     fi
 
