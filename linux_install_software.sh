@@ -950,7 +950,26 @@ function installDocker(){
             ${sudoCmd} dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
             ${sudoCmd} dnf remove -y podman buildah 
             ${sudoCmd} dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            
+        elif [[ "$osRelease" == "debian" ]]; then
+            for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; 
+            do 
+                ${sudoCmd} apt-get remove $pkg;
+            done
 
+            ${sudoCmd} apt-get update
+            ${sudoCmd} apt-get install -y ca-certificates curl gnupg
+            ${sudoCmd} install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            ${sudoCmd} chmod a+r /etc/apt/keyrings/docker.gpg
+
+            echo \
+            "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+            ${osReleaseVersionCodeName} stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
+            ${sudoCmd} apt-get update
+            ${sudoCmd} apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         else
             curl -fsSL https://get.docker.com -o ${configDockerDownloadPath}/get-docker.sh
             # curl -sSL https://get.daocloud.io/docker -o ${configDockerDownloadPath}/get-docker.sh  
@@ -1012,8 +1031,9 @@ function removeDocker(){
         sudo yum remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     else 
-        sudo apt-get remove docker docker-engine
-
+        sudo apt-get remove -y docker docker-engine
+        sudo apt-get remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    
     fi
 
     rm -rf /var/lib/docker/
