@@ -1631,7 +1631,7 @@ function installAlist(){
     green " 1. 安装 Alist "
     green " 2. 安装 Alist + Nginx (需要域名 并已解析到本机IP)"
     green " 3. 更新 Alist"  
-    red " 4. 删除 Alist"     
+    red " 4. 卸载 Alist"     
     echo
     read -r -p "请输入纯数字, 默认为安装:" languageInput
     
@@ -1639,14 +1639,14 @@ function installAlist(){
 
     case "${languageInput}" in
         1 )
-            curl -fsSL "https://nn.ci/alist.sh" | bash -s install
-            sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
+            curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install
+            # sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
             ${sudoCmd} systemctl daemon-reload
             ${sudoCmd} systemctl restart alist       
         ;;
         2 )
-            curl -fsSL "https://nn.ci/alist.sh" | bash -s install
-            sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
+            curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install
+            # sed -i "/^\[Service\]/a \User=www-data" ${configAlistSystemdServicePath}
             ${sudoCmd} systemctl daemon-reload
             ${sudoCmd} systemctl restart alist    
 
@@ -1664,12 +1664,12 @@ function installAlist(){
                 configInstallNginxMode="alist"
                 installWebServerNginx
             fi
-        ;;        
+        ;;
         3 )
-            curl -fsSL "https://nn.ci/alist.sh" | bash -s update
+            curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s update
         ;;
         4 )
-            curl -fsSL "https://nn.ci/alist.sh" | bash -s uninstall
+            curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s uninstall
         ;;
         * )
             exit
@@ -2237,6 +2237,7 @@ EOF
         location / {
 
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
             proxy_set_header Range \$http_range;
@@ -2245,6 +2246,7 @@ EOF
             proxy_pass http://127.0.0.1:${configAlistPort};
 
             # 上传的最大文件尺寸
+            # the max size of file to upload
             client_max_body_size   20000m;
         }
     }
