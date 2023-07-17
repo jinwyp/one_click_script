@@ -1097,8 +1097,8 @@ function getLatestCentosKernelVersion(){
             done
 
             green "Centos elrepo 源的最新的Linux 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml}" 
-            green "由 Teddysun 编译的 Centos 最新的Linux 5.15 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun515}" 
-            green "由 Teddysun 编译的 Centos 最新的Linux 6.1 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun61}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 5.15 LTS 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun515}" 
+            green "由 Teddysun 编译的 Centos 最新的Linux 6.1 LTS 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun61}" 
             green "由 Teddysun 编译的 Centos 最新的Linux 6.xx 内核 kernel-ml 版本号为 ${elrepo_kernel_version_ml_Teddysun_latest}" 
             
         fi
