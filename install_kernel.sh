@@ -2020,7 +2020,7 @@ function installDebianUbuntuKernel(){
             mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
             cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
-            if [ "${linuxKernelToInstallVersion}" = "6.1" ]; then
+            if [ "${linuxKernelToInstallVersion}" = "6.3" ]; then
                 bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/${linuxKernelToInstallVersionFull}"
 
             elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then 
@@ -2048,8 +2048,8 @@ function installDebianUbuntuKernel(){
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
                 downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Optional_linux-headers-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
             else
-                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
-                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-bbrplus-1_amd64.deb
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-image-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-1_amd64.deb
+                downloadFile ${bbrplusDownloadUrl}/Debian-Ubuntu_Required_linux-headers-${bbrplusKernelVersion}-bbrplus_${bbrplusKernelVersion}-1_amd64.deb
             fi
 
         fi
