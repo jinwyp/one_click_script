@@ -3024,9 +3024,9 @@ services:
             - "${configJoplin_PostgreSQLPORT}:5432"
         restart: unless-stopped
         environment:
-            - POSTGRES_PASSWORD=${configJoplin_PostgreSQLPASSWORD}
-            - POSTGRES_USER=${configJoplin_PostgreSQLUSER}
-            - POSTGRES_DB=${configJoplin_PostgreSQLDATABASE}
+            - POSTGRES_PASSWORD=${configOutline_PostgreSQLPASSWORD}
+            - POSTGRES_USER=${configOutline_PostgreSQLUSER}
+            - POSTGRES_DB=${configOutline_PostgreSQLDATABASE}
     app:
         image: joplin/server:latest
         volumes:
@@ -3119,6 +3119,360 @@ function removeJoplin(){
 
 
 
+
+
+configOutlineDockerPath="${HOME}/outline/docker"
+configOutlineDockerComposeFilePath="${HOME}/outline/docker/docker-compose.yml"
+configOutlineDockerPostgresPath="${HOME}/outline/docker/postgres"
+configOutlineDockerRedisPath="${HOME}/outline/docker/redis"
+configOutlineDockerFileStoragePath="${HOME}/outline/docker/minio/storage_data"
+configOutlineDockerHttpsPortalPath="${HOME}/outline/docker/https_portal"
+
+configOutline_PORT="3000"
+configOutline_PostgreSQLDATABASE="outlinedb"
+configOutline_PostgreSQLUSER="postgreuseradmin"
+configOutline_PostgreSQLPASSWORD="postgreuseradminpw"
+configOutline_PostgreSQLPORT="5432"
+configOutline_MinioAdminUSER="minioadmin"
+configOutline_MinioAdminPASSWORD="minioadminpw"
+configOutline_APP_BASE_URL="https://outline.example.com/"
+configOutline_BUCKET_NAME="wiki"
+
+function installOutline(){
+    # https://docs.getoutline.com/s/hosting/doc/docker-7pfeLP5a8t
+
+    if [[ -d "${configOutlineDockerPath}" ]]; then
+        showHeaderRed " Outline already installed !"
+        exit
+    fi
+    showHeaderGreen "开始 使用Docker方式 安装 Outline "
+
+    ${sudoCmd} mkdir -p "${configOutlineDockerPostgresPath}"
+    ${sudoCmd} mkdir -p "${configOutlineDockerRedisPath}"
+    ${sudoCmd} mkdir -p "${configOutlineDockerFileStoragePath}"
+    ${sudoCmd} mkdir -p "${configOutlineDockerHttpsPortalPath}"
+
+    cd "${configOutlineDockerPath}" || exit
+
+    # wget https://raw.githubusercontent.com/outline/outline/main/.env.sample -O "${configOutlineDockerPath}/.env"
+
+
+    read -r -p "请输入PostgreSQL 数据库名 (直接回车默认为outlinedb):" configOutline_PostgreSQLDATABASE
+    configOutline_PostgreSQLDATABASE=${configOutline_PostgreSQLDATABASE:-outlinedb}
+    echo
+    read -r -p "请输入PostgreSQL USER (直接回车默认为postgreuseradmin):" configOutline_PostgreSQLUSER
+    configOutline_PostgreSQLUSER=${configOutline_PostgreSQLUSER:-postgreuseradmin}
+    echo
+    read -r -p "请输入PostgreSQL PASSWORD (直接回车默认为postgreuseradminpw):" configOutline_PostgreSQLPASSWORD
+    configOutline_PostgreSQLPASSWORD=${configOutline_PostgreSQLPASSWORD:-postgreuseradminpw}
+    echo
+    read -r -p "请输入PostgreSQL PORT (直接回车默认为5432):" configOutline_PostgreSQLPORT
+    configOutline_PostgreSQLPORT=${configOutline_PostgreSQLPORT:-5432}
+    echo
+
+    read -r -p "请输入Minio Admin USER (直接回车默认为minioadmin):" configOutline_MinioAdminUSER
+    configOutline_MinioAdminUSER=${configOutline_MinioAdminUSER:-minioadmin}
+    echo
+    read -r -p "请输入Minio Admin PASSWORD (直接回车默认为minioadminpw):" configOutline_MinioAdminPASSWORD
+    configOutline_MinioAdminPASSWORD=${configOutline_MinioAdminPASSWORD:-minioadminpw}
+    echo
+
+    read -r -p "请输入Outline Server PORT (直接回车默认为3000):" configOutline_PORT
+    configOutline_PORT=${configOutline_PORT:-3000}
+    echo
+
+
+
+    green " ================================================== "
+    echo
+    green "请输入域名 不要带有 https:// 或者 http://"
+    echo
+    read -r -p "请输入域名 (直接回车默认为 outline.xxx.com):" configOutline_APP_BASE_URL
+    configOutline_APP_BASE_URL=${configOutline_APP_BASE_URL:-outline.xxx.com}
+    echo
+
+
+    tempStringHex32=$(openssl rand -hex 32)
+    tempString2Hex32=$(openssl rand -hex 32)
+
+    cat > "${configOutlineDockerPath}/docker.env" <<-EOF
+# –––––––––––––––– REQUIRED ––––––––––––––––
+
+NODE_ENV=production
+
+SECRET_KEY=${tempStringHex32}
+UTILS_SECRET=${tempString2Hex32}
+
+DATABASE_URL=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@postgres:5432/${configOutline_PostgreSQLDATABASE}
+DATABASE_URL_TEST=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@postgres:5432/outline-test
+DATABASE_CONNECTION_POOL_MIN=
+DATABASE_CONNECTION_POOL_MAX=
+# Uncomment this to disable SSL for connecting to Postgres
+# PGSSLMODE=disable
+
+
+REDIS_URL=redis://redis:6379
+
+URL=http://${configOutline_APP_BASE_URL}:3000
+PORT=3000
+
+# See [documentation](docs/SERVICES.md) on running a separate collaboration
+# server, for normal operation this does not need to be set.
+COLLABORATION_URL=
+
+# To support uploading of images for avatars and document attachments an
+# s3-compatible storage must be provided. AWS S3 is recommended for redundancy
+# however if you want to keep all file storage local an alternative such as
+# minio (https://github.com/minio/minio) can be used.
+AWS_ACCESS_KEY_ID=${configOutline_MinioAdminUSER}
+AWS_SECRET_ACCESS_KEY=${configOutline_MinioAdminPASSWORD}
+AWS_REGION=us-east-1
+AWS_S3_ACCELERATE_URL=
+AWS_S3_UPLOAD_BUCKET_URL=http://127.0.0.1:9000
+AWS_S3_UPLOAD_BUCKET_NAME=${configOutline_BUCKET_NAME}
+AWS_S3_UPLOAD_MAX_SIZE=26214400
+AWS_S3_FORCE_PATH_STYLE=true
+AWS_S3_ACL=private
+
+
+# –––––––––––––––– OPTIONAL ––––––––––––––––
+
+
+# If using a Cloudfront/Cloudflare distribution or similar it can be set below.
+# This will cause paths to javascript, stylesheets, and images to be updated to
+# the hostname defined in CDN_URL. In your CDN configuration the origin server
+# should be set to the same as URL.
+CDN_URL=
+
+# Auto-redirect to https in production. The default is true but you may set to
+# false if you can be sure that SSL is terminated at an external loadbalancer.
+FORCE_HTTPS=false
+
+# Have the installation check for updates by sending anonymized statistics to
+# the maintainers
+ENABLE_UPDATES=true
+
+# How many processes should be spawned. As a reasonable rule divide your servers
+# available memory by 512 for a rough estimate
+WEB_CONCURRENCY=2
+
+# Override the maximum size of document imports, could be required if you have
+# especially large Word documents with embedded imagery
+MAXIMUM_IMPORT_SIZE=5120000
+
+# You can remove this line if your reverse proxy already logs incoming http
+# requests and this ends up being duplicative
+DEBUG=http
+
+# Configure lowest severity level for server logs. Should be one of
+# error, warn, info, http, verbose, debug and silly
+LOG_LEVEL=info
+
+
+# Optionally enable google analytics to track pageviews in the knowledge base
+GOOGLE_ANALYTICS_ID=
+
+# Optionally enable Sentry (sentry.io) to track errors and performance,
+# and optionally add a Sentry proxy tunnel for bypassing ad blockers in the UI:
+# https://docs.sentry.io/platforms/javascript/troubleshooting/#using-the-tunnel-option)
+SENTRY_DSN=
+SENTRY_TUNNEL=
+
+# To support sending outgoing transactional emails such as "document updated" or
+# "you've been invited" you'll need to provide authentication for an SMTP server
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_FROM_EMAIL=hello@example.com
+SMTP_REPLY_EMAIL=hello@example.com
+SMTP_TLS_CIPHERS=
+SMTP_SECURE=true
+
+# The default interface language. See translate.getoutline.com for a list of
+# available language codes and their rough percentage translated.
+DEFAULT_LANGUAGE=en_US
+
+# Optionally enable rate limiter at application web server
+RATE_LIMITER_ENABLED=true
+
+# Configure default throttling parameters for rate limiter
+RATE_LIMITER_REQUESTS=1000
+RATE_LIMITER_DURATION_WINDOW=60
+
+
+EOF
+
+
+
+    cat > "${configOutlineDockerComposeFilePath}" <<-EOF
+
+version: "3.2"
+services:
+
+  outline:
+    image: docker.getoutline.com/outlinewiki/outline:latest
+    # env_file: ${configOutlineDockerPath}/docker.env
+    ports:
+      - "${configOutline_PORT}:3000"
+    depends_on:
+      - postgres
+      - redis
+      - storage
+    environment:
+      - PGSSLMODE=disable
+      - SECRET_KEY=${tempStringHex32}
+      - UTILS_SECRET=${tempString2Hex32}
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@postgres:5432/${configOutline_PostgreSQLDATABASE}
+      - URL=http://${configOutline_APP_BASE_URL}:3000
+      - AWS_ACCESS_KEY_ID=${configOutline_MinioAdminUSER}
+      - AWS_SECRET_ACCESS_KEY=${configOutline_MinioAdminPASSWORD}
+      - AWS_REGION=us-east-1
+      - AWS_S3_UPLOAD_BUCKET_URL=http://127.0.0.1:9000
+      - AWS_S3_UPLOAD_BUCKET_NAME=${configOutline_BUCKET_NAME}
+      - AWS_S3_FORCE_PATH_STYLE=true
+      - AWS_S3_ACL=private 
+      - FORCE_HTTPS=false
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+    volumes:
+      - ${configOutlineDockerRedisPath}/redis_data/:/data
+    command: ["redis-server" ]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 3
+
+  postgres:
+    image: postgres:15
+    ports:
+      - "${configOutline_PostgreSQLPORT}:5432"
+    volumes:
+      -  ${configOutlineDockerPostgresPath}/postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${configOutline_PostgreSQLDATABASE}", "-U", "${configOutline_PostgreSQLUSER}"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    environment:
+      POSTGRES_USER: '${configOutline_PostgreSQLUSER}'
+      POSTGRES_PASSWORD: '${configOutline_PostgreSQLPASSWORD}'
+      POSTGRES_DB: '${configOutline_PostgreSQLDATABASE}'
+
+  storage:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    entrypoint: sh
+    command: -c 'minio server /data --console-address ":9001"'
+    deploy:
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - ${configOutlineDockerFileStoragePath}:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    environment:
+      MINIO_ROOT_USER: ${configOutline_MinioAdminUSER}
+      MINIO_ROOT_PASSWORD: ${configOutline_MinioAdminPASSWORD}
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - storage
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host rm local;
+      /usr/bin/mc config host add myminio http://storage:9000 ${configOutline_MinioAdminUSER} ${configOutline_MinioAdminPASSWORD};
+      /usr/bin/mc mb myminio/${configOutline_BUCKET_NAME};
+      /usr/bin/mc policy set public myminio/${configOutline_BUCKET_NAME};
+      exit 0;
+      "
+
+  https-portal:
+    image: steveltn/https-portal
+    ports:
+      - '80:80'
+      - '443:443'
+    links:
+      - outline
+      - storage
+    restart: always
+    volumes:
+      - ${configOutlineDockerHttpsPortalPath}:/var/lib/https-portal
+    healthcheck:
+      test: ["CMD", "service", "nginx", "status"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    environment:
+      DOMAINS: '${configOutline_APP_BASE_URL} -> http://outline:3000'
+      STAGE: 'production'
+      WEBSOCKET: 'true'
+
+
+EOF
+
+    docker-compose up -d
+
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/outline"
+        # getHTTPSCertificateStep1
+        configInstallNginxMode="outline"
+        # installWebServerNginx
+
+        # ${sudoCmd} systemctl restart nginx.service
+
+    fi
+
+        showHeaderGreen "Outline Server install success !  https://${configOutline_APP_BASE_URL}" \
+        "POSTGRES_USER: ${configOutline_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configOutline_PostgreSQLPASSWORD}" \
+        "Outline_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
+        "Outline_Data Path : ${configOutlineDockerPath}" \
+        "Outline Logs: docker-compose --file docker-compose.yml logs" 
+}
+
+
+function removeOutline(){
+    echo
+    read -r -p "是否确认卸载Outline? 直接回车默认卸载, 请输入[Y/n]:" isRemoveOutlineInput
+    isRemoveOutlineInput=${isRemoveOutlineInput:-Y}
+
+    if [[ "${isRemoveOutlineInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configOutlineDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Outline Server"
+
+            cd ${configOutlineDockerPath} || exit
+            docker-compose down 
+
+            rm -rf "${configOutlineDockerPath}"
+            rm -f "${nginxConfigSiteConfPath}/outline_site.conf"
+            
+            systemctl restart nginx.service
+            showHeaderGreen "已成功卸载 Outline Server 版本 !"
+            
+        else
+            showHeaderRed "系统没有安装 Outline Server, 退出卸载"
+        fi
+
+    fi
+    removeNginx
+}
 
 
 
@@ -5481,23 +5835,24 @@ function start_menu(){
     green " 43. 安装 Joplin Server 笔记(类似 Evernote) "
     red " 44. 卸载 Joplin Server 笔记 " 
     echo
-
-    green " 47. 安装视频会议系统 Jitsi Meet "
-    red " 48. 卸载 Jitsi Meet "
-    green " 49. Jitsi Meet 发起会议是否需要密码验证"
+    green " 51. 安装 Outline Server 多人协作笔记(类似 Notion) "
+    red " 52. 卸载 Outline Server 多人协作笔记 " 
+    echo
+    green " 61. 安装视频会议系统 Jitsi Meet "
+    red " 62. 卸载 Jitsi Meet "
+    green " 63. Jitsi Meet 发起会议是否需要密码验证"
 
     echo
-    green " 51. 安装 Air-Universe 服务器端"
-    red " 52. 卸载 Air-Universe"
-    green " 53. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
-    green " 54. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
-    green " 55. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
-    green " 56. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
-    green " 58. 更新 geoip.dat 和 geosite.dat 文件"
-    echo 
-    green " 61. 单独申请域名SSL证书"
+    green " 81. 安装 Air-Universe 服务器端"
+    red " 82. 卸载 Air-Universe"
+    green " 83. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
+    green " 84. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
+    green " 85. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
+    green " 86. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
+    green " 87. 更新 geoip.dat 和 geosite.dat 文件"
     echo
-    green " 77. 子菜单 安装 V2board 服务器端 XrayR, V2Ray-Poseidon, Soga"
+    green " 89. 子菜单 安装 V2board 服务器端 XrayR, V2Ray-Poseidon, Soga"
+    green " 90. 单独申请域名SSL证书"
     echo
     green " 88. 升级脚本"
     green " 0. 退出脚本"
@@ -5538,23 +5893,25 @@ function start_menu(){
     red " 42. Remove Ghost Blog "
     green " 43. Install Joplin Server (Evernote alternative) "
     red " 44. Remove Joplin Server "
-    echo    
-    green " 47. Install Jitsi Meet video conference system"
-    red " 48. Remove Jitsi Meet video conference system"
-    green " 49. Modify Jitsi Meet whether to Start a meeting requires password authentication"
+    echo
+    green " 51. Install Outline Server (Notion alternative) "
+    red " 52. Remove Outline Server "
+    echo       
+    green " 62. Install Jitsi Meet video conference system"
+    red " 63. Remove Jitsi Meet video conference system"
+    green " 63. Modify Jitsi Meet whether to Start a meeting requires password authentication"
 
     echo
-    green " 51. Install Air-Universe server side "
-    red " 52. Remove Air-Universe"
-    green " 53. Stop, restart, show log, manage Air-Universe server side "
-    green " 54. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
-    green " 55. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
-    green " 56. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
-    green " 58. Update geoip.dat and geosite.dat "
-    echo 
-    green " 61. Get a free SSL certificate for domain name only"
+    green " 81. Install Air-Universe server side "
+    red " 82. Remove Air-Universe"
+    green " 83. Stop, restart, show log, manage Air-Universe server side "
+    green " 84. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
+    green " 85. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
+    green " 86. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
+    green " 87. Update geoip.dat and geosite.dat "
     echo
-    green " 77. Submenu. install XrayR, V2Ray-Poseidon, Soga for V2board panel"
+    green " 89. Submenu. install XrayR, V2Ray-Poseidon, Soga for V2board panel"
+    green " 90. Get a free SSL certificate for domain name only"
     echo
     green " 88. upgrade this script to latest version"
     green " 0. exit"
@@ -5650,53 +6007,56 @@ function start_menu(){
         ;;
         44 )
             removeJoplin
+        ;;
+        51 )
+            installOutline
+        ;;
+        52 )
+            removeOutline
         ;;        
-        47 )
+        61 )
             installJitsiMeet
         ;;
-        48 )
+        62 )
             removeJitsiMeet
         ;;
-        49 )
+        63 )
             secureAddPasswordForJitsiMeet
         ;;
 
 
-        51 )
+        81 )
             setLinuxDateZone
             installAirUniverse
         ;;
-        52 )
+        82 )
             removeAirUniverse
         ;;                                        
-        53 )
+        83 )
             manageAirUniverse
         ;;                                        
-        54 )
+        84 )
             replaceAirUniverseConfigWARP
         ;;
-        55 )
+        85 )
             downgradeXray
         ;;
-        56 )
+        86 )
             installAirUniverse "ssl"
         ;;
-        57 )
-            installAiruAndNginx
-        ;;
-        58 )
+        87 )
             updateGeoIp
         ;;
-        61 )
-            getHTTPSCertificateStep1
-        ;;
-        77 )
+        89 )
             startMenuOther
+        ;;        
+        90 )
+            getHTTPSCertificateStep1
         ;;
         88 )
             upgradeScript
         ;;
-        89 )
+        99 )
                 su - ghostsite << EOF
     echo "--------------------"
     echo "Current user: $(whoami)"
