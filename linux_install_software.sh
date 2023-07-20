@@ -69,17 +69,15 @@ function showInfoGreen(){
 
 
 function promptContinueOpeartion(){
-	read -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
+	read -r -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
 	isContinueInput=${isContinueInput:-Y}
 
 	if [[ $isContinueInput == [Yy] ]]; then
 		echo ""
 	else 
-		exit
+		exit 1
 	fi
 }
-
-
 
 
 
@@ -220,19 +218,37 @@ function getLinuxOSRelease(){
 }
 
 
+configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
+function getVPSIPInput (){
+    read -r -p "请输入VPS的IP地址:" currentVPSIPaddressInput
 
+    if [[ -n "${currentVPSIPaddressInput}" ]]; then
+        configLocalVPSIp="${currentVPSIPaddressInput}"
+    else
+        red "输入的IP地址无效 请重新输入. Invalid IP address, pls input again."
 
-
-function promptContinueOpeartion(){
-	read -r -p "是否继续操作? 直接回车默认继续操作, 请输入[Y/n]:" isContinueInput
-	isContinueInput=${isContinueInput:-Y}
-
-	if [[ $isContinueInput == [Yy] ]]; then
-		echo ""
-	else 
-		exit 1
-	fi
+        getVPSIPInput
+    fi
 }
+function getVPSIP(){
+    configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
+
+    echo
+    green "当前VPS的IP为: ${configLocalVPSIp}"
+    green "The current IP address of the VPS is: ${configLocalVPSIp}"
+    echo
+    green "如果本机IPv4 不是 ${configLocalVPSIp}, 请手动输入正确的IP "
+    green "If VPS IP is not ${configLocalVPSIp}, pls input the IP manually"
+    read -r -p "是否手动输入IP 默认否, 请输入[y/N]:" isChangeVPSIPInput
+    
+    if [[ $isChangeVPSIPInput == [yY] ]]; then
+        getVPSIPInput
+    fi
+
+}
+
+
+
 
 osPort80=""
 osPort443=""
@@ -2435,6 +2451,49 @@ EOF
     }
 EOF
 
+    elif [[ "${configInstallNginxMode}" == "affine" ]]; then
+        cat > "${nginxConfigSiteConfPath}/affine_site.conf" <<-EOF
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header Host \$http_host;
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+            proxy_pass http://127.0.0.1:${configAffine_PORT};
+
+        }
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+EOF
+
     else
         echo
     fi
@@ -2959,7 +3018,7 @@ function installJoplin(){
         showHeaderRed " Joplin already installed !"
         exit
     fi
-    showHeaderGreen "开始 使用Docker方式 安装 Joplin "
+    showHeaderGreen "Start to install Joplin with docker"
 
     ${sudoCmd} mkdir -p "${configJoplinDockerPostgresPath}"
     ${sudoCmd} mkdir -p "${configJoplinDockerFileStoragePath}"
@@ -3081,8 +3140,10 @@ EOF
 
 function removeJoplin(){
     echo
+
     read -r -p "是否确认卸载Joplin? 直接回车默认卸载, 请输入[Y/n]:" isRemoveJoplinInput
     isRemoveJoplinInput=${isRemoveJoplinInput:-Y}
+
 
     if [[ "${isRemoveJoplinInput}" == [Yy] ]]; then
 
@@ -3107,6 +3168,142 @@ function removeJoplin(){
     fi
     removeNginx
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+configAffineDockerPath="${HOME}/affine/docker"
+configAffineDockerFileStoragePath="${HOME}/affine/docker/data"
+
+configAffine_PORT="3300"
+configAffine_APP_BASE_URL="https://affine.example.com/"
+
+function installAffine(){
+    # https://affine.pro/blog/a-new-docker-image-with-the-server-side-is-coming
+
+    if [[ -d "${configAffineDockerPath}" ]]; then
+        showHeaderRed " AFFiNE already installed !"
+        exit
+    fi
+    showHeaderGreen "Start to install AFFiNE with docker"
+
+    ${sudoCmd} mkdir -p "${configAffineDockerFileStoragePath}"
+
+    cd "${configAffineDockerPath}" || exit
+
+
+    echo
+    read -r -p "请输入 AFFiNE Server PORT (直接回车默认为3300):" configAffine_PORT
+    configAffine_PORT=${configAffine_PORT:-3300}
+    echo
+
+
+    green " ================================================== "
+    echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+    echo
+    red "如果选择安装 Nginx, 请输入你的域名 例如 affine.xxx.com (不要带有 https:// 或者 http://)"
+    red "如果选择不安装 Nginx, 请输入你的IP 例如 192.168.1.1 (不要带有 https:// 或者 http://)"
+    echo
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        read -r -p "请输入域名 (直接回车默认为 affine.xxx.com):" configAffine_APP_Domain
+        configAffine_APP_Domain=${configAffine_APP_Domain:-joplin.xxx.com}
+
+        configAffine_APP_BASE_URL="https://${configAffine_APP_Domain}"
+    else
+        getVPSIP
+
+        configAffine_APP_BASE_URL="http://${configLocalVPSIp}:${configAffine_PORT}"
+    fi
+
+
+    docker pull ghcr.io/toeverything/affine-self-hosted:latest
+
+
+    cat > "${configAffineDockerPath}/docker-compose.yml" <<-EOF
+
+version: '3'
+
+services:
+    app:
+        image: ghcr.io/toeverything/affine-self-hosted:latest
+        ports:
+            - "${configAffine_PORT}:3000"
+        volumes:
+            - ${configAffineDockerFileStoragePath}:/app/data
+        restart: unless-stopped
+
+EOF
+
+    docker-compose up -d
+
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/affine"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="affine"
+        installWebServerNginx
+
+        ${sudoCmd} systemctl restart nginx.service
+
+    fi
+        showHeaderGreen "AFFiNE Server install success !  ${configAffine_APP_BASE_URL}" \
+        "AFFiNE_Admin_USER: admin@localhost, AFFiNE_Admin_PASSWORD: admin" \
+        "AFFiNE_Data Path : ${configAffineDockerPath}" \
+        "AFFiNE Logs: docker-compose --file docker-compose.yml logs" 
+}
+
+
+function removeAffine(){
+    echo
+    read -r -p "是否确认卸载AFFiNE? 直接回车默认卸载, 请输入[Y/n]:" isRemoveAffineInput
+    isRemoveAffineInput=${isRemoveAffineInput:-Y}
+
+    if [[ "${isRemoveAffineInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configAffineDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 AFFiNE Server"
+
+            cd ${configAffineDockerPath} || exit
+            docker-compose down 
+
+            rm -rf "${configAffineDockerPath}"
+            rm -f "${nginxConfigSiteConfPath}/affine_site.conf"
+
+            if [[ -f ""${nginxConfigSiteConfPath}/affine_site.conf"" ]]; then
+                rm -f "${nginxConfigSiteConfPath}/affine_site.conf"
+                systemctl restart nginx.service
+            fi
+            
+            showHeaderGreen "已成功卸载 AFFiNE Server 版本 !"
+            
+        else
+            showHeaderRed "系统没有安装 AFFiNE Server, 退出卸载"
+        fi
+
+    fi
+    removeNginx
+}
+
 
 
 
@@ -3284,10 +3481,11 @@ SMTP_HOST=
 SMTP_PORT=
 SMTP_USERNAME=
 SMTP_PASSWORD=
-SMTP_FROM_EMAIL=hello@example.com
-SMTP_REPLY_EMAIL=hello@example.com
+SMTP_FROM_EMAIL=
+SMTP_REPLY_EMAIL=
 SMTP_TLS_CIPHERS=
 SMTP_SECURE=true
+SMTP_NAME=
 
 # The default interface language. See translate.getoutline.com for a list of
 # available language codes and their rough percentage translated.
@@ -3439,9 +3637,10 @@ EOF
 
         showHeaderGreen "Outline Server install success !  https://${configOutline_APP_BASE_URL}" \
         "POSTGRES_USER: ${configOutline_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configOutline_PostgreSQLPASSWORD}" \
-        "Outline_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
-        "Outline_Data Path : ${configOutlineDockerPath}" \
-        "Outline Logs: docker-compose --file docker-compose.yml logs" 
+        "Outline Do Not support email login, Pls manually set up authentication" \
+        "Outline docker-compose config path : ${configOutlineDockerComposeFilePath}" \
+        "Outline docker env path : ${configOutlineDockerPath}/docker.env " \
+        "Outline Logs: docker-compose logs outline" 
 }
 
 
@@ -3463,7 +3662,12 @@ function removeOutline(){
             rm -rf "${configOutlineDockerPath}"
             rm -f "${nginxConfigSiteConfPath}/outline_site.conf"
             
-            systemctl restart nginx.service
+            if [[ -f "${nginxConfigSiteConfPath}/outline_site.conf" ]]; then
+                rm -f "${nginxConfigSiteConfPath}/outline_site.conf"
+                systemctl restart nginx.service
+            fi
+
+            
             showHeaderGreen "已成功卸载 Outline Server 版本 !"
             
         else
@@ -3551,7 +3755,7 @@ function installJitsiMeetByDocker(){
 
     mkdir -p ~/.jitsi-meet-cfg/{web,transcripts,prosody/config,prosody/prosody-plugins-custom,jicofo,jvb,jigasi,jibri}
 
-    configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
+    getVPSIP
 
     green " =================================================="
     echo
@@ -3731,7 +3935,7 @@ function installJitsiMeetOnUbuntu(){
 
     showHeaderGreen "Setting up jitsi meet local IP configuration"
 
-    configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
+    getVPSIP
     echo
     read -r -p "请输入本机IP: 直接回车默认为 ${configLocalVPSIp}" jitsimeetVPSIPInput
     jitsimeetVPSIPInput=${jitsimeetVPSIPInput:-${configLocalVPSIp}}
@@ -4110,6 +4314,26 @@ EOF
     removeNginx
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5835,8 +6059,10 @@ function start_menu(){
     green " 43. 安装 Joplin Server 笔记(类似 Evernote) "
     red " 44. 卸载 Joplin Server 笔记 " 
     echo
-    green " 51. 安装 Outline Server 多人协作笔记(类似 Notion) "
-    red " 52. 卸载 Outline Server 多人协作笔记 " 
+    green " 51. 安装 AFFiNE Server 多人协作笔记(类似 Notion) "
+    red " 52. 卸载 AFFiNE Server 多人协作笔记 "     
+    green " 53. 安装 Outline Server 多人协作笔记(类似 Notion) "
+    red " 54. 卸载 Outline Server 多人协作笔记 " 
     echo
     green " 61. 安装视频会议系统 Jitsi Meet "
     red " 62. 卸载 Jitsi Meet "
@@ -5894,8 +6120,10 @@ function start_menu(){
     green " 43. Install Joplin Server (Evernote alternative) "
     red " 44. Remove Joplin Server "
     echo
-    green " 51. Install Outline Server (Notion alternative) "
-    red " 52. Remove Outline Server "
+    green " 51. Install AFFiNE Server (Notion alternative) "
+    red " 52. Remove AFFiNE Server "    
+    green " 53. Install Outline Server (Notion alternative) "
+    red " 54. Remove Outline Server "
     echo       
     green " 62. Install Jitsi Meet video conference system"
     red " 63. Remove Jitsi Meet video conference system"
@@ -6009,11 +6237,17 @@ function start_menu(){
             removeJoplin
         ;;
         51 )
-            installOutline
+            installAffine
         ;;
         52 )
+            removeAffine
+        ;;
+        53 )
+            installOutline
+        ;;
+        54 )
             removeOutline
-        ;;        
+        ;;
         61 )
             installJitsiMeet
         ;;
