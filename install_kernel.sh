@@ -1989,7 +1989,7 @@ function installDebianUbuntuKernel(){
             cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
 
-            for file in ${ubuntuKernelDownloadUrlArray[@]}; do
+            for file in "${ubuntuKernelDownloadUrlArray[@]}"; do
                 downloadFile ${ubuntuDownloadUrl}/${file}
             done
 
@@ -3634,18 +3634,18 @@ function setLanguage(){
     echo
     green " =================================================="
     green " Please choose your language"
-    green " 1. 中文"
-    green " 2. English"  
+    green " 1. English"
+    green " 2. 中文"  
     echo
-    read -p "Please input your language:" languageInput
+    read -r -p "Please input your language:" languageInput
     
     case "${languageInput}" in
         1 )
-            echo "cn" > ${configLanguageFilePath}
+            echo "en" > ${configLanguageFilePath}
             showMenu
         ;;
         2 )
-            echo "en" > ${configLanguageFilePath}
+            echo "cn" > ${configLanguageFilePath}
             showMenu
         ;;
         * )
@@ -3653,7 +3653,6 @@ function setLanguage(){
             setLanguage
         ;;
     esac
-
 }
 
 configLanguageFilePath="${HOME}/language_setting_v2ray_trojan.md"

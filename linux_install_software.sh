@@ -220,6 +220,7 @@ function getLinuxOSRelease(){
 
 configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
 function getVPSIPInput (){
+    echo
     read -r -p "请输入VPS的IP地址:" currentVPSIPaddressInput
 
     if [[ -n "${currentVPSIPaddressInput}" ]]; then
@@ -229,6 +230,7 @@ function getVPSIPInput (){
 
         getVPSIPInput
     fi
+
 }
 function getVPSIP(){
     configLocalVPSIp="$(curl https://ipv4.icanhazip.com/)"
@@ -239,12 +241,13 @@ function getVPSIP(){
     echo
     green "如果本机IPv4 不是 ${configLocalVPSIp}, 请手动输入正确的IP "
     green "If VPS IP is not ${configLocalVPSIp}, pls input the IP manually"
+    echo
     read -r -p "是否手动输入IP 默认否, 请输入[y/N]:" isChangeVPSIPInput
     
     if [[ $isChangeVPSIPInput == [yY] ]]; then
         getVPSIPInput
     fi
-
+    echo
 }
 
 
@@ -2494,6 +2497,87 @@ EOF
     }
 EOF
 
+
+    elif [[ "${configInstallNginxMode}" == "focalboard" ]]; then
+        cat > "${nginxConfigSiteConfPath}/focalboard_site.conf" <<-EOF
+
+    upstream focalboard {
+        server localhost:${configFocalboard_PORT};
+        keepalive 32;
+    }
+
+    server {
+        listen 443 ssl http2;
+        listen [::]:443 http2;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+        
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ~ /ws/* {
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+            client_max_body_size 50M;
+            proxy_set_header Host \$http_host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_set_header X-Frame-Options SAMEORIGIN;
+            proxy_buffers 256 16k;
+            proxy_buffer_size 16k;
+            client_body_timeout 60;
+            send_timeout 300;
+            lingering_timeout 5;
+            proxy_connect_timeout 1d;
+            proxy_send_timeout 1d;
+            proxy_read_timeout 1d;
+            proxy_pass http://focalboard;
+        }
+
+        location / {
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+
+            client_max_body_size 50M;
+            proxy_set_header Connection "";
+            proxy_set_header Host \$http_host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_set_header X-Frame-Options SAMEORIGIN;
+            proxy_buffers 256 16k;
+            proxy_buffer_size 16k;
+            proxy_read_timeout 600s;
+            proxy_cache_revalidate on;
+            proxy_cache_min_uses 2;
+            proxy_cache_use_stale timeout;
+            proxy_cache_lock on;
+            proxy_http_version 1.1;
+            proxy_pass http://focalboard;
+        }
+
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        return 301 https://$configSSLDomain\$request_uri;
+    }
+EOF
+
     else
         echo
     fi
@@ -3075,8 +3159,9 @@ function installJoplin(){
 version: '3'
 
 services:
-    db:
+    joplin_db:
         image: postgres:15
+        container_name: joplin_postgres
         volumes:
             - ${configJoplinDockerPostgresPath}/postgres_data:/var/lib/postgresql/data
         ports:
@@ -3086,12 +3171,13 @@ services:
             - POSTGRES_PASSWORD=${configOutline_PostgreSQLPASSWORD}
             - POSTGRES_USER=${configOutline_PostgreSQLUSER}
             - POSTGRES_DB=${configOutline_PostgreSQLDATABASE}
-    app:
+    joplin:
         image: joplin/server:latest
+        container_name: joplin_app1
         volumes:
             - ${configJoplinDockerFileStoragePath}:/mnt/files
         depends_on:
-            - db
+            - joplin_db
         ports:
             - "${configJoplin_PORT}:22300"
         restart: unless-stopped
@@ -3103,7 +3189,7 @@ services:
             - POSTGRES_DATABASE=${configJoplin_PostgreSQLDATABASE}
             - POSTGRES_USER=${configJoplin_PostgreSQLUSER}
             - POSTGRES_PORT=5432
-            - POSTGRES_HOST=db
+            - POSTGRES_HOST=joplin_db
             - STORAGE_DRIVER=Type=Filesystem; Path=/mnt/files
             - STORAGE_DRIVER_FALLBACK=Type=Database; Mode=ReadAndWrite
 
@@ -3223,7 +3309,7 @@ function installAffine(){
 
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
         read -r -p "请输入域名 (直接回车默认为 affine.xxx.com):" configAffine_APP_Domain
-        configAffine_APP_Domain=${configAffine_APP_Domain:-joplin.xxx.com}
+        configAffine_APP_Domain=${configAffine_APP_Domain:-affine.xxx.com}
 
         configAffine_APP_BASE_URL="https://${configAffine_APP_Domain}"
     else
@@ -3241,8 +3327,9 @@ function installAffine(){
 version: '3'
 
 services:
-    app:
+    affine:
         image: ghcr.io/toeverything/affine-self-hosted:latest
+        container_name: affine_app1
         ports:
             - "${configAffine_PORT}:3000"
         volumes:
@@ -3400,15 +3487,15 @@ NODE_ENV=production
 SECRET_KEY=${tempStringHex32}
 UTILS_SECRET=${tempString2Hex32}
 
-DATABASE_URL=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@postgres:5432/${configOutline_PostgreSQLDATABASE}
-DATABASE_URL_TEST=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@postgres:5432/outline-test
+DATABASE_URL=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@outline_postgres:5432/${configOutline_PostgreSQLDATABASE}
+DATABASE_URL_TEST=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@outline_postgres:5432/outline-test
 DATABASE_CONNECTION_POOL_MIN=
 DATABASE_CONNECTION_POOL_MAX=
 # Uncomment this to disable SSL for connecting to Postgres
 # PGSSLMODE=disable
 
 
-REDIS_URL=redis://redis:6379
+REDIS_URL=redis://outline_redis:6379
 
 URL=http://${configOutline_APP_BASE_URL}:3000
 PORT=3000
@@ -3510,19 +3597,20 @@ services:
 
   outline:
     image: docker.getoutline.com/outlinewiki/outline:latest
+    container_name: outline_app1
     # env_file: ${configOutlineDockerPath}/docker.env
     ports:
       - "${configOutline_PORT}:3000"
     depends_on:
-      - postgres
-      - redis
-      - storage
+      - outline_postgres
+      - outline_redis
+      - outline_storage
     environment:
       - PGSSLMODE=disable
       - SECRET_KEY=${tempStringHex32}
       - UTILS_SECRET=${tempString2Hex32}
-      - REDIS_URL=redis://redis:6379
-      - DATABASE_URL=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@postgres:5432/${configOutline_PostgreSQLDATABASE}
+      - REDIS_URL=redis://outline_redis:6379
+      - DATABASE_URL=postgres://${configOutline_PostgreSQLUSER}:${configOutline_PostgreSQLPASSWORD}@outline_postgres:5432/${configOutline_PostgreSQLDATABASE}
       - URL=http://${configOutline_APP_BASE_URL}:3000
       - AWS_ACCESS_KEY_ID=${configOutline_MinioAdminUSER}
       - AWS_SECRET_ACCESS_KEY=${configOutline_MinioAdminPASSWORD}
@@ -3533,8 +3621,9 @@ services:
       - AWS_S3_ACL=private 
       - FORCE_HTTPS=false
 
-  redis:
+  outline_redis:
     image: redis:latest
+    container_name: outline_redis
     ports:
       - "6379:6379"
     restart: always
@@ -3547,8 +3636,9 @@ services:
       timeout: 30s
       retries: 3
 
-  postgres:
+  outline_postgres:
     image: postgres:15
+    container_name: outline_postgresdb
     ports:
       - "${configOutline_PostgreSQLPORT}:5432"
     volumes:
@@ -3563,8 +3653,9 @@ services:
       POSTGRES_PASSWORD: '${configOutline_PostgreSQLPASSWORD}'
       POSTGRES_DB: '${configOutline_PostgreSQLDATABASE}'
 
-  storage:
+  outline_storage:
     image: minio/minio
+    container_name: outline_minio
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -3584,27 +3675,29 @@ services:
       MINIO_ROOT_USER: ${configOutline_MinioAdminUSER}
       MINIO_ROOT_PASSWORD: ${configOutline_MinioAdminPASSWORD}
 
-  createbuckets:
+  outline_createbuckets:
     image: minio/mc
+    container_name: outline_createbucket
     depends_on:
-      - storage
+      - outline_storage
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc config host rm local;
-      /usr/bin/mc config host add myminio http://storage:9000 ${configOutline_MinioAdminUSER} ${configOutline_MinioAdminPASSWORD};
+      /usr/bin/mc config host add myminio http://outline_storage:9000 ${configOutline_MinioAdminUSER} ${configOutline_MinioAdminPASSWORD};
       /usr/bin/mc mb myminio/${configOutline_BUCKET_NAME};
       /usr/bin/mc policy set public myminio/${configOutline_BUCKET_NAME};
       exit 0;
       "
 
-  https-portal:
+  outline_https-portal:
     image: steveltn/https-portal
+    container_name: outline_https_portal
     ports:
       - '80:80'
       - '443:443'
     links:
       - outline
-      - storage
+      - outline_storage
     restart: always
     volumes:
       - ${configOutlineDockerHttpsPortalPath}:/var/lib/https-portal
@@ -3682,6 +3775,271 @@ function removeOutline(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+configFocalboardDockerPath="${HOME}/focalboard/docker"
+configFocalboardDockerDataPath="${HOME}/focalboard/docker/data"
+configFocalboardDockerPostgresPath="${HOME}/focalboard/docker/postgres"
+
+configFocalboard_PORT="8001"
+config_APP_BASE_URL="https://focalboard.example.com/"
+configFocalboard_PostgreSQLDATABASE="focalboarddb"
+configFocalboard_PostgreSQLUSER="postgreuseradmin"
+configFocalboard_PostgreSQLPASSWORD="postgreuseradminpw"
+configFocalboard_PostgreSQLPORT="5432"
+
+function installFocalboard(){
+    # https://www.focalboard.com/download/personal-edition/docker/
+
+    if [[ -d "${configFocalboardDockerPath}" ]]; then
+        showHeaderRed " Focalboard Personal Server already installed !"
+        exit
+    fi
+    showHeaderGreen "Start to install Focalboard Personal Server with docker"
+
+    ${sudoCmd} mkdir -p "${configFocalboardDockerDataPath}"
+
+    ${sudoCmd} chmod -R 777 "${configFocalboardDockerDataPath}"
+    cd "${configFocalboardDockerPath}" || exit
+
+
+    echo
+    read -r -p "请输入 Focalboard Server PORT (直接回车默认为8001):" configFocalboard_PORT
+    configFocalboard_PORT=${configFocalboard_PORT:-8001}
+
+
+    echo
+    read -r -p "数据库是否使用sqlite, 否为使用postgresql? 直接回车默认使用sqlite, 请输入[Y/n]:" isUseSqliteInput
+    isUseSqliteInput=${isUseSqliteInput:-Y}
+
+    configFocalboardDatabaseType="sqlite3"
+    configFocalboardDatabaseLink="./data/focalboard.db"
+
+    if [[ "${isUseSqliteInput}" == [Yy] ]]; then
+        configFocalboardDatabaseType="sqlite3"
+        configFocalboardDatabaseLink="./data/focalboard.db"
+
+    cat > "${configFocalboardDockerPath}/docker-compose.yml" <<-EOF
+
+version: '3'
+
+services:
+    focalboard:
+        image: mattermost/focalboard
+        container_name: focalboard_app1
+        ports:
+            - "${configFocalboard_PORT}:8000"
+        volumes:
+            - ${configFocalboardDockerDataPath}:/opt/focalboard/data
+            - ${configFocalboardDockerPath}/config.json:/opt/focalboard/config.json
+        restart: unless-stopped
+        environment:
+            - VIRTUAL_HOST=focalboard.local
+            - VIRTUAL_PORT=8000
+
+EOF
+
+
+    else
+        ${sudoCmd} mkdir -p "${configFocalboardDockerPostgresPath}"
+
+        read -r -p "请输入PostgreSQL 数据库名 (直接回车默认为focalboarddb):" configFocalboard_PostgreSQLDATABASE
+        configFocalboard_PostgreSQLDATABASE=${configFocalboard_PostgreSQLDATABASE:-focalboarddb}
+        echo
+        read -r -p "请输入PostgreSQL USER (直接回车默认为postgreuseradmin):" configFocalboard_PostgreSQLUSER
+        configFocalboard_PostgreSQLUSER=${configFocalboard_PostgreSQLUSER:-postgreuseradmin}
+        echo
+        read -r -p "请输入PostgreSQL PASSWORD (直接回车默认为postgreuseradminpw):" configFocalboard_PostgreSQLPASSWORD
+        configFocalboard_PostgreSQLPASSWORD=${configFocalboard_PostgreSQLPASSWORD:-postgreuseradminpw}
+        echo
+        read -r -p "请输入PostgreSQL PORT (直接回车默认为5432):" configFocalboard_PostgreSQLPORT
+        configFocalboard_PostgreSQLPORT=${configFocalboard_PostgreSQLPORT:-5432}
+        echo
+
+        # https://github.com/mattermost/focalboard/blob/main/docker/config.json
+        configFocalboardDatabaseType="postgres"
+        configFocalboardDatabaseLink="postgres://${configFocalboard_PostgreSQLUSER}:${configFocalboard_PostgreSQLPASSWORD}@focalboard_db/${configFocalboard_PostgreSQLDATABASE}?sslmode=disable&connect_timeout=10"
+
+    cat > "${configFocalboardDockerPath}/docker-compose.yml" <<-EOF
+
+version: '3'
+
+services:
+    focalboard:
+        image: mattermost/focalboard
+        container_name: focalboard_app1
+        depends_on:
+            - focalboard_db 
+        ports:
+            - "${configFocalboard_PORT}:8000"
+        volumes:
+            - ${configFocalboardDockerDataPath}:/opt/focalboard/data
+            - ${configFocalboardDockerPath}/config.json:/opt/focalboard/config.json
+        restart: unless-stopped
+        environment:
+            - VIRTUAL_HOST=focalboard.local
+            - VIRTUAL_PORT=8000
+
+    focalboard_db:
+        image: postgres:latest
+        container_name: focalboard_postgresdb
+        ports:
+            - "${configFocalboard_PostgreSQLPORT}:5432"
+        restart: always
+        volumes:
+            -  ${configFocalboardDockerPostgresPath}/postgres_data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: '${configFocalboard_PostgreSQLDATABASE}'
+            POSTGRES_USER: '${configFocalboard_PostgreSQLUSER}'
+            POSTGRES_PASSWORD: '${configFocalboard_PostgreSQLPASSWORD}'
+
+EOF
+
+    fi
+
+    # https://www.focalboard.com/guide/admin/
+    cat > "${configFocalboardDockerPath}/config.json" <<-EOF
+{
+    "serverRoot": "http://localhost:8000",
+    "port": 8000,
+    "dbtype": "${configFocalboardDatabaseType}",
+    "dbconfig": "${configFocalboardDatabaseLink}",
+    "postgres_dbconfig": "dbname=boards sslmode=disable",
+    "useSSL": false,
+    "webpath": "./pack",
+    "filespath": "./data/files",
+    "telemetry": true,
+    "session_expire_time": 2592000,
+    "session_refresh_time": 18000,
+    "localOnly": false,
+    "enableLocalMode": true,
+    "localModeSocketLocation": "/var/tmp/focalboard_local.socket",
+    "enablePublicSharedBoards": false
+}
+
+EOF
+
+    # https://github.com/mattermost/focalboard/blob/main/docker/server_config.json
+    cat > "${configFocalboardDockerPath}/default_config_sqlite.json" <<-EOF
+{
+  "serverRoot": "http://localhost:8000",
+  "port": 8000,
+  "dbtype": "sqlite3",
+  "dbconfig": "./data/focalboard.db",
+  "postgres_dbconfig": "dbname=focalboard sslmode=disable",
+  "useSSL": false,
+  "webpath": "./pack",
+  "filespath": "./data/files",
+  "telemetry": true,
+  "session_expire_time": 2592000,
+  "session_refresh_time": 18000,
+  "localOnly": false,
+  "enableLocalMode": true,
+  "localModeSocketLocation": "/var/tmp/focalboard_local.socket"
+}
+
+EOF
+
+
+    green " ================================================== "
+    echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+    echo
+    red "如果选择安装 Nginx, 请输入你的域名 例如 focalboard.xxx.com (不要带有 https:// 或者 http://)"
+    red "如果选择不安装 Nginx, 请输入你的IP 例如 192.168.1.1 (不要带有 https:// 或者 http://)"
+    echo
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/focalboard"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="focalboard"
+        installWebServerNginx
+        ${sudoCmd} systemctl restart nginx.service
+
+        config_APP_BASE_URL="https://${configSSLDomain}"
+    else
+        getVPSIP
+        config_APP_BASE_URL="http://${configLocalVPSIp}:${configFocalboard_PORT}"
+    fi
+ 
+    echo
+    docker pull mattermost/focalboard
+    echo
+    docker-compose up -d
+    echo
+    
+    if [[ "${isUseSqliteInput}" == [Yy] ]]; then
+        showHeaderGreen "Focalboard Server install success !  " \
+        "Visit: ${config_APP_BASE_URL}" \
+        "Focalboard DockerCompose Config : ${configFocalboardDockerPath}/config.json" \
+        "Focalboard Sqlite Data : ${configFocalboardDockerDataPath}/focalboard.db" \
+        "Focalboard Logs: docker-compose --file docker-compose.yml logs" 
+    else
+
+        showHeaderGreen "Focalboard Server install success !  " \
+        "Visit: ${config_APP_BASE_URL}" \
+        "Focalboard DockerCompose Config : ${configFocalboardDockerPath}/config.json" \
+        "PostgreSQL Admin: ${configFocalboard_PostgreSQLUSER}, PostgreSQL Admin Password: ${configFocalboard_PostgreSQLPASSWORD}" \
+        "Focalboard PostgreSQL Data : ${configFocalboardDockerDataPath}" \
+        "Focalboard Logs: docker-compose --file docker-compose.yml logs" 
+    fi
+
+
+
+}
+
+
+function removeFocalboard(){
+    echo
+    read -r -p "是否确认卸载Focalboard? 直接回车默认卸载, 请输入[Y/n]:" isRemoveFocalboardInput
+    isRemoveFocalboardInput=${isRemoveFocalboardInput:-Y}
+
+    if [[ "${isRemoveFocalboardInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configFocalboardDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Focalboard Server"
+
+            cd ${configFocalboardDockerPath} || exit
+            docker-compose down 
+
+            rm -rf "${configFocalboardDockerPath}"
+            
+            if [[ -f ""${nginxConfigSiteConfPath}/focalboard_site.conf"" ]]; then
+                rm -f "${nginxConfigSiteConfPath}/focalboard_site.conf"
+                systemctl restart nginx.service
+            fi
+            
+            showHeaderGreen "已成功卸载 Focalboard Server 版本 !"
+        else
+            showHeaderRed "系统没有安装 Focalboard Server, 退出卸载"
+        fi
+
+    fi
+    removeNginx
+}
 
 
 
@@ -6067,7 +6425,11 @@ function start_menu(){
     green " 61. 安装视频会议系统 Jitsi Meet "
     red " 62. 卸载 Jitsi Meet "
     green " 63. Jitsi Meet 发起会议是否需要密码验证"
-
+    echo
+    green " 65. 安装 Focalboard Personal Server 项目管理看板 (类似 Trello) "
+    red " 66. 卸载 Focalboard Personal Server "
+    green " 67. 安装 Mattermost Boards Server 项目管理看板 (类似 Trello) "
+    red " 68. 卸载 Mattermost Boards Server "
     echo
     green " 81. 安装 Air-Universe 服务器端"
     red " 82. 卸载 Air-Universe"
@@ -6125,10 +6487,14 @@ function start_menu(){
     green " 53. Install Outline Server (Notion alternative) "
     red " 54. Remove Outline Server "
     echo       
-    green " 62. Install Jitsi Meet video conference system"
-    red " 63. Remove Jitsi Meet video conference system"
+    green " 61. Install Jitsi Meet video conference system"
+    red " 62. Remove Jitsi Meet video conference system"
     green " 63. Modify Jitsi Meet whether to Start a meeting requires password authentication"
-
+    echo
+    green " 65. Install Focalboard Personal Server (Trello alternative) "
+    red " 66. Remove Focalboard Personal Server "    
+    green " 67. Install Mattermost Boards Server (Trello alternative) "
+    red " 68. Remove Mattermost Boards Server "   
     echo
     green " 81. Install Air-Universe server side "
     red " 82. Remove Air-Universe"
@@ -6257,7 +6623,18 @@ function start_menu(){
         63 )
             secureAddPasswordForJitsiMeet
         ;;
-
+        65 )
+            installFocalboard
+        ;;
+        66 )
+            removeFocalboard
+        ;;
+        67 )
+            installMattermostBoards
+        ;;
+        68 )
+            removeMattermostBoards
+        ;;
 
         81 )
             setLinuxDateZone
@@ -6328,18 +6705,18 @@ function setLanguage(){
     echo
     green " =================================================="
     green " Please choose your language"
-    green " 1. 中文"
-    green " 2. English"  
+    green " 1. English"
+    green " 2. 中文"  
     echo
-    read -p "Please input your language:" languageInput
+    read -r -p "Please input your language:" languageInput
     
     case "${languageInput}" in
         1 )
-            echo "cn" > ${configLanguageFilePath}
+            echo "en" > ${configLanguageFilePath}
             showMenu
         ;;
         2 )
-            echo "en" > ${configLanguageFilePath}
+            echo "cn" > ${configLanguageFilePath}
             showMenu
         ;;
         * )
@@ -6347,7 +6724,6 @@ function setLanguage(){
             setLanguage
         ;;
     esac
-
 }
 
 configLanguageFilePath="${HOME}/language_setting_v2ray_trojan.md"
