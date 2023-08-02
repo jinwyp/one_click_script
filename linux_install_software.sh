@@ -1786,15 +1786,16 @@ function installCloudreve(){
     green "   Prepare to install Cloudreve ${versionCloudreve}"
     green " ================================================== "
 
-
+    getVPSIP
+    
     mkdir -p ${configCloudreveDownloadCodeFolder}
     mkdir -p ${configCloudreveCommandFolder}
     cd ${configCloudrevePath}
 
 
-    # https://github.com/cloudreve/Cloudreve/releases/download/3.5.3/cloudreve_3.5.3_linux_amd64.tar.gz
-    # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_arm.tar.gz
-    # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.4.2_linux_arm64.tar.gz
+    # https://github.com/cloudreve/Cloudreve/releases/download/3.8.1/cloudreve_3.8.1_linux_amd64.tar.gz
+    # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.8.1_linux_arm.tar.gz
+    # https://github.com/cloudreve/Cloudreve/releases/download/3.4.2/cloudreve_3.8.1_linux_arm64.tar.gz
     
 
     downloadFilenameCloudreve="cloudreve_${versionCloudreve}_linux_amd64.tar.gz"
@@ -1814,7 +1815,7 @@ function installCloudreve(){
     cd ${configCloudreveCommandFolder}
     echo "nohup ${configCloudreveCommandFolder}/cloudreve > ${configCloudreveReadme} 2>&1 &"
     nohup ${configCloudreveCommandFolder}/cloudreve > ${configCloudreveReadme} 2>&1 &
-    sleep 3
+    sleep 10
     pidCloudreve=$(ps -ef | grep cloudreve | grep -v grep | awk '{print $2}')
     echo "kill -9 ${pidCloudreve}"
     kill -9 ${pidCloudreve}
@@ -1825,6 +1826,7 @@ function installCloudreve(){
 
 
     cat > ${osSystemMdPath}cloudreve.service <<-EOF
+
 [Unit]
 Description=Cloudreve
 Documentation=https://docs.cloudreve.org
@@ -1832,7 +1834,7 @@ After=network.target
 Wants=network.target
 
 [Service]
-User=${wwwUsername}
+# User=${wwwUsername}
 WorkingDirectory=${configCloudreveCommandFolder}
 ExecStart=${configCloudreveCommandFolder}/cloudreve -c ${configCloudreveIni}
 Restart=on-abnormal
@@ -1844,6 +1846,7 @@ StandardError=syslog
 
 [Install]
 WantedBy=multi-user.target
+
 EOF
 
     echo
@@ -1863,8 +1866,8 @@ EOF
 
     echo
     green " ================================================== "
-    green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
-    green " Please visit http://your ip:${configCloudrevePort}"
+    green " Cloudreve Installed successfully! "
+    green " Visit http://${configLocalVPSIp}:${configCloudrevePort}"
     green " 如无法访问, 请设置Firewall防火墙规则 放行 ${configCloudrevePort} 端口"
     green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
     green " Cloudreve INI 配置文件路径: ${configCloudreveIni}"
