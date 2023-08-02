@@ -1820,6 +1820,8 @@ function installCloudreve(){
     echo "kill -9 ${pidCloudreve}"
     kill -9 ${pidCloudreve}
     echo
+    sleep 3
+    echo
 
     ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
     ${sudoCmd} chmod -R 775 ${configCloudrevePath}
@@ -1858,12 +1860,6 @@ EOF
     systemctl start cloudreve
     systemctl enable cloudreve
 
-    ${configCloudreveCommandFolder}/cloudreve -eject
-
-    ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
-    ${sudoCmd} chmod -R 775 ${configCloudrevePath}
-
-
     echo
     green " ================================================== "
     green " Cloudreve Installed successfully! "
@@ -1885,6 +1881,11 @@ EOF
     isNginxInstallInput=${isNginxInstallInput:-Y}
 
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        # ${configCloudreveCommandFolder}/cloudreve -eject
+
+        # ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${configCloudrevePath}
+        # ${sudoCmd} chmod -R 775 ${configCloudrevePath}
+
         isInstallNginx="true"
         configSSLCertPath="${configSSLCertPath}/cloudreve"
         getHTTPSCertificateStep1
@@ -2161,9 +2162,9 @@ EOF
 EOF
 
     elif [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
-        mkdir -p ${configWebsitePath}/static
-        cp -f -R ${configCloudreveCommandFolder}/statics/* ${configWebsitePath}/static
-        mv -f ${configWebsitePath}/static/static/* ${configWebsitePath}/static
+        # mkdir -p ${configWebsitePath}/static
+        # cp -f -R ${configCloudreveCommandFolder}/statics/* ${configWebsitePath}/static
+        # mv -f ${configWebsitePath}/static/static/* ${configWebsitePath}/static
 
         mkdir -p ${nginxCloudreveStoragePath}
         ${sudoCmd} chown -R ${wwwUsername}:${wwwUsername} ${nginxCloudreveStoragePath}
@@ -2190,24 +2191,7 @@ EOF
         root $configWebsitePath;
         index index.php index.html index.htm;
 
-        location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$ {
-            expires      3d;
-            error_log /dev/null;
-            access_log /dev/null;
-        }
-        
-        location ~ .*\.(js|css)?$ {
-            expires      24h;
-            error_log /dev/null;
-            access_log /dev/null; 
-        }
-        
-        location /static {
-            root $configWebsitePath;
-        }
-
         location / {
-
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
@@ -2215,7 +2199,7 @@ EOF
             proxy_pass http://127.0.0.1:${configCloudrevePort};
 
             # 如果您要使用本地存储策略，请将下一行注释符删除，并更改大小为理论最大文件尺寸
-            client_max_body_size   7000m;
+            client_max_body_size  20000m;
         }
     }
 
@@ -2673,7 +2657,7 @@ EOF
     fi
 
     if [[ "${configInstallNginxMode}" == "cloudreve" ]]; then
-        green " Cloudreve Installed ! Working port: ${configCloudrevePort}"
+        green " Cloudreve Installed successfully ! Running at port: ${configCloudrevePort}"
         green " Please visit https://${configSSLDomain}"
         green " 查看运行状态命令: systemctl status cloudreve  重启: systemctl restart cloudreve "
         green " Cloudreve INI 配置文件路径: ${configCloudreveIni}"
