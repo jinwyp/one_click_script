@@ -441,8 +441,7 @@ function updatePVEAptSource(){
 		echo "deb http://download.proxmox.wiki/debian/pve ${osReleaseVersionCodeName} pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
         
 		if [[ "${pveVersionShort}" == "8" ]] ; then
-		echo "deb https://mirrors.tuna.tsinghua.edu.cn/ceph/debian-quincy/ ${osReleaseVersionCodeName} no-subscription" > /etc/apt/sources.list.d/ceph.list
-
+		echo "deb https://mirrors.ustc.edu.cn/proxmox/debian/ceph-quincy ${osReleaseVersionCodeName} no-subscription" > /etc/apt/sources.list.d/ceph.list
 		fi
 
 		if [[ "${pveVersionShort}" == "6" ]] ; then
@@ -462,15 +461,19 @@ function updatePVEAptSource(){
 	if [[ "$osReleaseVersionNo" == "12" ]]; then
 		cat > /etc/apt/sources.list <<-EOF
 
-deb https://mirrors.tuna.tsinghua.edu.cn/debian ${osReleaseVersionCodeName} main contrib
-deb-src https://mirrors.tuna.tsinghua.edu.cn/debian ${osReleaseVersionCodeName} main contrib
+deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName} main contrib non-free
+deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName} main contrib non-free
 
-deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib
-deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib
+deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
+deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
+
+deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-backports main non-free non-free-firmware contrib
+deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-backports main non-free non-free-firmware contrib
+
+deb https://mirrors.ustc.edu.cn/debian-security/ bookworm-security main
+deb-src https://mirrors.ustc.edu.cn/debian-security/ bookworm-security main
 
 
-deb https://mirrors.tuna.tsinghua.edu.cn/debian-security/ bookworm-security main contrib
-deb-src https://mirrors.tuna.tsinghua.edu.cn/debian-security/ bookworm-security main contrib
 
 EOF
 	elif [[ "$osReleaseVersionNo" == "11" ]]; then
@@ -485,8 +488,8 @@ deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates ma
 deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
 deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
 
-deb https://mirrors.aliyun.com/debian-security/ bullseye-security main
-deb-src https://mirrors.aliyun.com/debian-security/ bullseye-security main
+deb https://mirrors.ustc.edu.cn/debian-security/ bullseye-security main
+deb-src https://mirrors.ustc.edu.cn/debian-security/ bullseye-security main
 
 EOF
 	else
@@ -512,8 +515,10 @@ EOF
 
 
 
-	${sudoCmd} apt dist-upgrade
-	${sudoCmd} apt-get update
+
+	${sudoCmd} apt-get update -y
+	${sudoCmd} apt update -y
+	${sudoCmd} apt dist-upgrade -y
 
 	apt install -y vim
 	green " ================================================== "
@@ -1072,8 +1077,11 @@ EOF
 
     fi
 
-
+	echo
+	update-initramfs -u -k all
+	echo
 	update-grub
+	echo
 	green " ================================================== "
 	green " 开启IOMMU成功 需要重启生效!"
 	green " 重启后 在PVE 虚拟机添加PCI设备 ${pveVfioVideoIdText} 即可实现显卡直通!"
