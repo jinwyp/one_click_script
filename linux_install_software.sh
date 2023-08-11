@@ -1877,9 +1877,11 @@ EOF
     echo
     green "是否继续安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
     green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
     read -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
     isNginxInstallInput=${isNginxInstallInput:-Y}
-
+    echo
+    
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
         # ${configCloudreveCommandFolder}/cloudreve -eject
 
@@ -2035,8 +2037,8 @@ function installWebServerNginx(){
     mkdir -p "${nginxConfigSiteConfPath}"
 
     rm -rf ${configWebsitePath}/*
-    downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/website2.zip" "${configWebsitePath}" "website2.zip"
-
+    # downloadAndUnzip "https://github.com/jinwyp/one_click_script/raw/master/download/website2.zip" "${configWebsitePath}" "website2.zip"
+    wget -O "${configWebsitePath}/index.html" https://raw.githubusercontent.com/nginx/nginx/master/docs/html/index.html
 
     nginxConfigServerHttpInput=""
 
