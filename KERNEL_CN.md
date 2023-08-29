@@ -62,9 +62,9 @@ wget --no-check-certificate https://ghproxy.com/https://ghproxy.com/https://raw.
 4. 安装BBR Plus 内核并开启 BBR Plus. 运行脚本后 选择61 安装原版4.14.129版本 BBR Plus 内核, 或选择66 安装5.10 LTS BBR Plus内核. 安装完成重启2次后, 重新运行脚本后 选择3 根据提示开始 BBR Plus. 
 5. 注意安装过程中 如果弹出大框的英文提示(下面有示例图) "安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS.
 
-![注意 安装BBR plus](https://github.com/xion222/one_click_script/blob/master/docs/debian.jpg?raw=true)
-![注意 安装BBR plus](https://github.com/xion222/one_click_script/blob/master/docs/kernel.png?raw=true)
-![注意 安装BBR plus](https://github.com/xion222/one_click_script/blob/master/docs/ubuntu.png?raw=true)
+![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
+![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
+![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
 
 6. 安装 XanMod 内核并开启 BBR2. Debian / Ubuntu 系统 运行脚本后 请选择51 安装 XanMod 内核, 安装完成重启后, 重新运行脚本后 选择2 然后根据提示选择 BBR2 加速.
 
