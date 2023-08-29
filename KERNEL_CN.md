@@ -19,26 +19,33 @@
 
 ## Installation 安装方法  
 
-#### Usage 脚本使用方法
-```bash
-bash <(curl -Lso- https://git.io/kernel.sh)
-```
+
 #### 通过 curl 命令安装  via curl to install script
 
 ```bash
-curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+curl -O https://ghproxy.com/https://raw.githubusercontent.com/xion222/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+```
+
+#### 国内镜像源 - 通过 curl 命令安装  via curl to install script
+
+```bash
+curl -O https://ghproxy.com/https://ghproxy.com/https://raw.githubusercontent.com/xion222/one_click_script/master/install_kernel_cn.sh && chmod +x ./install_kernel_cn.sh && ./install_kernel_cn.sh
 ```
 
 
 #### 通过 wget 命令安装 Linux 内核 和 Wireguard  via wget to install script
 
 ```bash
-wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+wget --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/xion222/one_click_script/master/install_kernel.sh && chmod +x ./install_kernel.sh && ./install_kernel.sh
+```
+#### 国内镜像源 - 通过 wget 命令安装 Linux 内核 和 Wireguard  via wget to install script
+
+```bash
+wget --no-check-certificate https://ghproxy.com/https://ghproxy.com/https://raw.githubusercontent.com/xion222/one_click_script/master/install_kernel_cn.sh && chmod +x ./install_kernel_cn.sh && ./install_kernel_cn.sh
 ```
 
 
-
-![功能列表3](https://github.com/jinwyp/one_click_script/blob/master/docs/readme3.png?raw=true)
+![功能列表3](https://ghproxy.com/https://github.com/xion222/one_click_script/blob/master/docs/readme3.png?raw=true)
 
 
 
@@ -55,9 +62,9 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 4. 安装BBR Plus 内核并开启 BBR Plus. 运行脚本后 选择61 安装原版4.14.129版本 BBR Plus 内核, 或选择66 安装5.10 LTS BBR Plus内核. 安装完成重启2次后, 重新运行脚本后 选择3 根据提示开始 BBR Plus. 
 5. 注意安装过程中 如果弹出大框的英文提示(下面有示例图) "安装linux内核有风险是否终止", 要选择" NO" 不终止. 安装完毕会重启VPS.
 
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/debian.jpg?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/kernel.png?raw=true)
-![注意 安装BBR plus](https://github.com/jinwyp/one_click_script/blob/master/docs/ubuntu.png?raw=true)
+![注意 安装BBR plus](https://ghproxy.com/https://github.com/xion222/one_click_script/blob/master/docs/debian.jpg?raw=true)
+![注意 安装BBR plus](https://ghproxy.com/https://github.com/xion222/one_click_script/blob/master/docs/kernel.png?raw=true)
+![注意 安装BBR plus](https://ghproxy.com/https://github.com/xion222/one_click_script/blob/master/docs/ubuntu.png?raw=true)
 
 6. 安装 XanMod 内核并开启 BBR2. Debian / Ubuntu 系统 运行脚本后 请选择51 安装 XanMod 内核, 安装完成重启后, 重新运行脚本后 选择2 然后根据提示选择 BBR2 加速.
 
@@ -79,14 +86,14 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 #### 通过 wget 命令安装 via wget to install script
 
 ```bash
-wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
+wget --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/xion222/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
 ```
 
 
 ####  通过 curl 命令安装 via curl to install script
 
 ```bash
-curl -O https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
+curl -O https://ghproxy.com/https://raw.githubusercontent.com/xion222/one_click_script/master/netflix_check.sh && chmod +x ./netflix_check.sh && ./netflix_check.sh
 ```
 
 
