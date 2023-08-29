@@ -45,7 +45,7 @@ wget --no-check-certificate https://ghproxy.com/https://ghproxy.com/https://raw.
 ```
 
 
-![功能列表3](https://github.com/xion222/one_click_script/blob/master/docs/readme3.png?raw=true)
+![功能列表3](https://github.com/jinwyp/one_click_script/blob/master/docs/readme3.png?raw=true)
 
 
 
