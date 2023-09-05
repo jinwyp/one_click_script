@@ -1997,7 +1997,7 @@ EOF
         cat > "${nginxConfigSiteConfPath}/v2rayssl_site.conf" <<-EOF
     server {
         listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen [::]:443 ssl http2;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2071,7 +2071,7 @@ EOM
             read -r -d '' nginxConfigStreamOwnWebsiteInput << EOM
     server {
         listen 8000 ssl http2;
-        listen [::]:8000 http2;
+        listen [::]:8000 ssl http2;
         server_name  $configNginxSNIDomainWebsite;
 
         ssl_certificate       ${configNginxSNIDomainWebsiteCertPath}/$configSSLCertFullchainFilename;
