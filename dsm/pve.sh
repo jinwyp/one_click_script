@@ -441,7 +441,7 @@ function updatePVEAptSource(){
 		echo "deb http://download.proxmox.wiki/debian/pve ${osReleaseVersionCodeName} pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
         
 		if [[ "${pveVersionShort}" == "8" ]] ; then
-		echo "deb https://mirrors.ustc.edu.cn/proxmox/debian/ceph-quincy ${osReleaseVersionCodeName} no-subscription" > /etc/apt/sources.list.d/ceph.list
+		echo "deb http://download.proxmox.com/debian/ceph-quincy ${osReleaseVersionCodeName} no-subscription" > /etc/apt/sources.list.d/ceph.list
 		fi
 
 		if [[ "${pveVersionShort}" == "6" ]] ; then
@@ -451,7 +451,7 @@ function updatePVEAptSource(){
 		elif [[ "${pveVersionShort}" == "8" ]] ; then
 			wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg
 		fi
-
+ 
 	fi
 
 
@@ -461,32 +461,28 @@ function updatePVEAptSource(){
 	if [[ "$osReleaseVersionNo" == "12" ]]; then
 		cat > /etc/apt/sources.list <<-EOF
 
-deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName} main contrib non-free
-deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName} main contrib non-free
+deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName} main contrib 
+deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName} main contrib 
 
-deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
-deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
-
-deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-backports main non-free non-free-firmware contrib
-deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-backports main non-free non-free-firmware contrib
+deb https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib 
+deb-src https://mirrors.ustc.edu.cn/debian/ ${osReleaseVersionCodeName}-updates main contrib 
 
 deb https://mirrors.ustc.edu.cn/debian-security/ bookworm-security main
 deb-src https://mirrors.ustc.edu.cn/debian-security/ bookworm-security main
-
 
 
 EOF
 	elif [[ "$osReleaseVersionNo" == "11" ]]; then
 		cat > /etc/apt/sources.list <<-EOF
 
-deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib non-free
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName} main contrib
 
-deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib non-free
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-updates main contrib
 
-deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
-deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib non-free
+deb http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib
+deb-src http://mirrors.aliyun.com/debian/ ${osReleaseVersionCodeName}-backports main contrib
 
 deb https://mirrors.ustc.edu.cn/debian-security/ bullseye-security main
 deb-src https://mirrors.ustc.edu.cn/debian-security/ bullseye-security main
@@ -525,6 +521,16 @@ EOF
 	green " 更新源成功 "
 	green " ================================================== "
 
+	# 备份APLinfo  
+	cp /usr/share/perl5/PVE/APLInfo.pm /usr/share/perl5/PVE/APLInfo_bak.pm
+
+	# 更换XLC源 
+	sed -i 's|http://download.proxmox.com|https://mirrors.tuna.tsinghua.edu.cn/proxmox|g' /usr/share/perl5/PVE/APLInfo.pm
+
+	systemctl restart pvedaemon.service
+
+	# 安装sysfsutils (设置虚拟核显数量)
+	apt install -y sysfsutils
 
 # deb http://deb.debian.org/debian buster main contrib non-free
 # deb-src http://deb.debian.org/debian buster main contrib non-free
