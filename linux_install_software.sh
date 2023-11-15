@@ -2209,6 +2209,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 
@@ -2263,6 +2264,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 
@@ -2291,7 +2293,6 @@ EOF
         index index.php index.html index.htm;
 
         location / {
-
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
@@ -2307,6 +2308,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2335,7 +2337,6 @@ EOF
         index index.php index.html index.htm;
 
         location / {
-
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
@@ -2351,6 +2352,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2379,7 +2381,6 @@ EOF
         index index.php index.html index.htm;
 
         location / {
-
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
@@ -2395,6 +2396,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2423,7 +2425,6 @@ EOF
         index index.php index.html index.htm;
 
         location / {
-
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
@@ -2439,6 +2440,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2466,7 +2468,6 @@ EOF
         index index.php index.html index.htm;
 
         location / {
-
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
@@ -2482,6 +2483,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2563,6 +2565,7 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
+        # root $configWebsitePath;
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF

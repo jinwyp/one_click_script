@@ -2195,21 +2195,29 @@ function removeDebianKernel(){
 
 
 
+function installWARP(){
+    # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
+	# wget -qN --no-check-certificate -O ./warp-go.sh https://raw.githubusercontent.com/fscarmen/warp/main/warp-go.sh && chmod +x ./warp-go.sh && ./warp-go.sh
+    # wget -qN --no-check-certificate -O ./warp-go.sh https://gitlab.com/fscarmen/warp/-/raw/main/warp-go.sh && chmod +x ./warp-go.sh && ./warp-go.sh
+    wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh
+}
 
 function installWARPGO(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
-	wget -qN --no-check-certificate -O ./warp-go.sh https://raw.githubusercontent.com/fscarmen/warp/main/warp-go.sh && chmod +x ./warp-go.sh && ./warp-go.sh
+	# wget -qN --no-check-certificate -O ./warp-go.sh https://raw.githubusercontent.com/fscarmen/warp/main/warp-go.sh && chmod +x ./warp-go.sh && ./warp-go.sh
+    wget -qN --no-check-certificate -O ./warp-go.sh https://gitlab.com/fscarmen/warp/-/raw/main/warp-go.sh && chmod +x ./warp-go.sh && ./warp-go.sh
 }
+
 function vps_netflix_auto(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
-	bash <(curl -sSL https://raw.githubusercontent.com/fscarmen/warp_unlock/main/unlock.sh)
+	# bash <(curl -sSL https://raw.githubusercontent.com/fscarmen/warp_unlock/main/unlock.sh)
+    bash <(curl -sSL https://gitlab.com/fscarmen/warp_unlock/-/raw/main/unlock.sh)
 }
 
 function vps_netflix_jin(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
 	wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/one_click_script/master/netflix_check.sh && chmod +x ./nf.sh && ./nf.sh
 }
-
 
 function vps_netflix_jin_auto(){
     # wget -qN --no-check-certificate -O ./nf.sh https://raw.githubusercontent.com/jinwyp/SimpleNetflix/dev/nf.sh && chmod +x ./nf.sh
@@ -3229,7 +3237,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 内核 一键安装脚本 | 2023-5-26 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux 内核 一键安装脚本 | 2023-11-16 | 系统支持：centos7+ / debian10+ / ubuntu16.04+"
     green " Linux 内核 4.9 以上都支持开启BBR, 如要开启BBR Plus 则需要安装支持BBR Plus的内核 "
     red " 在任何生产环境中请谨慎使用此脚本, 升级内核有风险, 请做好备份！在某些VPS会导致无法启动! "
     green " =================================================="
@@ -3264,9 +3272,11 @@ function start_menu(){
     green " 15. 切换 WireGuard 对VPS服务器的 IPv6 和 IPv4 的网络支持"
     green " 16. 设置 VPS 服务器 IPv4 还是 IPv6 网络优先访问"
 
-    green " 21. 安装 warp-go 脚本 by fscarmen"
+    green " 21. 安装 warp 脚本 by fscarmen"
+    green " 22. 安装 warp-go 脚本 by fscarmen"
+    green " 23. 自动刷新WARP IP 直到支持 Netflix 非自制剧解锁 "
     # green " 22. 测试 VPS 是否支持 Netflix 非自制剧解锁 支持 WARP SOCKS5 测试 强烈推荐使用 "
-    green " 22. 自动刷新WARP IP 直到支持 Netflix 非自制剧解锁 "
+
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3323,7 +3333,7 @@ function start_menu(){
     else
 
     green " =================================================="
-    green " Linux kernel install script | 2023-5-26 | OS support：centos7+ / debian10+ / ubuntu16.04+"
+    green " Linux kernel install script | 2023-11-16 | OS support：centos7+ / debian10+ / ubuntu16.04+"
     green " Enable bbr require linux kernel higher than 4.9. Enable bbr plus require special bbr plus kernel "
     red " Please use this script with caution in production. Backup your data first! Upgrade linux kernel will cause VPS unable to boot sometimes."
     green " =================================================="
@@ -3358,8 +3368,9 @@ function start_menu(){
     green " 15. Switch WireGuard using IPv6 or IPv4 for your VPS"
     green " 16. Set VPS using IPv4 or IPv6 firstly to access network"
 
-    green " 21. Install warp-go by fscarmen. Enable IPv6, avoid Google reCAPTCHA and unlock Netflix geo restriction "
-    green " 22. Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
+    green " 21. Install warp by fscarmen. Enable IPv6, avoid Google reCAPTCHA and unlock Netflix geo restriction "
+    green " 22. Install warp-go by fscarmen. Enable IPv6, avoid Google reCAPTCHA and unlock Netflix geo restriction "
+    green " 23. Auto refresh Cloudflare WARP IP to unlock Netflix non-self produced drama"
     echo
 
     if [[ "${osRelease}" == "centos" ]]; then
@@ -3468,16 +3479,20 @@ function start_menu(){
         16 )
            preferIPV4 "redo"
         ;;
+
         21 )
-           installWARPGO
+           installWARP
         ;;
         22 )
-           vps_netflix_auto
+           installWARPGO
         ;;
         23 )
-           vps_netflix_jin
+           vps_netflix_auto
         ;;
         24 )
+           vps_netflix_jin
+        ;;
+        25 )
            vps_netflix_jin_auto
         ;;
         31 )
