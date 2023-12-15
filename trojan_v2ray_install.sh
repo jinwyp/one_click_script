@@ -4777,14 +4777,14 @@ EOM
                     "xver": 0,
                     "serverNames": [
                         "${configXrayRealitySni}",
+                        "ebay.com",
+                        "www.ebay.com",
                         "icloud.com",
                         "www.icloud.com",
                         "apple.com",
                         "www.apple.com",
                         "mozilla.org",
                         "addons.mozilla.org",
-                        "ebay.com",
-                        "www.ebay.com",
                         "walmart.com",
                         "www.walmart.com",
                         "etsy.com",
@@ -4813,7 +4813,8 @@ EOM
                         "s0.awsstatic.com",
                         "d1.awsstatic.com",
                         "amazon.com",
-                        "m.media-amazon.com"
+                        "m.media-amazon.com",
+                        "www.lovelive-anime.jp"
                     ],
                     "privateKey": "${xrayRealityPrivateKey}",
                     "maxTimeDiff": 0, 
