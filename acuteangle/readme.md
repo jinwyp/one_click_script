@@ -208,13 +208,13 @@ wget --no-check-certificate -O /root/pve.sh https://raw.githubusercontent.com/ji
 ## Openwrtsetting
 ## Openwrt 中的 DHCP 和 DNS 等设置
 
-13. 由于锐角云只有一个网卡, 可以在 网络 -> 接口 里面可以直接删除WAN. 或者把WAN设置为"不配置协议". sirpdboy 固件里面还可以通过向导模式设置旁路由. 具体单臂网关服务器如何设置可以参考 [DNS设置方法](https://github.com/jinwyp/one_click_script/blob/master/DNS.md#mosdns).
+14. 由于锐角云只有一个网卡, 可以在 网络 -> 接口 里面可以直接删除WAN. 或者把WAN设置为"不配置协议". sirpdboy 固件里面还可以通过向导模式设置旁路由. 具体单臂网关服务器如何设置可以参考 [DNS设置方法](https://github.com/jinwyp/one_click_script/blob/master/DNS.md#mosdns).
 
-14. 开启MosDNS服务器, 进入MosDNS服务器设置页面, 先点击 "更新数据库"Tab, 然后点击按钮 "检查并更新" 更新IP数据库. 然后回到"基本设置"Tab 启动MosDNS即可.
+15. 开启MosDNS服务器, 进入MosDNS服务器设置页面, 先点击 "更新数据库"Tab, 然后点击按钮 "检查并更新" 更新IP数据库. 然后回到"基本设置"Tab 启动MosDNS即可.
 ![setup1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/mosdns2.jpg?raw=true)
 ![setup2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/mosdns1.jpg?raw=true)
 
-15. 建议使用锐角云做DHCP服务器 (锐角云的DHCP优先级高, 在DHCP勾选 强制), 并保留原路由器的DHCP功能. 使主路由的DHCP和锐角云的DHCP同时工作, 这样即使锐角云挂了也可以正常上网. 在 DHCP 选项 中填写 6,192.168.xxx.xxx , 192.168.xxx.xxx 为本openwrt的IP,这样设备获取到的IP同时,DNS会设置为本openwrt的IP, 如果开启了MosDNS,就是由本Openwrt上的MosDNS服务器提供域名解析服务.
+16. 建议使用锐角云做DHCP服务器 (锐角云的DHCP优先级高, 在DHCP勾选 强制), 并保留原路由器的DHCP功能. 使主路由的DHCP和锐角云的DHCP同时工作, 这样即使锐角云挂了也可以正常上网. 在 DHCP 选项 中填写 6,192.168.xxx.xxx , 192.168.xxx.xxx 为本openwrt的IP,这样设备获取到的IP同时,DNS会设置为本openwrt的IP, 如果开启了MosDNS,就是由本Openwrt上的MosDNS服务器提供域名解析服务.
 ![setup1](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/setup1.jpg?raw=true)
 ![setup2](https://github.com/jinwyp/one_click_script/blob/master/acuteangle/setup2.jpg?raw=true)
 
