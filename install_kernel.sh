@@ -984,7 +984,7 @@ function installKernel(){
 
 
 function getVersionBBRPlus(){
-    if [ "${linuxKernelToInstallVersion}" = "6.4" ]; then
+    if [ "${linuxKernelToInstallVersion}" = "6.6" ]; then
         bbrplusKernelVersion=$(getGithubLatestReleaseVersionBBRPlus "UJX6N/bbrplus-6.x_stable")
 
     elif [ "${linuxKernelToInstallVersion}" = "6.1" ]; then
@@ -1444,7 +1444,7 @@ function installCentosKernelManual(){
         cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
 
-        if [ "${linuxKernelToInstallVersion}" = "6.4" ]; then
+        if [ "${linuxKernelToInstallVersion}" = "6.6" ]; then
             bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/${linuxKernelToInstallVersionFull}"
 
         elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then
@@ -1512,7 +1512,8 @@ function installCentosKernelManual(){
             # https://github.com/UJX6N/bbrplus-5.14/releases/download/5.14.18-bbrplus/CentOS-8_Optional_kernel-bbrplus-modules-extra-5.14.18-1.bbrplus.el8.x86_64.rpm
 
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" || "${linuxKernelToInstallVersion}" == "6.4" ]]; then
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" || "${linuxKernelToInstallVersion}" == "6.6" ]]; then
+                # https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/6.6.1-bbrplus/CentOS-Stream-8_Required_kernel-6.6.1-bbrplus.el8.x86_64.rpm
                 # https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/6.4.3-bbrplus/CentOS-Stream-8_Required_kernel-6.4.3-bbrplus.el8.x86_64.rpm
                 # https://github.com/UJX6N/bbrplus-6.1/releases/download/6.1.28-bbrplus/CentOS-Stream-8_Required_kernel-6.1.28-bbrplus.el8.x86_64.rpm
                 # https://github.com/UJX6N/bbrplus-5.15/releases/download/5.15.86-bbrplus/CentOS-Stream-8_Required_kernel-5.15.86-bbrplus.el8.x86_64.rpm
@@ -2021,7 +2022,7 @@ function installDebianUbuntuKernel(){
             mkdir -p ${userHomePath}/${linuxKernelToInstallVersionFull}
             cd ${userHomePath}/${linuxKernelToInstallVersionFull}
 
-            if [ "${linuxKernelToInstallVersion}" = "6.4" ]; then
+            if [ "${linuxKernelToInstallVersion}" = "6.6" ]; then
                 bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/${linuxKernelToInstallVersionFull}"
 
             elif [ "${linuxKernelToInstallVersion}" = "4.14" ]; then
@@ -2030,7 +2031,6 @@ function installDebianUbuntuKernel(){
             else
                 bbrplusDownloadUrl="https://github.com/UJX6N/bbrplus-${linuxKernelToInstallVersion}/releases/download/${linuxKernelToInstallVersionFull}"
             fi
-
 
 
             # https://github.com/UJX6N/bbrplus-5.9/releases/download/5.9.16-bbrplus/Debian-Ubuntu_Required_linux-image-5.9.16-bbrplus_5.9.16-bbrplus-1_amd64.deb
@@ -2042,7 +2042,7 @@ function installDebianUbuntuKernel(){
             # https://github.com/UJX6N/bbrplus-4.9/releases/download/4.9.337-bbrplus/Debian-Ubuntu_Required_linux-image-4.9.337-bbrplus_4.9.337-bbrplus-1_amd64.deb
 
 
-            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" ]]; then
+            if [[ "${linuxKernelToInstallVersion}" == "5.10" || "${linuxKernelToInstallVersion}" == "5.15" || "${linuxKernelToInstallVersion}" == "6.1" || "${linuxKernelToInstallVersion}" == "6.6" ]]; then
             # https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/6.4.3-bbrplus/Debian-Ubuntu_Required_linux-image-6.4.3-bbrplus_6.4.3-1_amd64.deb
             # https://github.com/UJX6N/bbrplus-6.x_stable/releases/download/6.4.3-bbrplus/Debian-Ubuntu_Optional_linux-headers-6.4.3-bbrplus_6.4.3-1_amd64.deb
 
@@ -3416,7 +3416,7 @@ function start_menu(){
     green " 64. Install BBR Plus kernel 5.10 LTS, compile by UJX6N"
     green " 65. Install BBR Plus kernel 5.15 LTS, compile by UJX6N"
     green " 66. Install BBR Plus kernel 6.1 LTS, compile by UJX6N"
-    green " 67. Install BBR Plus latest kernel 6.4 or higher, compile by UJX6N"
+    green " 67. Install BBR Plus latest kernel 6.6 or higher, compile by UJX6N"
     echo
     green " 0. exit"
 
@@ -3615,7 +3615,7 @@ function start_menu(){
             installKernel
         ;;
         67 )
-            linuxKernelToInstallVersion="6.4"
+            linuxKernelToInstallVersion="6.6"
             linuxKernelToBBRType="bbrplus"
             installKernel
         ;;
