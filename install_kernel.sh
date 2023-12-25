@@ -3324,7 +3324,7 @@ function start_menu(){
     green " 64. 安装 BBR Plus 内核 5.10 LTS, UJX6N 编译"
     green " 65. 安装 BBR Plus 内核 5.15 LTS, UJX6N 编译"
     green " 66. 安装 BBR Plus 内核 6.1 LTS, UJX6N 编译"
-    green " 67. 安装 BBR Plus 最新版内核 6.4或更高版本, UJX6N 编译"
+    green " 67. 安装 BBR Plus 最新版内核 6.6或更高版本, UJX6N 编译"
 
     echo
     green " 0. 退出脚本"
