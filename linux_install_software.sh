@@ -738,7 +738,7 @@ EOF
 # 更新本脚本
 function upgradeScript(){
     wget -Nq --no-check-certificate -O ./linux_install_software.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/linux_install_software.sh"
-    green " 本脚本升级成功! "
+    green " Script upgrade successful. 本脚本升级成功! "
     chmod +x ./linux_install_software.sh
     sleep 2s
     exec "./linux_install_software.sh"
@@ -3201,15 +3201,15 @@ EOF
 
         showHeaderGreen "Joplin Server install success !  https://${configSSLDomain}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
-        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
-        "Joplin_Data Path : ${configJoplinDockerPath}" \
+        "Joplin Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
+        "Joplin Data Path : ${configJoplinDockerPath}" \
         "Joplin Logs: docker-compose --file docker-compose.yml logs"
     else
 
         showHeaderGreen "Joplin Server install success !  ${configJoplin_APP_BASE_URL}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
-        "Joplin_Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
-        "Joplin_Data Path : ${configJoplinDockerPath}" \
+        "Joplin Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
+        "Joplin Data Path : ${configJoplinDockerPath}" \
         "Joplin Logs: docker-compose --file docker-compose.yml logs"
     fi
 
@@ -3249,10 +3249,99 @@ function removeJoplin(){
 
 
 
+configLinkwardenDockerPath="${HOME}/linkwarden/docker"
+configLinkwardenDockerPostgresPath="${HOME}/linkwarden/docker/postgres_data"
+configLinkwardenDockerFileStoragePath="${HOME}/linkwarden/docker/data"
+configLinkwarden_PORT=4000
+
+function installLinkwarden(){
+    # https://docs.linkwarden.app/self-hosting/installation
+    if [[ -d "${configLinkwardenDockerPath}" ]]; then
+        showHeaderRed " Linkwarden already installed !"
+        exit
+    fi
+    showHeaderGreen "Start to install Linkwarden with docker"
+    ${sudoCmd} mkdir -p "${configLinkwardenDockerPath}"
+    ${sudoCmd} mkdir -p "${configLinkwardenDockerPostgresPath}"
+    ${sudoCmd} mkdir -p "${configLinkwardenDockerFileStoragePath}"
+
+    cd "${configLinkwardenDockerPath}" || exit
+
+    read -r -p "请输入 Linkwarden domain name (直接回车默认为localhost):" configLinkwarden_Domain
+    configLinkwarden_Domain=${configLinkwarden_Domain:-localhost}
+    echo
+    read -r -p "请输入 Linkwarden Server PORT (直接回车默认为4000):" configLinkwarden_PORT
+    configLinkwarden_PORT=${configLinkwarden_PORT:-4000}
+    echo
+    read -r -p "请输入PostgreSQL PASSWORD (直接回车默认为postgreuser2pw):" configLinkwarden_PostgreSQLPASSWORD
+    configLinkwarden_PostgreSQLPASSWORD=${configLinkwarden_PostgreSQLPASSWORD:-postgreuser2pw}
+    echo
+
+    NEXTAUTH_SECRET=$(cat /dev/urandom | head -1 | md5sum | head -c 10)
+
+    cat > "${configLinkwardenDockerPath}/.env" <<-EOF
+NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+NEXTAUTH_URL=http://$configLinkwarden_Domain:$configLinkwarden_PORT
+POSTGRES_PASSWORD=$configLinkwarden_PostgreSQLPASSWORD
+
+EOF
+
+    cat > "${configLinkwardenDockerPath}/docker-compose.yml" <<-EOF
+version: "3.5"
+services:
+  linkwarden_postgres:
+    image: postgres:16-alpine
+    env_file: .env
+    restart: always
+    volumes:
+      - ${configLinkwardenDockerPostgresPath}:/var/lib/postgresql/data
+  linkwarden:
+    env_file: ${configLinkwardenDockerPath}/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:${configLinkwarden_PostgreSQLPASSWORD}@linkwarden_postgres:5432/postgres
+    restart: always
+    image: ghcr.io/linkwarden/linkwarden:latest
+    ports:
+      - ${configLinkwarden_PORT}:3000
+    volumes:
+      - ${configLinkwardenDockerFileStoragePath}:/data/data
+    depends_on:
+      - linkwarden_postgres
+EOF
+
+    docker compose up -d
 
 
+    showHeaderGreen "Linkwarden Server install success !  ${configLinkwarden_Domain}" \
+    "POSTGRES_USER: postgres, POSTGRES_PASSWORD: ${configLinkwarden_PostgreSQLPASSWORD}" \
+    "Linkwarden Data Path : ${configJoplinDockerPath}" \
+    "Linkwarden Logs: docker-compose --file docker-compose.yml logs"
+}
 
+function removeLinkwarden(){
+    echo
+    read -r -p "是否确认卸载 Linkwarden? 直接回车默认卸载, 请输入[Y/n]:" isRemoveLinkwardenInput
+    isRemoveLinkwardenInput=${isRemoveLinkwardenInput:-Y}
 
+    if [[ "${isRemoveLinkwardenInput}" == [Yy] ]]; then
+        echo
+        if [[ -d "${configLinkwardenDockerPath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Linkwarden Server"
+
+            cd ${configLinkwardenDockerPath} || exit
+            docker-compose down
+
+            rm -rf "${configLinkwardenDockerPath}"
+            rm -f "${nginxConfigSiteConfPath}/linkwarden_site.conf"
+
+            systemctl restart nginx.service
+            showHeaderGreen "已成功卸载 Linkwarden Server 版本 !"
+        else
+            showHeaderRed "系统没有安装 Linkwarden Server, 退出卸载"
+        fi
+    fi
+}
 
 
 
@@ -6408,6 +6497,8 @@ function start_menu(){
     red " 42. 卸载 Ghost Blog 博客系统 "
     green " 43. 安装 Joplin Server 笔记(类似 Evernote) "
     red " 44. 卸载 Joplin Server 笔记 "
+    green " 45. 安装 Linkwarden 网络书签(类似 Pocket) "
+    red " 46. 卸载 Linkwarden 网络书签 "
     echo
     green " 51. 安装 AFFiNE Server 多人协作笔记(类似 Notion) "
     red " 52. 卸载 AFFiNE Server 多人协作笔记 "
@@ -6593,6 +6684,12 @@ function start_menu(){
         ;;
         44 )
             removeJoplin
+        ;;
+        45 )
+            installLinkwarden
+        ;;
+        46 )
+            removeLinkwarden
         ;;
         51 )
             installAffine

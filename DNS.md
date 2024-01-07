@@ -1,4 +1,4 @@
-# DNS, DOT(DNS over TLS) and DOH(DNS over HTTPS) 
+# DNS, DOT(DNS over TLS) and DOH(DNS over HTTPS)
 
 ## 目录 Table of Contents
 
@@ -30,7 +30,7 @@
 
 ### Chrome
 
-1. 需要先下载新版本Chrome 100 [下载地址1](https://pan.baidu.com/s/1PPRPggOHvBhcuZoQL7ZRQQ?pwd=9xuu).  [下载地址2](https://wws.lanzout.com/ihbbt040y4oh) 
+1. 需要先下载新版本Chrome 100 [下载地址1](https://pan.baidu.com/s/1PPRPggOHvBhcuZoQL7ZRQQ?pwd=9xuu).  [下载地址2](https://wws.lanzout.com/ihbbt040y4oh)
 2. 打开 Chrome, 在网址栏输入 chrome://settings/security 回车后, 进入"安全"设置页面. 或者点击Chrome地址栏右边菜单栏的三个点 打开菜单，然后点击 "设置" , 然后点击左边菜单的 "隐私设置和安全性", 然后在右边找到的 "安全"点击进入"安全"设置页面
 
 ![Chrome1](https://github.com/jinwyp/one_click_script/blob/master/docs/chrome1.png?raw=true)
@@ -47,9 +47,9 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 ### Firefox
 
-1. 需要下载新版本的Firefox.  [下载地址1](https://pan.baidu.com/s/19u-Ayy-rKvgYDmg_TNDIzA?pwd=827m). [下载地址2](https://wws.lanzout.com/ipGdD040ylbg) 
+1. 需要下载新版本的Firefox.  [下载地址1](https://pan.baidu.com/s/19u-Ayy-rKvgYDmg_TNDIzA?pwd=827m). [下载地址2](https://wws.lanzout.com/ipGdD040ylbg)
 
-2. 点击右边的菜单栏, 然后在下拉菜单点击 "设置". 然后选择左边菜单点击"常规", 然后在右边最下面"网络设置" 点击"设置" 
+2. 点击右边的菜单栏, 然后在下拉菜单点击 "设置". 然后选择左边菜单点击"常规", 然后在右边最下面"网络设置" 点击"设置"
 ![Firefox1](https://github.com/jinwyp/one_click_script/blob/master/docs/firefox1.png?raw=true)
 ![Firefox2](https://github.com/jinwyp/one_click_script/blob/master/docs/firefox2.png?raw=true)
 
@@ -60,8 +60,8 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 ### FirefoxESNI
 
-1. 需要下载最新版的Firefox  [下载地址1](https://pan.baidu.com/s/19u-Ayy-rKvgYDmg_TNDIzA?pwd=827m). [下载地址2](https://wws.lanzout.com/ipGdD040ylbg) 
-2. 在地址栏输入 ``` about:config ``` , 然后点击 "接受风险并继续", 然后搜索 ``` network.security.esni.enabled ``` , 
+1. 需要下载最新版的Firefox  [下载地址1](https://pan.baidu.com/s/19u-Ayy-rKvgYDmg_TNDIzA?pwd=827m). [下载地址2](https://wws.lanzout.com/ipGdD040ylbg)
+2. 在地址栏输入 ``` about:config ``` , 然后点击 "接受风险并继续", 然后搜索 ``` network.security.esni.enabled ``` ,
 ![Firefox1](https://github.com/jinwyp/one_click_script/blob/master/docs/firefoxesni1.png?raw=true)
 ![Firefox2](https://github.com/jinwyp/one_click_script/blob/master/docs/firefoxesni2.png?raw=true)
 
@@ -77,7 +77,7 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 
 1. Edge 浏览器 [设置DoH加密DNS的方法] (https://www.icoa.cn/a/953.html)
 
-### 测试是否开启DOT和ESNI 
+### 测试是否开启DOT和ESNI
 
 1. 使用浏览器打开 https://www.cloudflare.com/zh-cn/ssl/encrypted-sni/ 点击 "Check My Browser" 按钮. 测试之前浏览器设置DNS的服务器请选择Cloudflare的DOH的服务器.
 
@@ -96,8 +96,8 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 ### AdGuardHome
 ### 搭建的DNS服务器
 
-1. 通过本脚本, ``` bash <(curl -Lso- https://git.io/oneclick) ``` 运行本脚本, 选择28 安装 AdGuard Home 架设DNS服务器, 同时还可以去广告. 建议在国外的服务器上安装 
-2. 安装完成后, 再次运行本脚本 选择29 申请域名证书. 这样就可以开启DOH和DOT 加密DNS解析. 
+1. 通过本脚本, ``` bash <(curl -Lso- https://git.io/oneclick) ``` 运行本脚本, 选择28 安装 AdGuard Home 架设DNS服务器, 同时还可以去广告. 建议在国外的服务器上安装
+2. 安装完成后, 再次运行本脚本 选择29 申请域名证书. 这样就可以开启DOH和DOT 加密DNS解析.
 
 3. 具体设置请参考 [AdGuardHome 官方网站](https://github.com/AdguardTeam/AdGuardHome). 本脚本已经自动添加了针对中国网站的广告屏蔽规则.
 4. [AdGuard Home 的整理的DNS服务器列表](https://kb.adguard.com/en/general/dns-providers)
@@ -105,33 +105,42 @@ AdGuardHome](https://github.com/AdguardTeam/AdGuardHome). 具体方法请看[搭
 ### Mosdns
 ### 分流国内和国外的DNS服务解析
 
-1. 建议有条件的请先按照上面教程搭建AdGuardHome DNS服务器. 然后再安装mosdns 进行DNS分流. 没有条件搭建DNS服务器也不用担心, 本脚本已经内置多个DNS服务器地址 
+1. 建议有条件的请先按照上面教程搭建AdGuardHome DNS服务器. 然后再安装mosdns 进行DNS分流. 没有条件搭建DNS服务器也不用担心, 本脚本已经内置多个DNS服务器地址
 2. 通过使用mosdns 或 mosdns-cn 可以让国内的网址走国内的DNS解析, 国外的网址走国外的DNS解析. 同时也不用在浏览器里面设置DOH了 (上面教程里浏览器设置部分不需要了).  安装mosdns 分为 [Openwrt X86版本](#openwrt), [linux 版本](#linux) 或 [windows 版本](#windows). 建议有软路由的直接在软路由安装Openwrt X86版本.
 
-#### openwrt
-3. 如果使用x86 openwrt 软路由, 可以直接使用 SSH登录到软路由上 使用如下脚本安装mosdns. 如果已经安装过mosdns 可以在OpenWRT中先删除mosdns. 在openwrt管理菜单 系统 -> 软件包 -> 过滤器  里面 搜索 mosdns 有两个结果 一个是mosdns 一个是 luci-app-mosdns  2个都点击移除 然后再用下面脚本重新安装就可以了
-```bash 
+#### Mosdns 在 Openwrt 上安装与使用
+1. 升级带有Moddns 的路由器固件. X86的Openwrt可以很方便升级最近的固件 例如Esir的固件或 Sirpdboy 的固件
+2. Esir的固件下载 https://drive.google.com/drive/folders/1uRXg_krKHPrQneI3F2GNcSVRoCgkqESr . Esir youtube 频道 https://www.youtube.com/c/eSirPlayGround
+3. Sirpdboy 的固件下载 https://github.com/sirpdboy/openwrt/blob/master/README.md#%E5%9B%BA%E4%BB%B6%E4%B8%8B%E8%BD%BD
+
+4. 如果使用x86 openwrt 软路由, 也可以直接使用 SSH登录到软路由上 使用如下脚本安装mosdns. 如果已经安装过mosdns 可以在OpenWRT中先删除mosdns. 在openwrt管理菜单 系统 -> 软件包 -> 过滤器  里面 搜索 mosdns 有两个结果 一个是mosdns 一个是 luci-app-mosdns  2个都点击移除 然后再用下面脚本重新安装就可以了
+```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/dsm/openwrt.sh && chmod +x ./openwrt.sh && ./openwrt.sh
 ```
 
 
-4. 使用上面脚本在软路由安装 luci-app-mosdns 完毕后, 请进入OpenWRT管理菜单: 服务-> MosDNS -> MosDNS 配置文件选择 下拉框选择 自定义配置. 然后勾选 启用 复选框后, 点击 保存&应用 按钮 就可以启动 MosDNS. 注意:如果mosdns启动失败, 请先关闭ssr 或 passwall 插件, 因为这些插件内置的PDNSD也运行在5335端口导致冲突. 或者更换mosdns的启动端口.
+4. 使用上面脚本在软路由安装 luci-app-mosdns 完毕后, 请进入OpenWRT管理菜单: 服务-> MosDNS -> MosDNS 配置文件选择 下拉框选择 自定义配置. 然后勾选 启用 复选框后, 点击 保存&应用 按钮 就可以启动 MosDNS. 注意:如果mosdns启动失败, 请先关闭ssr 或 passwall 或 clash 等插件, 因为这些插件内置的PDNSD也运行在5335端口导致冲突. 或者更换mosdns的启动端口.
 
 ![mosdns1](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns1.png?raw=true)
 
-5. 然后在 OpenWRT管理菜单: 网络-> DHCP/DNS -> DNS 转发 填入 127.0.0.1#5335, 因为mosdns运行在软路由的5335端口, 如果mosdns不是运行在软路由而是用下面的脚本运行在其他linux上,则填入对应IP和端口即可. 然后在第二个tab "HOSTS 和解析文件" 勾选 忽略解析文件. 最后点击右下角 保存&应用 按钮完成设置.  注意: 如果没有正确填写转发就勾选了 "忽略解析文件" 会导致无法上网, 忽略解析文件的意思就是在dnsmasq 添加 no-reslov 指令不再使用原有的上游DNS解析. 最后在 ShadowSocksR Plus+ 设置 -> DNS解析方式 -> 使用本机端口为5335的DNS服务. 注意: 默认使用PDNSD TCP查询并缓存, 该项的PDNSD的也运行在5335端口, 所以会导致冲突, 如果mosdns启动失败, 请先关闭ssr 然后选择"使用本机端口为5335的DNS服务"后再启动ssr , 或者更换mosdns的启动端口.
+
+5. 然后在 OpenWRT管理菜单: 网络-> DHCP/DNS -> DNS 转发 填入 127.0.0.1#5335, 因为mosdns运行在软路由的5335端口, 如果mosdns不是运行在软路由而是用下面的脚本运行在其他linux上,则填入对应IP和端口即可. 然后在第二个tab "HOSTS 和解析文件" 勾选 忽略解析文件. 最后点击右下角 保存&应用 按钮完成设置.  注意: 如果没有正确填写转发就勾选了 "忽略解析文件" 会导致无法上网, 忽略解析文件的意思就是在dnsmasq 添加 no-reslov 指令不再使用原有的上游DNS解析.
+
 ![mosdns2](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns2.png?raw=true)
 ![mosdns3](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns3.png?raw=true)
+
+6. 最后在 ShadowSocksR Plus+ 或其他passwal等插件中 设置 -> DNS解析方式 -> 使用本机端口为5335的DNS服务. 注意: 默认第一个选项使用PDNSD TCP查询并缓存, 该项的PDNSD的也运行在5335端口, 所以会导致冲突, 如果mosdns启动失败, 请先关闭SSR plus 然后选择"使用本机端口为5335的DNS服务"后再启动ssr , 或者更换mosdns的启动端口.
+
 ![mosdns4](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns4.png?raw=true)
 
-#### linux
-6. 如果 linux系统 可以使用如下脚本在linux 系统上安装 mosdns 或 mosdns-cn. 安装完成后按照上面的步骤在路由器中设置DNS即可. 
-```bash 
+#### Mosdns 在 linux 上安装与使用
+6. 如果 linux系统 可以使用如下脚本在linux 系统上安装 mosdns 或 mosdns-cn. 安装完成后按照上面的步骤在路由器中设置DNS即可.
+```bash
 wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh && chmod +x ./trojan_v2ray_install.sh && ./trojan_v2ray_install.sh
 ```
 
 
-#### windows
+#### Mosdns 在 windows 上安装与使用
 7. 如果是 windows 系统, 可以从 [mosdns-cn 官方网站](https://github.com/IrineSistiana/mosdns-cn/releases/download/v1.2.3/mosdns-cn-windows-amd64.zip) 下载 mosdns-cn 压缩包直接解压后放到一个目录中. 再下载 [geosite文件](https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat) [geoip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat)  [cnip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat)  放到mosdns-cn解压的同一个目录中. 最后运行 ``` mosdns-cn -s :53 --blacklist-domain "geosite.dat:category-ads-all" --local-upstream https://223.5.5.5/dns-query --local-domain "geosite.dat:cn" --local-ip "geoip.dat:cn" --remote-upstream https://8.8.8.8/dns-query --remote-domain "geosite.dat:geolocation-!cn" ``` 即可.
 
 

@@ -845,7 +845,7 @@ function installSoftOhMyZsh(){
 # 更新本脚本
 function upgradeScript(){
     wget -Nq --no-check-certificate -O ./trojan_v2ray_install.sh "https://raw.githubusercontent.com/jinwyp/one_click_script/master/trojan_v2ray_install.sh"
-    green " 本脚本升级成功! "
+    green " Script upgrade successful. 本脚本升级成功! "
     chmod +x ./trojan_v2ray_install.sh
     sleep 2s
     exec "./trojan_v2ray_install.sh"
