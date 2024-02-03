@@ -1078,10 +1078,10 @@ downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 versionTrojanGo="0.10.6"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="4.45.2"
+versionV2ray="5.12.1"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
-versionXray="1.7.5"
+versionXray="1.8.7"
 downloadFilenameXray="Xray-linux-64.zip"
 
 versionTrojanWeb="2.10.5"
@@ -1229,29 +1229,30 @@ function getV2rayVersion(){
 
         if [[ $configV2rayWorkingMode == "vlessTCPREALITY" ]]; then
             tempXrayVersionDisplayText="1"
-            green " 请选择 Xray 的版本, 默认直接回车为 1.8.0 或以上的最新版本"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.8.7 或以上的最新版本"
             echo
-            green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            green " 1. 1.8.7 或以上的最新版本 支持 REALITY 和 XTLS Vision"
 
         elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
-            green " 请选择 Xray 的版本, 默认直接回车为 1.7.5 (推荐)"
+            tempXrayVersionDisplayText="1"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.8.7 或以上的最新版本"
             echo
-            green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
-            green " 2. 1.7.5 支持 XTLS Vision (推荐)"
+            green " 1. 1.8.7 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            green " 2. 1.7.5 支持 XTLS Vision "
 
         else
-            green " 请选择 Xray 的版本, 默认直接回车为 1.7.5 (推荐)"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.7.5"
             echo
             if [[ $2 == "update" ]]; then
-                red "升级 1.8.0 或以上版本可能导致 启动失败, 不兼容旧版 XTLS 配置!"
+                red "升级 1.8.7 或以上版本可能导致 启动失败, 不兼容旧版 XTLS 配置!"
                 echo
-                green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
             fi
 
             if [[ $2 == "shadowsocks" ]]; then
-                green " 1. 1.8.0 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+                echo
             fi
 
+            green " 1. 1.8.7 或以上的最新版本 支持 REALITY 和 XTLS Vision"
             green " 2. 1.7.5 支持 XTLS Vision (推荐)"
             green " 3. 1.6.1 (推荐)"
             green " 4. 1.6.0"
@@ -4883,7 +4884,7 @@ EOM
 
 
 function v2rayRouteRule(){
-    site_LIST=("google" "openai" "netflix" "disney" "youtube" "spotify" "pornhub" )
+    site_LIST=("google" "openai" "twitter" "netflix" "disney" "youtube" "spotify" "pornhub" )
 
     V2rayUnlockSiteRuleV6Text=""
     V2rayUnlockSiteRuleSock5Text=""
@@ -4899,7 +4900,10 @@ function v2rayRouteRule(){
         yellow " 请选择 避免弹出 Google reCAPTCHA 人机验证的方式"
 
         elif [[ "${site}" == "openai" ]]; then
-        yellow " 请选择 解锁 OpenAI 方式"
+        yellow " 请选择 解锁 OpenAI ChatGPT 方式"
+
+        elif [[ "${site}" == "twitter" ]]; then
+        yellow " 请选择 解锁 twitter 方式"
 
         elif [[ "${site}" == "netflix" ]]; then
         yellow " 请选择 解锁 Netflix 非自制剧的方式"
