@@ -487,9 +487,14 @@ function setLinuxDateZone(){
         fi
 
     else
-        $osSystemPackage install -y ntp
-        systemctl enable ntp
-        systemctl restart ntp
+        if [[ "${osReleaseVersionNoShort}" == "12" ]]; then
+            systemctl restart systemd-timesyncd
+            timedatectl timesync-status
+        else
+            $osSystemPackage install -y ntp
+            systemctl enable ntp
+            systemctl restart ntp
+        fi
     fi
 }
 
