@@ -2528,7 +2528,7 @@ function inputNginxSNIDomain(){
 
 function inputXraySystemdServiceName(){
 
-    if [ "$1" = "v2ray_nginxOptional" || "$1" = "nginx_v2ray" || "$1" = "v2ray"  ]; then
+    if [[ "$1" == "v2ray_nginxOptional" || "$1" == "nginx_v2ray" || "$1" == "v2ray" ]]; then
         echo
         green " ================================================== "
         yellow " 请输入自定义的 V2ray 或 Xray 的Systemd服务名称后缀, 默认为空"
