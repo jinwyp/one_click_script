@@ -2528,7 +2528,7 @@ function inputNginxSNIDomain(){
 
 function inputXraySystemdServiceName(){
 
-    if [ "$1" = "v2ray_nginxOptional" ]; then
+    if [ "$1" = "v2ray_nginxOptional" || "$1" = "nginx_v2ray" || "$1" = "v2ray"  ]; then
         echo
         green " ================================================== "
         yellow " 请输入自定义的 V2ray 或 Xray 的Systemd服务名称后缀, 默认为空"
@@ -8810,7 +8810,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray 一键安装脚本 | 2023-4-10 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray 一键安装脚本 | 2024-2-3 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -8861,7 +8861,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray Installation | 2023-4-10 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray Installation | 2024-2-3 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
