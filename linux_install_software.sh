@@ -5094,6 +5094,7 @@ function replaceXrayRConfig(){
         # mv ${configXrayRPath}/custom_inbound.json ${configXrayRPath}/custom_inbound_bak.json
         XrayR restart
 
+        (crontab -l ; echo "36 4 * * 0,1,2,3,4,5,6 systemctl restart XrayR.service ") | sort - | uniq - | crontab -
 
     fi
 
@@ -5175,20 +5176,12 @@ function installAiruAndNginx(){
 
 
 
-
-
-
-
-
-
-
 function downgradeXray(){
     echo
     green " =================================================="
     green "  准备降级 Xray 和 Air-Universe !"
     green " =================================================="
     echo
-
 
     yellow " 请选择 Air-Universe 降级到的版本, 默认不降级"
     red " 注意 Air-Universe 最新版不支持 Xray 1.5.0或更老版本"
