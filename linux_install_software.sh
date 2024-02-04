@@ -5091,7 +5091,7 @@ function replaceXrayRConfig(){
         sed -i "s/CertDomain: \"node1.test.com\"/CertDomain: \"${configSSLDomain}\"/g" ${configXrayRConfigFilePath}
 
 
-        sed -i "s/socks5-warp/IPv4_out/g" ${configXrayRPath}/route.json
+        sed -i "18,22d" ${configXrayRPath}/route.json
         # mv ${configXrayRPath}/custom_inbound.json ${configXrayRPath}/custom_inbound_bak.json
 
         XrayR restart
