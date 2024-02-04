@@ -5091,7 +5091,9 @@ function replaceXrayRConfig(){
         sed -i "s/CertDomain: \"node1.test.com\"/CertDomain: \"${configSSLDomain}\"/g" ${configXrayRConfigFilePath}
 
 
+        sed -i "s/socks5-warp/IPv4_out/g" ${configXrayRPath}/route.json
         # mv ${configXrayRPath}/custom_inbound.json ${configXrayRPath}/custom_inbound_bak.json
+
         XrayR restart
 
         (crontab -l ; echo "36 4 * * 0,1,2,3,4,5,6 systemctl restart XrayR.service ") | sort - | uniq - | crontab -
