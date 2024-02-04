@@ -4991,7 +4991,7 @@ function replaceXrayRConfig(){
         else
             sed -i 's/NodeType: Trojan/NodeType: V2ray/g' ${configXrayRConfigFilePath}
             echo
-            read -r -p "是否启用XrayR的Vless协议? 默认直接回车选择否 启用Vmess协议, 选择是则启用Vless协议, 请输入[y/N]:" isXrayRVlessSupportInput
+            read -r -p "是否启用XrayR的Vless协议? 默认直接回车为否, 默认启用Vmess协议, 选择是则启用Vless协议, 请输入[y/N]:" isXrayRVlessSupportInput
             isXrayRVlessSupportInput=${isXrayRVlessSupportInput:-N}
 
             if [[ $isXrayRVlessSupportInput == [Yy] ]]; then
@@ -5001,18 +5001,18 @@ function replaceXrayRConfig(){
             fi
 
             echo
-            read -r -p "是否启用XrayR的REALITY? 默认直接回车选择是,默认启用, 选择否则不启用, 请输入[Y/n]:" isXrayRREALITYSupportInput
+            read -r -p "是否启用XrayR的REALITY? 默认直接回车为否 不启用, 选择是则启用, 请输入[y/N]:" isXrayRREALITYSupportInput
             isXrayRREALITYSupportInput=${isXrayRREALITYSupportInput:-N}
 
-            if [[ $isXrayRREALITYSupportInput == [Nn] ]]; then
-                sed -i 's/EnableREALITY: true/EnableREALITY: false/g' ${configXrayRConfigFilePath}
-            else
+            if [[ $isXrayRREALITYSupportInput == [Yy] ]]; then
                 sed -i 's/EnableREALITY: false/EnableREALITY: true/g' ${configXrayRConfigFilePath}
+            else
+                sed -i 's/EnableREALITY: true/EnableREALITY: false/g' ${configXrayRConfigFilePath}
             fi
         fi
 
         echo
-        read -r -p "是否启用XrayR内置的DNS? 默认直接回车选择否 不启用, 选择是则启用, 请输入[y/N]:" isXrayREnableDNSInput
+        read -r -p "是否启用XrayR内置的DNS? 默认直接回车为否 不启用, 选择是则启用, 请输入[y/N]:" isXrayREnableDNSInput
         isXrayREnableDNSInput=${isXrayREnableDNSInput:-N}
 
         if [[ $isXrayREnableDNSInput == [Yy] ]]; then
@@ -5039,8 +5039,8 @@ function replaceXrayRConfig(){
         green " 4. 手动提供证书，需要指定证书的路径"
         green " 5. 通过外部的acme.sh 申请证书 支持http 和 dns 等更多模式申请证书"
         echo
-        read -r -p "请选择证书申请方式? 直接回车默认选1 不申请证书, 请输入纯数字:" isSSLRequestHTTPInput
-        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-1}
+        read -r -p "请选择证书申请方式? 直接回车默认选2 http模式申请, 请输入纯数字:" isSSLRequestHTTPInput
+        isSSLRequestHTTPInput=${isSSLRequestHTTPInput:-2}
         configXrayRSSLRequestMode="none"
 
         if [[ $isSSLRequestHTTPInput == "1" ]]; then
