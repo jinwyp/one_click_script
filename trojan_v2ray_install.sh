@@ -1385,8 +1385,8 @@ configRanPath="${HOME}/ran"
 configSSLAcmeScriptPath="${HOME}/.acme.sh"
 configSSLCertPath="${configWebsiteFatherPath}/cert"
 
-configSSLCertKeyFilename="private.key"
-configSSLCertFullchainFilename="fullchain.cer"
+configSSLCertKeyFilename="server.key"
+configSSLCertFullchainFilename="server_fullchain.cert"
 
 
 function renewCertificationWithAcme(){
@@ -4908,7 +4908,7 @@ function v2rayRouteRule(){
         yellow " 请选择 解锁 OpenAI ChatGPT 方式"
 
         elif [[ "${site}" == "twitter" ]]; then
-        yellow " 请选择 解锁 twitter 方式"
+        yellow " 请选择 解锁 Twitter 方式"
 
         elif [[ "${site}" == "netflix" ]]; then
         yellow " 请选择 解锁 Netflix 非自制剧的方式"
