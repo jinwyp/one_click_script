@@ -4759,7 +4759,23 @@ EOF
 
 }
 
-
+function testCMSGhost(){
+                su - ghostsite << EOF
+    echo "--------------------"
+    echo "Current user: $(whoami)"
+    whoami
+    $(whoami)
+    # ghost install --port 3468 --db=sqlite3 --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
+    echo "--------------------"
+EOF
+whoami
+sudo -u ghostsite bash << EOF
+echo "In"
+whoami
+EOF
+echo "Out"
+whoami
+}
 
 
 
@@ -5098,9 +5114,11 @@ function replaceXrayRConfig(){
 
         (crontab -l ; echo "36 4 * * 0,1,2,3,4,5,6 systemctl restart XrayR.service ") | sort - | uniq - | crontab -
 
+        warpGoCrontab
     fi
 
     manageXrayR
+
 }
 
 
@@ -5131,11 +5149,48 @@ function editXrayRConfig(){
 
 
 
+function warpGoCrontab(){
 
+    cat > /root/check_ipv6_warp-go-cron.sh <<-EOF
+#!/bin/bash
 
+ipv6_address="2001:4860:4860::8888"
+ping_command="ping6 -c 4 $ipv6_address"
 
+# check ipv6 network connectivity
+if ping6 -c 4 $ipv6_address > /dev/null; then
+    echo "IPv6 network is connected"
+else
+    echo "IPv6 network is unreachable"
+    /usr/bin/warp-go o
+    sleep 2
+    /usr/bin/warp-go o
+fi
+EOF
 
+    chmod +x /root/check_ipv6_warp-go-cron.sh
 
+    # create a cron job
+    (crontab -l ; echo "50 4 * * 0,1,2,3,4,5,6 /root/check_ipv6_warp-go-cron.sh ") | sort - | uniq - | crontab -
+
+    echo "warp-go Crontab added"
+
+}
+
+function warpGoCheckIpv6(){
+    ipv6_address="2001:4860:4860::8888"
+    ping_command="ping6 -c 4 $ipv6_address"
+
+    # check ipv6 network connectivity
+    if ping6 -c 4 $ipv6_address > /dev/null; then
+        echo "IPv6 network is connected"
+    else
+        echo "IPv6 network is unreachable"
+        /usr/bin/warp-go o
+        sleep 2
+        /usr/bin/warp-go o
+    fi
+}
 
 
 
@@ -6818,25 +6873,15 @@ function start_menu(){
         92 )
             replaceXrayRConfig
         ;;
+        96 )
+            warpGoCheckIpv6
+            warpGoCrontab
+        ;;
         88 )
             upgradeScript
         ;;
-        99 )
-                su - ghostsite << EOF
-    echo "--------------------"
-    echo "Current user: $(whoami)"
-    whoami
-    $(whoami)
-    # ghost install --port 3468 --db=sqlite3 --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
-    echo "--------------------"
-EOF
-whoami
-sudo -u ghostsite bash << EOF
-echo "In"
-whoami
-EOF
-echo "Out"
-whoami
+        98 )
+            testCMSGhost
         ;;
         0 )
             exit 1
