@@ -5154,11 +5154,8 @@ function warpGoCrontab(){
     cat > /root/check_ipv6_warp-go-cron.sh <<-EOF
 #!/bin/bash
 
-ipv6_address="2001:4860:4860::8888"
-ping_command="ping6 -c 4 $ipv6_address"
-
 # check ipv6 network connectivity
-if ping6 -c 4 $ipv6_address > /dev/null; then
+if ping6 -c 4 2001:4860:4860::8888 > /dev/null; then
     echo "IPv6 network is connected"
 else
     echo "IPv6 network is unreachable"
