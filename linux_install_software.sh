@@ -5161,7 +5161,14 @@ else
     echo "IPv6 network is unreachable"
     /usr/bin/warp-go o
     sleep 2
-    /usr/bin/warp-go o
+
+    if ping6 -c 4 2001:4860:4860::8888 > /dev/null; then
+        echo "IPv6 network is connected"
+    else
+        echo "IPv6 network is unreachable"
+        /usr/bin/warp-go o
+        sleep 2
+    fi
 fi
 EOF
 
@@ -5185,7 +5192,13 @@ function warpGoCheckIpv6(){
         echo "IPv6 network is unreachable"
         /usr/bin/warp-go o
         sleep 2
-        /usr/bin/warp-go o
+        if ping6 -c 4 $ipv6_address > /dev/null; then
+            echo "IPv6 network is connected"
+        else
+            echo "IPv6 network is unreachable"
+            /usr/bin/warp-go o
+            sleep 2
+        fi
     fi
 }
 
