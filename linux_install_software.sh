@@ -5112,7 +5112,7 @@ function replaceXrayRConfig(){
 
         XrayR restart
 
-        (crontab -l ; echo "35 4 * * 0,1,2,3,4,5,6 rm /root/xrayr-*.log") | sort - | uniq - | crontab -
+        (crontab -l ; echo "35 4 * * 0,1,2,3,4,5,6 rm -f /root/xrayr-*.log") | sort - | uniq - | crontab -
         (crontab -l ; echo "36 4 * * 0,1,2,3,4,5,6 systemctl restart XrayR.service ") | sort - | uniq - | crontab -
 
         warpGoCrontab
