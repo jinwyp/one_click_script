@@ -2403,8 +2403,62 @@ function removeNginx(){
 
 
             if [[ $isDomainSSLRemoveInput == [Yy] ]]; then
-                rm -rf ${configWebsiteFatherPath}
+                shopt -s nullglob
+                renewDomainArray=("${configSSLAcmeScriptPath}"/*ecc*)
+                COUNTER1=1
+
+                echo
+                green " ================================================== "
+                green " 请选择要续签或要删除的域名:"
+                echo
+                for renewDomainName in "${renewDomainArray[@]}"; do
+
+                    substr=${renewDomainName##*/}
+                    substr=${substr%_ecc*}
+                    renewDomainArrayFix[${COUNTER1}]="$substr"
+                    echo " ${COUNTER1}. 域名: ${substr}"
+
+                    COUNTER1=$((COUNTER1 +1))
+                done
+
+                echo
+                read -r -p "请选择域名? 请输入纯数字:" isRenewDomainSelectNumberInput
+                isRenewDomainSelectNumberInput=${isRenewDomainSelectNumberInput:-99}
+
+                if [[ "$isRenewDomainSelectNumberInput" == "99" ]]; then
+                    red " 输入错误, 请重新输入!"
+                    echo
+                    read -r -p "请选择域名? 请输入纯数字:" isRenewDomainSelectNumberInput
+                    isRenewDomainSelectNumberInput=${isRenewDomainSelectNumberInput:-99}
+
+                    if [[ "$isRenewDomainSelectNumberInput" == "99" ]]; then
+                        red " 输入错误, 退出!"
+                        exit
+                    else
+                        echo
+                    fi
+                else
+                    echo
+                fi
+
+                configSSLRenewDomain=${renewDomainArrayFix[${isRenewDomainSelectNumberInput}]}
+
+                if [[ -n $(${configSSLAcmeScriptPath}/acme.sh --list | grep ${configSSLRenewDomain}) ]]; then
+
+                    ${configSSLAcmeScriptPath}/acme.sh --revoke -d ${configSSLRenewDomain} --ecc
+                    ${configSSLAcmeScriptPath}/acme.sh --remove -d ${configSSLRenewDomain} --ecc
+
+                    rm -rf "${configSSLAcmeScriptPath}/${configSSLRenewDomain}_ecc"
+                    echo
+                    green " 域名 ${configSSLRenewDomain} 的证书已经删除成功!"
+
+                else
+                    echo
+                    red " 您选择的域名 ${configSSLRenewDomain} 证书不存在！"
+                fi
+
                 ${sudoCmd} bash ${configSSLAcmeScriptPath}/acme.sh --uninstall
+                rm -rf ${configWebsiteFatherPath}
 
                 showHeaderGreen "Nginx 卸载完毕, SSL 证书文件已删除!"
 
