@@ -2069,8 +2069,9 @@ function installWebServerNginx(){
         cat > "${nginxConfigSiteConfPath}/airuniverse.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2112,8 +2113,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/ghost_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2180,8 +2182,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/cloudreve_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2230,8 +2233,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/alist_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2279,8 +2283,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/grist_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2323,8 +2328,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/nocodb_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2367,8 +2373,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/etherpad_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2411,8 +2418,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/joplin_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2454,8 +2462,9 @@ EOF
         cat > "${nginxConfigSiteConfPath}/affine_site.conf" <<-EOF
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2503,8 +2512,9 @@ EOF
     }
 
     server {
-        listen 443 ssl http2;
-        listen [::]:443 http2;
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2797,6 +2807,7 @@ function removeNginx(){
 
 configEtherpadProjectPath="${HOME}/etherpad"
 configEtherpadDockerPath="${HOME}/etherpad/docker"
+configEtherpadDockerComposeFilePath="${HOME}/etherpad/docker/docker-compose.yml"
 
 # Online collaborative Document
 function installEtherpad(){
@@ -2816,7 +2827,6 @@ function installEtherpad(){
     docker pull etherpad/etherpad
 
 
-
     read -r -p "请输入Admin的密码 (默认为admin):" configEtherpadPasswordInput
     configEtherpadPasswordInput=${configEtherpadPasswordInput:-admin}
     echo
@@ -2832,6 +2842,34 @@ function installEtherpad(){
     echo
     echo "docker run -d -p 9001:9001 -e ADMIN_PASSWORD=${configEtherpadPasswordInput} --name etherpad etherpad/etherpad"
     echo
+
+
+    cat > "${configEtherpadDockerComposeFilePath}" <<-EOF
+
+version: '3'
+
+services:
+    etherpad:
+        image: etherpad/etherpad:latest
+        container_name: etherpad
+        volumes:
+            - ${configEtherpadDockerPath}/data:/opt/etherpad-lite/var
+        ports:
+            - "9001:9001"
+        restart: unless-stopped
+        environment:
+            - SUPPRESS_ERRORS_IN_PAD_TEXT=true
+            - ADMIN_PASSWORD=1234562024
+            - DEFAULT_PAD_TEXT=Welcome to Etherpad Lite!
+        networks:
+            meet.jitsi:
+                aliases:
+                    - etherpad.meet.jitsi
+EOF
+
+    # docker-compose up -d
+
+
 
     if [[ "${isNginxInstallInput}" == [Yy] ]]; then
         isInstallNginx="true"
