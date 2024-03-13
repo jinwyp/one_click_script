@@ -567,7 +567,7 @@ function installSoftDownload(){
 
     if [[ "${osRelease}" == "debian" || "${osRelease}" == "ubuntu" ]]; then
 
-        PACKAGE_LIST=( "wget" "curl" "git" "unzip" "apt-transport-https" "cpu-checker" )
+        PACKAGE_LIST=( "wget" "curl" "git" "unzip" "apt-transport-https" "cpu-checker" "bc" "cron" )
 
         # 检查所有软件包是否已安装
         for package in "${PACKAGE_LIST[@]}"; do
@@ -696,6 +696,7 @@ EOF
             ${osSystemPackage} install -y xz-utils jq lsb-core lsb-release
             ${osSystemPackage} install -y iputils-ping
             ${osSystemPackage} install -y iperf3
+            ${osSystemPackage} install -y cron
         fi
 
     elif [ "$osRelease" == "debian" ]; then
@@ -8869,7 +8870,7 @@ function start_menu(){
     if [[ ${configLanguage} == "cn" ]] ; then
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray 一键安装脚本 | 2024-2-3 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray 一键安装脚本 | 2024-3-13 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. 安装linux内核 bbr plus, 安装WireGuard, 用于解锁 Netflix 限制和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -8920,7 +8921,7 @@ function start_menu(){
 
 
     green " ===================================================================================================="
-    green " Trojan-go V2ray Xray Installation | 2024-2-3 | OS support: centos7+ / debian9+ / ubuntu16.04+"
+    green " Trojan-go V2ray Xray Installation | 2024-3-13 | OS support: centos7+ / debian9+ / ubuntu16.04+"
     green " ===================================================================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
