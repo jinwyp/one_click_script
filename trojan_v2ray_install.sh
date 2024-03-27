@@ -7901,8 +7901,6 @@ function downloadMosdns(){
     cd ${configMosdnsBinPath} || exit
 
 
-
-
     if [[ "${isInstallMosdns}" == "true" ]]; then
         versionMosdns=$(getGithubLatestReleaseVersion "IrineSistiana/mosdns")
 
@@ -7950,9 +7948,8 @@ function downloadMosdns(){
 
 
     rm -rf "${configMosdnsPath}"
-    mkdir -p "${configMosdnsPath}"
+    mkdir -p "${configMosdnsPath}/rule"
     cd ${configMosdnsPath} || exit
-
 
 
     if [[ "${isUseEasyMosdnsConfig}" == "false" ]]; then
@@ -7974,12 +7971,55 @@ function downloadMosdns(){
         geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
         geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
         cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
+        privateUrl="https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/private.txt"
 
-        wget -O ${configMosdnsPath}/${geositeFilename} ${geositeUrl}
-        wget -O ${configMosdnsPath}/${geoipFilename} ${geoipeUrl}
-        wget -O ${configMosdnsPath}/${cnipFilename} ${cnipUrl}
+        wget -O ${configMosdnsPath}/rule/${geositeFilename} ${geositeUrl}
+        wget -O ${configMosdnsPath}/rule/${geoipFilename} ${geoipeUrl}
+        wget -O ${configMosdnsPath}/rule/${cnipFilename} ${cnipUrl}
+        wget -O ${configMosdnsPath}/rule/private.txt ${privateUrl}
+
+        hostsUrl="https://raw.githubusercontent.com/Journalist-HK/mosdns-config/main/rule/hosts.txt"
+
+        china_domain_listUrl="https://raw.githubusercontent.com/pmkol/easymosdns/main/rules/china_domain_list.txt"
+        china_ip_listUrl="https://raw.githubusercontent.com/pmkol/easymosdns/main/rules/china_ip_list.txt"
+        white_listUrl="https://raw.githubusercontent.com/Journalist-HK/Rules/master/white_list.txt"
+        block_listUrl="https://raw.githubusercontent.com/Journalist-HK/Rules/master/block_list.txt"
+
+        grey_listUrl="https://raw.githubusercontent.com/Journalist-HK/Rules/master/grey_list.txt"
+        ipv6_domain_listUrl="https://raw.githubusercontent.com/Journalist-HK/Rules/master/ipv6_domain_list.txt"
+        original_domain_listUrl="https://raw.githubusercontent.com/Journalist-HK/Rules/main/original_domain_list.txt"
+        akamai_domain_listUrl="https://raw.githubusercontent.com/Journalist-HK/Rules/master/akamai_domain_list.txt"
+        cdn_domain_listUrl="https://raw.githubusercontent.com/pmkol/easymosdns/rules/cdn_domain_list.txt"
+
+
+        wget -O ${configMosdnsPath}/rule/hosts.txt ${hostsUrl}
+        wget -O ${configMosdnsPath}/rule/china_domain_list.txt ${china_domain_listUrl}
+        wget -O ${configMosdnsPath}/rule/china_ip_list.txt ${china_ip_listUrl}
+        wget -O ${configMosdnsPath}/rule/white_list.txt ${white_listUrl}
+        wget -O ${configMosdnsPath}/rule/block_list.txt ${block_listUrl}
+
+        wget -O ${configMosdnsPath}/rule/grey_list.txt ${grey_listUrl}
+        wget -O ${configMosdnsPath}/rule/ipv6_domain_list.txt ${ipv6_domain_listUrl}
+        wget -O ${configMosdnsPath}/rule/original_domain_list.txt ${original_domain_listUrl}
+        wget -O ${configMosdnsPath}/rule/akamai_domain_list.txt ${akamai_domain_listUrl}
+        wget -O ${configMosdnsPath}/rule/cdn_domain_list.txt ${cdn_domain_listUrl}
+
+
+        wget -O ${configMosdnsPath}/rule/gfw.txt "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt"
+        wget -O ${configMosdnsPath}/rule/greatfire.txt "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/greatfire.txt"
+        wget -O ${configMosdnsPath}/rule/custom_list.txt "https://raw.githubusercontent.com/Journalist-HK/Rules/master/custom_list.txt"
+
+        wget -O ${configMosdnsPath}/rule/gfw_ip_list.txt "https://raw.githubusercontent.com/pmkol/easymosdns/rules/gfw_ip_list.txt"
+        wget -O ${configMosdnsPath}/rule/facebook.txt "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/facebook.txt"
+        wget -O ${configMosdnsPath}/rule/twitter.txt "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/twitter.txt"
+
+        wget -O ${configMosdnsPath}/rule/ip.txt "https://raw.githubusercontent.com/XIU2/CloudflareSpeedTest/master/ip.txt"
+        wget -O ${configMosdnsPath}/rule/ipv6.txt "https://raw.githubusercontent.com/XIU2/CloudflareSpeedTest/master/ipv6.txt"
+        wget -O ${configMosdnsPath}/rule/cloudfront.txt "https://raw.githubusercontent.com/Journalist-HK/Rules/master/cloudfront.txt"
+        wget -O ${configMosdnsPath}/rule/cloudfront_ipv6.txt "https://raw.githubusercontent.com/Journalist-HK/Rules/master/cloudfront_ipv6.txt"
+        wget -O ${configMosdnsPath}/rule/fastly.txt "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/fastly.txt"
+
     fi
-
 
 }
 
@@ -8006,7 +8046,6 @@ function installMosdns(){
         exit 1
     fi
 
-
     if [ -f "${configMosdnsBinPath}/mosdns-cn" ]; then
         echo
         green " =================================================="
@@ -8019,11 +8058,11 @@ function installMosdns(){
     green " =================================================="
     green " 请选择安装 Mosdns 还是 Mosdns-cn DNS 服务器:"
     echo
-    green " 1. Mosdns 配置规则比较复杂"
-    green " 2. Mosdns-cn, 容易配置, 相当于Mosdns配置简化版 推荐使用"
+    green " 1. Mosdns 配置规则比较复杂 推荐使用"
+    green " 2. Mosdns-cn, 容易配置, 相当于Mosdns配置简化版 "
     echo
     read -r -p "请选择Mosdns还是Mosdns-cn, 默认直接回车安装Mosdns-cn, 请输入纯数字:" isInstallMosdnsServerInput
-    isInstallMosdnsServerInput=${isInstallMosdnsServerInput:-2}
+    isInstallMosdnsServerInput=${isInstallMosdnsServerInput:-1}
     echo
 
     if [[ "${isInstallMosdnsServerInput}" == "1" ]]; then
@@ -8043,22 +8082,16 @@ function installMosdns(){
         else
             isUseEasyMosdnsConfig="true"
         fi
-
     else
         isInstallMosdns="false"
         isinstallMosdnsName="mosdns-cn"
     fi
-
-
-
 
     echo
     green " ================================================== "
     green "    开始安装 ${isinstallMosdnsName} !"
     green " ================================================== "
     echo
-
-
 
     echo
     green " ================================================== "
@@ -8077,59 +8110,29 @@ function installMosdns(){
     fi
 
 
-
-
     echo
     green " ================================================== "
-    green " 是否添加自建的DNS服务器, 默认直接回车不添加"
-    green " 选是为添加DNS服务器, 建议先架设好DNS服务器后再运行此脚本"
-    green " 本脚本默认已经内置了多个DNS服务器地址"
+    green " 是否添加本地运营商的DNS服务器, 默认直接回车不添加, 建议添加"
+    green " 选y是 添加本地运营商DNS服务器, 请通过光猫或路由器查看DNS的IP"
     echo
-    read -r -p "是否添加自建的DNS服务器? 默认直接回车为不添加, 请输入[y/N]:" isAddNewDNSServerInput
+    read -r -p "是否添加运营商的DNS服务器? 默认直接回车为不添加, 请输入[y/N]:" isAddNewDNSServerInput
     isAddNewDNSServerInput=${isAddNewDNSServerInput:-n}
 
-    addNewDNSServerIPMosdnsCnText=""
-    addNewDNSServerDomainMosdnsCnText=""
-
-    addNewDNSServerIPText=""
-    addNewDNSServerDomainText=""
     if [[ "$isAddNewDNSServerInput" == [Nn] ]]; then
         echo
+        chinaDNSServerIPInput="218.2.2.2"
     else
         echo
         green " ================================================== "
-        green " 请输入自建的DNS服务器IP 格式例如 1.1.1.1"
+        green " 请输入本地运营商DNS服务器IP 格式例如 1.1.1.1"
         green " 请保证端口53 提供DNS解析服务, 如果是非53端口请填写端口号, 格式例如 1.1.1.1:8053"
+        green " 请通过光猫或路由器查看DNS的IP 直接回车默认 218.2.2.2 江苏电信"
+        green " 全国DNS列表 https://github.com/easonjim/dns-server-list"
         echo
-        read -r -p "请输入自建DNS服务器IP地址, 请输入:" isAddNewDNSServerIPInput
-
-        if [ -n "${isAddNewDNSServerIPInput}" ]; then
-            addNewDNSServerIPMosdnsCnText="\"udp://${isAddNewDNSServerIPInput}\", "
-            read -r -d '' addNewDNSServerIPText << EOM
-        - addr: "udp://${isAddNewDNSServerIPInput}"
-          idle_timeout: 500
-          trusted: true
-EOM
-
-        fi
-
-        echo
-        green " ================================================== "
-        green " 请输入自建的DNS服务器的域名 用于提供DOH服务, 格式例如 www.dns.com"
-        green " 请保证服务器在 /dns-query 提供DOH服务, 例如 https://www.dns.com/dns-query"
-        echo
-        read -r -p "请输入自建DOH服务器的域名, 不要输入https://, 请直接输入域名:" isAddNewDNSServerDomainInput
-
-        if [ -n "${isAddNewDNSServerDomainInput}" ]; then
-            addNewDNSServerDomainMosdnsCnText="\"https://${isAddNewDNSServerDomainInput}/dns-query\", "
-            read -r -d '' addNewDNSServerDomainText << EOM
-        - addr: "https://${isAddNewDNSServerDomainInput}/dns-query"
-          idle_timeout: 400
-          trusted: true
-EOM
-        fi
+        read -r -p "请输入DNS服务器IP地址:" chinaDNSServerIPInput
+        chinaDNSServerIPInput=${chinaDNSServerIPInput:-218.2.2.2}
     fi
-
+    echo
 
     downloadMosdns
 
@@ -8137,7 +8140,6 @@ EOM
     if [[ "${isInstallMosdns}" == "true" ]]; then
 
         rm -f "${configMosdnsPath}/config.yaml"
-
 
         if [[ "${isUseEasyMosdnsConfig}" == "true" ]]; then
             downloadAndUnzip "https://mirror.apad.pro/dns/easymosdns.tar.gz" "${configMosdnsPath}" "easymosdns.tar.gz"
@@ -8154,179 +8156,549 @@ EOM
 
 
             cat > "${configMosdnsPath}/config.yaml" <<-EOF
-
 log:
   level: info
   file: "${configMosdnsPath}/mosdns.log"
 
-data_providers:
-  - tag: geosite
-    file: ${configMosdnsPath}/${geositeFilename}
-    auto_reload: true
-  - tag: geoip
-    file: ${configMosdnsPath}/${geoipFilename}
-    auto_reload: true
+# []string, 从其他配置文件载入 plugins 插件设置。
+# include 的插件会比本配置文件中的插件先初始化。
 
 plugins:
-  # 缓存
-  - tag: cache
-    type: cache
-    args:
-      size: 2048
-      lazy_cache_ttl: 86400
-      cache_everything: true
-
-  # hosts map
-  # - tag: map_hosts
-  #   type: hosts
+  # - tag: ecs_cn
+  #   type: ecs_handler
   #   args:
-  #     hosts:
-  #       - 'google.com 0.0.0.0'
-  #       - 'api.miwifi.com 127.0.0.1'
-  #       - 'www.baidu.com 0.0.0.0'
+  #     forward: false
+  #     preset: 58.208.0.0 # 电信，请针对不同的运营商自行修改
+  #     send: false
+  #     mask4: 12
+  #     mask6: 28
 
-  # 转发至本地服务器的插件
-  - tag: forward_local
-    type: fast_forward
+  - tag: ecs_tw
+    type: ecs_handler
     args:
-      upstream:
-        - addr: "udp://223.5.5.5"
-          trusted: true
-        - addr: "udp://119.29.29.29"
-          trusted: true
+      forward: false
+      preset: 168.95.0.0
+      send: false
+      mask4: 16
+      # mask6: 40
 
-  # 转发至远程服务器的插件
-  - tag: forward_remote
-    type: fast_forward
+  - tag: ecs_us
+    type: ecs_handler
     args:
-      upstream:
-${addNewDNSServerIPText}
-${addNewDNSServerDomainText}
-        - addr: "udp://208.67.222.222"
-          trusted: true
+      forward: false
+      preset: 38.94.109.0
+      send: false
+      mask4: 24
+      # mask6: 40
 
-        - addr: "udp://1.0.0.1"
-          trusted: true
-        - addr: "https://dns.cloudflare.com/dns-query"
-          idle_timeout: 400
-          trusted: true
+  # 不应处理本地 DNS 请求，防止死循环。正确顺序应该是 dnsmasq --> OpenClash（可选）--> mosdns。
+  # - tag: "forward_lan"
+  #   type: forward
+  #   args:
+  #     concurrent: 1
+  #     upstream:
+  #       - addr: "192.168.1.1"
 
-
-        - addr: "udp://5.2.75.231"
-          idle_timeout: 400
-          trusted: true
-
-        - addr: "udp://185.121.177.177"
-          idle_timeout: 400
-          trusted: true
-
-        - addr: "udp://94.130.180.225"
-          idle_timeout: 400
-          trusted: true
-
-        - addr: "udp://78.47.64.161"
-          idle_timeout: 400
-          trusted: true
-
-        - addr: "udp://51.38.83.141"
-
-        - addr: "udp://176.9.93.198"
-        - addr: "udp://176.9.1.117"
-
-        - addr: "udp://88.198.92.222"
-
-
-  # 匹配本地域名的插件
-  - tag: query_is_local_domain
-    type: query_matcher
+  - tag: "forward_local"
+    type: forward
     args:
-      domain:
-        - 'provider:geosite:cn'
+      concurrent: 2
+      upstreams:
+        - addr: "${chinaDNSServerIPInput}" # 江苏电信 DNS，自行修改
+        - addr: "218.4.4.4" # 江苏电信 DNS，自行修改
+        - addr: "210.22.70.3" # 上海联通 DNS，自行修改
 
-  - tag: query_is_gfw_domain
-    type: query_matcher
+  - tag: "forward_alidns"
+    type: forward
     args:
-      domain:
-        - 'provider:geosite:gfw'
+      concurrent: 1
+      upstreams:
+        - addr: "quic://223.6.6.6:853"
+        - addr: "https://dns.alidns.com/dns-query"
+          dial_addr: "223.5.5.5"
+          enable_http3: false
 
-  # 匹配非本地域名的插件
-  - tag: query_is_non_local_domain
-    type: query_matcher
+  - tag: "forward_easy"
+    type: "forward"
     args:
-      domain:
-        - 'provider:geosite:geolocation-!cn'
+      concurrent: 1
+      upstreams:
+        - addr: "https://doh.apad.pro/dns-query"
+          bootstrap: "218.2.2.2"
+          enable_http3: false
 
-  # 匹配广告域名的插件
-  - tag: query_is_ad_domain
-    type: query_matcher
+  - tag: "forward_remote"
+    type: "forward"
     args:
-      domain:
-        - 'provider:geosite:category-ads-all'
+      concurrent: 1 # 并发数。每次请求随机选取 concurrent 个 upstreams 发送请求。
+                    # 取最快返回的应答。超过 3 最多选 3 个。默认 1。
+      upstreams:
+        - addr: "https://162.159.36.1/dns-query"
+          enable_http3: false
+          # socks5: "127.0.0.1:1080" # 目前暂不支持用户名密码认证，只支持基于 TCP 的协议
+        - addr: "https://162.159.46.1/dns-query"
+          enable_http3: false
+        # - addr: "https://doh.opendns.com/dns-query"
+        #   dial_addr: "146.112.41.2"
+        #   enable_http3: false
+        # - addr: "https://public.dns.iij.jp/dns-query"
+        #   dial_addr: 103.2.57.5
+        #   enable_http3: false
+        # - addr: "tcp://208.67.220.220:5353" # CISCO OpenDNS
+        #   enable_pipeline: true
 
-  # 匹配本地 IP 的插件
-  - tag: response_has_local_ip
-    type: response_matcher
-    args:
-      ip:
-        - 'provider:geoip:cn'
-
-
-  # 主要的运行逻辑插件
-  # sequence 插件中调用的插件 tag 必须在 sequence 前定义，
-  # 否则 sequence 找不到对应插件。
-  - tag: main_sequence
+  - tag: remote_sequence
     type: sequence
     args:
-      exec:
-        # - map_hosts
+      - exec: prefer_ipv4
+      - exec: \$ecs_tw
+      - exec: \$forward_remote
+      - exec: return
 
-        # 缓存
-        - cache
+  - tag: "fallback"
+    type: "fallback"
+    args:
+      primary: forward_easy    # easy
+      secondary: forward_remote  # remote
+      threshold: 360           # 无响应回滚阈值。单位毫秒。默认 500 。
+      always_standby: true     # 副可执行插件始终待命。
 
-        # 屏蔽广告域名 ad block
-        - if: query_is_ad_domain
-          exec:
-            - _new_nxdomain_response
-            - _return
+  - tag: fallback_sequence
+    type: sequence
+    args:
+      - exec: prefer_ipv4
+      - exec: \$ecs_tw
+      - exec: \$fallback
+      - exec: return
 
-        # 已知的本地域名用本地服务器解析
-        - if: query_is_local_domain
-          exec:
-            - forward_local
-            - _return
+  - tag: fallback_sequence_ipv6
+    type: sequence
+    args:
+      - exec: prefer_ipv6
+      - exec: \$fallback
+      - exec: return
 
-        - if: query_is_gfw_domain
-          exec:
-            - forward_remote
-            - _return
+  - tag: has_resp_sequence
+    type: sequence
+    args:
+      - matches:
+          - has_resp
+        exec: accept
 
-        # 已知的非本地域名用远程服务器解析
-        - if: query_is_non_local_domain
-          exec:
-            - _prefer_ipv4
-            - forward_remote
-            - _return
 
-          # 剩下的未知域名用 IP 分流。
-          # primary 从本地服务器获取应答，丢弃非本地 IP 的结果。
-        - primary:
-            - forward_local
-            - if: "(! response_has_local_ip) && [_response_valid_answer]"
-              exec:
-                - _drop_response
-          secondary:
-            - _prefer_ipv4
-            - forward_remote
-          fast_fallback: 200
-          always_standby: true
 
-servers:
-  - exec: main_sequence
-    listeners:
-      - protocol: udp
-        addr: ":${mosDNSServerPort}"
-      - protocol: tcp
-        addr: ":${mosDNSServerPort}"
+
+  - tag: "hosts"
+    type: "hosts"
+    args:
+      # entries:
+      #   - "google.com 108.177.122.113"
+      files:
+        - "/etc/mosdns/rule/hosts.txt"
+
+  - tag: geosite_cn # 国内域名
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/china_domain_list.txt" # https://raw.githubusercontent.com/pmkol/easymosdns/rules/china_domain_list.txt
+
+  - tag: geoip_cn # 国内 IP
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/rule/china_ip_list.txt" # https://raw.githubusercontent.com/pmkol/easymosdns/rules/china_ip_list.txt
+
+  - tag: privatelist # 内网域名
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/private.txt" # https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/private.txt
+
+  - tag: whitelist
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/white_list.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/white_list.txt
+
+  - tag: blocklist
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/block_list.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/block_list.txt
+
+  - tag: greylist # 用来存放被污染的域名。
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/grey_list.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/grey_list.txt
+
+  - tag: ipv6list # 用来存放优先走 ipv6 的域名。
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/ipv6_domain_list.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/ipv6_domain_list.txt
+
+  - tag: originallist # 用来存放优不进行 IP 优选的域名。
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/original_domain_list.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/original_domain_list.txt
+
+  - tag: akamailist
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/akamai_domain_list.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/akamai_domain_list.txt
+
+  - tag: cdnlist
+    type: domain_set
+    args:
+      exps:
+        - "cloudflare.com"
+        - "cloudfront.net"
+        - "ghproxy.com"
+        - "microsoft.com"
+        - "playstation.com"
+        - "playstation.net"
+        - "redhat.com"
+        - "samsung.com"
+        - "ubi.com"
+        - "ubisoft.com"
+        - "xboxlive.com"
+      files:
+        - "/etc/mosdns/rule/cdn_domain_list.txt" # https://raw.githubusercontent.com/pmkol/easymosdns/rules/cdn_domain_list.txt
+
+  - tag: gfwlist
+    type: domain_set
+    args:
+      files:
+        - "/etc/mosdns/rule/gfw.txt" # https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt
+        - "/etc/mosdns/rule/greatfire.txt" # https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/greatfire.txt
+        - "/etc/mosdns/rule/custom_list.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/custom_list.txt
+
+  - tag: banned_ip
+    type: ip_set
+    args:
+      ips:
+        - "0.0.0.0/32"
+        - "2001::/32"
+      files:
+        - "/etc/mosdns/rule/gfw_ip_list.txt" # https://raw.githubusercontent.com/pmkol/easymosdns/rules/gfw_ip_list.txt
+        - "/etc/mosdns/rule/facebook.txt" # https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/facebook.txt
+        # - "/etc/mosdns/rule/telegram.txt" # https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/telegram.txt
+        - "/etc/mosdns/rule/twitter.txt" # https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/twitter.txt
+
+  - tag: cloudflare_ip
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/rule/ip.txt" # https://raw.githubusercontent.com/XIU2/CloudflareSpeedTest/master/ip.txt
+
+  - tag: cloudflare_ipv6
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/rule/ipv6.txt" # https://raw.githubusercontent.com/XIU2/CloudflareSpeedTest/master/ipv6.txt
+
+  - tag: cloudfront_ip
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/rule/cloudfront.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/cloudfront.txt
+
+  - tag: cloudfront_ipv6
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/rule/cloudfront_ipv6.txt" # https://raw.githubusercontent.com/Journalist-HK/Rules/master/cloudfront_ipv6.txt
+
+  - tag: fastly_ip
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/rule/fastly.txt" # https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/fastly.txt
+
+  - tag: "cache_0"
+    type: "cache"
+    args:
+      size: 8192  # 默认: 1024。
+      # lazy_cache_ttl > 0 会启用 lazy cache。
+      # 所有应答都会在缓存中存留 lazy_cache_ttl 秒，但自身的 TTL 仍然有效。如果命中过期的应答，
+      # 则缓存会立即返回 TTL 为 5 的应答，然后自动在后台发送请求更新数据。
+      lazy_cache_ttl: 259200  # 默认: 0（禁用 lazy cache）。
+                              # 建议值 86400（1天）~ 259200（3天）
+      dump_file: /usr/share/mosdns/cache.dump
+      # (实验性) 自动保存间隔。单位秒。默认 600。
+      # 如果距离上次 dump 有 1024 次更新，则自动保存。
+      dump_interval: 7200
+
+
+
+
+
+
+
+  # IP 优选，需要定期修改，最好填写 2 - 4 个
+  - tag: blackhole_akamai # 替换部分 AKAMAI 域名 IP，详见 https://github.com/IrineSistiana/mosdns/discussions/489
+    type: sequence
+    args:
+      - exec: black_hole 119.149.188.15 202.142.229.59 223.44.51.33 # best_akamai_ip
+      - exec: ttl 3600-0
+      - exec: accept # 运行 black_hole 之后接受请求，不再进行后续判断
+
+  - tag: blackhole_akamai_ipv6
+    type: sequence
+    args:
+      - exec: black_hole 2600:140b:1000::1730:d5ab 2600:140b:1000::1730:d5ce # best_akamai_ipv6
+      - exec: ttl 3600-0
+      - exec: accept
+
+  - tag: blackhole_cloudflare
+    type: sequence
+    args:
+      - exec: black_hole 104.17.7.198 104.17.61.114 162.159.0.195 162.159.7.75 # best_cloudflare_ip
+      - exec: ttl 3600-0
+      - exec: accept
+
+  - tag: blackhole_cloudflare_ipv6
+    type: sequence
+    args:
+      - exec: black_hole 2a06:98c1:310f::e0c0:131c:2cb3 2a06:98c1:310f::ee3c:1d43:fc2e:6f6c # best_cloudflare_ipv6
+      - exec: ttl 3600-0
+      - exec: accept
+
+  - tag: blackhole_cloudfront
+    type: sequence
+    args:
+      - exec: black_hole 18.172.26.139 18.172.28.94 52.84.151.126 52.84.228.48 # best_cloudfront_ip
+      - exec: ttl 3600-0
+      - exec: accept
+
+  - tag: blackhole_cloudfront_ipv6
+    type: sequence
+    args:
+      - exec: black_hole 2600:9000:20e9:1edf:3560:977b:c990:1f75 2600:9000:20e9:1edf:35c0:29ed:b6ac:7b3b # best_cloudfront_ipv6
+      - exec: ttl 3600-0
+      - exec: accept
+
+  - tag: remote_sequence_us # 使用 US ECS 请求上游
+    type: sequence
+    args:
+      - exec: prefer_ipv4
+      - exec: \$ecs_us
+      - exec: \$forward_remote
+      - exec: jump has_resp_sequence
+
+  - tag: fallback_sequence_us # 使用 US ECS 请求上游
+    type: sequence
+    args:
+      - exec: prefer_ipv4
+      - exec: \$ecs_us
+      - exec: \$fallback
+      - exec: jump has_resp_sequence
+
+  - tag: change_cdn_ip_akamai
+    type: sequence
+    args:
+      - matches:
+          - cname akamai.net
+          - qtype 1
+          - has_wanted_ans # 防止纯 IPV6 域名被替换
+        exec: jump blackhole_akamai
+      - matches:
+          - cname akamai.net
+          - qtype 28
+          - has_wanted_ans
+        exec: jump blackhole_akamai_ipv6 # 如果不需要对纯 IPV6 域名优选可以去掉这一段
+      - exec: return
+
+  - tag: change_cdn_ip_cf # https://github.com/XIU2/CloudflareSpeedTest/discussions/317
+    type: sequence
+    args:
+      - matches:
+          - qtype 1
+          - has_wanted_ans
+          - resp_ip \$cloudflare_ip
+        exec: jump blackhole_cloudflare
+      - matches:
+          - qtype 1
+          - has_wanted_ans
+          - resp_ip \$cloudfront_ip
+        exec: jump blackhole_cloudfront
+      - matches:
+          - qtype 28
+          - has_wanted_ans
+          - resp_ip \$cloudflare_ipv6
+        exec: jump blackhole_cloudflare_ipv6
+      - matches:
+          - qtype 28
+          - has_wanted_ans
+          - resp_ip \$cloudfront_ipv6
+        exec: jump blackhole_cloudfront_ipv6
+      - exec: return
+
+  - tag: reforward_fastly_remote # 使用 US ECS 再次查询优化 Fastly CDN 结果
+    type: sequence
+    args:
+      - matches:
+          - resp_ip \$fastly_ip
+        exec: jump remote_sequence_us
+      - exec: return
+
+  - tag: reforward_fastly_fallback # 使用 US ECS 再次查询优化 Fastly CDN 结果
+    type: sequence
+    args:
+      - matches:
+          - resp_ip \$fastly_ip
+        exec: jump fallback_sequence_us
+      - exec: return
+
+  - tag: gfw_sequence # 处理 GFW 域名
+    type: sequence
+    args:
+      - exec: jump remote_sequence
+      - exec: jump change_cdn_ip_akamai
+      - exec: jump change_cdn_ip_cf
+      - exec: jump reforward_fastly_remote
+      - exec: accept # 查询失败也会停止，防止后续查询回落到国内上游
+
+  - tag: default_sequence # 默认使用 fallback
+    type: sequence
+    args:
+      - exec: jump fallback_sequence
+      - exec: jump change_cdn_ip_akamai
+      - exec: jump change_cdn_ip_cf
+      - exec: jump reforward_fastly_fallback
+      - exec: accept # 查询失败也会停止，防止后续查询回落到国内上游
+
+  - tag: default_sequence_original # 使用 fallback，不替换 CDN IP
+    type: sequence
+    args:
+      - exec: jump fallback_sequence
+      - exec: jump has_resp_sequence
+
+  - tag: default_sequence_ipv6 # 使用 fallback，但不替换 CDN IP，IPV6 优先
+    type: sequence
+    args:
+      - exec: jump fallback_sequence_ipv6
+      - exec: jump has_resp_sequence
+
+  - tag: ali_sequence
+    type: sequence
+    args:
+      # - exec: prefer_ipv4
+      - exec: \$forward_alidns
+      - exec: jump change_cdn_ip_akamai
+      - exec: jump change_cdn_ip_cf
+      - exec: jump reforward_fastly_fallback
+      - exec: accept # 查询失败也会停止，防止后续查询其他上游
+
+  - tag: ali_sequence_ipv4
+    type: sequence
+    args:
+      - exec: prefer_ipv4
+      - exec: \$forward_alidns
+      - exec: jump change_cdn_ip_akamai
+      - exec: jump change_cdn_ip_cf
+      - exec: jump reforward_fastly_fallback
+      - exec: accept # 查询失败也会停止，防止后续查询其他上游
+
+  # - tag: reforward_banned_ip
+  #   type: sequence
+  #   args:
+  #     - exec: debug_print "DNS poisoning detected"
+  #     - exec: jump fallback_sequence
+  #     - exec: return
+
+  - tag: main
+    type: sequence
+    args:
+      - matches:
+          - qtype 65
+        exec: reject 3 # 屏蔽 QTYPE 65
+
+      - exec: \$hosts
+      - exec: jump has_resp_sequence
+
+      - matches:
+          - qname \$privatelist #内网域名
+        exec: reject 5 # 屏蔽内网域名
+        # exec: \$forward_lan # 查询内网 DNS
+      # - exec: jump has_resp_sequence
+
+      - matches:
+          - qname \$whitelist # DDNS 和 其他白名单
+        exec: \$forward_local
+      - exec: ttl 5-180
+      - exec: jump has_resp_sequence
+
+      - matches:
+          - qname \$blocklist # 黑名单，可添加去广告列表
+        exec: reject 5
+
+      - exec: \$cache_0 # 下面的请求结果均进入缓存
+
+      - matches:
+          - qname \$ipv6list
+        exec: jump default_sequence_ipv6 # IPV6 域名请求 EASY DNS
+
+      - matches:
+          - qname \$originallist # 不进行 IP 替换的域名，通常是游戏等使用非常用端口的域名
+        exec: jump default_sequence_original
+
+      - matches:
+          - qname \$greylist
+        exec: jump default_sequence # 污染域名请求 EASY DNS
+
+      - matches:
+          - qname \$geosite_cn # 国内域名走阿里 DNS，也可以走运营商 DNS
+        exec: jump ali_sequence # 如果使用策略 1，可以考虑去掉这一段。去掉后，当阿里 DNS 查询失败后会查询可信上游。
+
+      - matches:
+          - qname \$cdnlist apple.com icloud.com edgesuite.net msftconnecttest.com trafficmanager.net
+        exec: jump ali_sequence_ipv4 # 我这里用阿里 DNS 请求 AKAMAI 域名返回东京电信的概率较高，可以替换成其他。
+
+      - matches:
+          - qname \$gfwlist
+        exec: jump gfw_sequence # GFW 域名直接请求海外 DNS
+
+      - matches:
+          - qname \$akamailist
+        exec: jump ali_sequence_ipv4 # 我这里用阿里 DNS 请求 AKAMAI 域名返回东京电信的概率较高，可以替换成其他。
+
+      # 策略 1：默认查询国内上游，入返回境外 IP，再次将域名交给可信 DNS 查询。
+      - exec: \$forward_alidns # 默认使用阿里 DNS，如果担心 DNS 泄露，可以调换顺序，把 fallback 放在前面，代价是延迟会变高。这种情况下可以使用前面的 cdnlist 域名先做判断。
+      - matches:
+          - resp_ip \$banned_ip # 记录被污染域名，日后加入 gerylist。可以去掉。
+        exec: debug_print "DNS poisoning detected"
+      - matches:
+          - "resp_ip \$geoip_cn"
+        exec: accept # 返回国内 IP 直接接受
+      - exec: jump change_cdn_ip_akamai
+      - matches: # 有些 AKAMAI 的域名不能直接替换 IP（没有绑定全证书），此处多加一次判断，接受所有 AKAMAI CDN 的 IP。
+          - cname \$akamailist
+        exec: accept
+      - exec: jump change_cdn_ip_cf
+      - exec: jump reforward_fastly_fallback
+
+      # 策略 2：注释上方策略 1 的配置，默认查询可信 DNS，可以避免“DNS 泄露”，对上游稳定性要求更高
+      - exec: jump default_sequence # 其余域名使用可信 DNS
+
+
+  - tag: udp_server
+    type: udp_server
+    args:
+      entry: main
+      listen: ":${mosDNSServerPort}"
+
+  - tag: tcp_server
+    type: tcp_server
+    args:
+      entry: main
+      listen: ":${mosDNSServerPort}"
+      # cert: "/etc/nginx/conf.d/_lan.crt" # 配置 cert 和 key 后会启用 TLS (DoT)。
+      # key: "/etc/nginx/conf.d/_lan.key"
+      idle_timeout: 10 # 空连接超时。单位秒。默认 10。
 
 EOF
 
@@ -8357,11 +8729,11 @@ debug: false
 log_file: "${configMosdnsPath}/mosdns-cn.log"
 upstream: []
 local_upstream: ["udp://223.5.5.5", "udp://119.29.29.29"]
-local_ip: ["${configMosdnsPath}/${geoipFilename}:cn"]
+local_ip: ["${configMosdnsPath}/rule/${geoipFilename}:cn"]
 local_domain: []
 local_latency: 50
-remote_upstream: [${addNewDNSServerIPMosdnsCnText}  ${addNewDNSServerDomainMosdnsCnText}  "udp://1.0.0.1", "udp://208.67.222.222", "tls://8.8.4.4:853", "udp://5.2.75.231", "udp://172.105.216.54"]
-remote_domain: ["${configMosdnsPath}/${geositeFilename}:geolocation-!cn"]
+remote_upstream: [ "udp://1.0.0.1", "udp://208.67.222.222", "tls://8.8.4.4:853", "udp://5.2.75.231", "udp://172.105.216.54"]
+remote_domain: ["${configMosdnsPath}/rule/${geositeFilename}:geolocation-!cn"]
 working_dir: "${configMosdnsPath}"
 cd2exe: false
 
@@ -8413,7 +8785,6 @@ function removeMosdns(){
         else
             ${configMosdnsBinPath}/mosdns-cn --service stop
             ${configMosdnsBinPath}/mosdns-cn --service uninstall
-
         fi
 
         rm -rf "${configMosdnsBinPath}"

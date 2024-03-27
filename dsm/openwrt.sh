@@ -93,7 +93,7 @@ getIPDKdownloadFilename(){
         elif [ "${filename#*geoip}" != "$filename" ]; then
             v2rayGeoIpFilename="${filename}"
             v2rayGeoIpUrl="https://op.supes.top/packages/x86_64/${v2rayGeoIpFilename}"
-            echo "5 $v2rayGeoIpFilename"            
+            echo "5 $v2rayGeoIpFilename"
         else
             tempUrlXX=""
         fi
@@ -164,7 +164,7 @@ installMosdns(){
 
 
 
-   
+
     echo
     echo " ================================================== "
     echo " 请填写mosdns运行的端口号 默认端口5335"
@@ -190,13 +190,13 @@ installMosdns(){
     addNewDNSServerIPText=""
     addNewDNSServerDomainText=""
     if [[ "$isAddNewDNSServerInput" == [Nn] ]]; then
-        echo 
+        echo
     else
         echo
         echo " ================================================== "
         echo " 请输入自建的DNS服务器IP 格式例如 1.1.1.1"
         echo " 请保证端口53 提供DNS解析服务, 如果是非53端口请填写端口号, 格式例如 1.1.1.1:8053"
-        echo 
+        echo
         read -r -p "请输入自建DNS服务器IP地址, 请输入:" isAddNewDNSServerIPInput
 
         if [ -n "${isAddNewDNSServerIPInput}" ]; then
@@ -212,12 +212,12 @@ EOM
         echo " ================================================== "
         echo " 请输入自建的DNS服务器的域名 用于提供DOH服务, 格式例如 www.dns.com"
         echo " 请保证服务器在 /dns-query 提供DOH服务, 例如 https://www.dns.com/dns-query"
-        echo 
+        echo
         read -r -p "请输入自建DOH服务器的域名, 不要输入https://, 请直接输入域名:" isAddNewDNSServerDomainInput
 
         if [ -n "${isAddNewDNSServerDomainInput}" ]; then
         read -r -d '' addNewDNSServerDomainText << EOM
-        - addr: "https://${isAddNewDNSServerDomainInput}/dns-query"       
+        - addr: "https://${isAddNewDNSServerDomainInput}/dns-query"
           idle_timeout: 400
           trusted: true
 EOM
@@ -250,13 +250,13 @@ EOM
     if [ ! -f "${mosdnsDownloadPath}/${geositeFilename}" ]; then
         wget -O ${mosdnsDownloadPath}/${geositeFilename} ${geositeUrl}
         wget -O ${mosdnsDownloadPath}/${geoipFilename} ${geoipeUrl}
-    fi 
+    fi
 
     if [ ! -f "${mosdnsDownloadPath}/${geositeFilename}" ]; then
         echo
         echo " ${geositeUrl}"
         echo " 下载失败, 请检查网络是否可以正常访问 gitHub.com"
-    fi 
+    fi
 
     if [ ! -f "${mosdnsDownloadPath}/${geoipFilename}" ]; then
         echo
@@ -266,7 +266,7 @@ EOM
 
 
     echo
-    echo " ================================================== "    
+    echo " ================================================== "
     echo " Install mosdns.ipk and luci-app-mosdns.ipk. 开始安装 mosdns.ipk luci-app-mosdns.ipk"
     echo
 
@@ -295,10 +295,10 @@ EOM
         cp -f ${mosdnsDownloadPath}/${geoipFilename} ${mosdnsEtcPath}
     else
         cp -f /usr/share/v2ray/${geoipFilename} ${mosdnsEtcPath}
-    fi 
+    fi
 
 
-    cat > "${mosdnsEtcPath}/cus_config.yaml" <<-EOF    
+    cat > "${mosdnsEtcPath}/cus_config.yaml" <<-EOF
 
 log:
   level: info
@@ -363,22 +363,22 @@ ${addNewDNSServerDomainText}
 
         - addr: "udp://185.121.177.177"
           idle_timeout: 400
-          trusted: true        
+          trusted: true
 
         - addr: "udp://94.130.180.225"
           idle_timeout: 400
-          trusted: true     
+          trusted: true
 
         - addr: "udp://78.47.64.161"
           idle_timeout: 400
-          trusted: true 
+          trusted: true
 
-        - addr: "udp://51.38.83.141"          
+        - addr: "udp://51.38.83.141"
 
         - addr: "udp://176.9.93.198"
-        - addr: "udp://176.9.1.117"                  
+        - addr: "udp://176.9.1.117"
 
-        - addr: "udp://88.198.92.222"                  
+        - addr: "udp://88.198.92.222"
 
 
   # 匹配本地域名的插件
