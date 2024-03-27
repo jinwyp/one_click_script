@@ -150,13 +150,15 @@ wget --no-check-certificate https://raw.githubusercontent.com/jinwyp/one_click_s
 3. 如果是 windows 系统, 也可以可以从 [mosdns-cn 官方网站](https://github.com/IrineSistiana/mosdns-cn/releases/download/v1.4.0/mosdns-cn-windows-amd64.zip) 下载 mosdns-cn 压缩包直接解压后放到一个目录中. 再下载 [geosite文件](https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat) [geoip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat)  [cnip文件](https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat)  放到mosdns-cn解压的同一个目录中. 最后运行 ``` mosdns-cn -s :53 --blacklist-domain "geosite.dat:category-ads-all" --local-upstream https://223.5.5.5/dns-query --local-domain "geosite.dat:cn" --local-ip "geoip.dat:cn" --remote-upstream https://8.8.8.8/dns-query --remote-domain "geosite.dat:geolocation-!cn" ``` 即可.
 
 
-4. 如果是非OpenWRT路由器, 需要在你的终端设备上设置DNS服务器为Mosdns的IP. 例如windows 需要在网络设置设置中指定DNS服务器为Mosdns的IP. 如果是OpenWRT路由器则不用在每个终端设备上设置, 只需要在路由器上设置即可,请看下面OpenWRT的设置.
+4. 如果是OpenWRT路由器则不用在每个终端设备上设置, 只需要在路由器上设置即可,请看下面OpenWRT的设置. 如果是非OpenWRT路由器, 需要在你的每个终端设备上设置DNS服务器为Mosdns的IP. 例如windows 需要在网络设置设置中指定DNS服务器为Mosdns的IP.
 ![mosdns6](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns6.png?raw=true)
 
 5. 在OpenWRT中可以在DHCP给客户端分配IP时, 直接给客户端赋予与路由器IP不同的DNS服务器, 这样无论通过上面方法架设好mosdns后, 把运行mosdns 的机器的IP填入下图.客户端就不用手动设置DNS了. OpenWRT管理菜单: 网络 -> 接口 -> LAN 点击"修改" 按钮 进入页面下部 "DHCP 服务器" 部分, 点击第二个tab "高级设置" -> DHCP 选项 填入6,192.168.1.5, 其中192.168.1.5改为mosdns的机器IP就可以了.  这样所有客户端会默认使用mosdns作为DNS服务器, 同时也不需要上面的设置 DHCP/DNS -> DNS 转发 的修改方法了. 客户端需要重新连接一下WIFI或网络重新获取IP地址才能生效.
 ![mosdns5](https://github.com/jinwyp/one_click_script/blob/master/docs/mosdns5.png?raw=true)
 
-4. 具体参数可以参考官方网站 https://github.com/IrineSistiana/mosdns-cn 和 https://github.com/IrineSistiana/mosdns
+
+6. 具体参数可以参考官方网站 https://github.com/IrineSistiana/mosdns-cn 和 https://github.com/IrineSistiana/mosdns
+7. Mosdns 相关整理好的配置文件 https://github.com/pmkol/easymosdns 和 https://github.com/Journalist-HK/mosdns-config
 
 ### DNS服务器列表大全
 
