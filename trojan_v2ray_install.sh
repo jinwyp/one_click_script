@@ -1,10 +1,10 @@
 #!/bin/bash
 
 export LC_ALL=C
-#export LANG=C
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
-
+export LC_COLLATE=C
+export LC_CTYPE=en_US.UTF-8
 
 sudoCmd=""
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
@@ -596,7 +596,7 @@ function installSoftDownload(){
             ${sudoCmd} dnf distro-sync -y
         fi
 
-        PACKAGE_LIST_Centos=( "wget" "curl" "git" "unzip" )
+        PACKAGE_LIST_Centos=( "wget" "curl" "git" "unzip" "glibc-langpack-en" )
 
         # 检查所有软件包是否已安装
         for package in "${PACKAGE_LIST_Centos[@]}"; do
@@ -817,6 +817,8 @@ function installSoftOhMyZsh(){
 
         zshAutosuggestionsConfig=${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
         sed -i "s/ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'/ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=1'/" $zshAutosuggestionsConfig
+
+        sed -i "s/# zstyle ':omz:update' mode disabled/zstyle ':omz:update' mode disabled/" $zshConfig
 
 
         # Actually change the default shell to zsh
