@@ -2331,24 +2331,41 @@ function installWARPClient(){
         ${sudoCmd} apt install -y gnupg
         ${sudoCmd} apt install -y apt-transport-https
 
-        curl https://pkg.cloudflareclient.com/pubkey.gpg | ${sudoCmd} apt-key add -
+        # Add cloudflare gpg key
+        sudo mkdir -p --mode=0755 /usr/share/keyrings
+        curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
 
-        echo "deb http://pkg.cloudflareclient.com/ $osReleaseVersionCodeName main" | ${sudoCmd} tee /etc/apt/sources.list.d/cloudflare-client.list
+        # Add this repo to your apt repositories
+        echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $osReleaseVersionCodeName main" | ${sudoCmd} tee /etc/apt/sources.list.d/cloudflared.list
+
+        # install cloudflared
 
         ${sudoCmd} apt-get update
         ${sudoCmd} apt install -y cloudflare-warp
+        ${sudoCmd} apt-get install cloudflared
 
     elif [[ "${osRelease}" == "centos" ]]; then
         ${sudoCmd} rpm -e gpg-pubkey-835b8acb-*
         ${sudoCmd} rpm -e gpg-pubkey-8e5f9a5d-*
 
         if [ "${osReleaseVersionNoShort}" -eq 7 ]; then
-            ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el7.rpm
-            ${sudoCmd} rpm -ivh http://pkg.cloudflare.com/cloudflare-release-latest.el7.rpm
             # red "Cloudflare WARP Official client is not supported on Centos 7"
+
+            # This requires yum config-manager
+            ${sudoCmd} yum install yum-utils
+
+            # Add cloudflared.repo to config-manager
+            ${sudoCmd} yum-config-manager --add-repo https://pkg.cloudflare.com/cloudflared-ascii.repo
+
+            # install cloudflared
+            ${sudoCmd} yum install cloudflared
         else
-            ${sudoCmd} rpm -ivh --replacepkgs --replacefiles https://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
-            # ${sudoCmd} rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
+            # This requires dnf config-manager
+            # Add cloudflared.repo to config-manager
+            ${sudoCmd} dnf config-manager --add-repo https://pkg.cloudflare.com/cloudflared-ascii.repo
+
+            # install cloudflared
+            ${sudoCmd} dnf install cloudflared
         fi
 
         ${sudoCmd} yum install -y cloudflare-warp
@@ -2762,6 +2779,8 @@ function enableWireguardIPV6OrIPV4(){
         preferIPV4
     fi
 }
+
+
 
 
 function preferIPV4(){

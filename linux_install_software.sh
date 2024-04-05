@@ -2071,7 +2071,7 @@ function installWebServerNginx(){
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2104,6 +2104,15 @@ function installWebServerNginx(){
         server_name  $configSSLDomain;
         root $configWebsitePath;
         index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
     }
 
 EOF
@@ -2115,7 +2124,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2152,16 +2161,21 @@ EOF
         root ${configGhostSitePath}/system/nginx-root; # Used for acme.sh SSL verification (https://acme.sh)
         index index.php index.html index.htm;
 
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root ${configGhostSitePath}/system/nginx-root;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
+
         location / {
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto \$scheme;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header Host \$http_host;
             proxy_pass http://127.0.0.1:3468;
-        }
-
-        location ~ /.well-known {
-            allow all;
         }
 
         client_max_body_size 50m;
@@ -2184,7 +2198,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2217,7 +2231,18 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
+
         return 301 https://$configSSLDomain\$request_uri;
     }
 
@@ -2235,7 +2260,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2273,7 +2298,17 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
         return 301 https://$configSSLDomain\$request_uri;
     }
 
@@ -2285,7 +2320,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2318,7 +2353,17 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2330,7 +2375,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2355,7 +2400,6 @@ EOF
             proxy_set_header If-Range \$http_if_range;
             proxy_redirect off;
             proxy_pass http://127.0.0.1:8080;
-
         }
     }
 
@@ -2363,7 +2407,17 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2375,7 +2429,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2408,7 +2462,17 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2420,7 +2484,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2453,7 +2517,17 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2464,7 +2538,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2497,7 +2571,17 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
         return 301 https://$configSSLDomain\$request_uri;
     }
 EOF
@@ -2514,7 +2598,7 @@ EOF
     server {
         listen 443 ssl;
         listen [::]:443 ssl;
-        http2  on;
+        # http2  on;
         server_name  $configSSLDomain;
 
         ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
@@ -2580,8 +2664,137 @@ EOF
         listen 80;
         listen [::]:80;
         server_name  $configSSLDomain;
-        # root $configWebsitePath;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
         return 301 https://$configSSLDomain\$request_uri;
+    }
+EOF
+
+
+    elif [[ "${configInstallNginxMode}" == "freegpt35" ]]; then
+        cat > "${nginxConfigSiteConfPath}/freegpt35_site.conf" <<-EOF
+
+    upstream freegptapi {
+        server 127.0.0.1:${configAurora_PORT};
+        server 127.0.0.1:${configFreegpt35_PORT};
+    }
+    upstream freegptnextweb {
+        server 127.0.0.1:${configChatGPTNextWeb_PORT};
+    }
+
+    server {
+        listen 443 ssl;
+        listen [::]:443 ssl;
+        # http2  on;
+        server_name  $configSSLDomain;
+
+        ssl_certificate       ${configSSLCertPath}/$configSSLCertFullchainFilename;
+        ssl_certificate_key   ${configSSLCertPath}/$configSSLCertKeyFilename;
+        ssl_protocols         TLSv1.2 TLSv1.3;
+        ssl_ciphers           TLS-AES-256-GCM-SHA384:TLS-CHACHA20-POLY1305-SHA256:TLS-AES-128-GCM-SHA256:TLS-AES-128-CCM-8-SHA256:TLS-AES-128-CCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256;
+
+        # Config for 0-RTT in TLSv1.3
+        ssl_early_data on;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security "max-age=31536000";
+
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location / {
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+
+            client_max_body_size 50M;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header REMOTE-HOST \$remote_addr;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_set_header X-Frame-Options SAMEORIGIN;
+            proxy_buffers 256 16k;
+            proxy_buffer_size 16k;
+            proxy_read_timeout 600s;
+            proxy_cache_revalidate on;
+            proxy_cache_min_uses 2;
+            proxy_cache_use_stale timeout;
+            proxy_cache_lock on;
+            proxy_http_version 1.1;
+            proxy_pass http://freegptnextweb;
+
+            add_header Cache-Control no-cache;
+            proxy_cache off;
+            proxy_buffering off;
+            chunked_transfer_encoding on;
+            tcp_nopush on;
+            tcp_nodelay on;
+            keepalive_timeout 300;
+
+        }
+
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        server_name  $configSSLDomain;
+        root $configWebsitePath;
+        index index.php index.html index.htm;
+
+        location ^~ /.well-known/acme-challenge/ {
+            default_type "text/plain";
+            allow all;
+            root $configWebsitePath;
+        }
+        location = /.well-known/acme-challenge/ {
+            return 404;
+        }
+        location / {
+            proxy_set_header Range \$http_range;
+            proxy_set_header If-Range \$http_if_range;
+            proxy_redirect off;
+
+            client_max_body_size 50M;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host \$http_host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header REMOTE-HOST \$remote_addr;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_set_header X-Frame-Options SAMEORIGIN;
+            proxy_buffers 256 16k;
+            proxy_buffer_size 16k;
+            proxy_read_timeout 600s;
+            proxy_cache_revalidate on;
+            proxy_cache_min_uses 2;
+            proxy_cache_use_stale timeout;
+            proxy_cache_lock on;
+            proxy_http_version 1.1;
+            proxy_pass http://freegptapi;
+
+            add_header Cache-Control no-cache;
+            proxy_cache off;
+            proxy_buffering off;
+            chunked_transfer_encoding on;
+            tcp_nopush on;
+            tcp_nodelay on;
+            keepalive_timeout 300;
+
+        }
     }
 EOF
 
@@ -2805,6 +3018,175 @@ function removeNginx(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+configGhostProjectPath="/opt/ghost"
+configGhostDockerPath="/opt/ghost/docker"
+configGhostSitePath="/opt/ghost/site"
+ghostUser="ghostsite"
+
+function installCMSGhost(){
+    if [[ -d "${configGhostDownloadPath}" ]]; then
+        showHeaderRed "Ghost already installed !"
+        exit
+    fi
+    showHeaderGreen "Prepare to install Ghost !"
+
+    if ! command -v npm &> /dev/null ; then
+        showHeaderRed "Npm could not be found, Please install Nodejs first !"
+        exit
+    fi
+
+    isInstallNginx="true"
+    configSSLCertPath="${configSSLCertPath}/ghost"
+    getHTTPSCertificateStep1
+    configInstallNginxMode="ghost"
+    installWebServerNginx
+
+
+
+    createNewUser "${ghostUser}"
+    # passwd "${ghostUser}" ghost2022user
+
+    # https://stackoverflow.com/questions/714915/using-the-passwd-command-from-within-a-shell-script
+    echo "ghost2022user" | passwd "${ghostUser}" --stdin
+    red " Password for linux user ghostsite: ghost2022user"
+    echo
+
+    ${sudoCmd} mkdir -p "${configGhostSitePath}"
+
+    ${sudoCmd} chown -R ${ghostUser}:${ghostUser} "${configGhostProjectPath}"
+    ${sudoCmd} chmod -R 775  "${configGhostProjectPath}"
+
+    cd "${configGhostSitePath}" || exit
+    ${sudoCmd} npm install ghost-cli@latest -g
+
+    # su - "ghost" -c cd "${configGhostSitePath}"
+
+    su - ${ghostUser} << EOF
+    echo "--------------------"
+    echo "Current user:"
+    whoami
+    echo
+    cd "${configGhostSitePath}"
+    ghost install --port 3468 --db=sqlite3 --no-setup-nginx --no-setup-ssl --no-setup-mysql --no-stack --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
+    echo "--------------------"
+EOF
+
+    echo
+    echo "Current user: $(whoami)"
+    echo
+
+    showHeaderGreen "Ghost installed successfully! " \
+    "Ghost Admin panel:  http://localhost:3468/ghost" \
+    "The SQLite3 database located in ${configGhostSitePath}/content/data"
+
+    showHeaderGreen " Please manually run following command if installation failed: " \
+    "su - ${ghostUser}" \
+    "cd ${configGhostSitePath}" \
+    "ghost install --port 3468 --db=sqlite3 --no-setup-nginx --no-setup-ssl --no-setup-mysql --no-stack --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}"
+    red "Input password 'ghost2022user' when ask for linux user 'ghostsite' password"
+
+
+        read -r -d '' ghostConfigEmailInput << EOM
+    "mail": {
+      "from": "annajscool@freair.com",
+      "transport": "SMTP",
+      "options": {
+        "host": "smtp.gmail.com",
+        "service": "Gmail",
+        "port": "465",
+        "secure": true,
+        "auth": {
+          "user": "jinwyp2@gmail.com",
+          "pass": "aslgotjzmwrkuvto"
+        }
+      }
+    },
+EOM
+
+
+}
+
+
+function removeCMSGhost(){
+    echo
+    read -r -p "是否确认卸载Ghost? 直接回车默认卸载, 请输入[Y/n]:" isRemoveGhostInput
+    isRemoveGhostInput=${isRemoveGhostInput:-Y}
+
+    if [[ "${isRemoveGhostInput}" == [Yy] ]]; then
+
+        echo
+        if [[ -d "${configGhostSitePath}" ]]; then
+
+            showHeaderGreen "准备卸载已安装的 Ghost"
+
+    su - ${ghostUser} << EOF
+    echo "--------------------"
+    echo "Current user:"
+    whoami
+    echo
+    cd "${configGhostSitePath}"
+    ghost stop
+    ghost uninstall
+    echo "--------------------"
+EOF
+
+            userdel -r "${ghostUser}"
+
+            rm -rf "${configGhostSitePath}"
+            rm -f "${nginxConfigSiteConfPath}/ghost_site.conf"
+
+            systemctl restart nginx.service
+            showHeaderGreen "已成功卸载 Ghost !"
+        else
+            showHeaderRed "系统没有安装 Ghost, 退出卸载"
+        fi
+
+    fi
+    removeNginx
+
+}
+
+function testCMSGhost(){
+                su - ghostsite << EOF
+    echo "--------------------"
+    echo "Current user: $(whoami)"
+    whoami
+    $(whoami)
+    # ghost install --port 3468 --db=sqlite3 --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
+    echo "--------------------"
+EOF
+whoami
+sudo -u ghostsite bash << EOF
+echo "In"
+whoami
+EOF
+echo "Out"
+whoami
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 configEtherpadProjectPath="${HOME}/etherpad"
 configEtherpadDockerPath="${HOME}/etherpad/docker"
 configEtherpadDockerComposeFilePath="${HOME}/etherpad/docker/docker-compose.yml"
@@ -2897,10 +3279,8 @@ function removeEtherpad(){
     isRemoveEtherpadInput=${isRemoveEtherpadInput:-Y}
 
     if [[ "${isRemoveEtherpadInput}" == [Yy] ]]; then
-
-        echo
         if [[ -d "${configEtherpadDockerPath}" ]]; then
-
+            echo
             showHeaderGreen "准备卸载已安装的 Etherpad"
 
             dockerIDEtherpad=$(docker ps -a -q --filter ancestor=etherpad/etherpad --format="{{.ID}}")
@@ -2910,9 +3290,11 @@ function removeEtherpad(){
             fi
 
             rm -rf "${configEtherpadProjectPath}"
-            rm -f "${nginxConfigSiteConfPath}/etherpad_site.conf"
+            if [[ -f "${nginxConfigSiteConfPath}/etherpad_site.conf" ]]; then
+                rm -f "${nginxConfigSiteConfPath}/etherpad_site.conf"
+                systemctl restart nginx.service
+            fi
 
-            systemctl restart nginx.service
             showHeaderGreen "已成功卸载 Etherpad Docker 版本 !"
 
         else
@@ -3117,6 +3499,15 @@ function removeGrist(){
 
 
 
+
+
+
+
+
+
+
+
+
 configJoplinProjectPath="${HOME}/joplin"
 configJoplinDockerPath="${HOME}/joplin/docker"
 configJoplinDockerComposeFilePath="${HOME}/joplin/docker/docker-compose.yml"
@@ -3246,14 +3637,14 @@ EOF
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
         "Joplin Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
         "Joplin Data Path : ${configJoplinDockerPath}" \
-        "Joplin Logs: docker-compose --file docker-compose.yml logs"
+        "Joplin Logs: docker-compose logs -f -t "
     else
 
         showHeaderGreen "Joplin Server install success !  ${configJoplin_APP_BASE_URL}" \
         "POSTGRES_USER: ${configJoplin_PostgreSQLUSER}, POSTGRES_PASSWORD: ${configJoplin_PostgreSQLPASSWORD}" \
         "Joplin Admin_USER: admin@localhost, Joplin_Admin_PASSWORD: admin" \
         "Joplin Data Path : ${configJoplinDockerPath}" \
-        "Joplin Logs: docker-compose --file docker-compose.yml logs"
+        "Joplin Logs: docker-compose logs -f -t "
     fi
 
 }
@@ -3358,7 +3749,7 @@ EOF
     showHeaderGreen "Linkwarden Server install success !  ${configLinkwarden_Domain}" \
     "POSTGRES_USER: postgres, POSTGRES_PASSWORD: ${configLinkwarden_PostgreSQLPASSWORD}" \
     "Linkwarden Data Path : ${configJoplinDockerPath}" \
-    "Linkwarden Logs: docker-compose --file docker-compose.yml logs"
+    "Linkwarden Logs: docker-compose logs -f -t "
 }
 
 function removeLinkwarden(){
@@ -3478,7 +3869,7 @@ EOF
         showHeaderGreen "AFFiNE Server install success !  ${configAffine_APP_BASE_URL}" \
         "AFFiNE_Admin_USER: admin@localhost, AFFiNE_Admin_PASSWORD: admin" \
         "AFFiNE_Data Path : ${configAffineDockerPath}" \
-        "AFFiNE Logs: docker-compose --file docker-compose.yml logs"
+        "AFFiNE Logs: docker-compose logs -f -t "
 }
 
 
@@ -3921,7 +4312,7 @@ configFocalboardDockerDataPath="${HOME}/focalboard/docker/data"
 configFocalboardDockerPostgresPath="${HOME}/focalboard/docker/postgres"
 
 configFocalboard_PORT="8001"
-config_APP_BASE_URL="https://focalboard.example.com/"
+configFocalboard_APP_BASE_URL="https://focalboard.example.com/"
 configFocalboard_PostgreSQLDATABASE="focalboarddb"
 configFocalboard_PostgreSQLUSER="postgreuseradmin"
 configFocalboard_PostgreSQLPASSWORD="postgreuseradminpw"
@@ -4101,10 +4492,10 @@ EOF
         installWebServerNginx
         ${sudoCmd} systemctl restart nginx.service
 
-        config_APP_BASE_URL="https://${configSSLDomain}"
+        configFocalboard_APP_BASE_URL="https://${configSSLDomain}"
     else
         getVPSIP
-        config_APP_BASE_URL="http://${configLocalVPSIp}:${configFocalboard_PORT}"
+        configFocalboard_APP_BASE_URL="http://${configLocalVPSIp}:${configFocalboard_PORT}"
     fi
 
     echo
@@ -4115,18 +4506,18 @@ EOF
 
     if [[ "${isUseSqliteInput}" == [Yy] ]]; then
         showHeaderGreen "Focalboard Server install success !  " \
-        "Visit: ${config_APP_BASE_URL}" \
+        "Visit: ${configFocalboard_APP_BASE_URL}" \
         "Focalboard DockerCompose Config : ${configFocalboardDockerPath}/config.json" \
         "Focalboard Sqlite Data : ${configFocalboardDockerDataPath}/focalboard.db" \
-        "Focalboard Logs: docker-compose --file docker-compose.yml logs"
+        "Focalboard Logs: docker-compose logs -f -t "
     else
 
         showHeaderGreen "Focalboard Server install success !  " \
-        "Visit: ${config_APP_BASE_URL}" \
+        "Visit: ${configFocalboard_APP_BASE_URL}" \
         "Focalboard DockerCompose Config : ${configFocalboardDockerPath}/config.json" \
         "PostgreSQL Admin: ${configFocalboard_PostgreSQLUSER}, PostgreSQL Admin Password: ${configFocalboard_PostgreSQLPASSWORD}" \
         "Focalboard PostgreSQL Data : ${configFocalboardDockerDataPath}" \
-        "Focalboard Logs: docker-compose --file docker-compose.yml logs"
+        "Focalboard Logs: docker-compose logs -f -t "
     fi
 
 
@@ -4669,151 +5060,6 @@ function removeJitsiMeet(){
 
 
 
-configGhostProjectPath="/opt/ghost"
-configGhostDockerPath="/opt/ghost/docker"
-configGhostSitePath="/opt/ghost/site"
-ghostUser="ghostsite"
-
-function installCMSGhost(){
-    if [[ -d "${configGhostDownloadPath}" ]]; then
-        showHeaderRed "Ghost already installed !"
-        exit
-    fi
-    showHeaderGreen "Prepare to install Ghost !"
-
-    if ! command -v npm &> /dev/null ; then
-        showHeaderRed "Npm could not be found, Please install Nodejs first !"
-        exit
-    fi
-
-    isInstallNginx="true"
-    configSSLCertPath="${configSSLCertPath}/ghost"
-    getHTTPSCertificateStep1
-    configInstallNginxMode="ghost"
-    installWebServerNginx
-
-
-
-    createNewUser "${ghostUser}"
-    # passwd "${ghostUser}" ghost2022user
-
-    # https://stackoverflow.com/questions/714915/using-the-passwd-command-from-within-a-shell-script
-    echo "ghost2022user" | passwd "${ghostUser}" --stdin
-    red " Password for linux user ghostsite: ghost2022user"
-    echo
-
-    ${sudoCmd} mkdir -p "${configGhostSitePath}"
-
-    ${sudoCmd} chown -R ${ghostUser}:${ghostUser} "${configGhostProjectPath}"
-    ${sudoCmd} chmod -R 775  "${configGhostProjectPath}"
-
-    cd "${configGhostSitePath}" || exit
-    ${sudoCmd} npm install ghost-cli@latest -g
-
-    # su - "ghost" -c cd "${configGhostSitePath}"
-
-    su - ${ghostUser} << EOF
-    echo "--------------------"
-    echo "Current user:"
-    whoami
-    echo
-    cd "${configGhostSitePath}"
-    ghost install --port 3468 --db=sqlite3 --no-setup-nginx --no-setup-ssl --no-setup-mysql --no-stack --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
-    echo "--------------------"
-EOF
-
-    echo
-    echo "Current user: $(whoami)"
-    echo
-
-    showHeaderGreen "Ghost installed successfully! " \
-    "Ghost Admin panel:  http://localhost:3468/ghost" \
-    "The SQLite3 database located in ${configGhostSitePath}/content/data"
-
-    showHeaderGreen " Please manually run following command if installation failed: " \
-    "su - ${ghostUser}" \
-    "cd ${configGhostSitePath}" \
-    "ghost install --port 3468 --db=sqlite3 --no-setup-nginx --no-setup-ssl --no-setup-mysql --no-stack --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}"
-    red "Input password 'ghost2022user' when ask for linux user 'ghostsite' password"
-
-
-        read -r -d '' ghostConfigEmailInput << EOM
-    "mail": {
-      "from": "annajscool@freair.com",
-      "transport": "SMTP",
-      "options": {
-        "host": "smtp.gmail.com",
-        "service": "Gmail",
-        "port": "465",
-        "secure": true,
-        "auth": {
-          "user": "jinwyp2@gmail.com",
-          "pass": "aslgotjzmwrkuvto"
-        }
-      }
-    },
-EOM
-
-
-}
-
-
-function removeCMSGhost(){
-    echo
-    read -r -p "是否确认卸载Ghost? 直接回车默认卸载, 请输入[Y/n]:" isRemoveGhostInput
-    isRemoveGhostInput=${isRemoveGhostInput:-Y}
-
-    if [[ "${isRemoveGhostInput}" == [Yy] ]]; then
-
-        echo
-        if [[ -d "${configGhostSitePath}" ]]; then
-
-            showHeaderGreen "准备卸载已安装的 Ghost"
-
-    su - ${ghostUser} << EOF
-    echo "--------------------"
-    echo "Current user:"
-    whoami
-    echo
-    cd "${configGhostSitePath}"
-    ghost stop
-    ghost uninstall
-    echo "--------------------"
-EOF
-
-            userdel -r "${ghostUser}"
-
-            rm -rf "${configGhostSitePath}"
-            rm -f "${nginxConfigSiteConfPath}/ghost_site.conf"
-
-            systemctl restart nginx.service
-            showHeaderGreen "已成功卸载 Ghost !"
-        else
-            showHeaderRed "系统没有安装 Ghost, 退出卸载"
-        fi
-
-    fi
-    removeNginx
-
-}
-
-function testCMSGhost(){
-                su - ghostsite << EOF
-    echo "--------------------"
-    echo "Current user: $(whoami)"
-    whoami
-    $(whoami)
-    # ghost install --port 3468 --db=sqlite3 --no-prompt --dir ${configGhostSitePath} --url https://${configSSLDomain}
-    echo "--------------------"
-EOF
-whoami
-sudo -u ghostsite bash << EOF
-echo "In"
-whoami
-EOF
-echo "Out"
-whoami
-}
 
 
 
@@ -6468,9 +6714,165 @@ function removeShareNetflixAccount(){
 
 
 
+configAuroraDockerPath="${HOME}/aurora/docker"
+configAuroraDockerDataPath="${HOME}/aurora/docker/data"
+
+configAurora_PORT="8082"
+configFreegpt35_PORT="3042"
+configChatGPTNextWeb_PORT="3002"
+configChatGPT_Password="123456gpt"
+
+configAurora_Domain="aurora.example.com"
+configGPT_API_Domain="chatgptapi.example.com"
+
+function installAURORA(){
+    echo
+    green " ================================================== "
+    yellow " Prepare to install Aurora"
+    yellow " Aurora is a self-hosted free GPT"
+    green " ================================================== "
+
+    if [[ -d "${configAuroraDockerPath}" ]]; then
+        showHeaderRed " Aurora already installed !"
+        exit
+    fi
+    showHeaderGreen "Start to install Aurora. A self-hosted free GPT"
+
+    ${sudoCmd} mkdir -p "${configAuroraDockerPath}"
+    ${sudoCmd} chmod -R 774 "${configAuroraDockerPath}"
+    cd "${configAuroraDockerPath}" || exit
+
+    echo
+    read -r -p "Pls input Server PORT? 直接回车默认 8082 , 请输入纯数字:" configAurora_PORT
+    configAurora_PORT=${configAurora_PORT:-8082}
+
+    echo
+    read -r -p "Pls input Freegpt35 PORT? 直接回车默认 3042 , 请输入纯数字:" configFreegpt35_PORT
+    configFreegpt35_PORT=${configFreegpt35_PORT:-3042}
+
+    echo
+    read -r -p "Pls input ChatGPTNextWeb PORT? 直接回车默认 3002 , 请输入纯数字:" configChatGPTNextWeb_PORT
+    configChatGPTNextWeb_PORT=${configChatGPTNextWeb_PORT:-3002}
+
+    echo
+    read -r -p "Pls input Domain? Default is aurora.example.com:" configAurora_Domain
+    configAurora_Domain=${configAurora_Domain:-aurora.example.com}
+
+    echo
+    read -r -p "Pls input ChatGPT API Domain? Default is chatgptapi.example.com:" configGPT_API_Domain
+    configGPT_API_Domain=${configGPT_API_Domain:-chatgptapi.example.com}
 
 
 
+    cat > "${configAuroraDockerPath}/docker-compose.yml" <<-EOF
+
+version: '3'
+
+services:
+    aurora:
+        image: ghcr.io/aurora-develop/aurora:latest
+        container_name: aurora_app1
+        restart: unless-stopped
+        ports:
+            - "${configAurora_PORT}:8080"
+        environment:
+            - BASE_URL=https://auroraxf.glitch.me/api
+
+    freegpt35:
+        image: missuo/freegpt35:latest
+        container_name: freegpt35_app1
+        restart: unless-stopped
+        ports:
+            - "${configFreegpt35_PORT}:3040"
+
+    chatgptnextweb:
+        image: yidadaa/chatgpt-next-web
+        container_name: chatgptnextweb1
+        ports:
+            - "${configChatGPTNextWeb_PORT}:3000"
+        environment:
+            OPENAI_API_KEY: "gptyyds"
+            CODE: "${configChatGPT_Password}" # 如果你想要设置页面的访问密码，请修改这里
+            BASE_URL: "http://freegpt35:3040"
+            CUSTOM_MODELS: "-all,+gpt-3.5-turbo"
+        depends_on:
+            - freegpt35
+
+EOF
+
+    green " ================================================== "
+    echo
+    green "是否安装 Nginx web服务器, 安装Nginx可以提高安全性并提供更多功能"
+    green "如要安装 Nginx 需要提供域名, 并设置好域名DNS已解析到本机IP"
+    echo
+    read -r -p "是否安装 Nginx web服务器? 直接回车默认安装, 请输入[Y/n]:" isNginxInstallInput
+    isNginxInstallInput=${isNginxInstallInput:-Y}
+
+
+    if [[ "${isNginxInstallInput}" == [Yy] ]]; then
+        isInstallNginx="true"
+        configSSLCertPath="${configSSLCertPath}/freegpt35"
+        getHTTPSCertificateStep1
+        configInstallNginxMode="freegpt35"
+        installWebServerNginx
+
+        ${sudoCmd} systemctl restart nginx.service
+    fi
+
+
+    echo
+    docker pull ghcr.io/aurora-develop/aurora:latest
+    echo
+    docker pull missuo/freegpt35:latest
+    echo
+    docker pull yidadaa/chatgpt-next-web
+    echo
+    docker-compose up -d
+    echo
+
+    showHeaderGreen "Aurora Server install success !  " \
+    "Visit: ${configAurora_Domain}:${configAurora_PORT}" \
+    "Visit: ${configSSLDomain}" \
+    "Password: ${configChatGPT_Password}" \
+    "Aurora DockerCompose Config : ${configAuroraDockerPath}/docker-compose.yml" \
+    "Aurora Logs: docker-compose logs -f -t " \
+    "Run following command to test: "
+
+    echo "curl --location 'http://127.0.0.1:8082/v1/chat/completions' --header 'Content-Type: application/json' --data '{\"model\": \"gpt-3.5-turbo\", \"messages\": [{\"role\": \"user\", \"content\": \"Say this is a test!\"}], \"stream\": true}'"
+    echo
+    echo "curl --location 'http://127.0.0.1:3042/v1/chat/completions' -H 'Content-Type: application/json' -H 'Authorization: Bearer ${configChatGPT_Password}' --data '{\"model\": \"gpt-3.5-turbo\", \"messages\": [{\"role\": \"user\", \"content\": \"Say this is a test!\"}], \"stream\": true}'"
+
+}
+
+function removeAURORA(){
+
+    echo
+    read -r -p "Are you sure to uninstall Aurora? 直接回车默认卸载, 请输入[Y/n]:" isRemoveAuroraInput
+    isRemoveAuroraInput=${isRemoveAuroraInput:-Y}
+
+    if [[ "${isRemoveAuroraInput}" == [Yy] ]]; then
+        if [[ -d "${configAuroraDockerPath}" ]]; then
+            echo
+            showHeaderGreen "Prepare to remove Aurora"
+
+            cd ${configAuroraDockerPath} || exit
+            docker-compose down
+
+            rm -rf "${configAuroraDockerPath}"
+
+            if [[ -f "${nginxConfigSiteConfPath}/aurora_site.conf" ]]; then
+                rm -f "${nginxConfigSiteConfPath}/aurora_site.conf"
+                systemctl restart nginx.service
+            fi
+
+            showHeaderGreen "Aurora removed success !"
+
+        else
+            showHeaderRed "系统没有安装 Aurora Server, 退出卸载"
+        fi
+    fi
+    removeNginx
+}
 
 
 
@@ -6504,6 +6906,14 @@ function startMenuOther(){
 
         green " =================================================="
         echo
+        green " 11. 安装 Air-Universe 服务器端"
+        red " 12. 卸载 Air-Universe"
+        green " 13. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
+        green " 14. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
+        green " 15. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
+        green " 16. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
+        green " 17. 更新 geoip.dat 和 geosite.dat 文件"
+        echo
         green " 21. 安装 XrayR 服务器端"
         green " 22. 停止, 重启, 查看日志等, 管理 XrayR 服务器端"
         green " 23. 编辑 XrayR 配置文件 ${configXrayRConfigFilePath}"
@@ -6513,8 +6923,8 @@ function startMenuOther(){
         green " 42. 停止, 重启, 查看日志等, 管理 Soga 服务器端"
         green " 43. 编辑 Soga 配置文件 ${configSogaConfigFilePath}"
         echo
-        green " 62. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
-        red " 63. 卸载共享Netflix账号服务器端"
+        green " 61. 安装共享Netflix账号服务器端, 可以不用奈菲账号直接看奈菲"
+        red " 62. 卸载共享Netflix账号服务器端"
         echo
         green " 71. 工具脚本合集 by BlueSkyXN "
         green " 72. 工具脚本合集 by jcnf "
@@ -6525,6 +6935,14 @@ function startMenuOther(){
     else
         green " =================================================="
         echo
+        green " 11. Install Air-Universe server side "
+        red " 12. Remove Air-Universe"
+        green " 13. Stop, restart, show log, manage Air-Universe server side "
+        green " 14. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
+        green " 15. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
+        green " 16. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
+        green " 17. Update geoip.dat and geosite.dat "
+        echo
         green " 21. Install XrayR server side "
         green " 22. Stop, restart, show log, manage XrayR server side "
         green " 23. Using VI open XrayR config file ${configXrayRConfigFilePath}"
@@ -6534,8 +6952,8 @@ function startMenuOther(){
         green " 42. Stop, restart, show log, manage Soga server side "
         green " 43. Using VI open Soga config file ${configSogaConfigFilePath}"
         echo
-        green " 62. Install Netflix account share service server, Play Netflix without Netflix account"
-        red " 63. Remove Netflix account share service server"
+        green " 61. Install Netflix account share service server, Play Netflix without Netflix account"
+        red " 62. Remove Netflix account share service server"
         echo
         green " 71. toolkit by BlueSkyXN "
         green " 72. toolkit by jcnf "
@@ -6549,6 +6967,28 @@ function startMenuOther(){
     echo
     read -r -p "Please input number:" menuNumberInput
     case "$menuNumberInput" in
+        11 )
+            setLinuxDateZone
+            installAirUniverse
+        ;;
+        12 )
+            removeAirUniverse
+        ;;
+        13 )
+            manageAirUniverse
+        ;;
+        14 )
+            replaceAirUniverseConfigWARP
+        ;;
+        15 )
+            downgradeXray
+        ;;
+        16 )
+            installAirUniverse "ssl"
+        ;;
+        17 )
+            updateGeoIp
+        ;;
         21 )
             setLinuxDateZone
             installXrayR
@@ -6572,10 +7012,10 @@ function startMenuOther(){
         43 )
             editSogaConfig
         ;;
-        62 )
+        61 )
             installShareNetflixAccount
         ;;
-        63 )
+        62 )
             removeShareNetflixAccount
         ;;
         71 )
@@ -6648,24 +7088,24 @@ function start_menu(){
     green " 28. 安装 CasaOS 系统(包括 Nextcloud 云盘 和 AdGuard DNS 等)  "
     red " 29. 卸载 CasaOS 系统 "
     echo
-    green " 31. 安装 Grist 在线Excel表格(类似 Airtable) "
-    red " 32. 卸载 Grist 在线Excel表格 "
-    green " 33. 安装 NocoDB 在线Excel表格(类似 Airtable) "
-    red " 34. 卸载 NocoDB 在线Excel表格 "
-    green " 35. 安装 Etherpad 多人协作文档(类似 Word) "
-    red " 36. 卸载 Etherpad 多人协作文档 "
+    green " 31. 安装 Ghost Blog 博客系统 "
+    red " 32. 卸载 Ghost Blog 博客系统 "
+    green " 33. 安装 Joplin Server 笔记(类似 Evernote) "
+    red " 33. 卸载 Joplin Server 笔记 "
+    green " 35. 安装 Linkwarden 网络书签(类似 Pocket) "
+    red " 36. 卸载 Linkwarden 网络书签 "
     echo
-    green " 41. 安装 Ghost Blog 博客系统 "
-    red " 42. 卸载 Ghost Blog 博客系统 "
-    green " 43. 安装 Joplin Server 笔记(类似 Evernote) "
-    red " 44. 卸载 Joplin Server 笔记 "
-    green " 45. 安装 Linkwarden 网络书签(类似 Pocket) "
-    red " 46. 卸载 Linkwarden 网络书签 "
+    green " 41. 安装 AFFiNE Server 多人协作笔记(类似 Notion) "
+    red " 42. 卸载 AFFiNE Server 多人协作笔记 "
+    green " 43. 安装 Outline Server 多人协作笔记(类似 Notion) "
+    red " 44. 卸载 Outline Server 多人协作笔记 "
     echo
-    green " 51. 安装 AFFiNE Server 多人协作笔记(类似 Notion) "
-    red " 52. 卸载 AFFiNE Server 多人协作笔记 "
-    green " 53. 安装 Outline Server 多人协作笔记(类似 Notion) "
-    red " 54. 卸载 Outline Server 多人协作笔记 "
+    green " 51. 安装 Grist 在线Excel表格(类似 Airtable) "
+    red " 52. 卸载 Grist 在线Excel表格 "
+    green " 53. 安装 NocoDB 在线Excel表格(类似 Airtable) "
+    red " 54. 卸载 NocoDB 在线Excel表格 "
+    green " 55. 安装 Etherpad 多人协作文档(类似 Word) "
+    red " 56. 卸载 Etherpad 多人协作文档 "
     echo
     green " 61. 安装视频会议系统 Jitsi Meet "
     red " 62. 卸载 Jitsi Meet "
@@ -6676,13 +7116,8 @@ function start_menu(){
     green " 67. 安装 Mattermost Boards Server 项目管理看板 (类似 Trello) "
     red " 68. 卸载 Mattermost Boards Server "
     echo
-    green " 81. 安装 Air-Universe 服务器端"
-    red " 82. 卸载 Air-Universe"
-    green " 83. 停止, 重启, 查看日志等, 管理 Air-Universe 服务器端"
-    green " 84. 配合 WARP (Wireguard) 使用IPV6 解锁 google人机验证和 Netflix等流媒体网站"
-    green " 85. 升级或降级 Air-Universe 到 1.0.0 or 0.9.2, 降级 Xray 到 1.5或1.4"
-    green " 86. 重新申请证书 并修改 Air-Universe 配置文件 ${configAirUniverseConfigFilePath}"
-    green " 87. 更新 geoip.dat 和 geosite.dat 文件"
+    green " 81. 安装 AURORA 免费GPT"
+    red " 82. 卸载  AURORA"
     echo
     green " 89. 子菜单 安装 V2board 服务器端 XrayR, V2Ray-Poseidon, Soga"
     green " 90. 单独申请域名SSL证书"
@@ -6715,23 +7150,26 @@ function start_menu(){
     green " 28. Install CasaOS(Including Nextcloud, AdGuard DNS )  "
     red " 29. Remove CasaOS "
     echo
-    green " 31. Install Grist Online Spreadsheet (Airtable alternative)"
-    red " 32. Remove Grist Online Spreadsheet "
-    green " 33. Install NocoDB Online Spreadsheet (Airtable alternative)"
-    red " 34. Remove NocoDB Online Spreadsheet "
-    green " 35. Install Etherpad collaborative editor (Word alternative)"
-    red " 36. Remove Etherpad collaborative editor "
+    green " 31. Install Ghost Blog "
+    red " 32. Remove Ghost Blog "
+    green " 33. Install Joplin Server (Evernote alternative) "
+    red " 34. Remove Joplin Server "
+    green " 35. Install Linkwarden (Pocket alternative) "
+    red " 36. Remove Linkwarden"
     echo
-    green " 41. Install Ghost Blog "
-    red " 42. Remove Ghost Blog "
-    green " 43. Install Joplin Server (Evernote alternative) "
-    red " 44. Remove Joplin Server "
+    green " 41. Install AFFiNE Server (Notion alternative) "
+    red " 42. Remove AFFiNE Server "
+    green " 43. Install Outline Server (Notion alternative) "
+    red " 44. Remove Outline Server "
     echo
-    green " 51. Install AFFiNE Server (Notion alternative) "
-    red " 52. Remove AFFiNE Server "
-    green " 53. Install Outline Server (Notion alternative) "
-    red " 54. Remove Outline Server "
+    green " 51. Install Grist Online Spreadsheet (Airtable alternative)"
+    red " 52. Remove Grist Online Spreadsheet "
+    green " 53. Install NocoDB Online Spreadsheet (Airtable alternative)"
+    red " 54. Remove NocoDB Online Spreadsheet "
+    green " 55. Install Etherpad collaborative editor (Word alternative)"
+    red " 56. Remove Etherpad collaborative editor "
     echo
+
     green " 61. Install Jitsi Meet video conference system"
     red " 62. Remove Jitsi Meet video conference system"
     green " 63. Modify Jitsi Meet whether to Start a meeting requires password authentication"
@@ -6741,13 +7179,8 @@ function start_menu(){
     green " 67. Install Mattermost Boards Server (Trello alternative) "
     red " 68. Remove Mattermost Boards Server "
     echo
-    green " 81. Install Air-Universe server side "
-    red " 82. Remove Air-Universe"
-    green " 83. Stop, restart, show log, manage Air-Universe server side "
-    green " 84. Using WARP (Wireguard) and IPV6 Unlock Netflix geo restriction and avoid Google reCAPTCHA"
-    green " 85. Upgrade or downgrade Air-Universe to 1.0.0 or 0.9.2, downgrade Xray to 1.5 / 1.4"
-    green " 86. Redo to get a free SSL certificate for domain name and modify Air-Universe config file ${configAirUniverseConfigFilePath}"
-    green " 87. Update geoip.dat and geosite.dat "
+    green " 81. Install AURORA Free GPT"
+    red " 82. Remove AURORA"
     echo
     green " 89. Submenu. install XrayR, V2Ray-Poseidon, Soga for V2board panel"
     green " 90. Get a free SSL certificate for domain name only"
@@ -6759,7 +7192,7 @@ function start_menu(){
 
 
     echo
-    read -p "Please input number:" menuNumberInput
+    read -r -p "Please input number:" menuNumberInput
     case "$menuNumberInput" in
         1 )
             installWireguard
@@ -6818,53 +7251,54 @@ function start_menu(){
             removeCasaOS
         ;;
         31 )
-            installGrist
-        ;;
-        32 )
-            removeGrist
-        ;;
-        33 )
-            installNocoDB
-        ;;
-        34 )
-            removeNocoDB
-        ;;
-        35 )
-            installEtherpad
-        ;;
-        36 )
-            removeEtherpad
-        ;;
-        41 )
             installCMSGhost
         ;;
-        42 )
+        32 )
             removeCMSGhost
         ;;
-        43 )
+        33 )
             installJoplin
         ;;
-        44 )
+        34 )
             removeJoplin
         ;;
-        45 )
+        35 )
             installLinkwarden
         ;;
-        46 )
+        36 )
             removeLinkwarden
         ;;
-        51 )
+        41 )
             installAffine
         ;;
-        52 )
+        42 )
             removeAffine
         ;;
-        53 )
+        43 )
             installOutline
         ;;
-        54 )
+        44 )
             removeOutline
         ;;
+        51 )
+            installGrist
+        ;;
+        52 )
+            removeGrist
+        ;;
+        53 )
+            installNocoDB
+        ;;
+        54 )
+            removeNocoDB
+        ;;
+        55 )
+            installEtherpad
+        ;;
+        56 )
+            removeEtherpad
+        ;;
+
         61 )
             installJitsiMeet
         ;;
@@ -6886,51 +7320,32 @@ function start_menu(){
         68 )
             removeMattermostBoards
         ;;
-
         81 )
-            setLinuxDateZone
-            installAirUniverse
+            installAURORA
         ;;
         82 )
-            removeAirUniverse
-        ;;
-        83 )
-            manageAirUniverse
-        ;;
-        84 )
-            replaceAirUniverseConfigWARP
-        ;;
-        85 )
-            downgradeXray
-        ;;
-        86 )
-            installAirUniverse "ssl"
-        ;;
-        87 )
-            updateGeoIp
-        ;;
-        89 )
-            startMenuOther
+            removeAURORA
         ;;
         90 )
             getHTTPSCertificateStep1
         ;;
         91 )
-            setLinuxDateZone
-            installXrayR
-        ;;
-        92 )
-            replaceXrayRConfig
+            testCMSGhost
         ;;
         96 )
             warpGoCheckIpv6
             warpGoCrontab
         ;;
+        98 )
+            replaceXrayRConfig
+        ;;
+        99 )
+            setLinuxDateZone
+            installXrayR
+        ;;
+
         88 )
             upgradeScript
-        ;;
-        98 )
-            testCMSGhost
         ;;
         0 )
             exit 1
