@@ -7117,7 +7117,7 @@ function start_menu(){
     red " 68. 卸载 Mattermost Boards Server "
     echo
     green " 81. 安装 AURORA 与 FreeGPT35 免费GPT"
-    red " 82. 卸载  AURORA 与 FreeGPT35"
+    red " 82. 卸载 AURORA 与 FreeGPT35"
     echo
     green " 89. 子菜单 安装 V2board 服务器端 XrayR, V2Ray-Poseidon, Soga"
     green " 90. 单独申请域名SSL证书"
@@ -7172,7 +7172,7 @@ function start_menu(){
 
     green " 61. Install Jitsi Meet video conference system"
     red " 62. Remove Jitsi Meet video conference system"
-    green " 63. Modify Jitsi Meet whether to Start a meeting requires password authentication"
+    green " 63. Modify Jitsi Meet config to requires password authentication"
     echo
     green " 65. Install Focalboard Personal Server (Trello alternative) "
     red " 66. Remove Focalboard Personal Server "
@@ -7180,7 +7180,7 @@ function start_menu(){
     red " 68. Remove Mattermost Boards Server "
     echo
     green " 81. Install AURORA and FreeGPT35 Free GPT"
-    red " 82. Remove and FreeGPT35 AURORA"
+    red " 82. Remove AURORA and FreeGPT35"
     echo
     green " 89. Submenu. install XrayR, V2Ray-Poseidon, Soga for V2board panel"
     green " 90. Get a free SSL certificate for domain name only"

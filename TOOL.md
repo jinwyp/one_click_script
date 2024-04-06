@@ -1,15 +1,15 @@
-# Linux toolkit Easily install docker and Nodejs shell script 
+# Linux toolkit Easily install docker and Nodejs shell script
 
 
 ## [中文文档](/TOOL_CN.md)
 
-## Features 
+## Features
 
 1. Configuring an SSH login without password. Change the SSH Default Port. Secure your VPS.
 2. Install linux sofrware including Oh-my-zsh, zsh-autosuggestions, Micro editors.
-3. Install Nodejs and PM2.   
-4. Install Docker and Docker Compose.   
-5. Install Portainer.   
+3. Install Nodejs and PM2.
+4. Install Docker and Docker Compose.
+5. Install Portainer.
 
 
 
