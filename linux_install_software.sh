@@ -7065,7 +7065,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2024-2-4 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2024-4-6 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
@@ -7116,8 +7116,8 @@ function start_menu(){
     green " 67. 安装 Mattermost Boards Server 项目管理看板 (类似 Trello) "
     red " 68. 卸载 Mattermost Boards Server "
     echo
-    green " 81. 安装 AURORA 免费GPT"
-    red " 82. 卸载  AURORA"
+    green " 81. 安装 AURORA 与 FreeGPT35 免费GPT"
+    red " 82. 卸载  AURORA 与 FreeGPT35"
     echo
     green " 89. 子菜单 安装 V2board 服务器端 XrayR, V2Ray-Poseidon, Soga"
     green " 90. 单独申请域名SSL证书"
@@ -7127,7 +7127,7 @@ function start_menu(){
 
     else
     green " =================================================="
-    green " Linux tools installation script | 2024-2-4 | OS support：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux tools installation script | 2024-4-6 | OS support：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. Install linux kernel,  bbr plus kernel, WireGuard and Cloudflare WARP. Unlock Netflix geo restriction and avoid Google reCAPTCHA"
     echo
@@ -7179,8 +7179,8 @@ function start_menu(){
     green " 67. Install Mattermost Boards Server (Trello alternative) "
     red " 68. Remove Mattermost Boards Server "
     echo
-    green " 81. Install AURORA Free GPT"
-    red " 82. Remove AURORA"
+    green " 81. Install AURORA and FreeGPT35 Free GPT"
+    red " 82. Remove and FreeGPT35 AURORA"
     echo
     green " 89. Submenu. install XrayR, V2Ray-Poseidon, Soga for V2board panel"
     green " 90. Get a free SSL certificate for domain name only"
