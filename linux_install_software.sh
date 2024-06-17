@@ -890,7 +890,7 @@ function getGithubLatestReleaseVersion(){
     wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
 }
 function getGithubLatestReleaseVersion2(){
-    # https://github.com/p4gefau1t/trojan-go/issues/63
+    # https://github.com/semaphoreui/semaphore/releases
     wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | sort -r | head -1 | cut -b 1-
 }
 
@@ -1116,9 +1116,189 @@ function installPortainer(){
 }
 
 
+function removePortainer(){
+    docker stop portainer
+    docker rm portainer
+    docker volume rm portainer_data
+
+    showHeaderGreen " Portainer 已经卸载完毕 !"
+}
+
+
+function installAnsible(){
+
+    showHeaderGreen "Prepare to install Ansible"
+
+    if [ "$osRelease" == "centos" ] ; then
+        ${sudoCmd} dnf install -y ansible
+    elif [ "$osRelease" == "ubuntu" ]; then
+
+        ${sudoCmd} apt update -y
+        ${sudoCmd} apt install -y software-properties-common
+        ${sudoCmd} add-apt-repository --yes --update ppa:ansible/ansible
+        ${sudoCmd} apt install -y ansible
+    elif [ "$osRelease" == "debian" ]; then
+        ${sudoCmd} apt install -y wget gpg
+        wget -O- "https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=get&search=0x6125E2A8C77F2818FB7BD15B93C4A3FD7BB9C367" | sudo gpg --dearmour -o /usr/share/keyrings/ansible-archive-keyring.gpg
+        echo "deb [signed-by=/usr/share/keyrings/ansible-archive-keyring.gpg] http://ppa.launchpad.net/ansible/ansible/ubuntu ${osReleaseVersionCodeName} main" | sudo tee /etc/apt/sources.list.d/ansible.list
+
+        ${sudoCmd} apt update -y
+        ${sudoCmd} apt install -y ansible
+    fi
+    showHeaderGreen "Ansible installed successfully !"
+    ansible --version
+}
 
 
 
+configSemaphoreDockerPath="${HOME}/semaphore/docker"
+configSemaphoreSystemPath="${HOME}/semaphore/systemd"
+function installSemaphore(){
+
+    if command -v ansible >/dev/null 2>&1; then
+        echo "Ansible is installed, version: $(ansible --version | head -n 1)"
+    else
+        echo "Ansible is not installed"
+        exit 1
+    fi
+
+    showHeaderGreen "Prepare to install Semaphore"
+
+    green " ================================================== "
+    echo
+    green "Install Semaphore using Docker or System Package?"
+    green "Y for Docker, N for System Package"
+    echo
+    read -r -p "Install Semaphore by Docker? Default is N, Input[Y/n]:" isSemaphoreInstallInput
+    isSemaphoreInstallInput=${isSemaphoreInstallInput:-n}
+
+    mkdir -p ${configSemaphoreDockerPath}
+    mkdir -p ${configSemaphoreSystemPath}
+
+    # semaphoreVersion=$(getGithubLatestReleaseVersion "semaphoreui/semaphore")
+    semaphoreVersion="2.9.64"
+
+
+    if [[ $isSemaphoreInstallInput == [Yy] ]]; then
+        cd ${configSemaphoreDockerPath}
+
+        cat > "${configSemaphoreDockerPath}/docker-compose.yml" <<-EOF
+
+version: '3.5'
+services:
+  # uncomment this section and comment out the mysql section to use postgres instead of mysql
+  #semaphore_postgres:
+    #restart: unless-stopped
+    #image: postgres:14
+    #hostname: postgres
+    #volumes:
+    #  - semaphore-postgres:/var/lib/postgresql/data
+    #environment:
+    #  POSTGRES_USER: semaphore
+    #  POSTGRES_PASSWORD: semaphore
+    #  POSTGRES_DB: semaphore
+  # if you wish to use postgres, comment the mysql service section below
+  semaphore_mysql:
+    restart: unless-stopped
+    image: mysql:8.0
+    hostname: mysql
+    volumes:
+      - semaphore-mysql:/var/lib/mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+      MYSQL_DATABASE: semaphore
+      MYSQL_USER: semaphore
+      MYSQL_PASSWORD: semaphore
+  semaphore:
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    image: semaphoreui/semaphore:latest
+    environment:
+      SEMAPHORE_DB_USER: semaphore
+      SEMAPHORE_DB_PASS: semaphore
+      SEMAPHORE_DB_HOST: semaphore_mysql # for postgres, change to: postgres
+      SEMAPHORE_DB_PORT: 3306 # change to 5432 for postgres
+      SEMAPHORE_DB_DIALECT: mysql # for postgres, change to: postgres
+      SEMAPHORE_DB: semaphore
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+      SEMAPHORE_ADMIN_PASSWORD: changeme
+      SEMAPHORE_ADMIN_NAME: admin
+      SEMAPHORE_ADMIN_EMAIL: admin@localhost
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: gs72mPntFATGJs9qK0pQ0rKtfidlexiMjYCH9gWKhTU=
+      SEMAPHORE_LDAP_ACTIVATED: 'no' # if you wish to use ldap, set to: 'yes'
+      SEMAPHORE_LDAP_HOST: dc01.local.example.com
+      SEMAPHORE_LDAP_PORT: '636'
+      SEMAPHORE_LDAP_NEEDTLS: 'yes'
+      SEMAPHORE_LDAP_DN_BIND: 'uid=bind_user,cn=users,cn=accounts,dc=local,dc=shiftsystems,dc=net'
+      SEMAPHORE_LDAP_PASSWORD: 'ldap_bind_account_password'
+      SEMAPHORE_LDAP_DN_SEARCH: 'dc=local,dc=example,dc=com'
+      SEMAPHORE_LDAP_SEARCH_FILTER: "(\u0026(uid=%s)(memberOf=cn=ipausers,cn=groups,cn=accounts,dc=local,dc=example,dc=com))"
+    depends_on:
+      - semaphore_mysql # for postgres, change to: semaphore_postgres
+volumes:
+  semaphore-mysql: # to use postgres, switch to: semaphore-postgres
+
+EOF
+
+        docker-compose up -d
+
+        showHeaderGreen "Semaphore installed successfully !" \
+        "Log: docker-compose logs -f semaphore" \
+        "Open URL http://your_ip:3000" \
+
+
+    else
+        cd ${configSemaphoreSystemPath}
+
+        if [ "$osRelease" == "centos" ] ; then
+            # https://github.com/semaphoreui/semaphore/releases/download/v2.9.68-beta/semaphore_2.9.68-beta_linux_amd64.rpm
+            semaphoreDownloadUrl="https://github.com/semaphoreui/semaphore/releases/download/v${semaphoreVersion}/semaphore_${semaphoreVersion}_linux_amd64.rpm"
+            wget "${semaphoreDownloadUrl}"
+
+            ${sudoCmd} yum install semaphore_${semaphoreVersion}_linux_amd64.rpm
+
+        elif [ "$osRelease" == "ubuntu" ] || [ "$osRelease" == "debian" ]; then
+            semaphoreDownloadUrl="https://github.com/semaphoreui/semaphore/releases/download/v${semaphoreVersion}/semaphore_${semaphoreVersion}_linux_amd64.deb"
+            wget "${semaphoreDownloadUrl}"
+            ${sudoCmd} dpkg -i semaphore_${semaphoreVersion}_linux_amd64.deb
+        fi
+
+
+    cat > ${osSystemMdPath}semaphore.service <<-EOF
+[Unit]
+Description=Semaphore Ansible
+Documentation=https://github.com/semaphoreui/semaphore
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/semaphore server --config=${configSemaphoreSystemPath}/config.json
+ExecReload=/bin/kill -HUP \$MAINPID
+SyslogIdentifier=semaphore
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+        ${sudoCmd} systemctl daemon-reload
+        # ${sudoCmd} systemctl start semaphore
+
+        showHeaderGreen "Semaphore installed successfully !" \
+        "Please run following command to start Semaphore:" \
+        "systemctl restart semaphore"
+
+        echo
+        semaphore version
+        echo
+        # semaphore setup
+    fi
+}
 
 
 
@@ -4617,7 +4797,7 @@ function installJitsiMeetByDocker(){
 
     downloadAndUnzip "https://github.com/jitsi/docker-jitsi-meet/archive/refs/tags/${versionJitsiMeet}.zip" "${configJitsiMeetProjectPath}" "${versionJitsiMeet}.zip"
 
-    # https://github.com/jitsi/docker-jitsi-meet/archive/refs/tags/stable-7439-2.zip
+    # https://github.com/jitsi/docker-jitsi-meet/archive/refs/tags/stable-9364-1.zip
 
     mv -f "${configJitsiMeetProjectPath}/docker-jitsi-meet-${versionJitsiMeet}" "${configJitsiMeetProjectPath}/docker"
 
@@ -7080,6 +7260,9 @@ function start_menu(){
     red " 14. 卸载 Docker 与 Docker Compose"
     green " 15. 设置 Docker Hub 镜像 "
     green " 16. 安装 Portainer "
+    green " 17. 安装 Ansible 运维工具 "
+    green " 18. 安装 Ansible UI semaphore 运维工具 "
+
     echo
     green " 21. 安装 Cloudreve 云盘系统 "
     red " 22. 卸载 Cloudreve 云盘系统 "
@@ -7234,6 +7417,12 @@ function start_menu(){
         ;;
         16 )
             installPortainer
+        ;;
+        17 )
+            installAnsible
+        ;;
+        18 )
+            installSemaphore
         ;;
         21 )
             installCloudreve
