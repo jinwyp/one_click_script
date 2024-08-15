@@ -584,11 +584,11 @@ function installSoftDownload(){
             # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
 
             cd /etc/yum.repos.d/
-            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+            sed -i 's/^mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
             sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
             yum update -y
 
-            sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+            sed -i 's/^mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
             sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
 
             ${sudoCmd} dnf install centos-release-stream -y
@@ -1237,16 +1237,20 @@ function getV2rayVersion(){
 
         if [[ $configV2rayWorkingMode == "vlessTCPREALITY" ]]; then
             tempXrayVersionDisplayText="1"
-            green " 请选择 Xray 的版本, 默认直接回车为 1.8.7 或以上的最新版本"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.8.23 或以上的最新版本"
             echo
-            green " 1. 1.8.7 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            green " 1. 1.8.23 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            green " 2. 1.8.10 支持 REALITY 和 XTLS Vision (推荐)"
+            green " 3. 1.8.4 支持 REALITY 和 XTLS Vision"
 
         elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
             tempXrayVersionDisplayText="1"
-            green " 请选择 Xray 的版本, 默认直接回车为 1.8.7 或以上的最新版本"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.8.23 或以上的最新版本"
             echo
-            green " 1. 1.8.7 或以上的最新版本 支持 REALITY 和 XTLS Vision"
-            green " 2. 1.7.5 支持 XTLS Vision "
+            green " 1. 1.8.23 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            green " 2. 1.8.10 支持 REALITY 和 XTLS Vision (推荐)"
+            green " 3. 1.8.4 支持 REALITY 和 XTLS Vision"
+            green " 4. 1.7.5 支持 XTLS Vision"
 
         else
             green " 请选择 Xray 的版本, 默认直接回车为 1.7.5"
@@ -1260,18 +1264,20 @@ function getV2rayVersion(){
                 echo
             fi
 
-            green " 1. 1.8.7 或以上的最新版本 支持 REALITY 和 XTLS Vision"
-            green " 2. 1.7.5 支持 XTLS Vision (推荐)"
-            green " 3. 1.6.1 (推荐)"
-            green " 4. 1.6.0"
-            green " 5. 1.5.5"
-            green " 6. 1.5.4"
-            green " 7. 1.5.3"
-            green " 8. 1.5.2"
-            green " 9. 1.5.1"
-            green " 10. 1.5.0"
-            green " 11. 1.4.5"
-            green " 12. 1.3.1"
+            green " 1. 1.8.23 或以上的最新版本 支持 REALITY 和 XTLS Vision"
+            green " 2. 1.8.10 支持 REALITY 和 XTLS Vision (推荐)"
+            green " 3. 1.8.4 支持 REALITY 和 XTLS Vision"
+            green " 4. 1.7.5 支持 XTLS Vision"
+            green " 5. 1.6.1 (推荐)"
+            green " 6. 1.6.0"
+            green " 7. 1.5.5"
+            green " 8. 1.5.4"
+            green " 9. 1.5.3"
+            green " 10. 1.5.2"
+            green " 11. 1.5.1"
+            green " 12. 1.5.0"
+            green " 13. 1.4.5"
+            green " 14. 1.3.1"
         fi
 
         echo
@@ -1281,34 +1287,43 @@ function getV2rayVersion(){
         if [[ "${isXrayVersionInput}" == "1" ]]; then
             versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
 
+        elif [[ "${isXrayVersionInput}" == "2" ]]; then
+            versionXray="1.8.10"
+
         elif [[ "${isXrayVersionInput}" == "3" ]]; then
-            versionXray="1.6.1"
+            versionXray="1.8.4"
 
         elif [[ "${isXrayVersionInput}" == "4" ]]; then
-            versionXray="1.6.0"
+            versionXray="1.7.5"
 
         elif [[ "${isXrayVersionInput}" == "5" ]]; then
-            versionXray="1.5.5"
+            versionXray="1.6.1"
 
         elif [[ "${isXrayVersionInput}" == "6" ]]; then
-            versionXray="1.5.4"
+            versionXray="1.6.0"
 
         elif [[ "${isXrayVersionInput}" == "7" ]]; then
-            versionXray="1.5.3"
+            versionXray="1.5.5"
 
         elif [[ "${isXrayVersionInput}" == "8" ]]; then
-            versionXray="1.5.2"
+            versionXray="1.5.4"
 
         elif [[ "${isXrayVersionInput}" == "9" ]]; then
-            versionXray="1.5.1"
+            versionXray="1.5.3"
 
         elif [[ "${isXrayVersionInput}" == "10" ]]; then
-            versionXray="1.5.0"
+            versionXray="1.5.2"
 
         elif [[ "${isXrayVersionInput}" == "11" ]]; then
-            versionXray="1.4.5"
+            versionXray="1.5.1"
 
         elif [[ "${isXrayVersionInput}" == "12" ]]; then
+            versionXray="1.5.0"
+
+        elif [[ "${isXrayVersionInput}" == "13" ]]; then
+            versionXray="1.4.5"
+
+        elif [[ "${isXrayVersionInput}" == "14" ]]; then
             versionXray="1.3.1"
 
         else
