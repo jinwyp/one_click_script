@@ -2865,7 +2865,6 @@ EOF
 
     upstream freegptapi {
         server 127.0.0.1:${configAurora_PORT};
-        server 127.0.0.1:${configFreegpt35_PORT};
     }
     upstream freegptnextweb {
         server 127.0.0.1:${configChatGPTNextWeb_PORT};
@@ -6897,12 +6896,12 @@ function removeShareNetflixAccount(){
 configAuroraDockerPath="${HOME}/aurora/docker"
 configAuroraDockerDataPath="${HOME}/aurora/docker/data"
 
-configAurora_PORT="8082"
-configFreegpt35_PORT="3042"
+configAurora_PORT="5010"
 configChatGPTNextWeb_PORT="3002"
 configChatGPT_Password="123456gpt"
+configAPIAUTHORIZATION="t123456"
 
-configAurora_Domain="aurora.example.com"
+configChatgptNextweb_Domain="chatgptnextweb.example.com"
 configGPT_API_Domain="chatgptapi.example.com"
 
 function installAURORA(){
@@ -6918,30 +6917,29 @@ function installAURORA(){
     fi
     showHeaderGreen "Start to install Aurora. A self-hosted free GPT"
 
-    ${sudoCmd} mkdir -p "${configAuroraDockerPath}"
+    ${sudoCmd} mkdir -p "${configAuroraDockerDataPath}"
     ${sudoCmd} chmod -R 774 "${configAuroraDockerPath}"
     cd "${configAuroraDockerPath}" || exit
 
     echo
-    read -r -p "Pls input Server PORT? 直接回车默认 8082 , 请输入纯数字:" configAurora_PORT
-    configAurora_PORT=${configAurora_PORT:-8082}
+    read -r -p "Pls input Server PORT? 直接回车默认 5010 , 请输入纯数字:" configAurora_PORT
+    configAurora_PORT=${configAurora_PORT:-5010}
 
     echo
-    read -r -p "Pls input Freegpt35 PORT? 直接回车默认 3042 , 请输入纯数字:" configFreegpt35_PORT
-    configFreegpt35_PORT=${configFreegpt35_PORT:-3042}
-
-    echo
-    read -r -p "Pls input ChatGPTNextWeb PORT? 直接回车默认 3002 , 请输入纯数字:" configChatGPTNextWeb_PORT
+    read -r -p "Pls input ChatGPTNextWeb PORT? 直接回车默认 3002, 请输入纯数字:" configChatGPTNextWeb_PORT
     configChatGPTNextWeb_PORT=${configChatGPTNextWeb_PORT:-3002}
 
     echo
-    read -r -p "Pls input Domain? Default is aurora.example.com:" configAurora_Domain
-    configAurora_Domain=${configAurora_Domain:-aurora.example.com}
+    read -r -p "Pls input chat2api AUTHORIZATION ? 直接回车默认 t123456 , 请输入自定义授权码:" configAPIAUTHORIZATION
+    configAPIAUTHORIZATION=${configAPIAUTHORIZATION:-t123456}
+
+    echo
+    read -r -p "Pls input Domain? Default is chatgptnextweb.example.com:" configChatgptNextweb_Domain
+    configChatgptNextweb_Domain=${configChatgptNextweb_Domain:-chatgptnextweb.example.com}
 
     echo
     read -r -p "Pls input ChatGPT API Domain? Default is chatgptapi.example.com:" configGPT_API_Domain
     configGPT_API_Domain=${configGPT_API_Domain:-chatgptapi.example.com}
-
 
 
     cat > "${configAuroraDockerPath}/docker-compose.yml" <<-EOF
@@ -6949,21 +6947,30 @@ function installAURORA(){
 version: '3'
 
 services:
-    aurora:
-        image: ghcr.io/aurora-develop/aurora:latest
-        container_name: aurora_app1
+    chat2api:
+        image: lanqian528/chat2api:latest
+        container_name: chat2api_app1
         restart: unless-stopped
         ports:
-            - "${configAurora_PORT}:8080"
+            - "${configAurora_PORT}:5005"
+        volumes:
+            - "${configAuroraDockerDataPath}:/app/data" # 挂载一些需要保存的数据
         environment:
-            - BASE_URL=https://auroraxf.glitch.me/api
+            - TZ=Asia/Shanghai # 设置时区
+            - "AUTHORIZATION=${configAPIAUTHORIZATION}" # 设置访问密码
+            - ARK0SE_TOKEN_URL=http://ark0se:5006/token # 已内置，不要改
+        depends_on:
+            - ark0se
 
-    freegpt35:
-        image: missuo/freegpt35:latest
-        container_name: freegpt35_app1
+    ark0se:
+        image: lanqian528/funcaptcha_solver:latest
+        container_name: funcaptcha_solver
         restart: unless-stopped
         ports:
-            - "${configFreegpt35_PORT}:3040"
+            - "5006:5006"
+        environment:
+            - TZ=Asia/Shanghai # 设置时区
+
 
     chatgptnextweb:
         image: yidadaa/chatgpt-next-web
@@ -6971,12 +6978,12 @@ services:
         ports:
             - "${configChatGPTNextWeb_PORT}:3000"
         environment:
-            OPENAI_API_KEY: "gptyyds"
+            OPENAI_API_KEY: "${configAPIAUTHORIZATION}"
             CODE: "${configChatGPT_Password}" # 如果你想要设置页面的访问密码，请修改这里
-            BASE_URL: "http://freegpt35:3040"
-            CUSTOM_MODELS: "-all,+gpt-3.5-turbo"
+            BASE_URL: "http://chat2api:5005"
+            CUSTOM_MODELS: "-all,+gpt-4o-mini"
         depends_on:
-            - freegpt35
+            - chat2api
 
 EOF
 
@@ -6999,19 +7006,21 @@ EOF
         ${sudoCmd} systemctl restart nginx.service
     fi
 
-
     echo
-    docker pull ghcr.io/aurora-develop/aurora:latest
-    echo
-    docker pull missuo/freegpt35:latest
+    docker pull lanqian528/chat2api:latest
     echo
     docker pull yidadaa/chatgpt-next-web
+
+    # docker pull ghcr.io/aurora-develop/aurora:latest
+    # docker pull missuo/freegpt35:latest
+
+
     echo
     docker-compose up -d
     echo
 
     showHeaderGreen "Aurora Server install success !  " \
-    "Visit: ${configAurora_Domain}:${configAurora_PORT}" \
+    "Visit: ${configChatgptNextweb_Domain}:${configAurora_PORT}" \
     "Visit: ${configSSLDomain}" \
     "Password: ${configChatGPT_Password}" \
     "Aurora DockerCompose Config : ${configAuroraDockerPath}/docker-compose.yml" \
@@ -7245,7 +7254,7 @@ function start_menu(){
 
     if [[ ${configLanguage} == "cn" ]] ; then
     green " =================================================="
-    green " Linux 常用工具 一键安装脚本 | 2024-4-6 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
+    green " Linux 常用工具 一键安装脚本 | 2024-9-6 | 系统支持：centos7+ / debian9+ / ubuntu16.04+"
     green " =================================================="
     green " 1. 安装 linux 内核 BBR Plus, 安装 WireGuard, 用于解锁 Netflix 限制 和避免弹出 Google reCAPTCHA 人机验证"
     echo
