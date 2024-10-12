@@ -942,8 +942,14 @@ function downloadFile(){
     if [ -f "${userHomePath}/${linuxKernelToInstallVersionFull}/${tempFilename}" ]; then
         green "文件已存在, 不需要下载, 文件原下载地址: $1 "
     else
-        green "文件下载中... 下载地址: $1 "
+        green "文件下载中... Path: $1 "
         wget -N --no-check-certificate -P ${userHomePath}/${linuxKernelToInstallVersionFull} $1
+        if [ $? -eq 0 ]; then
+            green "文件下载成功. ${userHomePath}/${linuxKernelToInstallVersionFull}/${tempFilename}"
+        else
+            red "文件下载失败, 请检查网络或者手动下载文件到目录 ${userHomePath}/${linuxKernelToInstallVersionFull} "
+            promptContinueOpeartion
+        fi
     fi
     echo
 }
@@ -1077,22 +1083,22 @@ function getLatestCentosKernelVersion(){
             # https://stackoverflow.com/questions/229551/how-to-check-if-a-string-contains-a-substring-in-bash
             for ver in "${elrepo_kernel_version_ml_teddysun_ftp_array_lts[@]}"; do
 
-                if [[ ${ver} == *"5.10.226"* ]]; then
+                if [[ ${ver} == *"5.10.222"* ]]; then
                     # echo "符合所选版本的Linux 5.10 内核版本: ${ver}"
                     elrepo_kernel_version_ml_Teddysun510=${ver}
                 fi
 
-                if [[ ${ver} == *"5.15.167"* ]]; then
+                if [[ ${ver} == *"5.15.163"* ]]; then
                     # echo "符合所选版本的Linux 5.15 内核版本: ${ver}"
                     elrepo_kernel_version_ml_Teddysun515=${ver}
                 fi
 
-                if [[ ${ver} == *"6.1.13"* ]]; then
+                if [[ ${ver} == *"6.1.100"* ]]; then
                     # echo "符合所选版本的Linux 6.1 内核版本: ${ver}"
                     elrepo_kernel_version_ml_Teddysun61=${ver}
                 fi
 
-                if [[ ${ver} == *"6.6"* ]]; then
+                if [[ ${ver} == *"6.6.41"* ]]; then
                     # echo "符合所选版本的Linux 6.1 内核版本: ${ver}"
                     elrepo_kernel_version_ml_Teddysun66=${ver}
                 fi
