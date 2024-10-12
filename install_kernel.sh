@@ -1851,6 +1851,9 @@ function installDebianUbuntuKernel(){
 
             if [ "${linuxKernelToInstallVersion}" = "5.10" ]; then
                 debianKernelVersion="5.10.0-0"
+                if [ "${osReleaseVersionNo}" = "11" ]; then
+                    debianKernelVersion="5.10.0-16"
+                fi
                 # linux-image-5.10.0-0.bpo.15-amd64
             elif [ "${linuxKernelToInstallVersion}" = "5.19" ]; then
                 debianKernelVersion="5.16.0-0"
@@ -1860,10 +1863,22 @@ function installDebianUbuntuKernel(){
 
             elif [ "${linuxKernelToInstallVersion}" = "4.19" ]; then
                 debianKernelVersion="4.19.0-21"
-            else
+
+            elif [ "${linuxKernelToInstallVersion}" = "6.1" ]; then
                 debianKernelVersion="6.1.0-0"
                 if [ "${osReleaseVersionNo}" = "11" ]; then
-                    debianKernelVersion="6.1.0-0"
+                    debianKernelVersion="6.1.0-20"
+                fi
+                if [ "${osReleaseVersionNo}" = "12" ]; then
+                    debianKernelVersion="6.1.0-25"
+                fi
+            else
+                debianKernelVersion="6.6.0-0"
+                if [ "${osReleaseVersionNo}" = "11" ]; then
+                    debianKernelVersion="6.6.0-0"
+                fi
+                if [ "${osReleaseVersionNo}" = "12" ]; then
+                    debianKernelVersion="6.6.0-0"
                 fi
             fi
 
@@ -1899,7 +1914,8 @@ function installDebianUbuntuKernel(){
             echo
             echo "dpkg --get-selections | grep linux-image-${debianKernelVersion} | awk '/linux-image-[4-9]./{print \$1}' | awk -F'linux-image-' '{print \$2}' "
             #debianKernelVersionPackageName=$(dpkg --get-selections | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk -F'linux-image-' '{print $2}')
-            debianKernelVersionPackageName=$(apt-cache search linux-image | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]./{print $1}' | awk '/[0-9]-amd64$/{print $1}' | awk -F'linux-image-' '{print $2}' | tail -1)
+            echo "apt-cache search linux-image | grep ${debianKernelVersion} | awk '/linux-image-[4-9]\.[0-9]+\.[0-9]+/{print \$1}' | awk '/[0-9]+-amd64$/{print \$1}' | awk -F'linux-image-' '{print \$2}' | sort -V | tail -1"
+            debianKernelVersionPackageName=$(apt-cache search linux-image | grep "${debianKernelVersion}" | awk '/linux-image-[4-9]\.[0-9]+\.[0-9]+/{print $1}' | awk '/[0-9]+-amd64$/{print $1}' | awk -F'linux-image-' '{print $2}' | sort -V | tail -1)
 
 
             echo
@@ -3344,6 +3360,9 @@ function start_menu(){
                 green " 42. 安装 内核 5.19, 通过 Debian 官方源安装"
                 green " 43. 安装 最新版本内核 6.1 或更高, 通过 Debian 官方源安装"
             fi
+            if [[ "${osReleaseVersion}" == "12" ]]; then
+                green " 43. 安装 LTS内核 6.1 LTS, 通过 Debian 官方源安装"
+            fi
             echo
         fi
 
@@ -3438,6 +3457,9 @@ function start_menu(){
                 green " 41. Install LTS linux kernel, 5.10 LTS, from Debian repository source"
                 green " 42. Install linux kernel, 5.19, from Debian repository source"
                 green " 43. Install latest linux kernel, 6.1 or higher, from Debian repository source"
+            fi
+            if [[ "${osReleaseVersion}" == "12" ]]; then
+                green " 43. Install LTS linux kernel, 6.1 LTS, from Debian repository source"
             fi
             echo
         fi
