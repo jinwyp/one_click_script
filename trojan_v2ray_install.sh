@@ -1086,7 +1086,7 @@ downloadFilenameTrojan="trojan-${versionTrojan}-linux-amd64.tar.xz"
 versionTrojanGo="0.10.6"
 downloadFilenameTrojanGo="trojan-go-linux-amd64.zip"
 
-versionV2ray="5.12.1"
+versionV2ray="5.21.0"
 downloadFilenameV2ray="v2ray-linux-64.zip"
 
 versionXray="1.8.7"
@@ -1203,6 +1203,9 @@ function downloadAndUnzip(){
 
 function getGithubLatestReleaseVersion(){
     # https://github.com/p4gefau1t/trojan-go/issues/63
+    # wget --no-check-certificate -qO- https://api.github.com/repos/XTLS/Xray-core/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
+    # wget --no-check-certificate -qO- https://api.github.com/repos/v2fly/v2ray-core/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
+    # wget --no-check-certificate -qO- https://api.github.com/repos/v2fly/v2ray-core/releases/latest | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
     wget --no-check-certificate -qO- https://api.github.com/repos/$1/tags | grep 'name' | cut -d\" -f4 | head -1 | cut -b 2-
 }
 
@@ -1216,7 +1219,7 @@ function getV2rayVersion(){
         echo
         green " ================================================== "
         green " 请选择 V2ray 的版本, 默认直接回车为 稳定版4.45.2 (推荐)"
-        green " 选否则安装最新版的 V2ray 5.4.1 User Preview"
+        green " 选否则安装最新版的 V2ray 5.21.0"
         echo
         read -r -p "是否安装稳定版V2ray? 默认直接回车为稳定版4.45.2, 请输入[Y/n]:" isInstallXrayVersionInput
         isInstallXrayVersionInput=${isInstallXrayVersionInput:-Y}
@@ -1233,52 +1236,48 @@ function getV2rayVersion(){
     if [[ $1 == "xray" ]] ; then
         echo
         green " ================================================== "
-        tempXrayVersionDisplayText="2"
+        tempXrayVersionDisplayText="5"
 
-        if [[ $configV2rayWorkingMode == "vlessTCPREALITY" ]]; then
+        yellow " Xray 1.6.0 及以上的版本, 支持 Shadowsocks-2022"
+        yellow " Xray 1.7.0 及以上的版本, 支持 xtls-rprx-vision"
+        yellow " Xray 1.8.0 及以上的版本, 支持 REALITY 协议 "
+        yellow " Xray 1.8.21 及以上的版本, 支持 SplitHTTP for HTTP/3(QUIC) "
+        echo
+
+        if [[ $2 == "update" ]]; then
+            red "升级 1.8.7 或以上版本可能导致 启动失败, 不兼容旧版 XTLS 配置!"
+        fi
+        green " ================================================== "
+
+        if [[ $configV2rayWorkingMode == "vlessTCPREALITY" ||  $configV2rayWorkingMode == "vlessTCPVision" ]]; then
             tempXrayVersionDisplayText="1"
-            green " 请选择 Xray 的版本, 默认直接回车为 1.8.23 或以上的最新版本"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.8.24 或以上的最新版本"
             echo
-            green " 1. 1.8.23 或以上的最新版本 支持 REALITY 和 XTLS Vision"
-            green " 2. 1.8.10 支持 REALITY 和 XTLS Vision (推荐)"
-            green " 3. 1.8.4 支持 REALITY 和 XTLS Vision"
-
-        elif [[ $configV2rayWorkingMode == "vlessTCPVision" ]]; then
-            tempXrayVersionDisplayText="1"
-            green " 请选择 Xray 的版本, 默认直接回车为 1.8.23 或以上的最新版本"
-            echo
-            green " 1. 1.8.23 或以上的最新版本 支持 REALITY 和 XTLS Vision"
-            green " 2. 1.8.10 支持 REALITY 和 XTLS Vision (推荐)"
-            green " 3. 1.8.4 支持 REALITY 和 XTLS Vision"
-            green " 4. 1.7.5 支持 XTLS Vision"
-
+            green " 1. 24.9.30 或以上的最新版本 支持 REALITY 和 SplitHTTP"
+            green " 2. 1.8.24 支持 SplitHTTP for HTTP/3 旧版本号格式的最后一个版本"
+            green " 3. 1.8.13 支持 REALITY (推荐)"
+            green " 4. 1.8.11 支持 REALITY (推荐) HTTPUpgrade path 后加上 ?ed=2560 才会启用 0-RTT"
+            green " 5. 1.8.4 支持 REALITY 此为最后一个支持win7的版本"
+            green " 6. 1.7.5 支持 XTLS Vision"
         else
-            green " 请选择 Xray 的版本, 默认直接回车为 1.7.5"
+            green " 请选择 Xray 的版本, 默认直接回车为 1.8.4"
             echo
-            if [[ $2 == "update" ]]; then
-                red "升级 1.8.7 或以上版本可能导致 启动失败, 不兼容旧版 XTLS 配置!"
-                echo
-            fi
-
-            if [[ $2 == "shadowsocks" ]]; then
-                echo
-            fi
-
-            green " 1. 1.8.23 或以上的最新版本 支持 REALITY 和 XTLS Vision"
-            green " 2. 1.8.10 支持 REALITY 和 XTLS Vision (推荐)"
-            green " 3. 1.8.4 支持 REALITY 和 XTLS Vision"
-            green " 4. 1.7.5 支持 XTLS Vision"
-            green " 5. 1.6.1 (推荐)"
-            green " 6. 1.6.0"
-            green " 7. 1.5.5"
-            green " 8. 1.5.4"
-            green " 9. 1.5.3"
+            green " 1. 24.9.30 或以上的最新版本 支持 REALITY 和 SplitHTTP"
+            green " 2. 1.8.24 支持 SplitHTTP for HTTP/3 旧版本号格式的最后一个版本"
+            green " 3. 1.8.13 支持 REALITY (推荐)"
+            green " 4. 1.8.11 支持 REALITY (推荐) HTTPUpgrade path 后加上 ?ed=2560 才会启用 0-RTT"
+            green " 5. 1.8.4 支持 REALITY 此为最后一个支持win7的版本"
+            green " 6. 1.7.5 支持 XTLS Vision"
+            green " 7. 1.6.1 (推荐) 支持 Shadowsocks-2022"
+            green " 8. 1.5.5"
+            green " 9. 1.5.4"
             green " 10. 1.5.2"
-            green " 11. 1.5.1"
+            green " 11. 1.5.1 VMESS AEAD 从2022/1/1/强制启用 请注意更新服务端 移除alterId参数"
             green " 12. 1.5.0"
             green " 13. 1.4.5"
             green " 14. 1.3.1"
         fi
+
 
         echo
         read -r -p "请选择Xray版本? 直接回车默认选${tempXrayVersionDisplayText}, 请输入纯数字:" isXrayVersionInput
@@ -1286,31 +1285,27 @@ function getV2rayVersion(){
 
         if [[ "${isXrayVersionInput}" == "1" ]]; then
             versionXray=$(getGithubLatestReleaseVersion "XTLS/Xray-core")
-
+            # versionXray="24.9.30"
         elif [[ "${isXrayVersionInput}" == "2" ]]; then
-            versionXray="1.8.10"
-
+            versionXray="1.8.24"
         elif [[ "${isXrayVersionInput}" == "3" ]]; then
+            versionXray="1.8.13"
+        elif [[ "${isXrayVersionInput}" == "4" ]]; then
+            versionXray="1.8.11"
+        elif [[ "${isXrayVersionInput}" == "5" ]]; then
             versionXray="1.8.4"
 
-        elif [[ "${isXrayVersionInput}" == "4" ]]; then
+        elif [[ "${isXrayVersionInput}" == "6" ]]; then
             versionXray="1.7.5"
 
-        elif [[ "${isXrayVersionInput}" == "5" ]]; then
+        elif [[ "${isXrayVersionInput}" == "7" ]]; then
             versionXray="1.6.1"
 
-        elif [[ "${isXrayVersionInput}" == "6" ]]; then
-            versionXray="1.6.0"
-
-        elif [[ "${isXrayVersionInput}" == "7" ]]; then
+        elif [[ "${isXrayVersionInput}" == "8" ]]; then
             versionXray="1.5.5"
 
-        elif [[ "${isXrayVersionInput}" == "8" ]]; then
-            versionXray="1.5.4"
-
         elif [[ "${isXrayVersionInput}" == "9" ]]; then
-            versionXray="1.5.3"
-
+            versionXray="1.5.4"
         elif [[ "${isXrayVersionInput}" == "10" ]]; then
             versionXray="1.5.2"
 
@@ -1319,15 +1314,13 @@ function getV2rayVersion(){
 
         elif [[ "${isXrayVersionInput}" == "12" ]]; then
             versionXray="1.5.0"
-
         elif [[ "${isXrayVersionInput}" == "13" ]]; then
             versionXray="1.4.5"
-
         elif [[ "${isXrayVersionInput}" == "14" ]]; then
             versionXray="1.3.1"
 
         else
-            versionXray="1.7.5"
+            versionXray="1.8.4"
         fi
 
         echo "versionXray: ${versionXray}"
