@@ -596,6 +596,26 @@ function installSoftDownload(){
             ${sudoCmd} dnf distro-sync -y
         fi
 
+
+        if [[ ${osInfo} == "AlmaLinux" ]]; then
+
+            # 定义要检查的 GPG 密钥 ID
+            KEY_ID="ced7258b"
+
+            # 使用 rpm -qi 命令检查是否安装了指定的 GPG 密钥
+            rpm -qi "gpg-pubkey-$KEY_ID" &>/dev/null
+
+            # 检查命令的退出状态码
+            if [ $? -eq 0 ]; then
+                # red "GPG key with ID $KEY_ID is installed."
+            else
+                # red "GPG key with ID $KEY_ID is NOT installed."
+                ${sudoCmd} rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
+                ${sudoCmd} dnf clean all
+                ${sudoCmd} dnf makecache
+            fi
+        fi
+
         PACKAGE_LIST_Centos=( "wget" "curl" "git" "unzip" "glibc-langpack-en" )
 
         # 检查所有软件包是否已安装
@@ -4954,7 +4974,7 @@ EOM
 
 
 function v2rayRouteRule(){
-    site_LIST=("google" "openai" "twitter" "netflix" "disney" "youtube" "spotify" "pornhub" )
+    site_LIST=("google" "openai" "anthropic" "twitter" "netflix" "disney" "youtube" "spotify" "pornhub" )
 
     V2rayUnlockSiteRuleV6Text=""
     V2rayUnlockSiteRuleSock5Text=""
@@ -4971,6 +4991,9 @@ function v2rayRouteRule(){
 
         elif [[ "${site}" == "openai" ]]; then
         yellow " 请选择 解锁 OpenAI ChatGPT 方式"
+
+        elif [[ "${site}" == "anthropic" ]]; then
+        yellow " 请选择 解锁 Anthropic Claude AI 方式"
 
         elif [[ "${site}" == "twitter" ]]; then
         yellow " 请选择 解锁 Twitter 方式"
@@ -5008,23 +5031,16 @@ function v2rayRouteRule(){
         isV2rayUnlockGoogleInput=${isV2rayUnlockGoogleInput:-1}
 
         V2rayUnlockSiteRuleTempText=", \"geosite:${site}\" "
-        if [[ "${site}" == "others" ]]; then
-            V2rayUnlockSiteRuleTempText=", \"geosite:${site}\" "
-        fi
 
         if [[ $isV2rayUnlockGoogleInput == "2" ]]; then
-
             V2rayUnlockSiteRuleV6Text+="${V2rayUnlockSiteRuleTempText}"
 
         elif [[ $isV2rayUnlockGoogleInput == "3" ]]; then
-
             V2rayUnlockSiteRuleSock5Text+="${V2rayUnlockSiteRuleTempText}"
-
             inputUnlockWARPSock5Server
 
         elif [[ $isV2rayUnlockGoogleInput == "4" ]]; then
             V2rayUnlockSiteRuleV2rayServerText+="${V2rayUnlockSiteRuleTempText}"
-
             inputUnlockV2rayServerInfo
         else
             echo ""
@@ -8986,6 +9002,7 @@ EOM
 
 
 function firewallForbiden(){
+    # 禁止邮件端口
     # firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 0 -p tcp -m tcp --dport=25 -j ACCEPT
     # firewall-cmd --permanent --direct --add-rule ipv4 filter OUTPUT 1 -p tcp -m tcp --dport=25 -j REJECT
     # firewall-cmd --reload
