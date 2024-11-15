@@ -607,9 +607,9 @@ function installSoftDownload(){
 
             # 检查命令的退出状态码
             if [ $? -eq 0 ]; then
-                # red "GPG key with ID $KEY_ID is installed."
+                red "GPG key with ID $KEY_ID is installed."
             else
-                # red "GPG key with ID $KEY_ID is NOT installed."
+                red "GPG key with ID $KEY_ID is NOT installed."
                 ${sudoCmd} rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
                 ${sudoCmd} dnf clean all
                 ${sudoCmd} dnf makecache
