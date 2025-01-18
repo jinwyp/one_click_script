@@ -1278,7 +1278,7 @@ function getV2rayVersion(){
             tempXrayVersionDisplayText="1"
             green " 请选择 Xray 的版本, 默认直接回车为 1.8.24 或以上的最新版本"
             echo
-            green " 1. 24.9.30 或以上的最新版本 支持 REALITY 和 SplitHTTP"
+            green " 1. 24.11.11 或以上的最新版本 支持 REALITY 和 XHTTP"
             green " 2. 1.8.24 支持 SplitHTTP for HTTP/3 旧版本号格式的最后一个版本"
             green " 3. 1.8.13 支持 REALITY (推荐)"
             green " 4. 1.8.11 支持 REALITY (推荐) HTTPUpgrade path 后加上 ?ed=2560 才会启用 0-RTT"
@@ -1287,7 +1287,7 @@ function getV2rayVersion(){
         else
             green " 请选择 Xray 的版本, 默认直接回车为 1.8.4"
             echo
-            green " 1. 24.9.30 或以上的最新版本 支持 REALITY 和 SplitHTTP"
+            green " 1. 24.11.11 或以上的最新版本 支持 REALITY 和 XHTTP"
             green " 2. 1.8.24 支持 SplitHTTP for HTTP/3 旧版本号格式的最后一个版本"
             green " 3. 1.8.13 支持 REALITY (推荐)"
             green " 4. 1.8.11 支持 REALITY (推荐) HTTPUpgrade path 后加上 ?ed=2560 才会启用 0-RTT"

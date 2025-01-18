@@ -2329,7 +2329,7 @@ function getGithubLatestReleaseVersion(){
 
 # https://unix.stackexchange.com/questions/8656/usr-bin-vs-usr-local-bin-on-linux
 
-versionWgcf="2.2.11"
+versionWgcf="2.2.24"
 downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
 configWgcfBinPath="/usr/local/bin"
 configWgcfConfigFolderPath="${HOME}/wireguard"
@@ -2602,6 +2602,11 @@ function installWGCF(){
 
     versionWgcf=$(getGithubLatestReleaseVersion "ViRb3/wgcf")
     downloadFilenameWgcf="wgcf_${versionWgcf}_linux_amd64"
+    # https://github.com/ViRb3/wgcf/releases/download/v2.2.24/wgcf_2.2.24_linux_arm64
+
+    if [[ ${osArchitecture} == "arm" || ${osArchitecture} == "arm64" ]] ; then
+        downloadFilenameWgcf="wgcf_${versionWgcf}_linux_arm64"
+    fi
 
     echo
     green " =================================================="
