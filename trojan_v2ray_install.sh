@@ -4198,19 +4198,35 @@ function generateXrayRealityShortId() {
     done
 }
 
+# Parse xray x25519 key output into xrayRealityPrivateKey and xrayRealityPublicKey.
+# Supports two formats:
+#   Old (< 25.3.6): "Private key: <key>" / "Public key: <key>"
+#   New (>= 25.3.6): "PrivateKey: <key>" / "Password: <key>" / "Hash32: <key>"
+# Uses grep to match by field name rather than by line position.
+function parseXrayRealityKeys(){
+    xrayRealityPrivateKey=$(echo "${xrayRealityX25519Key}" | grep -i "^Private" | awk '{print $NF}')
+
+    # xray >= 25.3.6 renamed "Public key" to "Password" to avoid misunderstanding
+    local _password
+    _password=$(echo "${xrayRealityX25519Key}" | grep "^Password:" | awk '{print $NF}')
+    if [[ -n "${_password}" ]]; then
+        xrayRealityPublicKey="${_password}"
+    else
+        xrayRealityPublicKey=$(echo "${xrayRealityX25519Key}" | grep -i "^Public" | awk '{print $NF}')
+    fi
+}
+
 function generateXrayRealityPrivateKey(){
 
     if [[ -f "${configxrayRealityKeyFilePath}" ]]; then
         xrayRealityX25519Key=$(cat ${configxrayRealityKeyFilePath})
-        xrayRealityPrivateKey=$(echo "${xrayRealityX25519Key}" | head -1 | awk '{print $3}')
-        xrayRealityPublicKey=$(echo "${xrayRealityX25519Key}" | tail -n 1 | awk '{print $3}')
+        parseXrayRealityKeys
     fi
 
     if [[ -z "${xrayRealityPrivateKey}" ]]; then
         xrayRealityX25519Key=$(${configV2rayPath}/xray x25519)
         echo "${xrayRealityX25519Key}" > "${configxrayRealityKeyFilePath}"
-        xrayRealityPrivateKey=$(echo "${xrayRealityX25519Key}" | head -1 | awk '{print $3}')
-        xrayRealityPublicKey=$(echo "${xrayRealityX25519Key}" | tail -n 1 | awk '{print $3}')
+        parseXrayRealityKeys
     else
         echo
         green " 发现之前安装的 Xray Reality PublicKey 和 PrivateKey, 是否重新生成新Key？"
@@ -4221,8 +4237,7 @@ function generateXrayRealityPrivateKey(){
         if [[ "${isGenerateNewXrayRealityKey}" == [Yy] ]]; then
             xrayRealityX25519Key=$(${configV2rayPath}/xray x25519)
             echo "${xrayRealityX25519Key}" > "${configxrayRealityKeyFilePath}"
-            xrayRealityPrivateKey=$(echo "${xrayRealityX25519Key}" | head -1 | awk '{print $3}')
-            xrayRealityPublicKey=$(echo "${xrayRealityX25519Key}" | tail -n 1 | awk '{print $3}')
+            parseXrayRealityKeys
         fi
     fi
 
