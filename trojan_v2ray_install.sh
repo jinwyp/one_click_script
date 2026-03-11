@@ -2948,7 +2948,7 @@ function downloadTrojanBin(){
         downloadAndUnzip "https://github.com/fregie/trojan-go/releases/download/v${versionTrojanGo}/${downloadFilenameTrojanGo}" "${configTrojanBasePath}" "${downloadFilenameTrojanGo}"
 
     else
-        downloadFilenameTrojanGo="trojan-go-fork-linux-amd64.zip"
+        downloadFilenameTrojanGo="trojan-go-fork-linux-amd64-v2.zip"
         if [[ ${osArchitecture} == "arm" ]] ; then
             downloadFilenameTrojanGo="trojan-go-fork-linux-arm.zip"
         fi
