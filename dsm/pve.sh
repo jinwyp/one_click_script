@@ -1011,7 +1011,7 @@ function enableIOMMU(){
 	isAddPcieVideoInput=${isAddPcieVideoInput:-n}
 
 	if [[ $isAddPcieVideoInput == [Yy] ]]; then
-		isAddPcieText="${isAddPcieText} video=efifb:off,vesafb:off"
+		isAddPcieText="${isAddPcieText} video=efifb:off video=vesafb:off"
 
 		echo
 		yellow " 添加模块黑名单，即让GPU设备在下次系统启动之后不使用这些驱动，把设备腾出来给vfio驱动用: "
@@ -1022,9 +1022,10 @@ function enableIOMMU(){
 
 		if [[ $isAddPcieVideoCardBrandInput == [Ii] ]]; then
 			# Intel核显：
+            echo "blacklist i915" >> /etc/modprobe.d/pve-blacklist.conf
 			echo "blacklist snd_hda_intel" >> /etc/modprobe.d/pve-blacklist.conf
 			echo "blacklist snd_hda_codec_hdmi" >> /etc/modprobe.d/pve-blacklist.conf
-			echo "blacklist i915" >> /etc/modprobe.d/pve-blacklist.conf
+            echo "blacklist snd_soc_skl" >> /etc/modprobe.d/pve-blacklist.conf
 
 		elif [[ $isAddPcieVideoCardBrandInput == [Nn] ]]; then
 			# N卡：
@@ -1044,7 +1045,7 @@ function enableIOMMU(){
 		isAddPcieVideoCardAudioInput=${isAddPcieVideoCardAudioInput:-y}
 
 		if [[ $isAddPcieVideoCardAudioInput == [Yy] ]]; then
-			echo "blacklist snd_soc_skl" >> /etc/modprobe.d/pve-blacklist.conf
+			# echo "blacklist snd_soc_skl" >> /etc/modprobe.d/pve-blacklist.conf
 
 			if [[ $isAddAMDCPUFixedPerfCounterInput == [Yy] ]]; then
 				echo "blacklist snd_pci_acp3x" >> /etc/modprobe.d/pve-blacklist.conf
