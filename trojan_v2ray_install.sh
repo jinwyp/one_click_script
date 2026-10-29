@@ -3945,11 +3945,6 @@ fi
         "rules": [
             {
                 "type": "field",
-                "domain": [ "geosite:google-cn"],
-                "outboundTag": "IPv4_out"
-            },
-            {
-                "type": "field",
                 "domain": [ "geosite:cn" ],
                 "outboundTag": "${V2rayBlockChinaSiteRuleText}"
             },
@@ -4287,6 +4282,19 @@ function downloadV2rayXrayBin(){
         fi
 
         downloadAndUnzip "https://github.com/XTLS/Xray-core/releases/download/v${versionXray}/${downloadFilenameXray}" "${tempDownloadV2rayPath}" "${downloadFilenameXray}"
+
+        geositeFilename="geosite.dat"
+        geoipFilename="geoip.dat"
+
+        geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+        geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+
+        wget -O "${tempDownloadV2rayPath}/${geositeFilename}" "${geositeUrl}"
+        wget -O "${tempDownloadV2rayPath}/${geoipFilename}" "${geoipeUrl}"
+
+        chmod 644 "${tempDownloadV2rayPath}/${geositeFilename}"
+        chmod 644 "${tempDownloadV2rayPath}/${geoipFilename}"
+
     fi
 
     if [ "$1" = "upgrade" ]; then
@@ -4298,6 +4306,8 @@ function downloadV2rayXrayBin(){
         mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/geoip.dat ${configV2rayPath}
         mv -f ${configV2rayPath}/upgrade/${promptInfoXrayName}/geosite.dat ${configV2rayPath}
     fi
+
+
 
 }
 
@@ -4930,7 +4940,8 @@ EOM
                     "maxTimeDiff": 0,
                     "shortIds": [
                         ""
-                    ]
+                    ],
+                    "minClientVer": "1.8.15"
                 }
 EOM
         fi
@@ -5195,11 +5206,6 @@ function v2rayRouteRule(){
                 "domain": [${V2rayUnlockSiteRuleV2rayServerText}]
             },
             ${v2rayConfigRouteGoNetflixInput}
-            {
-                "type": "field",
-                "domain": [ "geosite:google-cn"],
-                "outboundTag": "IPv4_out"
-            },
             {
                 "type": "field",
                 "domain": [ "geosite:cn"],
@@ -6342,10 +6348,6 @@ EOM
                     "xver": 0,
                     "serverNames": [
                         "${configXrayRealitySni}",
-                        "icloud.com",
-                        "www.icloud.com",
-                        "apple.com",
-                        "www.apple.com",
                         "mozilla.org",
                         "addons.mozilla.org",
                         "ebay.com",
@@ -6366,9 +6368,6 @@ EOM
                         "www.tsmc.com",
                         "pfizer.com",
                         "www.pfizer.com",
-                        "microsoft.com",
-                        "www.microsoft.com",
-                        "support.microsoft.com",
                         "office.com",
                         "www.office.com",
                         "signup.live.com",
@@ -7124,10 +7123,10 @@ VLess运行在${configV2rayPortShowInfo}端口 (VLess-TCP-REALITY XTLS Vision) �
 }
 
 serverNames 还可以填入以下任意一个网站:
-icloud.com   www.icloud.com  apple.com  www.apple.com  mozilla.org  addons.mozilla.org  ebay.com  www.ebay.com
+mozilla.org  addons.mozilla.org  ebay.com  www.ebay.com
 walmart.com  www.walmart.com  etsy.com  www.etsy.com  shopify.com  www.shopify.com  samsung.com  www.samsung.com
 airbnb.com  www.airbnb.com  asml.com  www.asml.com  tsmc.com  www.tsmc.com  pfizer.com  www.pfizer.com
-microsoft.com  www.microsoft.com  support.microsoft.com  office.com  www.office.com  signup.live.com  www.live.com
+office.com  www.office.com  signup.live.com  www.live.com
 outlook.live.com  lovelive-anime.jp  s0.awsstatic.com  d1.awsstatic.com  amazon.com  m.media-amazon.com
 
 
@@ -8020,7 +8019,7 @@ function downloadMosdns(){
 
         geositeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
         geoipeUrl="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-        cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"
+        cnipUrl="https://raw.githubusercontent.com/Loyalsoldier/geoip/release/cn.dat"geosite.datgeosite.dat
         privateUrl="https://raw.githubusercontent.com/Loyalsoldier/domain-list-custom/release/private.txt"
 
         wget -O ${configMosdnsPath}/rule/${geositeFilename} ${geositeUrl}
